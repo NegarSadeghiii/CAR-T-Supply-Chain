@@ -371,6 +371,57 @@ def solve_master(plan_data, time_limit=300, solver_name='appsi_highs'):
     }
 
 
+def evaluate_with_simulation(data, plan_data, result,
+                             n_replications=100, output_csv=None):
+    """Evaluate the deterministic plan under stochastic process variability.
+
+    Calls simulation.stochastic_simulation.run() using the facility and
+    transport assignments fixed by solve_master().  Manufacturing and QC
+    durations are sampled stochastically; the facility assignments are kept
+    exactly as in the deterministic plan.
+
+    Parameters
+    ----------
+    data           : dict  raw data from parse_dat()
+    plan_data      : dict  output of generate_plans()
+    result         : dict  output of solve_master() — must have 'patients' key
+    n_replications : int   number of simulation replications (default 100)
+    output_csv     : str   optional path to write per-replication CSV
+
+    Returns
+    -------
+    dict  simulation summary (or None if the deterministic solve failed)
+    """
+    import sys as _sys, os as _os
+    _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+    from simulation import stochastic_simulation
+
+    if not result.get('solved') or not result.get('patients'):
+        print('[simulation] Cannot run: no valid deterministic solution found.')
+        return None
+
+    # Augment plan_data with the transport-time maps and lab-setup days that
+    # generate_plans() uses internally but does not expose in its return dict.
+    sim_plan_data = dict(plan_data)
+    sim_plan_data['TT1'] = data['TT1']   # {mode: outbound days}
+    sim_plan_data['TT3'] = data['TT3']   # {mode: return days}
+    sim_plan_data['TLS'] = data['TLS']   # lab-setup days at treatment centre
+
+    plan_assignments = result['patients']   # list of per-patient assignment dicts
+
+    print(f'\n[simulation] Running {n_replications} stochastic replications '
+          f'on {len(plan_assignments)} patients...')
+
+    summary = stochastic_simulation.run(
+        plan_assignments,
+        sim_plan_data,
+        n_replications=n_replications,
+        output_csv=output_csv,
+        verbose=True,
+    )
+    return summary
+
+
 def run_experiment(tau=0.0, data_file=None, urgency_config=None,
                    process_config=None, time_limit=300, random_seed=42,
                    solver_name='appsi_highs'):
@@ -415,18 +466,65 @@ def run_experiment(tau=0.0, data_file=None, urgency_config=None,
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--data', default=None)
-    parser.add_argument('--tau', type=float, default=0.0)
-    parser.add_argument('--time-limit', type=int, default=300)
+    parser = argparse.ArgumentParser(
+        description='CAR-T Column Generation Solver with optional stochastic simulation'
+    )
+    parser.add_argument('--data', default=None,
+                        help='Path to .dat instance file (default: Data_N50.dat)')
+    parser.add_argument('--tau', type=float, default=0.0,
+                        help='Deadline tightness factor 0-1 (default 0.0)')
+    parser.add_argument('--time-limit', type=int, default=300,
+                        help='MIP solver time limit in seconds (default 300)')
+    # Simulation options
+    parser.add_argument('--simulate', action='store_true',
+                        help='After solving, run stochastic SimPy simulation')
+    parser.add_argument('--replications', type=int, default=100,
+                        help='Number of simulation replications (default 100)')
+    parser.add_argument('--sim-output', default=None,
+                        help='CSV file path to save per-replication simulation results')
     args = parser.parse_args()
 
-    data_file = args.data or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Data_N50.dat')
-    r = run_experiment(tau=args.tau, data_file=data_file, time_limit=args.time_limit)
-    if r['solved']:
-        print('ColGen | Cost: $%s | TRT: %.1f | Plans: %d | Gen: %.1fs | Solve: %.1fs | %s' % (
-            '{:,.0f}'.format(r['total_cost']), r['avg_trt'], r['num_plans'],
-            r['gen_time'], r['solve_time'],
-            'OPTIMAL' if r.get('optimal') else 'FEASIBLE'))
+    data_file = args.data or os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'Data_N50.dat'
+    )
+
+    if args.simulate:
+        # When running simulation we need intermediate objects (data, plan_data)
+        # that run_experiment() does not expose, so we call the steps separately.
+        raw_data   = parse_dat(data_file)
+        t0         = _time.time()
+        pdata      = generate_plans(raw_data, tau=args.tau)
+        gen_time   = _time.time() - t0
+
+        infeasible = [p for p in pdata['P'] if not pdata['plans_by_patient'][p]]
+        if infeasible:
+            print('ColGen | FAILED: infeasible_patients %s' % infeasible)
+        else:
+            t0         = _time.time()
+            _, res     = solve_master(pdata, time_limit=args.time_limit)
+            solve_time = _time.time() - t0
+
+            if res.get('solved'):
+                print('ColGen | Cost: $%s | TRT: %.1f | Plans: %d | '
+                      'Gen: %.1fs | Solve: %.1fs | %s' % (
+                    '{:,.0f}'.format(res['total_cost']), res['avg_trt'],
+                    len(pdata['plans']), gen_time, solve_time,
+                    'OPTIMAL' if res.get('optimal') else 'FEASIBLE'))
+                # Run stochastic simulation on the deterministic plan
+                evaluate_with_simulation(
+                    raw_data, pdata, res,
+                    n_replications=args.replications,
+                    output_csv=args.sim_output,
+                )
+            else:
+                print('ColGen | FAILED: %s' % res.get('reason', res.get('termination', '?')))
     else:
-        print('ColGen | FAILED: %s' % r.get('reason', r.get('termination', '?')))
+        # Original behaviour — unchanged
+        r = run_experiment(tau=args.tau, data_file=data_file, time_limit=args.time_limit)
+        if r['solved']:
+            print('ColGen | Cost: $%s | TRT: %.1f | Plans: %d | Gen: %.1fs | Solve: %.1fs | %s' % (
+                '{:,.0f}'.format(r['total_cost']), r['avg_trt'], r['num_plans'],
+                r['gen_time'], r['solve_time'],
+                'OPTIMAL' if r.get('optimal') else 'FEASIBLE'))
+        else:
+            print('ColGen | FAILED: %s' % r.get('reason', r.get('termination', '?')))

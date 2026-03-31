@@ -1,0 +1,16 @@
+# CAR-T Supply Chain — Python dependencies
+# Install with: pip install -r requirements.txt
+
+# Optimisation
+pyomo>=6.0
+
+# Simulation (stochastic layer)
+simpy>=4.0
+numpy>=1.24
+
+# OR-Tools CP-SAT solver (used by cart_cpsat.py)
+ortools>=9.0
+
+# Web API (used by server.py)
+flask>=2.0
+flask-cors>=3.0
