@@ -1,0 +1,1715 @@
+[
+  {
+    "size": "N=5",
+    "tau": 0.0,
+    "n": 5,
+    "mip": {
+      "total_cost": 3119659.9,
+      "avg_trt": 20.6,
+      "num_patients": 5,
+      "group_summary": {
+        "high": {
+          "count": 1,
+          "avg_trt": 17.0,
+          "min_trt": 17.0,
+          "max_trt": 17.0,
+          "deadline": 19.0
+        },
+        "medium": {
+          "count": 2,
+          "avg_trt": 20.0,
+          "min_trt": 20.0,
+          "max_trt": 20.0,
+          "deadline": 20.0
+        },
+        "low": {
+          "count": 2,
+          "avg_trt": 23.0,
+          "min_trt": 23.0,
+          "max_trt": 23.0,
+          "deadline": 24.0
+        }
+      },
+      "patients": [
+        {
+          "id": "p2",
+          "group": "low",
+          "arrival_day": 2.0,
+          "completion_day": 25.0,
+          "turnaround": 23.0,
+          "deadline": 24.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p38",
+          "group": "medium",
+          "arrival_day": 9.0,
+          "completion_day": 29.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        },
+        {
+          "id": "p4",
+          "group": "medium",
+          "arrival_day": 6.0,
+          "completion_day": 26.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        },
+        {
+          "id": "p7",
+          "group": "high",
+          "arrival_day": 1.0,
+          "completion_day": 18.0,
+          "turnaround": 17.0,
+          "deadline": 19.0,
+          "slack": 2.0
+        },
+        {
+          "id": "p8",
+          "group": "low",
+          "arrival_day": 8.0,
+          "completion_day": 31.0,
+          "turnaround": 23.0,
+          "deadline": 24.0,
+          "slack": 1.0
+        }
+      ],
+      "facilities_open": [
+        "m1"
+      ],
+      "feasible": true,
+      "tau": 0.0,
+      "solve_time": 111.5,
+      "wall_time": 122.98
+    },
+    "colgen": {
+      "solved": true,
+      "optimal": true,
+      "total_cost": 3119659.9,
+      "transport_cost": 13023.0,
+      "facility_cost": 3007696.9,
+      "avg_trt": 20.6,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 1,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 2,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        },
+        "low": {
+          "count": 2,
+          "avg_trt": 23.0,
+          "min_trt": 23,
+          "max_trt": 23
+        }
+      },
+      "patients": [
+        {
+          "id": "p7",
+          "group": "high",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 3,
+          "deadline": 19.0,
+          "on_time": true
+        },
+        {
+          "id": "p2",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 23,
+          "mfg_start": 7,
+          "deadline": 24.0,
+          "on_time": true
+        },
+        {
+          "id": "p4",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 8,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p8",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 23,
+          "mfg_start": 13,
+          "deadline": 24.0,
+          "on_time": true
+        },
+        {
+          "id": "p38",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 11,
+          "deadline": 20.0,
+          "on_time": true
+        }
+      ],
+      "num_plans": 90,
+      "num_cap_constraints": 114,
+      "lower_bound": 3020719.9,
+      "upper_bound": 3020719.9,
+      "solver": "ColGen",
+      "tau": 0.0,
+      "num_patients": 5,
+      "gen_time": 0.0,
+      "solve_time": 0.06,
+      "build_time": 0.0,
+      "wall_time": 0.06
+    },
+    "benders": {
+      "solver": "Benders",
+      "solved": true,
+      "optimal": true,
+      "tau": 0.0,
+      "num_patients": 5,
+      "total_cost": 3119659.9,
+      "avg_trt": 20.6,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 1,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 2,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        },
+        "low": {
+          "count": 2,
+          "avg_trt": 23.0,
+          "min_trt": 23,
+          "max_trt": 23
+        }
+      },
+      "iterations": 1,
+      "num_cuts": 0,
+      "lower_bound": 3119659.9,
+      "upper_bound": 3119659.9,
+      "gap_pct": 0.0,
+      "solve_time": 1.11,
+      "build_time": 0,
+      "num_routes": 90,
+      "wall_time": 1.11
+    }
+  },
+  {
+    "size": "N=5",
+    "tau": 1.0,
+    "n": 5,
+    "mip": {
+      "total_cost": 3128118.9,
+      "avg_trt": 18.2,
+      "num_patients": 5,
+      "group_summary": {
+        "high": {
+          "count": 1,
+          "avg_trt": 17.0,
+          "min_trt": 17.0,
+          "max_trt": 17.0,
+          "deadline": 18.0
+        },
+        "medium": {
+          "count": 2,
+          "avg_trt": 17.0,
+          "min_trt": 17.0,
+          "max_trt": 17.0,
+          "deadline": 18.0
+        },
+        "low": {
+          "count": 2,
+          "avg_trt": 20.0,
+          "min_trt": 20.0,
+          "max_trt": 20.0,
+          "deadline": 20.0
+        }
+      },
+      "patients": [
+        {
+          "id": "p2",
+          "group": "low",
+          "arrival_day": 2.0,
+          "completion_day": 22.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        },
+        {
+          "id": "p38",
+          "group": "medium",
+          "arrival_day": 9.0,
+          "completion_day": 26.0,
+          "turnaround": 17.0,
+          "deadline": 18.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p4",
+          "group": "medium",
+          "arrival_day": 6.0,
+          "completion_day": 23.0,
+          "turnaround": 17.0,
+          "deadline": 18.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p7",
+          "group": "high",
+          "arrival_day": 1.0,
+          "completion_day": 18.0,
+          "turnaround": 17.0,
+          "deadline": 18.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p8",
+          "group": "low",
+          "arrival_day": 8.0,
+          "completion_day": 28.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        }
+      ],
+      "facilities_open": [
+        "m1"
+      ],
+      "feasible": true,
+      "tau": 1.0,
+      "solve_time": 237.5,
+      "wall_time": 248.42
+    },
+    "colgen": {
+      "solved": true,
+      "optimal": true,
+      "total_cost": 3128118.9,
+      "transport_cost": 21482.0,
+      "facility_cost": 3007696.9,
+      "avg_trt": 18.2,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 1,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 2,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "low": {
+          "count": 2,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        }
+      },
+      "patients": [
+        {
+          "id": "p7",
+          "group": "high",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 3,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p2",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 4,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p4",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 8,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p8",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 13,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p38",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 11,
+          "deadline": 18.0,
+          "on_time": true
+        }
+      ],
+      "num_plans": 54,
+      "num_cap_constraints": 108,
+      "lower_bound": 3029178.9,
+      "upper_bound": 3029178.9,
+      "solver": "ColGen",
+      "tau": 1.0,
+      "num_patients": 5,
+      "gen_time": 0.0,
+      "solve_time": 0.1,
+      "build_time": 0.0,
+      "wall_time": 0.1
+    },
+    "benders": {
+      "solver": "Benders",
+      "solved": true,
+      "optimal": true,
+      "tau": 1.0,
+      "num_patients": 5,
+      "total_cost": 3128118.9,
+      "avg_trt": 18.2,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 1,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 2,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "low": {
+          "count": 2,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        }
+      },
+      "iterations": 1,
+      "num_cuts": 0,
+      "lower_bound": 3128118.9,
+      "upper_bound": 3128118.9,
+      "gap_pct": 0.0,
+      "solve_time": 0.14,
+      "build_time": 0,
+      "num_routes": 54,
+      "wall_time": 0.14
+    }
+  },
+  {
+    "size": "N=10",
+    "tau": 0.0,
+    "n": 10,
+    "mip": {
+      "total_cost": 6245098.8,
+      "avg_trt": 20.3,
+      "num_patients": 10,
+      "group_summary": {
+        "high": {
+          "count": 2,
+          "avg_trt": 17.0,
+          "min_trt": 17.0,
+          "max_trt": 17.0,
+          "deadline": 19.0
+        },
+        "medium": {
+          "count": 5,
+          "avg_trt": 20.0,
+          "min_trt": 20.0,
+          "max_trt": 20.0,
+          "deadline": 20.0
+        },
+        "low": {
+          "count": 3,
+          "avg_trt": 23.0,
+          "min_trt": 23.0,
+          "max_trt": 23.0,
+          "deadline": 24.0
+        }
+      },
+      "patients": [
+        {
+          "id": "p12",
+          "group": "low",
+          "arrival_day": 13.0,
+          "completion_day": 36.0,
+          "turnaround": 23.0,
+          "deadline": 24.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p19",
+          "group": "low",
+          "arrival_day": 17.0,
+          "completion_day": 40.0,
+          "turnaround": 23.0,
+          "deadline": 24.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p2",
+          "group": "medium",
+          "arrival_day": 2.0,
+          "completion_day": 22.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        },
+        {
+          "id": "p25",
+          "group": "high",
+          "arrival_day": 10.0,
+          "completion_day": 27.0,
+          "turnaround": 17.0,
+          "deadline": 19.0,
+          "slack": 2.0
+        },
+        {
+          "id": "p38",
+          "group": "low",
+          "arrival_day": 9.0,
+          "completion_day": 32.0,
+          "turnaround": 23.0,
+          "deadline": 24.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p4",
+          "group": "medium",
+          "arrival_day": 6.0,
+          "completion_day": 26.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        },
+        {
+          "id": "p43",
+          "group": "medium",
+          "arrival_day": 15.0,
+          "completion_day": 35.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        },
+        {
+          "id": "p46",
+          "group": "high",
+          "arrival_day": 12.0,
+          "completion_day": 29.0,
+          "turnaround": 17.0,
+          "deadline": 19.0,
+          "slack": 2.0
+        },
+        {
+          "id": "p7",
+          "group": "medium",
+          "arrival_day": 1.0,
+          "completion_day": 21.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        },
+        {
+          "id": "p8",
+          "group": "medium",
+          "arrival_day": 8.0,
+          "completion_day": 28.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        }
+      ],
+      "facilities_open": [
+        "m1",
+        "m4"
+      ],
+      "feasible": true,
+      "tau": 0.0,
+      "solve_time": 460.5,
+      "wall_time": 535.47
+    },
+    "colgen": {
+      "solved": true,
+      "optimal": true,
+      "total_cost": 6245098.8,
+      "transport_cost": 31825.0,
+      "facility_cost": 6015393.8,
+      "avg_trt": 20.3,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1",
+        "m4"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 2,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 5,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        },
+        "low": {
+          "count": 3,
+          "avg_trt": 23.0,
+          "min_trt": 23,
+          "max_trt": 23
+        }
+      },
+      "patients": [
+        {
+          "id": "p7",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 3,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p2",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 4,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p4",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 8,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p8",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 13,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p38",
+          "group": "low",
+          "facility": "m4",
+          "j_out": "j2",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 23,
+          "mfg_start": 14,
+          "deadline": 24.0,
+          "on_time": true
+        },
+        {
+          "id": "p25",
+          "group": "high",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 12,
+          "deadline": 19.0,
+          "on_time": true
+        },
+        {
+          "id": "p46",
+          "group": "high",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 14,
+          "deadline": 19.0,
+          "on_time": true
+        },
+        {
+          "id": "p12",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 23,
+          "mfg_start": 18,
+          "deadline": 24.0,
+          "on_time": true
+        },
+        {
+          "id": "p43",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 20,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p19",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 23,
+          "mfg_start": 22,
+          "deadline": 24.0,
+          "on_time": true
+        }
+      ],
+      "num_plans": 174,
+      "num_cap_constraints": 162,
+      "lower_bound": 6047218.8,
+      "upper_bound": 6047218.8,
+      "solver": "ColGen",
+      "tau": 0.0,
+      "num_patients": 10,
+      "gen_time": 0.0,
+      "solve_time": 0.08,
+      "build_time": 0.0,
+      "wall_time": 0.09
+    },
+    "benders": {
+      "solver": "Benders",
+      "solved": true,
+      "optimal": true,
+      "tau": 0.0,
+      "num_patients": 10,
+      "total_cost": 6245098.8,
+      "avg_trt": 20.3,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1",
+        "m4"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 2,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 5,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        },
+        "low": {
+          "count": 3,
+          "avg_trt": 23.0,
+          "min_trt": 23,
+          "max_trt": 23
+        }
+      },
+      "iterations": 3,
+      "num_cuts": 2,
+      "lower_bound": 6245098.8,
+      "upper_bound": 6245098.8,
+      "gap_pct": 0.0,
+      "solve_time": 0.17,
+      "build_time": 0,
+      "num_routes": 174,
+      "wall_time": 0.17
+    }
+  },
+  {
+    "size": "N=10",
+    "tau": 1.0,
+    "n": 10,
+    "mip": {
+      "total_cost": 6260982.8,
+      "avg_trt": 17.9,
+      "num_patients": 10,
+      "group_summary": {
+        "high": {
+          "count": 2,
+          "avg_trt": 17.0,
+          "min_trt": 17.0,
+          "max_trt": 17.0,
+          "deadline": 18.0
+        },
+        "medium": {
+          "count": 5,
+          "avg_trt": 17.0,
+          "min_trt": 17.0,
+          "max_trt": 17.0,
+          "deadline": 18.0
+        },
+        "low": {
+          "count": 3,
+          "avg_trt": 20.0,
+          "min_trt": 20.0,
+          "max_trt": 20.0,
+          "deadline": 20.0
+        }
+      },
+      "patients": [
+        {
+          "id": "p12",
+          "group": "low",
+          "arrival_day": 13.0,
+          "completion_day": 33.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        },
+        {
+          "id": "p19",
+          "group": "low",
+          "arrival_day": 17.0,
+          "completion_day": 37.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        },
+        {
+          "id": "p2",
+          "group": "medium",
+          "arrival_day": 2.0,
+          "completion_day": 19.0,
+          "turnaround": 17.0,
+          "deadline": 18.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p25",
+          "group": "high",
+          "arrival_day": 10.0,
+          "completion_day": 27.0,
+          "turnaround": 17.0,
+          "deadline": 18.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p38",
+          "group": "low",
+          "arrival_day": 9.0,
+          "completion_day": 29.0,
+          "turnaround": 20.0,
+          "deadline": 20.0,
+          "slack": 0.0
+        },
+        {
+          "id": "p4",
+          "group": "medium",
+          "arrival_day": 6.0,
+          "completion_day": 23.0,
+          "turnaround": 17.0,
+          "deadline": 18.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p43",
+          "group": "medium",
+          "arrival_day": 15.0,
+          "completion_day": 32.0,
+          "turnaround": 17.0,
+          "deadline": 18.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p46",
+          "group": "high",
+          "arrival_day": 12.0,
+          "completion_day": 29.0,
+          "turnaround": 17.0,
+          "deadline": 18.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p7",
+          "group": "medium",
+          "arrival_day": 1.0,
+          "completion_day": 18.0,
+          "turnaround": 17.0,
+          "deadline": 18.0,
+          "slack": 1.0
+        },
+        {
+          "id": "p8",
+          "group": "medium",
+          "arrival_day": 8.0,
+          "completion_day": 25.0,
+          "turnaround": 17.0,
+          "deadline": 18.0,
+          "slack": 1.0
+        }
+      ],
+      "facilities_open": [
+        "m1",
+        "m4"
+      ],
+      "feasible": true,
+      "tau": 1.0,
+      "solve_time": 534.5,
+      "wall_time": 560.93
+    },
+    "colgen": {
+      "solved": true,
+      "optimal": true,
+      "total_cost": 6260982.8,
+      "transport_cost": 47709.0,
+      "facility_cost": 6015393.8,
+      "avg_trt": 17.9,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1",
+        "m4"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 2,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 5,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "low": {
+          "count": 3,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        }
+      },
+      "patients": [
+        {
+          "id": "p7",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 3,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p2",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 4,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p4",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 8,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p8",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 10,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p38",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 11,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p25",
+          "group": "high",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 12,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p46",
+          "group": "high",
+          "facility": "m4",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 14,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p12",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 15,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p43",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 17,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p19",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 19,
+          "deadline": 20.0,
+          "on_time": true
+        }
+      ],
+      "num_plans": 96,
+      "num_cap_constraints": 162,
+      "lower_bound": 6063102.8,
+      "upper_bound": 6063102.8,
+      "solver": "ColGen",
+      "tau": 1.0,
+      "num_patients": 10,
+      "gen_time": 0.0,
+      "solve_time": 0.1,
+      "build_time": 0.0,
+      "wall_time": 0.1
+    },
+    "benders": {
+      "solver": "Benders",
+      "solved": true,
+      "optimal": true,
+      "tau": 1.0,
+      "num_patients": 10,
+      "total_cost": 6260982.8,
+      "avg_trt": 17.9,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1",
+        "m4"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 2,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 5,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "low": {
+          "count": 3,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        }
+      },
+      "iterations": 3,
+      "num_cuts": 2,
+      "lower_bound": 6260982.8,
+      "upper_bound": 6260982.8,
+      "gap_pct": 0.0,
+      "solve_time": 0.14,
+      "build_time": 0,
+      "num_routes": 96,
+      "wall_time": 0.14
+    }
+  },
+  {
+    "size": "N=15",
+    "tau": 0.0,
+    "n": 15,
+    "mip": {
+      "feasible": false,
+      "tau": 0.0,
+      "num_patients": 15,
+      "termination": "infeasible",
+      "solve_time": 708.1,
+      "wall_time": 794.37
+    },
+    "colgen": {
+      "solved": true,
+      "optimal": true,
+      "total_cost": 3348864.9,
+      "transport_cost": 44348.0,
+      "facility_cost": 3007696.9,
+      "avg_trt": 20.2,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 3,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 8,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        },
+        "low": {
+          "count": 4,
+          "avg_trt": 23.0,
+          "min_trt": 23,
+          "max_trt": 23
+        }
+      },
+      "patients": [
+        {
+          "id": "p7",
+          "group": "high",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 3,
+          "deadline": 19.0,
+          "on_time": true
+        },
+        {
+          "id": "p2",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 4,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p4",
+          "group": "high",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 8,
+          "deadline": 19.0,
+          "on_time": true
+        },
+        {
+          "id": "p8",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 13,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p38",
+          "group": "high",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 11,
+          "deadline": 19.0,
+          "on_time": true
+        },
+        {
+          "id": "p25",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 12,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p46",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 23,
+          "mfg_start": 17,
+          "deadline": 24.0,
+          "on_time": true
+        },
+        {
+          "id": "p12",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 23,
+          "mfg_start": 18,
+          "deadline": 24.0,
+          "on_time": true
+        },
+        {
+          "id": "p43",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 23,
+          "mfg_start": 20,
+          "deadline": 24.0,
+          "on_time": true
+        },
+        {
+          "id": "p19",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 19,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p14",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 23,
+          "mfg_start": 24,
+          "deadline": 24.0,
+          "on_time": true
+        },
+        {
+          "id": "p5",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 25,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p22",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 27,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p28",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 27,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p41",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 32,
+          "deadline": 20.0,
+          "on_time": true
+        }
+      ],
+      "num_plans": 258,
+      "num_cap_constraints": 240,
+      "lower_bound": 3052044.9,
+      "upper_bound": 3052044.9,
+      "solver": "ColGen",
+      "tau": 0.0,
+      "num_patients": 15,
+      "gen_time": 0.0,
+      "solve_time": 0.26,
+      "build_time": 0.0,
+      "wall_time": 0.26
+    },
+    "benders": {
+      "solver": "Benders",
+      "solved": true,
+      "optimal": true,
+      "tau": 0.0,
+      "num_patients": 15,
+      "total_cost": 3348864.9,
+      "avg_trt": 20.2,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 3,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 8,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        },
+        "low": {
+          "count": 4,
+          "avg_trt": 23.0,
+          "min_trt": 23,
+          "max_trt": 23
+        }
+      },
+      "iterations": 1,
+      "num_cuts": 0,
+      "lower_bound": 3348864.9,
+      "upper_bound": 3348864.9,
+      "gap_pct": 0.0,
+      "solve_time": 0.37,
+      "build_time": 0,
+      "num_routes": 258,
+      "wall_time": 0.37
+    }
+  },
+  {
+    "size": "N=15",
+    "tau": 1.0,
+    "n": 15,
+    "mip": {
+      "feasible": false,
+      "tau": 1.0,
+      "num_patients": 15,
+      "termination": "infeasible",
+      "solve_time": 768.5,
+      "wall_time": 847.62
+    },
+    "colgen": {
+      "solved": true,
+      "optimal": true,
+      "total_cost": 3377573.9,
+      "transport_cost": 73057.0,
+      "facility_cost": 3007696.9,
+      "avg_trt": 17.8,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 3,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 8,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "low": {
+          "count": 4,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        }
+      },
+      "patients": [
+        {
+          "id": "p7",
+          "group": "high",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 3,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p2",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 4,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p4",
+          "group": "high",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 8,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p8",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 10,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p38",
+          "group": "high",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 11,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p25",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 12,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p46",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 17,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p12",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j2",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 15,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p43",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 20,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p19",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 19,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p14",
+          "group": "low",
+          "facility": "m1",
+          "j_out": "j2",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 20,
+          "mfg_start": 24,
+          "deadline": 20.0,
+          "on_time": true
+        },
+        {
+          "id": "p5",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 22,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p22",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 27,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p28",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 27,
+          "deadline": 18.0,
+          "on_time": true
+        },
+        {
+          "id": "p41",
+          "group": "medium",
+          "facility": "m1",
+          "j_out": "j1",
+          "j_ret": "j1",
+          "wait": 0,
+          "trt": 17,
+          "mfg_start": 32,
+          "deadline": 18.0,
+          "on_time": true
+        }
+      ],
+      "num_plans": 138,
+      "num_cap_constraints": 222,
+      "lower_bound": 3080753.9,
+      "upper_bound": 3080753.9,
+      "solver": "ColGen",
+      "tau": 1.0,
+      "num_patients": 15,
+      "gen_time": 0.01,
+      "solve_time": 0.12,
+      "build_time": 0.01,
+      "wall_time": 0.14
+    },
+    "benders": {
+      "solver": "Benders",
+      "solved": true,
+      "optimal": true,
+      "tau": 1.0,
+      "num_patients": 15,
+      "total_cost": 6384587.8,
+      "avg_trt": 17.8,
+      "all_on_time": true,
+      "facilities_open": [
+        "m1",
+        "m4"
+      ],
+      "group_summary": {
+        "high": {
+          "count": 3,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "medium": {
+          "count": 8,
+          "avg_trt": 17.0,
+          "min_trt": 17,
+          "max_trt": 17
+        },
+        "low": {
+          "count": 4,
+          "avg_trt": 20.0,
+          "min_trt": 20,
+          "max_trt": 20
+        }
+      },
+      "iterations": 3,
+      "num_cuts": 2,
+      "lower_bound": 6384587.8,
+      "upper_bound": 6384587.8,
+      "gap_pct": 0.0,
+      "solve_time": 0.23,
+      "build_time": 0,
+      "num_routes": 138,
+      "wall_time": 0.23
+    }
+  }
+]

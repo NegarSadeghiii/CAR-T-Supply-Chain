@@ -1,11 +1,11 @@
 # Auto-generated reduced data
-# 5 patients, time horizon 39
+# 40 patients, time horizon 100
 
 set c := c1 c2 c3 c4;
 set h := h1 h2 h3 h4;
 set j := j1 j2;
 set m := m1 m2 m3 m4 m5 m6;
-set p := p7 p2 p4 p8 p38;
+set p := p7 p2 p4 p8 p38 p25 p46 p12 p43 p19 p14 p5 p22 p28 p41 p49 p1 p33 p3 p32 p29 p31 p34 p16 p50 p10 p30 p35 p6 p20 p40 p15 p21 p36 p23 p26 p11 p9 p42 p17;
 
 param CIM :=
 m1 2216.13
@@ -152,6 +152,41 @@ p2 c3 2 1
 p4 c4 6 1
 p8 c2 8 1
 p38 c3 9 1
+p25 c4 10 1
+p46 c3 12 1
+p12 c3 13 1
+p43 c2 15 1
+p19 c1 17 1
+p14 c4 19 1
+p5 c2 20 1
+p22 c1 25 1
+p28 c3 25 1
+p41 c3 30 1
+p49 c1 31 1
+p1 c4 33 1
+p33 c4 34 1
+p3 c2 35 1
+p32 c4 36 1
+p29 c2 37 1
+p31 c2 39 1
+p34 c3 41 1
+p16 c3 45 1
+p50 c3 45 1
+p10 c2 47 1
+p30 c3 54 1
+p35 c3 55 1
+p6 c1 56 1
+p20 c1 56 1
+p40 c4 56 1
+p15 c4 62 1
+p21 c2 62 1
+p36 c4 62 1
+p23 c4 64 1
+p26 c4 67 1
+p11 c1 68 1
+p9 c2 69 1
+p42 c3 69 1
+p17 c1 70 1
 ;
 
 param FMAX := 1 ;

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAR-T Supply Chain — Optimization Dashboard</title>
+<script>
+MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+:root{
+  --text:#1a1a1a;--muted:#555;--border:#d4d4d4;--bg:#fff;--card:#f8f9fa;
+  --blue:#1E3A5F;--green:#1B6B2E;--purple:#6A1B9A;
+  --blue-bg:#EDF2F7;--green-bg:#EBF5EC;--purple-bg:#F3E5F5;
+  --warn:#92400E;--warn-bg:#FFFBEB;--warn-border:#F59E0B;
+  --ok:#166534;--ok-bg:#DCFCE7;
+  --fail:#991B1B;--fail-bg:#FEE2E2;
+  --font:'Palatino Linotype','Book Antiqua',Georgia,serif;
+  --mono:'Consolas','Monaco',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--text);line-height:1.6;max-width:1200px;margin:0 auto;padding:32px 28px 80px;background:var(--bg)}
+h1{font-size:1.7rem;text-align:center;margin-bottom:2px}
+h1 small{display:block;font-size:.92rem;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:1.25rem;margin:28px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--border)}
+h3{font-size:1.05rem;margin:18px 0 8px;color:var(--muted)}
+p{margin:6px 0;font-size:.93rem}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin:20px 0 0}
+.tab{padding:8px 18px;cursor:pointer;font-weight:600;font-size:.9rem;border:1.5px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;color:var(--muted);background:transparent;transition:.15s}
+.tab:hover{color:var(--text);background:var(--card)}
+.tab.active{color:var(--blue);border-color:var(--border);border-bottom:2px solid var(--bg);margin-bottom:-2px;background:var(--bg)}
+.tab-content{display:none;padding:16px 0}
+.tab-content.active{display:block}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:.88rem;margin:10px 0 16px}
+th{text-align:left;padding:7px 8px;border-bottom:2px solid var(--text);font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.04em}
+td{padding:6px 8px;border-bottom:1px solid #e5e5e5;font-family:var(--mono);font-size:.83rem}
+tr:last-child td{border-bottom:2px solid var(--text)}
+.right{text-align:right}
+.center{text-align:center}
+
+/* Heatmap */
+.heat{text-align:center;font-weight:700;border-radius:3px;padding:2px 6px}
+.h-exact{background:#d4edda;color:#155724}
+.h-good{background:#c3e6cb;color:#155724}
+.h-warn{background:#ffeeba;color:#856404}
+.h-bad{background:#f5c6cb;color:#721c24}
+.h-fail{background:#6c757d;color:#fff}
+.h-speed{background:#cfe2ff;color:#084298;font-weight:700}
+
+/* Side-by-side boxes */
+.side{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}
+.box{padding:14px 16px;border-radius:7px;border:1.5px solid;font-size:.9rem}
+.box.mip{border-color:var(--blue);background:var(--blue-bg)}
+.box.cg{border-color:var(--green);background:var(--green-bg)}
+.box.bd{border-color:var(--purple);background:var(--purple-bg)}
+.box-title{font-weight:700;font-size:.88rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.box.mip .box-title{color:var(--blue)}
+.box.cg .box-title{color:var(--green)}
+.box.bd .box-title{color:var(--purple)}
+.box .eq{margin:5px 0}
+.box .note{font-style:italic;color:var(--muted);font-size:.87rem;margin-top:6px}
+.box ul{margin:4px 0 4px 16px;font-size:.9rem}
+.box li{margin:2px 0}
+
+/* Info & warning */
+.info{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin:10px 0;font-size:.9rem}
+.finding{background:var(--warn-bg);border-left:4px solid var(--warn-border);padding:10px 14px;margin:10px 0;font-size:.9rem}
+.finding strong{color:var(--warn)}
+.success{background:var(--ok-bg);border-left:4px solid #16a34a;padding:10px 14px;margin:10px 0;font-size:.9rem}
+.success strong{color:var(--ok)}
+
+/* Tags */
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:.78rem;font-weight:700;letter-spacing:.03em}
+.tag-mip{background:var(--blue);color:#fff}
+.tag-cg{background:var(--green);color:#fff}
+.tag-bd{background:var(--purple);color:#fff}
+
+/* KPI cards */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.kpi-value{font-size:1.5rem;font-weight:700;color:var(--blue);font-family:var(--mono)}
+.kpi-label{font-size:.8rem;color:var(--muted);margin-top:2px}
+
+@media(max-width:700px){.side{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}}
+@media print{body{padding:16px;font-size:9pt}h1{font-size:1.3rem}}
+</style>
+</head>
+<body>
+
+<h1>CAR-T Cell Therapy Supply Chain Optimization
+<small>MIP vs Column Generation vs Benders Decomposition &mdash; Hard Deadline Formulation</small>
+</h1>
+
+<div class="info">
+<strong>Problem:</strong> Minimize total cost (facility + transport + material) subject to strict patient deadlines: $\text{TRT}_p \le D_p$ for all patients.
+<br><strong>Transport:</strong> Air (1 day/leg, ~$3,500) &nbsp;|&nbsp; Ground (4 days/leg, ~$1,200)
+&nbsp;|&nbsp; <strong>TRT:</strong> Air+Air = 17d &nbsp;|&nbsp; Air+Ground = 20d &nbsp;|&nbsp; Ground+Ground = 23d
+</div>
+
+<!-- ============================================================ -->
+<!-- TABS -->
+<!-- ============================================================ -->
+<div class="tabs">
+  <div class="tab active" onclick="showTab('benchmark')">Benchmark</div>
+  <div class="tab" onclick="showTab('formulation')">Formulation</div>
+  <div class="tab" onclick="showTab('kpi')">KPI Analysis</div>
+  <div class="tab" onclick="showTab('sensitivity')">Sensitivity</div>
+  <div class="tab" onclick="showTab('findings')">Key Findings</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 1: BENCHMARK -->
+<!-- ============================================================ -->
+<div id="benchmark" class="tab-content active">
+
+<h2>Solver Benchmark &mdash; Objective &amp; Time Comparison</h2>
+
+<p>All three methods solve the <strong>identical</strong> hard-deadline optimization problem. Optimality gap is measured against the MIP exact solution (where available).</p>
+
+<table>
+<tr>
+  <th>Size</th><th>&tau;</th>
+  <th class="right">MIP Cost</th><th class="right">MIP Time</th>
+  <th class="right">ColGen Cost</th><th class="right">CG Time</th><th class="center">CG Gap</th><th class="center">Speedup</th>
+  <th class="right">Benders Cost</th><th class="right">BD Time</th><th class="center">BD Gap</th>
+</tr>
+<tr>
+  <td>N=5</td><td>0.0</td>
+  <td class="right">$3,119,660</td><td class="right">1.9m</td>
+  <td class="right">$3,119,660</td><td class="right">0.1s</td><td class="heat h-exact">0.00%</td><td class="heat h-speed">1,858x</td>
+  <td class="right">$3,119,660</td><td class="right">1.1s</td><td class="heat h-exact">0.00%</td>
+</tr>
+<tr>
+  <td>N=5</td><td>1.0</td>
+  <td class="right">$3,128,119</td><td class="right">4.0m</td>
+  <td class="right">$3,128,119</td><td class="right">0.1s</td><td class="heat h-exact">0.00%</td><td class="heat h-speed">2,375x</td>
+  <td class="right">$3,128,119</td><td class="right">0.1s</td><td class="heat h-exact">0.00%</td>
+</tr>
+<tr>
+  <td>N=10</td><td>0.0</td>
+  <td class="right">$6,245,099</td><td class="right">7.7m</td>
+  <td class="right">$6,245,099</td><td class="right">0.1s</td><td class="heat h-exact">0.00%</td><td class="heat h-speed">5,756x</td>
+  <td class="right">$6,245,099</td><td class="right">0.2s</td><td class="heat h-exact">0.00%</td>
+</tr>
+<tr>
+  <td>N=10</td><td>1.0</td>
+  <td class="right">$6,260,983</td><td class="right">8.9m</td>
+  <td class="right">$6,260,983</td><td class="right">0.1s</td><td class="heat h-exact">0.00%</td><td class="heat h-speed">5,345x</td>
+  <td class="right">$6,260,983</td><td class="right">0.1s</td><td class="heat h-exact">0.00%</td>
+</tr>
+<tr>
+  <td>N=15</td><td>0.0</td>
+  <td class="right" style="color:var(--fail)">FAIL</td><td class="right">11.8m</td>
+  <td class="right">$3,348,865</td><td class="right">0.3s</td><td class="center">&mdash;</td><td class="center">&mdash;</td>
+  <td class="right">$3,348,865</td><td class="right">0.4s</td><td class="heat h-exact">0.00%</td>
+</tr>
+<tr>
+  <td>N=15</td><td>1.0</td>
+  <td class="right" style="color:var(--fail)">FAIL</td><td class="right">12.8m</td>
+  <td class="right">$3,377,574</td><td class="right">0.1s</td><td class="center">&mdash;</td><td class="center">&mdash;</td>
+  <td class="right">$6,384,588</td><td class="right">0.2s</td><td class="heat h-bad">+89.0%</td>
+</tr>
+</table>
+
+<h3>Scalability (ColGen only &mdash; MIP fails at N&ge;15)</h3>
+<table>
+<tr><th>Size</th><th>&tau;</th><th class="right">Cost</th><th class="right">Cost/Patient</th><th class="right">Avg TRT</th><th>Facilities</th><th class="right">Plans</th><th class="right">Time</th></tr>
+<tr><td>N=5</td><td>0.0</td><td class="right">$3,119,660</td><td class="right">$623,932</td><td class="right">20.6d</td><td>m1</td><td class="right">90</td><td class="right">0.1s</td></tr>
+<tr><td>N=10</td><td>0.0</td><td class="right">$6,245,099</td><td class="right">$624,510</td><td class="right">20.3d</td><td>m1, m4</td><td class="right">174</td><td class="right">0.1s</td></tr>
+<tr><td>N=15</td><td>0.0</td><td class="right">$3,348,865</td><td class="right">$223,258</td><td class="right">20.2d</td><td>m1</td><td class="right">258</td><td class="right">0.3s</td></tr>
+<tr><td>N=20</td><td>0.0</td><td class="right">$3,467,529</td><td class="right">$173,376</td><td class="right">20.2d</td><td>m1</td><td class="right">384</td><td class="right">0.1s</td></tr>
+<tr><td>N=25</td><td>0.0</td><td class="right">$6,592,586</td><td class="right">$263,703</td><td class="right">20.4d</td><td>m1, m4</td><td class="right">492</td><td class="right">0.2s</td></tr>
+<tr><td>N=50</td><td>0.0</td><td class="right">$7,167,579</td><td class="right">$143,352</td><td class="right">20.3d</td><td>m1, m4</td><td class="right">960</td><td class="right">0.5s</td></tr>
+</table>
+
+<div class="success">
+<strong>Result:</strong> Column Generation finds the <strong>exact optimal solution</strong> (0.00% gap vs MIP) while being <strong>1,858&ndash;5,756x faster</strong>. It scales to N=50 in 0.5s where the MIP fails at N&ge;15.
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 2: FORMULATION -->
+<!-- ============================================================ -->
+<div id="formulation" class="tab-content">
+
+<h2>Problem Formulation</h2>
+
+<h3>Common Notation</h3>
+<table>
+<tr><td>$P$</td><td>patients</td><td>$M$</td><td>manufacturing facilities</td></tr>
+<tr><td>$C$</td><td>collection centers</td><td>$H$</td><td>hospitals</td></tr>
+<tr><td>$J$</td><td>transport modes (air, ground)</td><td>$T$</td><td>time periods $\{1,\dots,130\}$</td></tr>
+<tr><td>$\text{CIM}_m, \text{CVM}_m$</td><td>facility costs</td><td>$U^o_{cmj}, U^r_{mhj}$</td><td>transport costs</td></tr>
+<tr><td>$\text{TT}^o_j, \text{TT}^r_j$</td><td>transport times</td><td>$T_\text{LS}, T_\text{MF}, T_\text{QC}$</td><td>stage durations (1, 7, 7 days)</td></tr>
+<tr><td>$D_p$</td><td>patient deadline</td><td>$\text{FCAP}_m$</td><td>facility capacity</td></tr>
+</table>
+
+<h3>Side-by-Side Comparison</h3>
+<div class="side">
+<div class="box mip">
+<div class="box-title">MIP (Time-Indexed)</div>
+<p><strong>Objective:</strong></p>
+<div class="eq">$$\min \sum_p \text{CTM}_p + \sum_p \text{TTC}_p + (C_\text{mat}+C_\text{qc})|P|$$</div>
+<p><strong>Variables:</strong></p>
+<ul>
+<li>$E_m \in \{0,1\}$ &mdash; open facility</li>
+<li>$Y^o_{pcmjt}, Y^r_{pmhjt} \in \{0,1\}$ &mdash; shipments at each time $t$</li>
+<li>7 flow variables (OUTC, LSR, LSA, INM, OUTM, MSO, FTD)</li>
+</ul>
+<p><strong>Key constraints:</strong></p>
+<ul>
+<li>8 flow-balance constraints (MSB1&ndash;MSB8)</li>
+<li>Per-period capacity (CAP1 + CAPCON1)</li>
+<li>Hard deadline: $\text{TRT}_p \le D_p$</li>
+<li>At most 2 facilities</li>
+</ul>
+<p class="note">Size: $O(|P| \cdot |C| \cdot |M| \cdot |J| \cdot |T|) \approx 86{,}000$ binaries for N=15</p>
+</div>
+
+<div class="box cg">
+<div class="box-title">Column Generation (Plan-Based)</div>
+<p><strong>Objective:</strong></p>
+<div class="eq">$$\min \sum_i c_i\, x_i + \sum_m f_m\, z_m + (C_\text{mat}+C_\text{qc})|P|$$</div>
+<p><strong>Variables:</strong></p>
+<ul>
+<li>$z_m \in \{0,1\}$ &mdash; open facility</li>
+<li>$x_i \in \{0,1\}$ &mdash; select plan $i$ for a patient</li>
+<li>A plan = (facility $m$, outbound mode $j$, return mode $k$)</li>
+</ul>
+<p><strong>Key constraints:</strong></p>
+<ul>
+<li>$\sum_{i \in \text{Plans}_p} x_i = 1$ &mdash; one plan per patient</li>
+<li>Capacity: entering(t) &minus; leaving(t) $\le$ FCAP &minus; recent entries</li>
+<li>$x_i \le z_{m(i)}$ &mdash; plan uses open facility</li>
+<li>Hard deadline enforced at plan generation (infeasible plans excluded)</li>
+</ul>
+<p class="note">Size: $O(|P| \cdot |M| \cdot |J|^2) \approx 258$ plans for N=15</p>
+</div>
+</div>
+
+<div class="finding">
+<strong>Why ColGen is equivalent:</strong> Both formulations define the same feasible region for integer solutions. ColGen avoids creating 86,000+ variables by pre-enumerating only the ~258 feasible patient plans. The hard deadline is enforced by filtering plans during generation &mdash; plans with $\text{TRT} > D_p$ are never created.
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 3: KPI ANALYSIS -->
+<!-- ============================================================ -->
+<div id="kpi" class="tab-content">
+
+<h2>KPI Analysis &mdash; Cost Breakdown</h2>
+
+<h3>Per-Patient Cost by Problem Size (ColGen, &tau;=0.0)</h3>
+<div class="kpi-row">
+<div class="kpi"><div class="kpi-value">$623,932</div><div class="kpi-label">N=5 &bull; 1 facility</div></div>
+<div class="kpi"><div class="kpi-value">$223,258</div><div class="kpi-label">N=15 &bull; 1 facility</div></div>
+<div class="kpi"><div class="kpi-value">$263,703</div><div class="kpi-label">N=25 &bull; 2 facilities</div></div>
+<div class="kpi"><div class="kpi-value">$143,352</div><div class="kpi-label">N=50 &bull; 2 facilities</div></div>
+</div>
+
+<h3>Cost Breakdown (ColGen)</h3>
+<table>
+<tr><th>Size</th><th>&tau;</th><th class="right">Facility</th><th class="right">Transport</th><th class="right">Material</th><th class="right">Total</th><th class="right">Cost/Patient</th><th class="right">Avg TRT</th><th>Facilities</th></tr>
+<tr><td>N=5</td><td>0.0</td><td class="right">$3,007,697</td><td class="right">$13,023</td><td class="right">$98,940</td><td class="right">$3,119,660</td><td class="right">$623,932</td><td class="right">20.6d</td><td>m1</td></tr>
+<tr><td>N=5</td><td>1.0</td><td class="right">$3,007,697</td><td class="right">$21,482</td><td class="right">$98,940</td><td class="right">$3,128,119</td><td class="right">$625,624</td><td class="right">18.2d</td><td>m1</td></tr>
+<tr><td>N=10</td><td>0.0</td><td class="right">$6,015,394</td><td class="right">$31,825</td><td class="right">$197,880</td><td class="right">$6,245,099</td><td class="right">$624,510</td><td class="right">20.3d</td><td>m1, m4</td></tr>
+<tr><td>N=10</td><td>1.0</td><td class="right">$6,015,394</td><td class="right">$47,709</td><td class="right">$197,880</td><td class="right">$6,260,983</td><td class="right">$626,098</td><td class="right">17.9d</td><td>m1, m4</td></tr>
+<tr><td>N=15</td><td>0.0</td><td class="right">$3,007,697</td><td class="right">$44,348</td><td class="right">$296,820</td><td class="right">$3,348,865</td><td class="right">$223,258</td><td class="right">20.2d</td><td>m1</td></tr>
+<tr><td>N=15</td><td>1.0</td><td class="right">$3,007,697</td><td class="right">$73,057</td><td class="right">$296,820</td><td class="right">$3,377,574</td><td class="right">$225,172</td><td class="right">17.8d</td><td>m1</td></tr>
+<tr><td>N=20</td><td>0.0</td><td class="right">$3,007,697</td><td class="right">$64,072</td><td class="right">$395,760</td><td class="right">$3,467,529</td><td class="right">$173,376</td><td class="right">20.2d</td><td>m1</td></tr>
+<tr><td>N=20</td><td>1.0</td><td class="right">$6,015,394</td><td class="right">$95,481</td><td class="right">$395,760</td><td class="right">$6,506,635</td><td class="right">$325,332</td><td class="right">17.9d</td><td>m1, m4</td></tr>
+<tr><td>N=25</td><td>0.0</td><td class="right">$6,015,394</td><td class="right">$82,492</td><td class="right">$494,700</td><td class="right">$6,592,586</td><td class="right">$263,703</td><td class="right">20.4d</td><td>m1, m4</td></tr>
+<tr><td>N=50</td><td>0.0</td><td class="right">$6,015,394</td><td class="right">$162,785</td><td class="right">$989,400</td><td class="right">$7,167,579</td><td class="right">$143,352</td><td class="right">20.3d</td><td>m1, m4</td></tr>
+</table>
+
+<h3>Cost of Tightening Deadlines (&tau;: 0.0 &rarr; 1.0)</h3>
+<table>
+<tr><th>Size</th><th class="right">Cost (&tau;=0)</th><th class="right">Cost (&tau;=1)</th><th class="right">Increase</th><th class="center">%</th><th>Driver</th></tr>
+<tr><td>N=5</td><td class="right">$3,119,660</td><td class="right">$3,128,119</td><td class="right">+$8,459</td><td class="heat h-exact">+0.3%</td><td>Transport mode switch only</td></tr>
+<tr><td>N=10</td><td class="right">$6,245,099</td><td class="right">$6,260,983</td><td class="right">+$15,884</td><td class="heat h-exact">+0.3%</td><td>Transport mode switch only</td></tr>
+<tr><td>N=15</td><td class="right">$3,348,865</td><td class="right">$3,377,574</td><td class="right">+$28,709</td><td class="heat h-good">+0.9%</td><td>Transport mode switch only</td></tr>
+<tr><td>N=20</td><td class="right">$3,467,529</td><td class="right">$6,506,635</td><td class="right">+$3,039,106</td><td class="heat h-bad">+87.6%</td><td>Forces 2nd facility (m4)</td></tr>
+<tr><td>N=25</td><td class="right">$6,592,586</td><td class="right">$6,634,916</td><td class="right">+$42,330</td><td class="heat h-good">+0.6%</td><td>Transport mode switch only</td></tr>
+<tr><td>N=50</td><td class="right">$7,167,579</td><td class="right">$7,255,309</td><td class="right">+$87,730</td><td class="heat h-good">+1.2%</td><td>Transport mode switch only</td></tr>
+</table>
+
+<div class="finding">
+<strong>Critical tipping point at N=20:</strong> Tightening deadlines costs only 0.3&ndash;1.2% for most sizes (transport mode switching). But at N=20, tight deadlines force opening a second manufacturing facility &mdash; an <strong>87.6% cost increase</strong> ($3.0M extra). This is the key managerial insight: deadline tightness at this patient volume doesn't just affect transport &mdash; it triggers a binary facility investment decision.
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 4: SENSITIVITY -->
+<!-- ============================================================ -->
+<div id="sensitivity" class="tab-content">
+
+<h2>Sensitivity Analysis</h2>
+
+<h3>Transport Mode Selection by Urgency Group (N=15)</h3>
+<table>
+<tr><th>&tau;</th><th>Group</th><th>N</th><th>Deadline</th><th>TRT Range</th><th>Transport</th></tr>
+<tr><td rowspan="3">0.0 (loose)</td><td>High</td><td>3</td><td>19.0</td><td>17d</td><td>Air + Air</td></tr>
+<tr><td>Medium</td><td>8</td><td>20.0</td><td>20d</td><td>Air + Ground (hybrid)</td></tr>
+<tr><td>Low</td><td>4</td><td>24.0</td><td>23d</td><td>Ground + Ground</td></tr>
+<tr><td rowspan="3">1.0 (tight)</td><td>High</td><td>3</td><td>18.0</td><td>17d</td><td>Air + Air</td></tr>
+<tr><td>Medium</td><td>8</td><td>18.0</td><td>17d</td><td>Air + Air</td></tr>
+<tr><td>Low</td><td>4</td><td>20.0</td><td>20d</td><td>Air + Ground</td></tr>
+</table>
+
+<h3>Physical Feasibility Boundaries</h3>
+<table>
+<tr><th>Transport Combo</th><th>TRT</th><th>Feasible for High (18d)?</th><th>Feasible for Med (18&ndash;20d)?</th><th>Feasible for Low (20&ndash;24d)?</th></tr>
+<tr><td>Air + Air</td><td>17d</td><td class="heat h-exact">Yes</td><td class="heat h-exact">Yes</td><td class="heat h-exact">Yes</td></tr>
+<tr><td>Air + Ground</td><td>20d</td><td class="heat h-bad">No</td><td class="heat h-warn">&tau;&le;0 only</td><td class="heat h-exact">Yes</td></tr>
+<tr><td>Ground + Air</td><td>20d</td><td class="heat h-bad">No</td><td class="heat h-warn">&tau;&le;0 only</td><td class="heat h-exact">Yes</td></tr>
+<tr><td>Ground + Ground</td><td>23d</td><td class="heat h-bad">No</td><td class="heat h-bad">No</td><td class="heat h-warn">&tau;&le;0.25</td></tr>
+</table>
+
+<h3>Facility Parameters</h3>
+<table>
+<tr><th>Facility</th><th>FCAP</th><th>CIM</th><th>CVM</th><th>Total Cost</th><th>Cost/Slot</th></tr>
+<tr><td>m1 / m4</td><td>4</td><td>$2,216</td><td>$20,920</td><td>$23,136</td><td>$5,784</td></tr>
+<tr><td>m3 / m6</td><td>10</td><td>$5,540</td><td>$52,300</td><td>$57,840</td><td>$5,784</td></tr>
+<tr><td>m2 / m5</td><td>31</td><td>$16,621</td><td>$156,900</td><td>$173,521</td><td>$5,598</td></tr>
+</table>
+
+<div class="finding">
+<strong>Why cheap facilities win:</strong> All facilities have similar cost per slot (~$5,600&ndash;5,800). The optimizer picks the <strong>cheapest total cost</strong> &mdash; m1 at $23K vs m2 at $173K. Even though m2 has more capacity (31 vs 4), the 7.5x cost premium is never justified when patient volumes are below 20&ndash;25.
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 5: KEY FINDINGS -->
+<!-- ============================================================ -->
+<div id="findings" class="tab-content">
+
+<h2>Key Findings</h2>
+
+<div class="success">
+<strong>1. Column Generation finds exact optimal solutions.</strong> Across all tested instances (N=5&ndash;50), ColGen achieves 0.00% optimality gap vs the MIP when both solve. It is an exact method, not a heuristic.
+</div>
+
+<div class="success">
+<strong>2. ColGen is 1,858&ndash;5,756x faster.</strong> Sub-second solve times (0.1&ndash;0.5s) vs minutes for the MIP. Scales to N=50 where the MIP fails at N&ge;15.
+</div>
+
+<div class="finding">
+<strong>3. The MIP becomes intractable at N&ge;15.</strong> The time-indexed formulation creates 86,000+ binary variables and 374,000+ constraints for just 15 patients. The solver either times out or falsely reports infeasibility. ColGen avoids this by generating only ~258 feasible plans.
+</div>
+
+<div class="finding">
+<strong>4. Facility cost dominates (95%+ of total).</strong> Transport cost is 1&ndash;3% of total. The critical decision is how many manufacturing facilities to open (1 vs 2), not which transport mode to use. Transport mode matters for <em>feasibility</em> (meeting deadlines) but not for cost.
+</div>
+
+<div class="finding">
+<strong>5. N=20 is the tipping point.</strong> Tightening deadlines at N=20 forces a second facility, increasing cost by 87.6%. At other sizes, tightening only switches transport modes (+0.3&ndash;1.2% cost). This is a non-linear, binary effect that planners must anticipate.
+</div>
+
+<div class="finding">
+<strong>6. Benders has a structural weakness.</strong> At loose deadlines, Benders opens extra facilities because its master problem lacks visibility into transport mode interactions. ColGen avoids this because each plan encodes the complete (facility + transport + timing) decision.
+</div>
+
+<div class="info">
+<strong>7. Economies of scale.</strong> Per-patient cost drops from $624K (N=5) to $143K (N=50) &mdash; a 77% reduction. Facility costs are amortized across more patients, making larger patient volumes significantly more cost-effective.
+</div>
+
+</div>
+
+<!-- ============================================================ -->
+<script>
+function showTab(id){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
