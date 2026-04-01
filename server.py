@@ -435,6 +435,360 @@ def rl_models():
     return jsonify(models)
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# DASHBOARD ENDPOINTS
+# Opt → Sim → Policy loop for the interactive dashboard.
+#
+# Data flow:
+#   POST /api/dashboard/run-baseline    → solve with CP-SAT, return baseline plan
+#   POST /api/dashboard/run-policy-loop → apply policy, run DES, return comparison
+#   POST /api/dashboard/run-sim         → DES only (no policy change), return sim KPIs
+#   POST /api/dashboard/run-scenarios   → multi-(N,tau) sweep with optional policy+sim
+#
+# Each endpoint returns a structured JSON that the dashboard.html JS unpacks
+# into the five UI panels (system flow, Gantt, patient table, KPIs, scenarios).
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.route('/dashboard')
+def dashboard_page():
+    """Serve the interactive Opt→Sim→Policy dashboard."""
+    return send_from_directory(BASE_DIR, 'dashboard.html')
+
+
+def _cpsat_baseline(n, tau, urgency_cfg, process_cfg, time_limit):
+    """Run CP-SAT and return a normalised baseline-plan object."""
+    from cart_cpsat import (run_experiment as cpsat_run,
+                            parse_dat as cpsat_parse,
+                            DEFAULT_PROCESS as CPSAT_PROC)
+
+    _ensure_data(n)
+    df  = os.path.join(BASE_DIR, f'Data_N{n}.dat')
+    pc  = process_cfg or CPSAT_PROC
+
+    res = cpsat_run(tau=tau, data_file=df,
+                    urgency_config=urgency_cfg,
+                    process_config=pc,
+                    time_limit=time_limit)
+
+    if not res.get('solved'):
+        return None, res, None, None
+
+    # Re-parse raw data so we can look up TT3 and FCAP per patient
+    raw   = cpsat_parse(df)
+    tt3_m = {j: int(raw['TT3'][j]) for j in raw['j']}
+    fcap  = {m: int(raw['FCAP'][m]) for m in raw['m']}
+
+    tmfe = pc.get('tmfe', 7)
+    tqc  = pc.get('tqc', 7)
+    tls  = pc.get('tls', 1)
+
+    baseline_plan = []
+    for p in res.get('patients', []):
+        pid        = p.get('id', '')
+        arrival    = p.get('arrival_day', 0)
+        wait       = p.get('wait', 0)
+        mfg_start  = p.get('manufacturing_start_baseline',
+                            arrival + tls + wait + 1)   # fallback
+
+        transport_ret = p.get('transport_ret', 'j1')
+        tt3 = tt3_m.get(transport_ret, 1)
+
+        baseline_plan.append({
+            # ── Identity ─────────────────────────────────────────────────────
+            'patient_id':                   pid,
+            'urgency_group':                p.get('group', '?'),
+            'facility':                     p.get('facility', '?'),
+            'transport_out':                p.get('transport_out', '?'),
+            'transport_ret':                transport_ret,
+            # ── Timing from optimizer ─────────────────────────────────────────
+            'arrival':                      arrival,
+            'optimizer_wait':               wait,
+            'earliest_mfg_start':           mfg_start - wait,   # wait=0 case
+            'manufacturing_start_baseline': mfg_start,
+            'mfg_end_baseline':             p.get('mfg_end_baseline', mfg_start + tmfe),
+            'qc_end_baseline':              p.get('qc_end_baseline',  mfg_start + tmfe + tqc),
+            'completion_baseline':          p.get('completion_day', arrival + p.get('turnaround', 0)),
+            'deadline':                     p.get('deadline', 20),
+            'deadline_day':                 arrival + p.get('deadline', 20),
+            'lateness_baseline':            p.get('lateness', 0),
+            'on_time_baseline':             p.get('on_time', True),
+            'trt_baseline':                 p.get('turnaround', 0),
+            # ── Simulation helpers ─────────────────────────────────────────────
+            'tt3':                          tt3,
+            'fcap':                         fcap.get(p.get('facility', ''), 4),
+            # ── Policy fields (filled by apply_policy; set to baseline default) ─
+            'manufacturing_start_policy':   mfg_start,
+            'policy_adjustment':            0,
+            'adjustment_reason':            'baseline',
+        })
+
+    solver_meta = {
+        'solver':       'CP-SAT',
+        'solved':       True,
+        'optimal':      res.get('optimal', False),
+        'total_cost':   res.get('real_cost', 0),
+        'avg_trt':      res.get('avg_trt', 0),
+        'num_late':     res.get('num_late', 0),
+        'all_on_time':  res.get('all_on_time', True),
+        'facilities_open': res.get('facilities_open', []),
+        'group_summary':   res.get('group_summary', {}),
+        'build_time':   res.get('build_time', 0),
+        'solve_time':   res.get('solve_time', 0),
+    }
+    return baseline_plan, res, solver_meta, fcap
+
+
+@app.route('/api/dashboard/run-baseline', methods=['POST'])
+def dashboard_run_baseline():
+    """Solve with CP-SAT and return the structured baseline plan.
+
+    Request JSON: {n, tau, time_limit, urgency, process}
+    Response:     {baseline_plan, solver_meta, kpis}
+    """
+    p = request.json or {}
+    n          = p.get('n', 10)
+    tau        = p.get('tau', 0.0)
+    time_limit = p.get('time_limit', 120)
+    uc         = _urg(p.get('urgency'))
+    pc         = _proc(p.get('process'))
+
+    try:
+        baseline_plan, raw_res, solver_meta, fcap = _cpsat_baseline(
+            n, tau, uc, pc, time_limit)
+
+        if baseline_plan is None:
+            return jsonify({'solved': False, 'error': raw_res.get('termination', 'infeasible')})
+
+        # Baseline KPIs (deterministic, no simulation yet)
+        n_patients = len(baseline_plan)
+        kpis = {
+            'total_cost':  solver_meta['total_cost'],
+            'avg_trt':     solver_meta['avg_trt'],
+            'on_time_pct': (sum(1 for p_ in baseline_plan if p_['on_time_baseline'])
+                            / n_patients * 100) if n_patients else 0,
+            'num_late':    solver_meta['num_late'],
+            'total_lateness': sum(p_.get('lateness_baseline', 0) for p_ in baseline_plan),
+            'mean_wait':   round(sum(p_.get('optimizer_wait', 0) for p_ in baseline_plan)
+                                 / n_patients, 2) if n_patients else 0,
+        }
+
+        return jsonify({
+            'solved':        True,
+            'baseline_plan': baseline_plan,
+            'solver_meta':   solver_meta,
+            'kpis':          kpis,
+        })
+    except Exception as e:
+        return jsonify({'solved': False, 'error': str(e),
+                        'trace': traceback.format_exc()})
+
+
+@app.route('/api/dashboard/run-policy-loop', methods=['POST'])
+def dashboard_run_policy_loop():
+    """Apply a policy to the baseline plan, then run the DES simulation.
+
+    This is the central endpoint of the Opt→Sim→Policy loop.
+
+    Request JSON:
+        baseline_plan   – list[dict] from run-baseline (sent back by client)
+        policy          – str  'baseline' | 'urgency-shift' | 'congestion-aware'
+        policy_params   – dict  policy-specific parameters
+        n_replications  – int  DES replications (default 20)
+        fcap_map        – dict {facility: cap}  (optional; inferred if absent)
+
+    Response:
+        adjusted_plan   – baseline_plan with manufacturing_start_policy filled in
+        sim_results     – per-patient realised timing + facility utilisation
+        kpis_comparison – {baseline, policy, simulation} side-by-side KPIs
+    """
+    from policy_hooks import apply_policy
+    from simulation.dashboard_simulation import run_sim
+
+    p = request.json or {}
+    baseline_plan  = p.get('baseline_plan', [])
+    policy_name    = p.get('policy', 'baseline')
+    policy_params  = p.get('policy_params', {})
+    n_reps         = p.get('n_replications', 20)
+    fcap_map       = p.get('fcap_map', {})
+
+    if not baseline_plan:
+        return jsonify({'error': 'baseline_plan is required'})
+
+    # Infer fcap_map from baseline_plan if not supplied by client
+    if not fcap_map:
+        for pt in baseline_plan:
+            fac = pt.get('facility', '')
+            if fac and fac not in fcap_map:
+                fcap_map[fac] = pt.get('fcap', 4)
+
+    try:
+        # ── Layer 3: apply policy ─────────────────────────────────────────────
+        adjusted_plan = apply_policy(
+            baseline_plan,
+            policy_name=policy_name,
+            policy_params=policy_params,
+            fcap_map=fcap_map,
+        )
+
+        # ── Layer 2: run DES simulation ───────────────────────────────────────
+        sim_out = run_sim(adjusted_plan, n_replications=n_reps)
+
+        # Build a lookup for sim per-patient results
+        sim_by_pid = {r['patient_id']: r for r in sim_out['per_patient']}
+
+        # ── Merge sim results back into adjusted_plan for the UI ───────────────
+        for pt in adjusted_plan:
+            pid = pt['patient_id']
+            sr  = sim_by_pid.get(pid, {})
+            pt['manufacturing_start_realized'] = sr.get('manufacturing_start_realized')
+            pt['completion_realized']           = sr.get('completion_realized')
+            pt['lateness_realized']             = sr.get('lateness_realized', 0)
+            pt['on_time_realized']              = sr.get('on_time_rate', 1) >= 0.5
+            pt['wait_at_facility']              = sr.get('wait_at_facility', 0)
+            pt['n_remanufactures']              = sr.get('n_remanufactures', 0)
+
+        # ── Build three-column KPI comparison ──────────────────────────────────
+        n_patients = len(baseline_plan)
+        def _pct(lst, key, thresh=0.01):
+            return round(sum(1 for x in lst if x.get(key, 0) <= thresh)
+                         / len(lst) * 100, 1) if lst else 0
+
+        baseline_kpis = {
+            'avg_trt':        round(sum(p_.get('trt_baseline', 0) for p_ in baseline_plan)
+                                    / n_patients, 2) if n_patients else 0,
+            'on_time_pct':    _pct(baseline_plan, 'lateness_baseline'),
+            'total_lateness': round(sum(p_.get('lateness_baseline', 0) for p_ in baseline_plan), 2),
+            'mean_wait':      round(sum(p_.get('optimizer_wait', 0) for p_ in baseline_plan)
+                                    / n_patients, 2) if n_patients else 0,
+            'num_late':       sum(1 for p_ in baseline_plan if p_.get('lateness_baseline', 0) > 0),
+        }
+
+        policy_kpis = {
+            'avg_shift':    round(sum(p_.get('policy_adjustment', 0) for p_ in adjusted_plan)
+                                  / n_patients, 2) if n_patients else 0,
+            'n_adjusted':   sum(1 for p_ in adjusted_plan if p_.get('policy_adjustment', 0) != 0),
+            'policy':       policy_name,
+        }
+
+        sim_kpis = dict(sim_out['kpis'])
+        sim_kpis['facility_util'] = sim_out['facility_util']
+        sim_kpis['n_remanufactures_total'] = round(
+            sum(r.get('n_remanufactures', 0) for r in sim_out['per_patient']), 1)
+
+        return jsonify({
+            'adjusted_plan':   adjusted_plan,
+            'sim_results':     sim_out,
+            'kpis_comparison': {
+                'baseline':   baseline_kpis,
+                'policy':     policy_kpis,
+                'simulation': sim_kpis,
+            },
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()})
+
+
+@app.route('/api/dashboard/run-sim', methods=['POST'])
+def dashboard_run_sim():
+    """Run DES simulation only (baseline policy, no adjustment).
+
+    Request JSON: {baseline_plan, n_replications}
+    Response:     {sim_results, kpis}
+    """
+    from simulation.dashboard_simulation import run_sim
+
+    p = request.json or {}
+    baseline_plan = p.get('baseline_plan', [])
+    n_reps        = p.get('n_replications', 20)
+
+    if not baseline_plan:
+        return jsonify({'error': 'baseline_plan is required'})
+
+    # Apply baseline policy (identity) so manufacturing_start_policy is set
+    for pt in baseline_plan:
+        pt.setdefault('manufacturing_start_policy',
+                      pt.get('manufacturing_start_baseline', 0))
+
+    try:
+        sim_out = run_sim(baseline_plan, n_replications=n_reps)
+        return jsonify({'sim_results': sim_out, 'kpis': sim_out['kpis']})
+    except Exception as e:
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()})
+
+
+@app.route('/api/dashboard/run-scenarios', methods=['POST'])
+def dashboard_run_scenarios():
+    """Run multiple (N, tau) scenario combinations with optional policy + sim.
+
+    Request JSON:
+        scenarios      – list of {n, tau, label}
+        policy         – str  policy name (default 'baseline')
+        policy_params  – dict
+        n_replications – int  DES reps per scenario (default 10)
+        time_limit     – int  solver time limit (default 60)
+
+    Response: list of {label, n, tau, baseline_kpis, sim_kpis}
+    """
+    from policy_hooks import apply_policy
+    from simulation.dashboard_simulation import run_sim
+
+    p = request.json or {}
+    scenarios   = p.get('scenarios', [])
+    policy_name = p.get('policy', 'baseline')
+    pol_params  = p.get('policy_params', {})
+    n_reps      = p.get('n_replications', 10)
+    time_limit  = p.get('time_limit', 60)
+
+    if not scenarios:
+        return jsonify([])
+
+    def run_one_scenario(s):
+        n   = s.get('n', 10)
+        tau = s.get('tau', 0.0)
+        lbl = s.get('label', f'N={n} τ={tau}')
+
+        try:
+            bplan, _, smeta, fcap = _cpsat_baseline(n, tau, None, None, time_limit)
+            if bplan is None:
+                return {'label': lbl, 'n': n, 'tau': tau, 'solved': False}
+
+            # Baseline KPIs
+            n_pat = len(bplan)
+            b_kpis = {
+                'avg_trt':        round(sum(x['trt_baseline'] for x in bplan) / n_pat, 2),
+                'on_time_pct':    round(sum(1 for x in bplan if x['on_time_baseline'])
+                                        / n_pat * 100, 1),
+                'total_lateness': round(sum(x['lateness_baseline'] for x in bplan), 2),
+                'total_cost':     smeta['total_cost'],
+            }
+
+            # Policy + sim
+            adj  = apply_policy(bplan, policy_name, pol_params, fcap or {})
+            sout = run_sim(adj, n_replications=n_reps)
+            s_kpis = dict(sout['kpis'])
+            s_kpis['facility_util'] = sout['facility_util']
+
+            return {
+                'label': lbl, 'n': n, 'tau': tau, 'solved': True,
+                'baseline_kpis': b_kpis,
+                'sim_kpis':      s_kpis,
+                'policy':        policy_name,
+            }
+        except Exception as e:
+            return {'label': lbl, 'n': n, 'tau': tau,
+                    'solved': False, 'error': str(e)}
+
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    results = {}
+    with ThreadPoolExecutor(max_workers=min(len(scenarios), os.cpu_count() or 4)) as ex:
+        futures = {ex.submit(run_one_scenario, s): i for i, s in enumerate(scenarios)}
+        for f in as_completed(futures):
+            results[futures[f]] = f.result()
+
+    return jsonify([results[i] for i in sorted(results)])
+
+
 if __name__ == '__main__':
     import multiprocessing
     cores = multiprocessing.cpu_count()

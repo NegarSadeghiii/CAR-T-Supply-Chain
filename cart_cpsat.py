@@ -299,6 +299,12 @@ def extract_cpsat_results(solver, meta, tau, status):
                 transport_ret = jr
                 break
 
+        # Extract manufacturing start from the CP-SAT variable.
+        # mfg_start = arrival + TLS + wait + TT1_chosen  (computed inside build_cpsat)
+        mfg_start = solver.value(meta['patient_mfg_start'][p])
+        mfg_end   = mfg_start + pc.get('tmfe', 7)
+        qc_end    = mfg_end   + pc.get('tqc',  7)
+
         patients.append({
             'id': p, 'group': grp,
             'arrival_day': arr,
@@ -311,6 +317,13 @@ def extract_cpsat_results(solver, meta, tau, status):
             'deadline': round(dl[p], 2),
             'lateness': late,
             'on_time': late < 1,
+            # ── Manufacturing timing (key for dashboard & policy layer) ──────
+            # These three fields are kept separate so a policy or RL agent
+            # can later override manufacturing_start_policy without losing
+            # the original optimizer decision.
+            'manufacturing_start_baseline': mfg_start,   # optimizer's decision
+            'mfg_end_baseline': mfg_end,                 # baseline mfg completion
+            'qc_end_baseline': qc_end,                   # baseline QC completion
         })
         if grp in gs:
             gs[grp]['count'] += 1
