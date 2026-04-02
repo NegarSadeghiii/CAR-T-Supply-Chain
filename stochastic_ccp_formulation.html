@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAR-T Supply Chain &mdash; Stochastic CCP Formulation</title>
+<script>
+MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+:root{
+  --text:#1a1a1a;--muted:#555;--border:#d4d4d4;--bg:#fff;--card:#f8f9fa;
+  --blue:#1E3A5F;--green:#1B6B2E;--purple:#6A1B9A;--orange:#92400E;
+  --blue-bg:#EDF2F7;--green-bg:#EBF5EC;--purple-bg:#F3E5F5;--orange-bg:#FEF3C7;
+  --warn:#92400E;--warn-bg:#FFFBEB;--warn-border:#F59E0B;
+  --ok:#166534;--ok-bg:#DCFCE7;
+  --fail:#991B1B;--fail-bg:#FEE2E2;
+  --font:'Palatino Linotype','Book Antiqua',Georgia,serif;
+  --mono:'Consolas','Monaco',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--text);line-height:1.6;max-width:1300px;margin:0 auto;padding:32px 28px 80px;background:var(--bg)}
+h1{font-size:1.7rem;text-align:center;margin-bottom:2px}
+h1 small{display:block;font-size:.92rem;font-weight:400;color:var(--muted);margin-top:4px}
+h2{font-size:1.25rem;margin:28px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--border)}
+h3{font-size:1.05rem;margin:18px 0 8px;color:var(--muted)}
+p{margin:6px 0;font-size:.93rem}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin:20px 0 0}
+.tab{padding:8px 18px;cursor:pointer;font-weight:600;font-size:.9rem;border:1.5px solid transparent;border-bottom:none;border-radius:6px 6px 0 0;color:var(--muted);background:transparent;transition:.15s}
+.tab:hover{color:var(--text);background:var(--card)}
+.tab.active{color:var(--blue);border-color:var(--border);border-bottom:2px solid var(--bg);margin-bottom:-2px;background:var(--bg)}
+.tab-content{display:none;padding:16px 0}
+.tab-content.active{display:block}
+table{width:100%;border-collapse:collapse;font-size:.88rem;margin:10px 0 16px}
+th{text-align:left;padding:7px 8px;border-bottom:2px solid var(--text);font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.04em}
+td{padding:6px 8px;border-bottom:1px solid #e5e5e5;font-family:var(--mono);font-size:.83rem}
+tr:last-child td{border-bottom:2px solid var(--text)}
+.right{text-align:right}.center{text-align:center}
+.heat{text-align:center;font-weight:700;border-radius:3px;padding:2px 6px}
+.h-exact{background:#d4edda;color:#155724}
+.h-good{background:#c3e6cb;color:#155724}
+.h-warn{background:#ffeeba;color:#856404}
+.h-bad{background:#f5c6cb;color:#721c24}
+.side3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:12px 0}
+.side{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}
+.box{padding:14px 16px;border-radius:7px;border:1.5px solid;font-size:.9rem}
+.box.mip{border-color:var(--blue);background:var(--blue-bg)}
+.box.cg{border-color:var(--green);background:var(--green-bg)}
+.box.sto{border-color:var(--orange);background:var(--orange-bg)}
+.box-title{font-weight:700;font-size:.88rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.box.mip .box-title{color:var(--blue)}
+.box.cg .box-title{color:var(--green)}
+.box.sto .box-title{color:var(--orange)}
+.box .eq{margin:5px 0}
+.box .note{font-style:italic;color:var(--muted);font-size:.87rem;margin-top:6px}
+.box ul{margin:4px 0 4px 16px;font-size:.9rem}
+.box li{margin:2px 0}
+.info{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin:10px 0;font-size:.9rem}
+.finding{background:var(--warn-bg);border-left:4px solid var(--warn-border);padding:10px 14px;margin:10px 0;font-size:.9rem}
+.finding strong{color:var(--warn)}
+.success{background:var(--ok-bg);border-left:4px solid #16a34a;padding:10px 14px;margin:10px 0;font-size:.9rem}
+.success strong{color:var(--ok)}
+.tag{display:inline-block;padding:2px 8px;border-radius:3px;font-size:.78rem;font-weight:700;letter-spacing:.03em}
+.tag-mip{background:var(--blue);color:#fff}
+.tag-cg{background:var(--green);color:#fff}
+.tag-sto{background:var(--orange);color:#fff}
+.delta{background:#fff;border:1.5px solid var(--orange);border-radius:6px;padding:12px 16px;margin:10px 0;font-size:.88rem}
+.delta h4{color:var(--orange);font-size:.92rem;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.new{color:var(--orange);font-weight:700}
+.same{color:var(--green);font-weight:700}
+@media(max-width:900px){.side3{grid-template-columns:1fr}.side{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<h1>CAR-T Cell Therapy Supply Chain Optimization
+<small>MIP vs Column Generation vs Stochastic CCP &mdash; Manufacturing Time Uncertainty</small>
+</h1>
+
+<div class="info">
+<strong>Problem:</strong> Minimize total cost (facility + transport + material) subject to patient deadlines: $\text{TRT}_p \le D_p$ for all $p$.
+<br><strong>Uncertainty:</strong> Manufacturing time $T_\text{MF} \sim \text{LogNormal}(\mu_L, \sigma_L^2)$ with $\mathbb{E}[T_\text{MF}]=7$ days.
+&nbsp;|&nbsp; <strong>CCP:</strong> Route $i$ generated only if $P(\text{TRT}_p \le D_p) \ge 1-\alpha$
+&nbsp;|&nbsp; <strong>No penalty terms.</strong> Pure cost objective retained.
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('formulation',this)">Formulation</div>
+  <div class="tab" onclick="showTab('notation',this)">Notation</div>
+  <div class="tab" onclick="showTab('ccp',this)">CCP Parameters</div>
+  <div class="tab" onclick="showTab('changes',this)">What Changes</div>
+  <div class="tab" onclick="showTab('findings',this)">Key Findings</div>
+</div>
+
+<!-- ====================================================== -->
+<!-- TAB 1: FORMULATION -->
+<!-- ====================================================== -->
+<div id="formulation" class="tab-content active">
+<h2>Side-by-Side Formulation</h2>
+<p>All three models solve the same underlying CAR-T supply chain problem. The columns below show how each formulation represents decisions, constraints, and uncertainty.</p>
+
+<div class="side3">
+
+<!-- MIP -->
+<div class="box mip">
+<div class="box-title">MIP &mdash; Time-Indexed</div>
+<p><strong>Objective:</strong></p>
+<div class="eq">$$\min \sum_p \text{CTM}_p + \sum_p \text{TTC}_p + (C_\text{mat}+C_\text{qc})|P|$$</div>
+<p><strong>Stage 1 Variables:</strong></p>
+<ul>
+<li>$E_m \in \{0,1\}$ &mdash; open facility $m$</li>
+<li>$Y^o_{pcmjt} \in \{0,1\}$ &mdash; patient $p$ ships from $c$ to $m$ via $j$ at $t$</li>
+<li>$Y^r_{pmhjt} \in \{0,1\}$ &mdash; patient $p$ ships from $m$ to $h$ via $j$ at $t$</li>
+<li>$\text{INM}_{pmt},\text{OUTM}_{pmt}$ &mdash; material flow at $m$</li>
+<li>$\text{LSA}_{pcmjt},\text{LSR}_{pcmjt}$ &mdash; loads shipped / received</li>
+<li>$\text{OUTC}_{pct},\text{MSO}_{pmhjt},\text{FTD}_{pmhjt}$ &mdash; remaining flows</li>
+</ul>
+<p><strong>Key Constraints:</strong></p>
+<ul>
+<li><em>MSB1:</em> $\text{OUTC}_{pct} = \text{INM}_{pm,t+T_\text{LS}}$ (collection delay)</li>
+<li><em>MSB2:</em> $\text{INM}_{pmt} = \text{OUTM}_{pm,t+T_\text{MF}}$ (mfg duration)</li>
+<li><em>MSB3&ndash;8:</em> transport &amp; QC flow balance</li>
+<li><em>CAP1+CAPCON1:</em> $\sum_p \text{INM}_{pmt} \le \text{CAP}_{mt}$</li>
+<li>Hard deadline: $\text{TRT}_p \le D_p \;\forall p$</li>
+<li>$\sum_m E_m \le 2$</li>
+</ul>
+<p class="note">$T_\text{MF}=7$ hardcoded in MSB2. Uncertainty requires full model rebuild.</p>
+<p class="note">Size: $O(|P|\cdot|C|\cdot|M|\cdot|J|\cdot|T|)\approx 86{,}000$ binaries for $N{=}15$</p>
+</div>
+
+<!-- ColGen Deterministic -->
+<div class="box cg">
+<div class="box-title">Column Generation &mdash; Deterministic</div>
+<p><strong>Objective:</strong></p>
+<div class="eq">$$\min \sum_i c_i\,x_i + \sum_m f_m\,z_m + (C_\text{mat}+C_\text{qc})|P|$$</div>
+<p><strong>Variables:</strong></p>
+<ul>
+<li>$z_m \in \{0,1\}$ &mdash; open facility $m$</li>
+<li>$x_i \in \{0,1\}$ &mdash; select plan $i$ for patient $p(i)$</li>
+<li>Plan $i = (m,\,j_\text{out},\,j_\text{ret},\,w{=}0)$</li>
+<li>$c_i = U^o_{c(p)\,m\,j_\text{out}} + U^r_{m\,h(p)\,j_\text{ret}}$ &mdash; transport cost</li>
+<li>$f_m = (\text{CIM}_m+\text{CVM}_m)\cdot|T|$ &mdash; facility cost</li>
+<li>$\text{TRT}_i = T_\text{LS}+\text{TT}^o_{j_\text{out}}+T_\text{MF}+T_\text{QC}+\text{TT}^r_{j_\text{ret}}$ <em>(fixed, $T_\text{MF}{=}7$)</em></li>
+</ul>
+<p><strong>Key Constraints:</strong></p>
+<ul>
+<li>$\displaystyle\sum_{i\in\text{Plans}_p}x_i=1 \;\forall p$ &mdash; one plan per patient</li>
+<li>$x_i \le z_{m(i)} \;\forall i$</li>
+<li>$\sum_m z_m \le 2$</li>
+<li>Capacity: $\text{entering}(m,t)-\text{leaving}(m,t)\le\text{FCAP}_m-\text{recent}(m,t)$<br>where $\text{mfg\_end}_i = \text{mfg\_start}_i + T_\text{MF}$</li>
+<li>Deadline filter at generation: plan $i$ created only if $\text{TRT}_i \le D_{p(i)}$</li>
+</ul>
+<p class="note">$T_\text{MF}=7$ in both TRT and capacity occupancy. Equivalent to MIP on same feasible region.</p>
+<p class="note">Size: $O(|P|\cdot|M|\cdot|J|^2)\approx 258$ plans for $N{=}15$</p>
+</div>
+
+<!-- CCP Stochastic -->
+<div class="box sto">
+<div class="box-title">CCP Stochastic ColGen &mdash; Option A</div>
+<p><strong>Objective (unchanged):</strong></p>
+<div class="eq">$$\min \sum_i c_i\,x_i + \sum_m f_m\,z_m + (C_\text{mat}+C_\text{qc})|P|$$</div>
+<p><strong>Variables (unchanged):</strong></p>
+<ul>
+<li>$z_m \in \{0,1\}$ &mdash; open facility $m$</li>
+<li>$x_i \in \{0,1\}$ &mdash; select route $i$ for patient $p(i)$</li>
+<li>Route $i=(m,\,j_\text{out},\,j_\text{ret})$ &mdash; no wait, no fixed TRT</li>
+<li>$c_i = U^o_{c(p)\,m\,j_\text{out}} + U^r_{m\,h(p)\,j_\text{ret}}$ &mdash; unchanged</li>
+<li>$f_m = (\text{CIM}_m+\text{CVM}_m)\cdot|T|$ &mdash; unchanged</li>
+<li><strong>New:</strong> $T_\text{MF}\sim F$, $\;\alpha\in(0,1)$, $\;T^\alpha_\text{MF}=F^{-1}(1-\alpha)$</li>
+</ul>
+<p><strong>Key Constraints:</strong></p>
+<ul>
+<li>$\displaystyle\sum_{i\in\text{Routes}_p}x_i=1\;\forall p$ &mdash; unchanged</li>
+<li>$x_i \le z_{m(i)}\;\forall i$ &mdash; unchanged</li>
+<li>$\sum_m z_m \le 2$ &mdash; unchanged</li>
+<li>Capacity: same structure, but $\text{mfg\_end}_i=\text{mfg\_start}_i+T^\alpha_\text{MF}$</li>
+<li><strong>CCP filter:</strong> route $i$ generated only if$$T_\text{LS}+\text{TT}^o_{j_\text{out}}+T^\alpha_\text{MF}+T_\text{QC}+\text{TT}^r_{j_\text{ret}}\le D_{p(i)}$$</li>
+<li><strong>Guarantee:</strong> $P(\text{TRT}_p\le D_p)\ge 1-\alpha\;\forall p$</li>
+</ul>
+<p class="note">$T^\alpha_\text{MF}=F^{-1}(1-\alpha)$ replaces $T_\text{MF}{=}7$ everywhere. No penalty terms. No second stage. No scenarios.</p>
+<p class="note">Size: same $O(|P|\cdot|M|\cdot|J|^2)$ structure; fewer routes pass filter as $\alpha\downarrow$</p>
+</div>
+
+</div><!-- end side3 -->
+
+<div class="finding">
+<strong>Key equivalence:</strong>
+The CCP stochastic formulation is structurally identical to deterministic ColGen.
+The entire stochastic extension is captured by one substitution: $T_\text{MF}{=}7 \;\ \longrightarrow\;\ T^\alpha_\text{MF} = F^{-1}(1-\alpha)$.
+The master problem, objective function, facility constraints, and routing constraints are completely unchanged.
+The parameter $\alpha$ controls the service-level guarantee: routes infeasible at the $(1-\alpha)$-quantile are excluded at generation, not penalized in the objective.
+</div>
+
+</div><!-- end formulation tab -->
+
+<!-- ====================================================== -->
+<!-- TAB 2: NOTATION -->
+<!-- ====================================================== -->
+<div id="notation" class="tab-content">
+<h2>Common Notation</h2>
+<p>All three formulations share the sets, parameters, and cost structure below. Rows highlighted in amber are new to the stochastic CCP extension.</p>
+
+<h3>Sets &amp; Indices</h3>
+<table>
+<tr><th>Symbol</th><th>Description</th><th>Symbol</th><th>Description</th></tr>
+<tr><td>$P$</td><td>patients</td><td>$M$</td><td>manufacturing facilities</td></tr>
+<tr><td>$C$</td><td>collection centers</td><td>$H$</td><td>hospitals</td></tr>
+<tr><td>$J$</td><td>transport modes (air $j_1$, ground $j_2$)</td><td>$T$</td><td>time periods $\{1,\dots,130\}$</td></tr>
+</table>
+
+<h3>Parameters</h3>
+<table>
+<tr><th>Symbol</th><th>Description</th><th>Value</th></tr>
+<tr><td>$T_\text{LS}$</td><td>logistics &amp; sample prep time at collection center</td><td>1 day</td></tr>
+<tr><td>$T_\text{MF}$</td><td>manufacturing execution time (deterministic)</td><td>7 days</td></tr>
+<tr><td>$T_\text{QC}$</td><td>quality control time at facility</td><td>7 days</td></tr>
+<tr><td>$\text{TT}^o_j$</td><td>outbound transport time (collection $\to$ facility), mode $j$</td><td>air: 1d, ground: 4d</td></tr>
+<tr><td>$\text{TT}^r_j$</td><td>return transport time (facility $\to$ hospital), mode $j$</td><td>air: 1d, ground: 4d</td></tr>
+<tr><td>$U^o_{cmj}$</td><td>outbound transport cost, center $c$, facility $m$, mode $j$</td><td>~$200&ndash;4,600</td></tr>
+<tr><td>$U^r_{mhj}$</td><td>return transport cost, facility $m$, hospital $h$, mode $j$</td><td>~$2,000&ndash;5,000</td></tr>
+<tr><td>$\text{CIM}_m$</td><td>fixed setup cost for facility $m$</td><td>$2,216&ndash;$16,621</td></tr>
+<tr><td>$\text{CVM}_m$</td><td>variable operating cost for facility $m$</td><td>$20,920&ndash;$156,900</td></tr>
+<tr><td>$\text{FCAP}_m$</td><td>maximum concurrent patients at facility $m$</td><td>4&ndash;31 patients</td></tr>
+<tr><td>$D_p$</td><td>deadline for patient $p$ (urgency-group dependent)</td><td>18&ndash;24 days</td></tr>
+<tr><td>$C_\text{mat}+C_\text{qc}$</td><td>fixed material &amp; QC cost per patient</td><td>$19,788/patient</td></tr>
+<tr style="background:#FEF3C7"><td>$T_\text{MF}\sim F$</td><td><strong>CCP:</strong> random mfg time; LogNormal$(\mu_L,\sigma_L^2)$ with $\mathbb{E}[T_\text{MF}]=7$</td><td>user-specified $\sigma_L$</td></tr>
+<tr style="background:#FEF3C7"><td>$\alpha$</td><td><strong>CCP:</strong> allowed deadline-miss probability per patient</td><td>e.g. 0.05, 0.10, 0.20</td></tr>
+<tr style="background:#FEF3C7"><td>$T^\alpha_\text{MF}=F^{-1}(1-\alpha)$</td><td><strong>CCP:</strong> $(1-\alpha)$-quantile of $T_\text{MF}$; replaces 7 in plan generation</td><td>depends on $\alpha$, $\sigma_L$</td></tr>
+</table>
+
+<h3>Derived Quantities (ColGen &amp; CCP)</h3>
+<table>
+<tr><th>Symbol</th><th>Definition</th><th>Notes</th></tr>
+<tr><td>$\text{TRT}_i$</td><td>$T_\text{LS}+\text{TT}^o_{j_\text{out}}+T_\text{MF}+T_\text{QC}+\text{TT}^r_{j_\text{ret}}$</td><td>deterministic ColGen; $T_\text{MF}=7$</td></tr>
+<tr><td>$\text{TRT}^\alpha_i$</td><td>$T_\text{LS}+\text{TT}^o_{j_\text{out}}+T^\alpha_\text{MF}+T_\text{QC}+\text{TT}^r_{j_\text{ret}}$</td><td>CCP; uses quantile $T^\alpha_\text{MF}$</td></tr>
+<tr><td>$\text{mfg\_start}_i$</td><td>$\text{arr}_{p(i)}+T_\text{LS}+\text{TT}^o_{j_\text{out}}$</td><td>same in both</td></tr>
+<tr><td>$\text{mfg\_end}_i$</td><td>$\text{mfg\_start}_i + T_\text{MF}$</td><td>ColGen: $T_\text{MF}{=}7$; CCP: $T^\alpha_\text{MF}$</td></tr>
+<tr><td>$c_i$</td><td>$U^o_{c(p)\,m\,j_\text{out}}+U^r_{m\,h(p)\,j_\text{ret}}$</td><td>transport cost; identical in both</td></tr>
+<tr><td>$f_m$</td><td>$(\text{CIM}_m+\text{CVM}_m)\cdot|T|$</td><td>facility cost; identical in both</td></tr>
+</table>
+
+<h3>TRT by Transport Combination (deterministic $T_\text{MF}=7$)</h3>
+<table>
+<tr><th>Outbound ($j_\text{out}$)</th><th>Return ($j_\text{ret}$)</th><th>TRT (det.)</th><th>TRT ($\alpha{=}0.10$, $T^\alpha{=}10$)</th><th>TRT ($\alpha{=}0.01$, $T^\alpha{=}14$)</th></tr>
+<tr><td>Air ($\text{TT}^o=1$)</td><td>Air ($\text{TT}^r=1$)</td><td>17d</td><td>20d</td><td>24d</td></tr>
+<tr><td>Air ($\text{TT}^o=1$)</td><td>Ground ($\text{TT}^r=4$)</td><td>20d</td><td>23d</td><td>27d</td></tr>
+<tr><td>Ground ($\text{TT}^o=4$)</td><td>Air ($\text{TT}^r=1$)</td><td>20d</td><td>23d</td><td>27d</td></tr>
+<tr><td>Ground ($\text{TT}^o=4$)</td><td>Ground ($\text{TT}^r=4$)</td><td>23d</td><td>26d</td><td>30d</td></tr>
+</table>
+<div class="finding">
+<strong>Tightening $\alpha$ inflates effective TRT:</strong> At $\alpha=0.10$, even air/air transport yields $\text{TRT}^\alpha=20$d &mdash; the same as air/ground in the deterministic model. High-urgency patients (deadline 18d) can only be served by air/air if $\alpha\ge0.20$ (requiring $T^\alpha_\text{MF}\le9$d). This directly quantifies the service-level vs. route-availability tradeoff.
+</div>
+</div>
+
+<!-- ====================================================== -->
+<!-- TAB 3: CCP PARAMETERS -->
+<!-- ====================================================== -->
+<div id="ccp" class="tab-content">
+<h2>CCP Parameter Design</h2>
+
+<h3>The CCP Plan-Generation Filter</h3>
+<div class="info">
+The chance constraint $P(\text{TRT}_p \le D_p) \ge 1-\alpha$ reduces analytically to a deterministic filter because $T_\text{MF}$ is the only random variable and enters $\text{TRT}_p$ additively:
+$$P(\text{TRT}_p \le D_p) = P\!\left(T_\text{MF} \le D_p - T_\text{LS} - \text{TT}^o_{j_\text{out}} - T_\text{QC} - \text{TT}^r_{j_\text{ret}}\right) \ge 1-\alpha$$
+$$\iff\quad F^{-1}(1-\alpha) \le D_p - T_\text{LS} - \text{TT}^o_{j_\text{out}} - T_\text{QC} - \text{TT}^r_{j_\text{ret}}$$
+$$\iff\quad \underbrace{T_\text{LS}+\text{TT}^o_{j_\text{out}}+T^\alpha_\text{MF}+T_\text{QC}+\text{TT}^r_{j_\text{ret}}}_{\text{TRT}^\alpha_i} \le D_{p(i)}$$
+This is the same filter as deterministic ColGen, with $T_\text{MF}{=}7$ replaced by $T^\alpha_\text{MF}=F^{-1}(1-\alpha)$.
+</div>
+
+<h3>LogNormal Distribution for $T_\text{MF}$</h3>
+<div class="info">
+$T_\text{MF}\sim\text{LogNormal}(\mu_L,\sigma_L^2)$ where $\mu_L = \ln(7)-\tfrac{\sigma_L^2}{2}$ ensures $\mathbb{E}[T_\text{MF}]=7$.
+The $(1-\alpha)$-quantile is: $T^\alpha_\text{MF} = \exp(\mu_L + z_\alpha\cdot\sigma_L)$
+where $z_\alpha=\Phi^{-1}(1-\alpha)$ is the standard normal quantile.
+</div>
+
+<h3>$T^\alpha_\text{MF}$ Values by $\alpha$ and $\sigma_L$</h3>
+<table>
+<tr><th>$\sigma_L$ (uncertainty)</th><th>$\alpha=0.20$ ($z=0.84$)</th><th>$\alpha=0.10$ ($z=1.28$)</th><th>$\alpha=0.05$ ($z=1.64$)</th><th>$\alpha=0.01$ ($z=2.33$)</th></tr>
+<tr><td>0.1 (low)</td><td>7.6d</td><td>7.9d</td><td>8.2d</td><td>8.7d</td></tr>
+<tr><td>0.2 (moderate)</td><td>8.2d</td><td>8.9d</td><td>9.4d</td><td>10.5d</td></tr>
+<tr><td>0.3 (high)</td><td>8.9d</td><td>10.0d</td><td>11.0d</td><td>13.1d</td></tr>
+<tr><td>0.5 (very high)</td><td>10.4d</td><td>12.4d</td><td>14.4d</td><td>19.6d</td></tr>
+</table>
+
+<h3>Feasibility of Route Combinations Under CCP ($D_p$ by urgency group, $\tau=0$)</h3>
+<table>
+<tr><th>Route</th><th>$\text{TT}^o+\text{TT}^r$</th><th>Req. $T^\alpha_\text{MF}\le$</th><th>High ($D=19$)</th><th>Medium ($D=20$)</th><th>Low ($D=24$)</th></tr>
+<tr><td>Air + Air</td><td>2d</td><td>$D_p-1-2-7=D_p-10$</td>
+  <td class="heat h-exact">$\le$9d &rarr; $\alpha\ge$0.16</td>
+  <td class="heat h-exact">$\le$10d &rarr; $\alpha\ge$0.10</td>
+  <td class="heat h-exact">$\le$14d &rarr; $\alpha\ge$0.01</td></tr>
+<tr><td>Air + Ground</td><td>5d</td><td>$D_p-1-5-7=D_p-13$</td>
+  <td class="heat h-bad">$\le$6d &rarr; infeasible</td>
+  <td class="heat h-warn">$\le$7d &rarr; $\alpha\ge$0.50</td>
+  <td class="heat h-exact">$\le$11d &rarr; $\alpha\ge$0.07</td></tr>
+<tr><td>Ground + Air</td><td>5d</td><td>same as Air+Ground</td>
+  <td class="heat h-bad">infeasible</td>
+  <td class="heat h-warn">$\le$7d &rarr; $\alpha\ge$0.50</td>
+  <td class="heat h-exact">$\le$11d &rarr; $\alpha\ge$0.07</td></tr>
+<tr><td>Ground + Ground</td><td>8d</td><td>$D_p-1-8-7=D_p-16$</td>
+  <td class="heat h-bad">infeasible</td>
+  <td class="heat h-bad">$\le$4d &rarr; infeasible</td>
+  <td class="heat h-warn">$\le$8d &rarr; $\alpha\ge$0.40</td></tr>
+</table>
+
+<div class="finding">
+<strong>Service level tightens route availability:</strong>
+At $\alpha=0.10$ ($\sigma_L=0.3$): $T^\alpha_\text{MF}=10$d. Only air/air is feasible for high-urgency patients, and air/ground becomes infeasible for medium-urgency.
+The CCP parameter $\alpha$ replaces the deadline tightness parameter $\tau$ as the primary lever controlling which routes survive plan generation.
+</div>
+</div>
+
+<!-- ====================================================== -->
+<!-- TAB 4: WHAT CHANGES -->
+<!-- ====================================================== -->
+<div id="changes" class="tab-content">
+<h2>What Changes from Deterministic ColGen to CCP</h2>
+
+<p>The CCP extension is a <strong>minimal perturbation</strong> of <code>cart_colgen.py</code>. The master problem, objective, and all constraint structures are preserved. The only change is the manufacturing time value used in plan generation and capacity occupancy.</p>
+
+<h3>Structural Comparison</h3>
+<table>
+<tr>
+  <th>Component</th>
+  <th><span class="tag tag-cg">ColGen Det.</span></th>
+  <th><span class="tag tag-sto">CCP Stochastic</span></th>
+  <th>Status</th>
+</tr>
+<tr>
+  <td><strong>Objective function</strong></td>
+  <td>$\min\sum_i c_i x_i + \sum_m f_m z_m + (C_\text{mat}+C_\text{qc})|P|$</td>
+  <td>Identical</td>
+  <td style="color:var(--green);font-weight:700">UNCHANGED</td>
+</tr>
+<tr>
+  <td><strong>Route assignment</strong></td>
+  <td>$\sum_{i\in\text{Plans}_p}x_i=1\;\forall p$</td>
+  <td>Identical</td>
+  <td style="color:var(--green);font-weight:700">UNCHANGED</td>
+</tr>
+<tr>
+  <td><strong>Facility open / link</strong></td>
+  <td>$x_i\le z_{m(i)}$, $\sum_m z_m\le 2$</td>
+  <td>Identical</td>
+  <td style="color:var(--green);font-weight:700">UNCHANGED</td>
+</tr>
+<tr>
+  <td><strong>Capacity constraint structure</strong></td>
+  <td>entering$(m,t)-$leaving$(m,t)\le\text{FCAP}_m-\text{recent}(m,t)$</td>
+  <td>Identical structure</td>
+  <td style="color:var(--green);font-weight:700">UNCHANGED</td>
+</tr>
+<tr>
+  <td><strong>Mfg time value</strong></td>
+  <td><code>TMFE = 7</code> (hardcoded)</td>
+  <td><code>TMFE_eff = F_inv(1-alpha)</code> (one parameter)</td>
+  <td style="color:var(--orange);font-weight:700">1 LINE CHANGE</td>
+</tr>
+<tr>
+  <td><strong>Plan generation filter</strong></td>
+  <td><code>if base_trt &gt; D_p: skip</code><br>where <code>base_trt</code> uses $T_\text{MF}=7$</td>
+  <td>Same filter, <code>base_trt</code> uses $T^\alpha_\text{MF}$</td>
+  <td style="color:var(--orange);font-weight:700">1 LINE CHANGE</td>
+</tr>
+<tr>
+  <td><strong>Capacity occupancy duration</strong></td>
+  <td><code>mfg_end = mfg_start + 7</code></td>
+  <td><code>mfg_end = mfg_start + TMFE_eff</code></td>
+  <td style="color:var(--orange);font-weight:700">1 LINE CHANGE</td>
+</tr>
+<tr>
+  <td><strong>New inputs</strong></td>
+  <td>None</td>
+  <td><code>alpha</code>, <code>sigma_L</code> (or any dist. params)</td>
+  <td style="color:var(--orange);font-weight:700">NEW PARAMS</td>
+</tr>
+<tr>
+  <td><strong>Output: per-patient</strong></td>
+  <td>TRT, on_time (bool)</td>
+  <td>TRT$^\alpha$, $P(\text{TRT}_p\le D_p)\ge 1-\alpha$ guarantee</td>
+  <td style="color:var(--orange);font-weight:700">EXTENDED</td>
+</tr>
+<tr>
+  <td><strong>Penalty terms</strong></td>
+  <td>None (hard deadline at plan generation)</td>
+  <td>None (hard deadline at plan generation, inflated)</td>
+  <td style="color:var(--green);font-weight:700">NONE</td>
+</tr>
+<tr>
+  <td><strong>Second stage / scenarios</strong></td>
+  <td>None</td>
+  <td>None</td>
+  <td style="color:var(--green);font-weight:700">NONE</td>
+</tr>
+</table>
+
+<h3>Code Delta &mdash; <code>generate_plans()</code></h3>
+<div class="delta">
+<h4>The Entire Stochastic Extension in generate_plans()</h4>
+<table>
+<tr><th>Line</th><th>Deterministic (current)</th><th>CCP Stochastic</th></tr>
+<tr>
+  <td>Input</td>
+  <td><code>process_config = {'tmfe': 7, ...}</code></td>
+  <td><code>process_config = {'tmfe': 7, 'alpha': 0.10, 'sigma_L': 0.3, ...}</code></td>
+</tr>
+<tr>
+  <td>Compute TMFE</td>
+  <td><code>TMFE = int(process_config.get('tmfe', 7))</code></td>
+  <td><code>TMFE = compute_tmfe_quantile(process_config)</code></td>
+</tr>
+<tr>
+  <td>base_trt</td>
+  <td><code>base_trt = TLS + TT1[j_out] + TMFE + TQC + TT3[j_ret]</code></td>
+  <td>Identical (TMFE now holds $T^\alpha_\text{MF}$)</td>
+</tr>
+<tr>
+  <td>Filter</td>
+  <td><code>if base_trt &gt; dl: continue</code></td>
+  <td>Identical</td>
+</tr>
+<tr>
+  <td>mfg_end</td>
+  <td><code>mfg_end = mfg_start + TMFE</code></td>
+  <td>Identical (TMFE now holds $T^\alpha_\text{MF}$)</td>
+</tr>
+</table>
+<p style="margin-top:8px;font-size:.88rem">New helper function:
+<code>compute_tmfe_quantile(cfg)</code> &rarr; reads <code>alpha</code>, <code>sigma_L</code>, computes $F^{-1}(1-\alpha)$ for LogNormal and returns the effective TMFE. Everything else in <code>generate_plans()</code> and <code>solve_master()</code> is untouched.</p>
+</div>
+
+<div class="success">
+<strong>Why this is correct:</strong>
+Because $T_\text{MF}$ enters $\text{TRT}_p$ additively and independently per patient, the individual chance constraint $P(\text{TRT}_p \le D_p) \ge 1-\alpha$ is exactly equivalent to requiring $\text{TRT}^\alpha_i \le D_p$ where $\text{TRT}^\alpha_i$ uses $T^\alpha_\text{MF} = F^{-1}(1-\alpha)$.
+This is not an approximation &mdash; it is the exact reformulation of the chance constraint for this problem structure.
+</div>
+</div>
+
+<!-- ====================================================== -->
+<!-- TAB 5: KEY FINDINGS -->
+<!-- ====================================================== -->
+<div id="findings" class="tab-content">
+<h2>Key Findings &mdash; Stochastic CCP Extension</h2>
+
+<div class="success">
+<strong>1. The CCP extension requires zero structural changes to the master problem.</strong>
+The objective function, routing constraints, facility constraints, and capacity constraint structure are identical to deterministic ColGen. The stochastic extension lives entirely in the plan generation step.
+</div>
+
+<div class="success">
+<strong>2. No penalty terms, no second stage, no scenarios.</strong>
+The chance constraint $P(\text{TRT}_p\le D_p)\ge 1-\alpha$ reduces to a deterministic filter because $T_\text{MF}$ is additive and scalar per patient.
+This is exact, not an approximation, for individual (non-joint) chance constraints.
+</div>
+
+<div class="finding">
+<strong>3. Service level $\alpha$ replaces deadline tightness $\tau$ as the primary design parameter.</strong>
+In the deterministic model, $\tau\in[0,1]$ controls how tight deadlines are.
+In the CCP model, $\alpha\in(0,1)$ controls which quantile of $T_\text{MF}$ is used.
+Both parameters ultimately control which routes survive plan generation.
+The CCP model subsumes the deterministic model: setting $\alpha\to 0.50$ with $\sigma_L\to 0$ recovers $T^\alpha_\text{MF}=7$ exactly.
+</div>
+
+<div class="finding">
+<strong>4. High-urgency patients (deadline 18&ndash;19d) are most sensitive to $\alpha$.</strong>
+At $\alpha=0.10$ with $\sigma_L=0.3$: $T^\alpha_\text{MF}=10$d. Air/air becomes the <em>only</em> feasible route for high-urgency patients (TRT$^\alpha$=20d). Ground transport is entirely excluded.
+This is not a modeling artifact &mdash; it reflects the real tradeoff: tight deadlines under uncertainty require faster, more expensive transport.
+</div>
+
+<div class="finding">
+<strong>5. Capacity constraint becomes more conservative under CCP.</strong>
+Using $T^\alpha_\text{MF}$ for occupancy duration means each patient's facility slot is reserved for longer.
+This reduces effective throughput per facility. For high $\sigma_L$, this may force opening a second facility &mdash; the same tipping-point behaviour seen at $N{=}20$ in the deterministic sensitivity analysis, but now triggered by uncertainty rather than patient volume.
+</div>
+
+<div class="info">
+<strong>6. Recommended parameter values for clinical practice.</strong>
+Based on the feasibility table and TRT inflation:
+$\sigma_L=0.2$ (moderate uncertainty) with $\alpha=0.10$ gives $T^\alpha_\text{MF}\approx 8.9$d &mdash; a 1.9-day buffer over nominal. This is a reasonable starting point: 90% of patients meet their deadline, and most routes remain available for medium/low urgency groups.
+</div>
+</div>
+
+<script>
+function showTab(id,el){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
