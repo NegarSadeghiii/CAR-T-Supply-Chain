@@ -30,3 +30,5 @@ Thumbs.db
 
 # Output files (generated, not source)
 ccp_sensitivity_results.html
+ccp_results*.html
+ccp_validation_report.html
