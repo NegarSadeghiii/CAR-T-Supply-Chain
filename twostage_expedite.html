@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Two-Stage Stochastic ColGen — Expediting Recourse</title>
+<script>MathJax={tex:{inlineMath:[["$","$"]],displayMath:[["$$","$$"]],tags:"ams"}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#1E3A5F;--green:#1B6B2E;--orange:#92400E;--purple:#5b21b6;--teal:#0f766e;--bg:#f4f5f7;--sf:#fff;--brd:#e0e3e8;--tx:#1a1d26;--dim:#5f6672;--rad:8px}
+body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:13.5px;line-height:1.7}
+.hd{background:var(--blue);color:#fff;padding:16px 32px}
+.hd h1{font-size:18px;font-weight:700}
+.hd .sub{font-size:11px;opacity:.75;margin-top:4px}
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--brd);padding:0 24px}
+.tab{padding:11px 22px;cursor:pointer;font-size:12px;font-weight:600;color:var(--dim);border-bottom:2px solid transparent;margin-bottom:-2px;transition:.15s}
+.tab.a{color:var(--blue);border-color:var(--blue)}
+.pane{display:none;max-width:1100px;margin:0 auto;padding:28px 24px 48px}
+.pane.a{display:block}
+.card{background:#fff;border:1px solid var(--brd);border-radius:var(--rad);padding:22px 26px;margin-bottom:20px}
+.card h2{font-size:15px;font-weight:700;color:var(--blue);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--brd)}
+.card h3{font-size:13px;font-weight:700;color:var(--tx);margin:16px 0 6px}
+p{margin-bottom:10px;color:var(--dim)}
+.eq-box{background:#f8f9fb;border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:12px 18px;margin:12px 0;overflow-x:auto}
+.eq-green{border-left-color:var(--green);background:#f0fdf4}
+.eq-orange{border-left-color:var(--orange);background:#fff7ed}
+.eq-purple{border-left-color:var(--purple);background:#f5f3ff}
+.eq-teal{border-left-color:var(--teal);background:#f0fdfa}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:860px){.grid2,.grid3{grid-template-columns:1fr}}
+.box{border-radius:var(--rad);padding:16px 18px;border:1px solid}
+.box-blue{background:#eff6ff;border-color:#bfdbfe}.box-green{background:#f0fdf4;border-color:#bbf7d0}
+.box-orange{background:#fff7ed;border-color:#fed7aa}.box-purple{background:#f5f3ff;border-color:#ddd6fe}
+.box-teal{background:#f0fdfa;border-color:#99f6e4}.box-red{background:#fef2f2;border-color:#fecaca}
+.box h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.box-blue h4{color:var(--blue)}.box-green h4{color:var(--green)}.box-orange h4{color:var(--orange)}
+.box-purple h4{color:var(--purple)}.box-teal h4{color:var(--teal)}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0}
+.tbl th{background:#f1f5f9;font-weight:700;padding:8px 12px;text-align:left;border-bottom:2px solid var(--brd);color:var(--dim)}
+.tbl td{padding:8px 12px;border-bottom:1px solid var(--brd)}
+.tbl tr:hover td{background:#f8fafc}
+.step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+.step-num{min-width:28px;height:28px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.hl{background:#fef9c3;border-radius:4px;padding:1px 5px;font-weight:600}
+.badge{display:inline-block;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;margin:2px}
+.badge-blue{background:#dbeafe;color:var(--blue)}.badge-green{background:#d1fae5;color:var(--green)}
+.badge-orange{background:#ffedd5;color:var(--orange)}.badge-purple{background:#ede9fe;color:var(--purple)}
+.badge-teal{background:#ccfbf1;color:var(--teal)}.badge-red{background:#fee2e2;color:#dc2626}
+ul{padding-left:18px;color:var(--dim);margin-bottom:10px}ul li{margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="hd">
+  <h1>Two-Stage Stochastic ColGen — With Expediting Recourse</h1>
+  <div class="sub">CAR-T Supply Chain &nbsp;·&nbsp; Recourse: Expedite return logistics or accept lateness &nbsp;·&nbsp; Analytical closed-form expected cost</div>
+</div>
+<div class="tabs">
+  <div class="tab a" onclick="show('biology')">Why Expediting?</div>
+  <div class="tab " onclick="show('recourse')">Recourse Decision</div>
+  <div class="tab " onclick="show('formulation')">Full Formulation</div>
+  <div class="tab " onclick="show('formula')">Closed-Form Cost</div>
+  <div class="tab " onclick="show('compare')">Comparison Table</div>
+  <div class="tab " onclick="show('notation')">Notation</div>
+</div>
+
+<!-- TAB 1 -->
+<div id="pane-biology" class="pane a">
+  <div class="card"><h2>What Recourse Actions Are Feasible in CAR-T?</h2>
+  <p>Once Stage 1 decisions are executed (facility opened, route booked, cells shipped outbound), the question is: what can we do <em>after</em> we observe the actual manufacturing duration?</p>
+  <div class="grid2">
+    <div class="box box-red"><h4>Reassign to Different Facility — NOT Feasible</h4>
+    <ul><li>Apheresis cells have already been <strong>shipped to facility m</strong></li><li>Manufacturing has <strong>already started</strong> — cells are being engineered</li><li>CAR-T cells are <strong>patient-specific</strong>: one patient, one batch, one facility</li><li>You cannot move partially-manufactured cells to m&prime;</li></ul>
+    <p style="font-size:12px">This is a <em>biological constraint</em>, not a modelling choice.</p></div>
+    <div class="box box-green"><h4>Expedite Return Logistics — YES, Feasible</h4>
+    <ul><li>Manufacturing is <strong>finished</strong> — cells are ready to ship back</li><li>Standard courier: $TT3$ days at cost $c^{ret}$</li><li>Expedited courier: $TT3 - \delta$ days at cost $c^{ret} + \pi_p$</li><li>Decision made <em>after</em> $T_{MF}$ is observed</li><li>If expediting saves more lateness penalty than its cost, choose expedite</li></ul>
+    <p style="font-size:12px">This is a genuine Stage 2 decision with a clear threshold rule.</p></div>
+  </div>
+  <div class="box box-blue" style="margin-top:8px"><h4>The Two-Stage Structure</h4>
+  <div class="grid2" style="margin-top:10px;margin-bottom:0">
+    <div><strong>Stage 1 — Before T<sub>MF</sub> is known:</strong><br><span style="font-size:12px;color:var(--dim)">Open facility $z_m$, assign patient to route $x_i$ (outbound hub $j^{out}$, facility $m$, standard return hub $j^{ret}$)</span></div>
+    <div><strong>Stage 2 — After T<sub>MF</sub> is revealed:</strong><br><span style="font-size:12px;color:var(--dim)">Observe actual manufacturing time. Decide: pay premium $\pi_p$ for faster return (saves $\delta$ days), or accept lateness penalty $w_p$ per day late.</span></div>
+  </div></div></div></div>
+
+<!-- TAB 2 -->
+<div id="pane-recourse" class="pane">
+  <div class="card"><h2>Stage 2 Recourse Decision</h2>
+  <p>Given the Stage 1 assignment $x_i = 1$ (plan $i$ selected for patient $p$), define:</p>
+  <div class="eq-box">$$K_i = D_p - T_{LS} - TT1_{j^{out}} - T_{QC} - TT3_{j^{ret}}$$</div>
+  <p>$K_i$ is the deadline slack — how much manufacturing time is available before the patient is late.</p>
+  <h3>After observing $\tilde T_{MF,p}$, the standard (non-expedited) lateness would be:</h3>
+  <div class="eq-box">$$L^{std}_p = \max(0,\; \tilde T_{MF,p} - K_i)$$</div>
+  <h3>Expediting reduces TT3 by $\delta$ days (but costs $\pi_p$ extra):</h3>
+  <div class="eq-box eq-teal">$$L^{exp}_p = \max(0,\; \tilde T_{MF,p} - K_i - \delta)$$</div>
+  <h3>Optimal Recourse Policy</h3>
+  <p>Choose the option with lower total cost:</p>
+  <div class="eq-box eq-green">$$\text{recourse}(\tilde T_{MF,p}) = \min\!\left(\underbrace{w_p \cdot L^{std}_p}_{\text{no expedite}},\;\underbrace{\pi_p + w_p \cdot L^{exp}_p}_{\text{expedite}}\right)$$</div>
+  <h3>Threshold Rule</h3>
+  <p>Expanding the min, expediting is optimal when $\tilde T_{MF,p} > T^*_i$:</p>
+  <div class="eq-box eq-orange">$$T^*_i = K_i + \frac{\pi_p}{w_p} \qquad \text{(expediting threshold for plan } i\text{)}$$</div>
+  <div class="grid3" style="margin-top:14px">
+    <div class="box box-teal"><h4>Zone 1: $\tilde T_{MF} \le K_i$</h4><p style="font-size:12px">Patient is on time even without expediting.<br>Recourse cost = 0</p></div>
+    <div class="box box-orange"><h4>Zone 2: $K_i < \tilde T_{MF} \le T^*_i$</h4><p style="font-size:12px">Patient late, but expediting premium $\pi_p$ exceeds lateness saved.<br>Accept lateness: pay $w_p(\tilde T_{MF}-K_i)$</p></div>
+    <div class="box box-green"><h4>Zone 3: $\tilde T_{MF} > T^*_i$</h4><p style="font-size:12px">Delay large enough that expediting saves more than it costs.<br>Expedite: pay $\pi_p + w_p\max(0,\tilde T_{MF}-K_i-\delta)$</p></div>
+  </div></div></div>
+
+<!-- TAB 3 -->
+<div id="pane-formulation" class="pane">
+  <div class="card"><h2>Full Two-Stage Stochastic Formulation with Expediting Recourse</h2>
+  <h3>Uncertainty Model</h3>
+  <div class="eq-box">$$T_{MF} \sim \text{LogNormal}(\mu_L,\, \sigma_L^2), \quad \mu_L = \ln(\bar T_{MF}) - \tfrac{1}{2}\sigma_L^2, \quad \mathbb{E}[T_{MF}] = \bar T_{MF}$$</div>
+  <h3>Two-Stage Objective</h3>
+  <div class="eq-box">$$\min_{x,z} \quad \underbrace{\sum_{i \in \mathcal{I}} c_i\, x_i + \sum_{m \in M} f_m\, z_m}_{\text{Stage 1: transport + facility cost}} \;+\; \underbrace{\sum_{i \in \mathcal{I}} x_i \cdot \mathbb{E}\left[R_i(T_{MF})\right]}_{\text{Stage 2: expected recourse cost}}$$</div>
+  <p>where the expected recourse cost for plan $i$ (patient $p$, slack $K_i$, threshold $T^*_i = K_i + \pi_p/w_p$) is:</p>
+  <div class="eq-box eq-green">$$\mathbb{E}[R_i(T_{MF})] = \underbrace{w_p \int_{K_i}^{T^*_i} (t - K_i)\, f(t)\, dt}_{\text{lateness in Zone 2}} + \underbrace{\int_{T^*_i}^{\infty} \!\left[\pi_p + w_p\max(0,\, t - K_i - \delta)\right] f(t)\, dt}_{\text{expediting cost in Zone 3}}$$</div>
+  <h3>Constraints (identical to deterministic ColGen)</h3>
+  <div class="eq-box">$$\sum_{i \in \mathcal{I}_p} x_i = 1 \quad \forall p \in P \tag{Assign}$$
+$$\sum_{m \in M} z_m \le M_{\max} \tag{FacLimit}$$
+$$x_i \le z_{m(i)} \quad \forall i \in \mathcal{I} \tag{FacLink}$$
+$$\sum_{i:\, m(i)=m,\, t \in [s_i,\, s_i+T_{MF})} x_i \le FCAP_m \quad \forall m,t \tag{Cap}$$
+$$x_i \in \{0,1\},\quad z_m \in \{0,1\} \tag{Binary}$$</div>
+  <h3>Reformulation: Modified Column Cost</h3>
+  <p>Because patients are assigned to exactly one plan, the expected recourse separates per column. Define the <strong>modified cost</strong>:</p>
+  <div class="eq-box eq-orange">$$\tilde c_i = c_i + \mathbb{E}[R_i(T_{MF})] \qquad \Longrightarrow \qquad \min \sum_i \tilde c_i\, x_i + \sum_m f_m\, z_m$$</div>
+  <p>The master IP structure is <strong>identical to deterministic ColGen</strong>. Only $c_i \to \tilde c_i$. No scenarios, no Benders cuts, no second-stage solver.</p>
+  </div></div>
+
+<!-- TAB 4 -->
+<div id="pane-formula" class="pane">
+  <div class="card"><h2>Closed-Form Expected Recourse Cost</h2>
+  <p>For $T_{MF} \sim \text{LogNormal}(\mu_L, \sigma_L^2)$, let $\Phi$ be the standard normal CDF. Define:</p>
+  <div class="eq-box">$$K_i = D_p - T_{LS} - TT1 - T_{QC} - TT3 \quad\text{(slack)}, \qquad T^*_i = K_i + \frac{\pi_p}{w_p} \quad\text{(expediting threshold)}$$</div>
+  <h3>Helper: Truncated LogNormal Expected Excess</h3>
+  <p>Define $\rho(K, \bar T, \sigma_L) = \mathbb{E}[\max(0, T_{MF} - K)]$ (Black-Scholes call formula):</p>
+  <div class="eq-box eq-purple">$$\rho(K) = \begin{cases} \bar T_{MF} - K & K \le 0 \\ \bar T_{MF}\,\Phi(d_1) - K\,\Phi(d_2) & K > 0 \end{cases}$$
+$$d_1 = \frac{\mu_L + \sigma_L^2 - \ln K}{\sigma_L}, \qquad d_2 = d_1 - \sigma_L$$</div>
+  <h3>Expected Recourse Cost (Three-Zone Decomposition)</h3>
+  <div class="eq-box eq-green">$$\mathbb{E}[R_i(T_{MF})] = \underbrace{w_p\left[\rho(K_i) - \rho(T^*_i)\right]}_{\text{Zone 2 lateness}} + \underbrace{\pi_p\,\Pr(T_{MF} > T^*_i) + w_p\,\rho(T^*_i + \delta) - w_p\,\delta\,\Pr(T_{MF} > T^*_i+\delta)}_{\text{Zone 3 expediting}}$$</div>
+  <p style="margin-top:8px">Where $\Pr(T_{MF} > K) = 1 - \Phi\!\left(\frac{\ln K - \mu_L}{\sigma_L}\right)$ is the LogNormal survival function.</p>
+  <h3>Special Cases</h3>
+  <div class="grid2">
+    <div class="box box-orange"><h4>Never Expedite ($\pi_p \ge w_p \cdot \delta$)</h4><p style="font-size:12px">Premium exceeds maximum possible savings. $T^*_i \ge K_i + \delta$, Zone 3 reduces to penalty-only.<br>$$\mathbb{E}[R_i] = w_p \cdot \rho(K_i)$$ (same as penalty-only two-stage)</p></div>
+    <div class="box box-teal"><h4>Always Expedite When Late ($\pi_p \to 0$)</h4><p style="font-size:12px">Free expediting. $T^*_i \to K_i$, Zone 2 vanishes.<br>$$\mathbb{E}[R_i] = \pi_p \cdot \Pr(T_{MF}>K_i) + w_p\,\rho(K_i+\delta)$$</p></div>
+  </div>
+  <h3>Step-by-Step Computation for Each Plan $i$</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-body">Compute slack $K_i = D_p - T_{LS} - TT1_{j^{out}} - T_{QC} - TT3_{j^{ret}}$</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">Compute threshold $T^*_i = K_i + \pi_p / w_p$</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">Compute $d_1, d_2$ at $K_i$, $T^*_i$, and $T^*_i+\delta$ using $\mu_L, \sigma_L$</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body">Evaluate $\rho(K_i)$, $\rho(T^*_i)$, $\rho(T^*_i+\delta)$ and survival probabilities</div></div>
+  <div class="step"><div class="step-num">5</div><div class="step-body">Sum zones 2 and 3 to get $\mathbb{E}[R_i]$</div></div>
+  <div class="step"><div class="step-num">6</div><div class="step-body">Set $\tilde c_i = c_i + \mathbb{E}[R_i]$ and pass to ColGen master</div></div>
+  </div></div>
+
+<!-- TAB 5 -->
+<div id="pane-compare" class="pane">
+  <div class="card"><h2>Formulation Comparison</h2>
+  <div class="grid3" style="margin-bottom:18px">
+    <div class="box box-blue"><h4>Deterministic ColGen</h4>
+      <p style="font-size:12px"><strong>Obj:</strong> $\min\sum c_i x_i + \sum f_m z_m$<br>
+      <strong>Plans removed:</strong> infeasible only<br><strong>Deadline:</strong> hard, $\bar T_{MF}=7$<br>
+      <strong>Recourse:</strong> none<br><strong>Tuning:</strong> none<br>
+      <strong>Guarantee:</strong> none under uncertainty</p></div>
+    <div class="box box-green"><h4>CCP Stochastic ColGen</h4>
+      <p style="font-size:12px"><strong>Obj:</strong> $\min\sum c_i x_i + \sum f_m z_m$<br>
+      <strong>Plans removed:</strong> low SL routes removed<br><strong>Deadline:</strong> probabilistic $\Pr(TRT\le D)\ge 1-\alpha$<br>
+      <strong>Recourse:</strong> none<br><strong>Tuning:</strong> $\alpha$<br>
+      <strong>Guarantee:</strong> $1-\alpha$ service level per patient</p></div>
+    <div class="box box-purple"><h4>Two-Stage + Penalty Only</h4>
+      <p style="font-size:12px"><strong>Obj:</strong> $\min\sum \tilde c_i x_i + \sum f_m z_m$<br>
+      $\tilde c_i = c_i + w_p \cdot \rho(K_i)$<br>
+      <strong>Plans removed:</strong> none<br><strong>Deadline:</strong> soft (penalised)<br>
+      <strong>Recourse:</strong> accept lateness<br><strong>Tuning:</strong> $w_p$<br>
+      <strong>Guarantee:</strong> min expected cost</p></div>
+  </div>
+  <div class="box box-teal" style="margin-bottom:18px"><h4>Two-Stage + Expediting Recourse (this formulation)</h4>
+  <div class="grid2" style="margin-top:10px;margin-bottom:0"><div>
+    <p style="font-size:12px"><strong>Objective:</strong> $\min\sum \tilde c_i x_i + \sum f_m z_m$<br>
+    $\tilde c_i = c_i + \mathbb{E}[R_i(T_{MF})]$ (three-zone expected recourse)</p>
+    <p style="font-size:12px"><strong>Plans removed:</strong> none (all routes available)<br>
+    <strong>Deadline:</strong> soft, but with active recourse<br>
+    <strong>Recourse actions:</strong> expedite return (pay $\pi_p$, save $\delta$ days) or accept penalty $w_p$/day</p>
+  </div><div>
+    <p style="font-size:12px"><strong>Tuning:</strong> $w_p$ (penalty weights), $\pi_p$ (expediting premiums), $\delta$ (days saved by expediting)<br>
+    <strong>Guarantee:</strong> minimises total expected cost including recourse<br>
+    <strong>Scenarios needed:</strong> No — analytical closed form<br>
+    <strong>Solver change:</strong> None — same ColGen master IP</p>
+  </div></div></div>
+  <table class="tbl"><thead><tr><th>Property</th><th>Deterministic</th><th>CCP</th><th>2S + Penalty</th><th>2S + Expediting</th></tr></thead><tbody>
+<tr><td>Uncertainty modelled</td><td>No</td><td>Yes (prob)</td><td>Yes (expected)</td><td>Yes (expected)</td></tr>
+<tr><td>Plans removed</td><td>Infeasible only</td><td>Infeasible + low SL</td><td>None</td><td>None</td></tr>
+<tr><td>Objective change</td><td>None</td><td>None</td><td>+E[lateness]</td><td>+E[recourse]</td></tr>
+<tr><td>Recourse action</td><td>None</td><td>None</td><td>Accept lateness</td><td>Expedite or accept</td></tr>
+<tr><td>Scenarios needed</td><td>No</td><td>No</td><td>No</td><td>No</td></tr>
+<tr><td>Solver structure</td><td>ColGen</td><td>ColGen</td><td>ColGen</td><td>ColGen</td></tr>
+<tr><td>Deadline violations</td><td>Not allowed</td><td>Not allowed (1-α)</td><td>Allowed (penalised)</td><td>Allowed (penalised/expedited)</td></tr>
+<tr><td>Stage 2 decision</td><td>—</td><td>—</td><td>None (evaluate only)</td><td>Binary: expedite?</td></tr>
+<tr><td>Tuning parameter</td><td>—</td><td>α</td><td>w_p</td><td>w_p, π_p, δ</td></tr>
+</tbody></table></div></div>
+
+<!-- TAB 6 -->
+<div id="pane-notation" class="pane">
+  <div class="card"><h2>Notation</h2>
+  <div class="grid2">
+  <div><h3>Sets &amp; Decision Variables</h3><table class="tbl"><thead><tr><th>Symbol</th><th>Description</th></tr></thead><tbody>
+<tr><td>$P$</td><td>Set of patients</td></tr>
+<tr><td>$M$</td><td>Manufacturing facilities</td></tr>
+<tr><td>$J$</td><td>Logistics hubs</td></tr>
+<tr><td>$\mathcal{I}$</td><td>All feasible plans (columns)</td></tr>
+<tr><td>$\mathcal{I}_p$</td><td>Plans available to patient $p$</td></tr>
+<tr><td>$x_i \in \{0,1\}$</td><td>1 if plan $i$ selected</td></tr>
+<tr><td>$z_m \in \{0,1\}$</td><td>1 if facility $m$ open</td></tr>
+</tbody></table></div>
+  <div><h3>Parameters</h3><table class="tbl"><thead><tr><th>Symbol</th><th>Description</th></tr></thead><tbody>
+<tr><td>$\bar T_{MF}$</td><td>Nominal mean mfg time (7 days)</td></tr>
+<tr><td>$\sigma_L$</td><td>LogNormal log-scale std-dev</td></tr>
+<tr><td>$\mu_L$</td><td>$\ln(\bar T_{MF})-\frac{1}{2}\sigma_L^2$</td></tr>
+<tr><td>$D_p$</td><td>Patient deadline (days)</td></tr>
+<tr><td>$K_i$</td><td>Deadline slack for plan $i$</td></tr>
+<tr><td>$T^*_i$</td><td>Expediting threshold $= K_i + \pi_p/w_p$</td></tr>
+<tr><td>$\delta$</td><td>Days saved by expedited return</td></tr>
+<tr><td>$\pi_p$</td><td>Expediting premium cost ($\$$)</td></tr>
+<tr><td>$w_p$</td><td>Lateness penalty ($/day)</td></tr>
+<tr><td>$\rho(K)$</td><td>$\mathbb{E}[\max(0,T_{MF}-K)]$ — call formula</td></tr>
+<tr><td>$\mathbb{E}[R_i]$</td><td>Expected recourse cost for plan $i$</td></tr>
+<tr><td>$\tilde c_i$</td><td>Modified column cost $c_i + \mathbb{E}[R_i]$</td></tr>
+<tr><td>$\Phi(\cdot)$</td><td>Standard normal CDF</td></tr>
+</tbody></table></div></div></div></div>
+
+<script>
+function show(name){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("a"));
+  document.querySelectorAll(".pane").forEach(p=>p.classList.remove("a"));
+  const idx={biology:0,recourse:1,formulation:2,formula:3,compare:4,notation:5}[name];
+  document.querySelectorAll(".tab")[idx].classList.add("a");
+  document.getElementById("pane-"+name).classList.add("a");
+  if(window.MathJax) MathJax.typesetPromise();
+}
+</script>
+</body>
+</html>
