@@ -155,7 +155,7 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 @media(max-width:800px){{.chart-grid{{grid-template-columns:1fr}}}}
 .chart-box{{background:#fff;border:1px solid var(--brd);border-radius:var(--rad);padding:16px}}
 .chart-box h3{{font-size:12px;font-weight:700;color:var(--dim);margin-bottom:12px}}
-.chart-wrap{{position:relative;height:260px}}
+.chart-wrap{{position:relative;height:260px;overflow:hidden}}
 .tbl{{width:100%;border-collapse:collapse;font-size:12px}}
 .tbl th{{background:#f1f5f9;font-weight:700;padding:8px 10px;text-align:left;
          border-bottom:2px solid var(--brd);color:var(--dim);white-space:nowrap}}
@@ -228,6 +228,8 @@ function show(n){{
   const m={{summary:0,results:1,charts:2,findings:3}};
   document.querySelectorAll(".tab")[m[n]].classList.add("a");
   document.getElementById("pane-"+n).classList.add("a");
+  // Let Chart.js re-measure after the pane becomes visible
+  requestAnimationFrame(()=>window.dispatchEvent(new Event("resize")));
 }}
 
 const DATA = {chart_data};
@@ -253,6 +255,9 @@ function mkBar(id, labels, data, label, fmt){{
 mkBar("costChart", labels, costs, "Cost ($M)", v=>"$"+v.toFixed(2)+"M");
 mkBar("trtChart",  labels, trts,  "Avg TRT (d)", v=>v.toFixed(1)+"d");
 mkBar("plansChart",labels, plans, "Plans", v=>v);
+
+// Force correct sizing after initial render
+requestAnimationFrame(()=>window.dispatchEvent(new Event("resize")));
 
 // Scatter: cost vs plans
 new Chart(document.getElementById("scatterChart"),{{
