@@ -58,7 +58,7 @@ def monte_carlo_validate(patients, tmfe, sigma_L, pi_map, n_sim=5000, seed=42):
         K = pat.get('slack')
         if K is None:
             continue
-        urg = pat.get('urgency', 'low')
+        urg = pat.get('group', pat.get('urgency', 'low'))
         pi  = pi_map.get(urg, 1500)
         th_prob = _lognormal_survival(K, tmfe, sigma_L)
         th_cost = pi * th_prob
@@ -230,7 +230,7 @@ def build_mc_html(ts_rows):
             err_col = '#166534' if row['rel_err'] < 0.10 else '#b45309'
             out.append(f"""<tr>
               <td>{row['id']}</td>
-              <td>{_badge(row['urgency'])}</td>
+              <td>{_badge(row['urgency'] if 'urgency' in row else row.get('group','low'))}</td>
               <td style=\"text-align:right\">{row['K_i']:.2f}</td>
               <td style=\"text-align:right\">${row['pi']:,}</td>
               <td style=\"text-align:right\">{row['th_prob']:.4f}</td>
@@ -267,7 +267,7 @@ def build_patient_html(ts_rows):
             pexp_col = '#dc2626' if pexp > 0.15 else '#b45309' if pexp > 0.05 else '#166534'
             out.append(f"""<tr>
               <td style=\"font-weight:600\">{p.get('id','?')}</td>
-              <td>{_badge(p.get('urgency','low'))}</td>
+              <td>{_badge(p.get('group', p.get('urgency','low')))}</td>
               <td style=\"text-align:right\">{dl}</td>
               <td style=\"text-align:right\">{trt}</td>
               <td style=\"text-align:center\">{ot_icon}</td>
