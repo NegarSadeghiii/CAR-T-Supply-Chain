@@ -435,6 +435,67 @@ def rl_models():
     return jsonify(models)
 
 
+@app.route('/compare')
+def compare_ui():
+    return send_from_directory(BASE_DIR, 'ui_compare.html')
+
+
+@app.route('/api/compare/run', methods=['POST'])
+def compare_run():
+    """Run Deterministic ColGen AND Two-Stage Expediting side-by-side."""
+    from cart_colgen_twostage import run_experiment_twostage, DEFAULT_PROCESS_2S
+    p = request.json or {}
+    n = p.get('n', 15)
+    tau = p.get('tau', 0.0)
+    uc = _urg(p.get('urgency'))
+    pc = _proc(p.get('process'))
+    time_limit = p.get('time_limit', 120)
+
+    _ensure_data(n)
+    df = os.path.join(BASE_DIR, f'Data_N{n}.dat')
+
+    ts_cfg = dict(DEFAULT_PROCESS_2S)
+    ts_cfg['sigma_L'] = p.get('sigma_L', 0.20)
+    ts_cfg['delta']   = p.get('delta', 2.0)
+    ts_cfg['epsilon'] = p.get('epsilon', 0.05)
+    pi = p.get('pi', {})
+    if pi.get('high'):   ts_cfg['pi_high']   = float(pi['high'])
+    if pi.get('medium'): ts_cfg['pi_medium'] = float(pi['medium'])
+    if pi.get('low'):    ts_cfg['pi_low']    = float(pi['low'])
+    # carry base process params into two-stage config
+    if pc:
+        for k in ('tls', 'tmfe', 'tqc', 'max_facilities'):
+            if k in pc:
+                ts_cfg[k] = pc[k]
+
+    out = {}
+
+    def run_det():
+        try:
+            r = colgen_run(tau=tau, data_file=df, urgency_config=uc,
+                           process_config=pc, time_limit=time_limit)
+            out['det'] = _normalize(r, 'colgen', df)
+        except Exception as e:
+            out['det'] = {'solved': False, 'error': str(e)}
+
+    def run_2s():
+        try:
+            r = run_experiment_twostage(tau=tau, data_file=df,
+                                        urgency_config=uc,
+                                        process_config=ts_cfg,
+                                        time_limit=time_limit)
+            out['2s'] = r
+        except Exception as e:
+            out['2s'] = {'solved': False, 'error': str(e)}
+
+    t1 = threading.Thread(target=run_det, daemon=True)
+    t2 = threading.Thread(target=run_2s,  daemon=True)
+    t1.start(); t2.start()
+    t1.join();  t2.join()
+
+    return jsonify(out)
+
+
 if __name__ == '__main__':
     import multiprocessing
     cores = multiprocessing.cpu_count()
