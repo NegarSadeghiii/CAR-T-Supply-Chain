@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CCP Validation — CAR-T Supply Chain</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1E3A5F;--green:#1B6B2E;--orange:#92400E;
+  --bg:#f4f5f7;--sf:#fff;--brd:#e0e3e8;
+  --tx:#1a1d26;--dim:#5f6672;--rad:8px;
+  --ac:#2563eb;--g:#059669;--r:#dc2626;--am:#d97706;
+}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:13px}
+.hd{background:var(--blue);color:#fff;padding:14px 28px;display:flex;align-items:center;gap:12px}
+.hd h1{font-size:17px;font-weight:700}
+.hd .sub{font-size:11px;opacity:.75;margin-left:auto}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--brd);background:#fff;padding:0 24px}
+.tab{padding:10px 20px;cursor:pointer;font-size:12px;font-weight:600;
+      color:var(--dim);border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.active{color:var(--blue);border-color:var(--blue)}
+.pane{display:none;padding:24px}.pane.active{display:block}
+.page{max-width:1280px;margin:0 auto}
+.card{background:#fff;border:1px solid var(--brd);border-radius:var(--rad);
+       padding:20px;margin-bottom:18px}
+.card h2{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--blue)}
+.ds-section{margin-bottom:28px}
+.ds-title{font-size:13px;font-weight:700;color:var(--dim);
+           text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;
+           padding-bottom:6px;border-bottom:1px solid var(--brd)}
+.tbl-wrap{overflow-x:auto}
+.data-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.data-tbl th{background:#f8f9fa;font-weight:600;padding:8px 10px;
+              text-align:left;border-bottom:2px solid var(--brd);
+              white-space:nowrap;color:var(--dim)}
+.data-tbl td{padding:8px 10px;border-bottom:1px solid var(--brd)}
+.data-tbl tr:hover td{background:#f8f9fa}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.chart-box{background:#fff;border:1px solid var(--brd);border-radius:var(--rad);
+            padding:16px}
+.chart-box h3{font-size:12px;font-weight:700;color:var(--dim);margin-bottom:12px}
+.mc-card{background:#fff;border:1px solid var(--brd);border-radius:var(--rad);
+          padding:16px;margin-bottom:12px}
+.mc-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.mc-title{font-size:13px;font-weight:700;color:var(--tx)}
+.mc-badge{padding:3px 9px;border-radius:12px;font-size:11px;font-weight:600}
+.mc-stats{display:flex;gap:12px;flex-wrap:wrap}
+.stat-box{background:#f8f9fa;border-radius:6px;padding:10px 16px;min-width:100px}
+.stat-val{font-size:20px;font-weight:700;color:var(--tx)}
+.stat-lbl{font-size:10px;color:var(--dim);margin-top:2px}
+.finding-card{background:#fff;border-left:4px solid var(--blue);
+               border-radius:0 var(--rad) var(--rad) 0;
+               padding:14px 18px;margin-bottom:10px;
+               border:1px solid var(--brd);border-left:4px solid var(--blue)}
+.finding-card h4{font-size:12px;font-weight:700;margin-bottom:4px;color:var(--blue)}
+.finding-card p{font-size:12px;color:var(--dim);line-height:1.6}
+@media(max-width:768px){.chart-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div>
+    <h1>CCP Stochastic Validation — CAR-T Supply Chain</h1>
+  </div>
+  <div class="sub">σ_L = 0.2 &nbsp;|&nbsp; 1,000 Monte Carlo runs &nbsp;|&nbsp;
+    Methods: Deterministic · CCP · Γ-robust</div>
+</div>
+
+<div class="page">
+<div class="tabs">
+  <div class="tab active" onclick="showTab('comparison')">Method Comparison</div>
+  <div class="tab" onclick="showTab('montecarlo')">Monte Carlo Validation</div>
+  <div class="tab" onclick="showTab('findings')">Key Findings</div>
+</div>
+
+<!-- TAB 1: Comparison -->
+<div id="pane-comparison" class="pane active">
+  <div class="chart-row">
+    <div class="chart-box">
+      <h3>Cost vs Empirical Service Level Frontier</h3>
+      <canvas id="frontierChart" height="280"></canvas>
+    </div>
+    <div class="chart-box">
+      <h3>Theoretical vs Empirical Service Level (Data_N15)</h3>
+      <canvas id="barChart" height="280"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Full Method Comparison</h2>
+    
+        <div class="ds-section">
+          <h3 class="ds-title">Data_N15</h3>
+          <div class="tbl-wrap">
+          <table class="data-tbl">
+            <thead><tr>
+              <th>Method</th><th>TMFE_eff (d)</th><th>Plans</th>
+              <th>Schedule Cost</th><th>Avg TRT (d)</th>
+              <th>Theoretical SL</th><th>Empirical SL</th>
+              <th>Avg Violations</th><th>Max Violations</th>
+            </tr></thead><tbody><tr>
+              <td><strong>Deterministic</strong></td>
+              <td>7.00</td>
+              <td>258</td>
+              <td>$3,348,865</td>
+              <td>20.2</td>
+              <td>50%</td>
+              <td style="color:#dc2626;font-weight:700">67.5%</td>
+              <td>4.87</td>
+              <td>11</td>
+            </tr><tr>
+              <td><strong>CCP(α=0.2)</strong></td>
+              <td>8.12</td>
+              <td>138</td>
+              <td>$6,389,162</td>
+              <td>18.9</td>
+              <td>80%</td>
+              <td style="color:#059669;font-weight:700">96.2%</td>
+              <td>0.57</td>
+              <td>5</td>
+            </tr><tr>
+              <td><strong>CCP(α=0.1)</strong></td>
+              <td>8.87</td>
+              <td>138</td>
+              <td>$6,389,162</td>
+              <td>19.7</td>
+              <td>90%</td>
+              <td style="color:#059669;font-weight:700">96.2%</td>
+              <td>0.57</td>
+              <td>5</td>
+            </tr><tr>
+              <td><strong>CCP(α=0.05)</strong></td>
+              <td>9.53</td>
+              <td>0</td>
+              <td><span style="color:#dc2626;font-weight:700">INFEASIBLE</span></td>
+              <td>—</td>
+              <td>—</td>
+              <td style="color:#666;font-weight:700">—</td>
+              <td>—</td>
+              <td>—</td>
+            </tr><tr>
+              <td><strong>Γ-robust(Γ=0.5)</strong></td>
+              <td>7.70</td>
+              <td>162</td>
+              <td>$6,379,458</td>
+              <td>19.3</td>
+              <td>worst-case</td>
+              <td style="color:#d97706;font-weight:700">90.3%</td>
+              <td>1.46</td>
+              <td>5</td>
+            </tr><tr>
+              <td><strong>Γ-robust(Γ=1.0)</strong></td>
+              <td>8.40</td>
+              <td>138</td>
+              <td>$6,389,162</td>
+              <td>19.2</td>
+              <td>worst-case</td>
+              <td style="color:#059669;font-weight:700">96.2%</td>
+              <td>0.57</td>
+              <td>5</td>
+            </tr><tr>
+              <td><strong>Γ-robust(Γ=1.5)</strong></td>
+              <td>9.10</td>
+              <td>0</td>
+              <td><span style="color:#dc2626;font-weight:700">INFEASIBLE</span></td>
+              <td>—</td>
+              <td>—</td>
+              <td style="color:#666;font-weight:700">—</td>
+              <td>—</td>
+              <td>—</td>
+            </tr></tbody></table></div></div>
+  </div>
+</div>
+
+<!-- TAB 2: Monte Carlo -->
+<div id="pane-montecarlo" class="pane">
+  <div class="card">
+    <h2>Monte Carlo Simulation Results</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:16px">
+      For each solved schedule, 1,000 T_MF ~ LogNormal(σ_L=0.2) samples
+      are drawn per patient. Empirical service level = fraction of (patient, run)
+      pairs where realized TRT ≤ deadline. The CCP guarantee is per-patient, so
+      empirical SL should be ≥ theoretical (1−α).
+    </p>
+    <div class="ds-section"><h3 class="ds-title">Data_N15 — Per-Method Monte Carlo (1,000 runs)</h3>
+            <div class="mc-card">
+              <div class="mc-header">
+                <span class="mc-title">Deterministic</span>
+                <span class="mc-badge" style="background:#dc262620;
+                      color:#dc2626;border:1px solid #dc262640">
+                  Empirical SL: 67.5%
+                </span>
+                <span class="mc-badge" style="background:#f3f4f6;color:#374151">
+                  Theory: 50%
+                </span>
+                <span class="mc-badge" style="background:#05966915;color:#059669">
+                  Gap: +17.5pp
+                </span>
+              </div>
+              <div class="mc-stats">
+                <div class="stat-box"><div class="stat-val">4.87</div>
+                  <div class="stat-lbl">Avg violations/run</div></div>
+                <div class="stat-box"><div class="stat-val">11</div>
+                  <div class="stat-lbl">Max violations</div></div>
+                <div class="stat-box"><div class="stat-val">0.5%</div>
+                  <div class="stat-lbl">Runs all-on-time</div></div>
+                <div class="stat-box"><div class="stat-val">1,000</div>
+                  <div class="stat-lbl">Simulations</div></div>
+              </div>
+            </div>
+            <div class="mc-card">
+              <div class="mc-header">
+                <span class="mc-title">CCP(α=0.2)</span>
+                <span class="mc-badge" style="background:#05966920;
+                      color:#059669;border:1px solid #05966940">
+                  Empirical SL: 96.2%
+                </span>
+                <span class="mc-badge" style="background:#f3f4f6;color:#374151">
+                  Theory: 80%
+                </span>
+                <span class="mc-badge" style="background:#05966915;color:#059669">
+                  Gap: +16.2pp
+                </span>
+              </div>
+              <div class="mc-stats">
+                <div class="stat-box"><div class="stat-val">0.57</div>
+                  <div class="stat-lbl">Avg violations/run</div></div>
+                <div class="stat-box"><div class="stat-val">5</div>
+                  <div class="stat-lbl">Max violations</div></div>
+                <div class="stat-box"><div class="stat-val">56.2%</div>
+                  <div class="stat-lbl">Runs all-on-time</div></div>
+                <div class="stat-box"><div class="stat-val">1,000</div>
+                  <div class="stat-lbl">Simulations</div></div>
+              </div>
+            </div>
+            <div class="mc-card">
+              <div class="mc-header">
+                <span class="mc-title">CCP(α=0.1)</span>
+                <span class="mc-badge" style="background:#05966920;
+                      color:#059669;border:1px solid #05966940">
+                  Empirical SL: 96.2%
+                </span>
+                <span class="mc-badge" style="background:#f3f4f6;color:#374151">
+                  Theory: 90%
+                </span>
+                <span class="mc-badge" style="background:#05966915;color:#059669">
+                  Gap: +6.2pp
+                </span>
+              </div>
+              <div class="mc-stats">
+                <div class="stat-box"><div class="stat-val">0.57</div>
+                  <div class="stat-lbl">Avg violations/run</div></div>
+                <div class="stat-box"><div class="stat-val">5</div>
+                  <div class="stat-lbl">Max violations</div></div>
+                <div class="stat-box"><div class="stat-val">56.2%</div>
+                  <div class="stat-lbl">Runs all-on-time</div></div>
+                <div class="stat-box"><div class="stat-val">1,000</div>
+                  <div class="stat-lbl">Simulations</div></div>
+              </div>
+            </div>
+            <div class="mc-card">
+              <div class="mc-header">
+                <span class="mc-title">Γ-robust(Γ=0.5)</span>
+                <span class="mc-badge" style="background:#d9770620;
+                      color:#d97706;border:1px solid #d9770640">
+                  Empirical SL: 90.3%
+                </span>
+                <span class="mc-badge" style="background:#f3f4f6;color:#374151">
+                  Theory: worst-case
+                </span>
+                <span class="mc-badge" style="background:#05966915;color:#059669">
+                  Gap: N/A
+                </span>
+              </div>
+              <div class="mc-stats">
+                <div class="stat-box"><div class="stat-val">1.46</div>
+                  <div class="stat-lbl">Avg violations/run</div></div>
+                <div class="stat-box"><div class="stat-val">5</div>
+                  <div class="stat-lbl">Max violations</div></div>
+                <div class="stat-box"><div class="stat-val">21.1%</div>
+                  <div class="stat-lbl">Runs all-on-time</div></div>
+                <div class="stat-box"><div class="stat-val">1,000</div>
+                  <div class="stat-lbl">Simulations</div></div>
+              </div>
+            </div>
+            <div class="mc-card">
+              <div class="mc-header">
+                <span class="mc-title">Γ-robust(Γ=1.0)</span>
+                <span class="mc-badge" style="background:#05966920;
+                      color:#059669;border:1px solid #05966940">
+                  Empirical SL: 96.2%
+                </span>
+                <span class="mc-badge" style="background:#f3f4f6;color:#374151">
+                  Theory: worst-case
+                </span>
+                <span class="mc-badge" style="background:#05966915;color:#059669">
+                  Gap: N/A
+                </span>
+              </div>
+              <div class="mc-stats">
+                <div class="stat-box"><div class="stat-val">0.57</div>
+                  <div class="stat-lbl">Avg violations/run</div></div>
+                <div class="stat-box"><div class="stat-val">5</div>
+                  <div class="stat-lbl">Max violations</div></div>
+                <div class="stat-box"><div class="stat-val">56.2%</div>
+                  <div class="stat-lbl">Runs all-on-time</div></div>
+                <div class="stat-box"><div class="stat-val">1,000</div>
+                  <div class="stat-lbl">Simulations</div></div>
+              </div>
+            </div></div>
+  </div>
+</div>
+
+<!-- TAB 3: Findings -->
+<div id="pane-findings" class="pane">
+  <div class="card">
+    <h2>Key Findings</h2>
+    <div class="finding-card">
+          <h4>CCP Guarantee Validity</h4>
+          <p>Across all CCP variants, <strong style="color:#059669">100%</strong>
+          achieved an empirical service level ≥ the theoretical (1−α) guarantee
+          (1,000 Monte Carlo runs, σ_L=0.2).
+          The CCP substitution T_MF^α = F⁻¹(1−α) correctly bounds per-patient deadline
+          violations as predicted by the chance-constraint derivation.</p>
+        </div>
+<div class="finding-card">
+          <h4>Cost of Robustness</h4>
+          <p>The cheapest feasible CCP schedule costs
+          <strong>$6,389,162</strong> vs
+          the deterministic baseline of <strong>$3,348,865</strong>
+          — a <strong>90.8% premium</strong> for the service-level guarantee.
+          This premium reflects fewer feasible routes (TMFE_eff > 7 days tightens
+          the deadline filter), not any change to the objective function.</p>
+        </div>
+<div class="finding-card">
+              <h4>Deterministic Schedule Under Real Uncertainty</h4>
+              <p>When the deterministic schedule (TMFE=7d) is exposed to
+              LogNormal(σ_L=0.2) manufacturing variability, the empirical
+              per-patient service level drops to
+              <strong style="color:#dc2626">67.5%</strong>, with an
+              average of <strong>4.87</strong> deadline violations per
+              simulation run. This illustrates why the CCP correction is necessary.</p>
+            </div>
+<div class="finding-card">
+      <h4>Γ-Robust vs CCP: Different Guarantees</h4>
+      <p>Γ-robust optimization (Bertsimas-Sim) protects against at most Γ simultaneous
+      worst-case deviations using a box uncertainty set. Unlike CCP, it makes no
+      probabilistic assumption about T_MF — the guarantee is worst-case deterministic.
+      This typically results in higher TMFE_eff (more conservative) than CCP at the
+      same σ_L, because the box worst-case exceeds the LogNormal quantile.
+      CCP is preferred when the distribution is well-characterised; Γ-robust
+      when only bounds on T_MF are known.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function showTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  const idx = {'comparison':0,'montecarlo':1,'findings':2}[name];
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById('pane-'+name).classList.add('active');
+}
+
+// Frontier scatter
+const frontierData = [{"name": "Data_N15", "points": [{"x": 67.5, "y": 3.349, "label": "Deterministic"}, {"x": 96.2, "y": 6.389, "label": "CCP(\u03b1=0.2)"}, {"x": 96.2, "y": 6.389, "label": "CCP(\u03b1=0.1)"}, {"x": 90.3, "y": 6.379, "label": "\u0393-robust(\u0393=0.5)"}, {"x": 96.2, "y": 6.389, "label": "\u0393-robust(\u0393=1.0)"}]}];
+const fColors = ["#1E3A5F"];
+const fCtx = document.getElementById('frontierChart').getContext('2d');
+new Chart(fCtx, {
+  type: 'scatter',
+  data: {
+    datasets: frontierData.map((ds,i) => ({
+      label: ds.name,
+      data: ds.points.map(p=>({'x':p.x,'y':p.y,'label':p.label})),
+      backgroundColor: fColors[i]+'cc',
+      borderColor: fColors[i],
+      pointRadius: 8, pointHoverRadius: 10,
+    }))
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      tooltip:{callbacks:{label:ctx=>
+        ctx.raw.label+': SL='+ctx.raw.x+'%  Cost=$'+
+        (ctx.raw.y*1e6).toLocaleString('en-US',{maximumFractionDigits:0})
+      }},
+      legend:{position:'bottom',labels:{font:{size:10}}}
+    },
+    scales:{
+      x:{title:{display:true,text:'Empirical Service Level (%)',font:{size:11}},
+          min:50,max:101},
+      y:{title:{display:true,text:'Schedule Cost ($M)',font:{size:11}}}
+    }
+  }
+});
+
+// Bar chart: theory vs empirical
+const barLabels = ["Deterministic", "CCP(\u03b1=0.2)", "CCP(\u03b1=0.1)", "\u0393-robust(\u0393=0.5)", "\u0393-robust(\u0393=1.0)"];
+const barTheory = [50.0, 80.0, 90.0, 100.0, 100.0];
+const barEmpirical = [67.5, 96.2, 96.2, 90.3, 96.2];
+const bCtx = document.getElementById('barChart').getContext('2d');
+new Chart(bCtx, {
+  type:'bar',
+  data:{
+    labels: barLabels,
+    datasets:[
+      {label:'Theoretical SL (%)', data:barTheory,
+        backgroundColor:'#1E3A5F44', borderColor:'#1E3A5F', borderWidth:1},
+      {label:'Empirical SL (%)',   data:barEmpirical,
+        backgroundColor:'#1B6B2E88', borderColor:'#1B6B2E', borderWidth:1},
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},
+    scales:{
+      y:{min:50,max:105,title:{display:true,text:'Service Level (%)',font:{size:11}}},
+      x:{ticks:{font:{size:9},maxRotation:30}}
+    }
+  }
+});
+</script>
+</body>
+</html>

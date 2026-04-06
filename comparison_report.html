@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CAR-T Stochastic Methods — Full Comparison</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#1E3A5F;--green:#1B6B2E;--orange:#92400E;
+      --bg:#f4f5f7;--sf:#fff;--brd:#e0e3e8;--tx:#1a1d26;--dim:#5f6672;--rad:8px}
+body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:13px;line-height:1.6}
+.hd{background:var(--blue);color:#fff;padding:14px 28px;display:flex;align-items:center;gap:16px}
+.hd h1{font-size:17px;font-weight:700}
+.hd .sub{font-size:11px;opacity:.7;margin-left:auto}
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--brd);padding:0 24px}
+.tab{padding:10px 20px;cursor:pointer;font-size:12px;font-weight:600;color:var(--dim);
+      border-bottom:2px solid transparent;margin-bottom:-2px;transition:.15s}
+.tab.a{color:var(--blue);border-color:var(--blue)}
+.pane{display:none;max-width:1280px;margin:0 auto;padding:22px 24px 40px}
+.pane.a{display:block}
+.card{background:#fff;border:1px solid var(--brd);border-radius:var(--rad);
+       padding:18px 22px;margin-bottom:18px}
+.card h2{font-size:14px;font-weight:700;color:var(--blue);margin-bottom:14px;
+          padding-bottom:8px;border-bottom:1px solid var(--brd)}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+@media(max-width:900px){.summary-grid{grid-template-columns:1fr}}
+.sm-card{border-radius:var(--rad);padding:14px 18px;border:1px solid}
+.sm-card h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.stat-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.stat-row .v{font-weight:700}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+@media(max-width:800px){.chart-grid{grid-template-columns:1fr}}
+.chart-box{background:#fff;border:1px solid var(--brd);border-radius:var(--rad);padding:16px}
+.chart-box h3{font-size:12px;font-weight:700;color:var(--dim);margin-bottom:12px}
+.chart-wrap{position:relative;height:260px;overflow:hidden}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:#f1f5f9;font-weight:700;padding:8px 10px;text-align:left;
+         border-bottom:2px solid var(--brd);color:var(--dim);white-space:nowrap}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--brd)}
+.tbl tr:hover td{background:#f8fafc}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}
+.ds-title{font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;
+           letter-spacing:.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--brd)}
+.ds-section{margin-bottom:24px}
+.inf{color:#dc2626;font-weight:700}
+</style>
+</head>
+<body>
+<div class="hd">
+  <div>
+    <h1>CAR-T Supply Chain — Stochastic Methods Comparison</h1>
+    <div style="font-size:11px;opacity:.7;margin-top:3px">
+      Deterministic &nbsp;·&nbsp; CCP (α=[0.2, 0.1, 0.05]) &nbsp;·&nbsp;
+      Two-Stage Expediting (δ=[1.0, 2.0, 3.0]d) &nbsp;·&nbsp; σ_L=0.2
+    </div>
+  </div>
+  <div class="sub">1 dataset(s) &nbsp;|&nbsp;
+    7 scenarios</div>
+</div>
+
+<div class="tabs">
+  <div class="tab a" onclick="show('summary')">Summary</div>
+  <div class="tab" onclick="show('results')">Results Table</div>
+  <div class="tab" onclick="show('charts')">Charts</div>
+  <div class="tab" onclick="show('findings')">Key Findings</div>
+</div>
+
+<!-- TAB 1: Summary -->
+<div id="pane-summary" class="pane a">
+  <div class="summary-grid"><div class="sm-card" style="background:#eff6ff;border-color:#bfdbfe">
+          <h4 style="color:#1E3A5F">Deterministic</h4>
+          <div class="stat-row"><span>Avg cost</span><span class="v">$3,348,865</span></div>
+          <div class="stat-row"><span>Avg TRT</span><span class="v">20.2d</span></div>
+          <div class="stat-row"><span>Avg plans</span><span class="v">258</span></div>
+          <div class="stat-row"><span>Feasible scenarios</span><span class="v">1/1</span></div>
+          
+        </div><div class="sm-card" style="background:#f0fdf4;border-color:#bbf7d0">
+          <h4 style="color:#1B6B2E">CCP Stochastic</h4>
+          <div class="stat-row"><span>Avg cost</span><span class="v">$6,389,162</span></div>
+          <div class="stat-row"><span>Avg TRT</span><span class="v">19.3d</span></div>
+          <div class="stat-row"><span>Avg plans</span><span class="v">138</span></div>
+          <div class="stat-row"><span>Feasible scenarios</span><span class="v">2/3</span></div>
+          <div class="stat-row"><span>Service levels</span><span class="v">['90%', '80%']</span></div>
+        </div><div class="sm-card" style="background:#fff7ed;border-color:#fed7aa">
+          <h4 style="color:#92400E">Two-Stage Expediting</h4>
+          <div class="stat-row"><span>Avg cost</span><span class="v">$3,374,161</span></div>
+          <div class="stat-row"><span>Avg TRT</span><span class="v">18.8d</span></div>
+          <div class="stat-row"><span>Avg plans</span><span class="v">186</span></div>
+          <div class="stat-row"><span>Feasible scenarios</span><span class="v">3/3</span></div>
+          <div class="stat-row"><span>Avg P(expedite)</span><span class="v">14.5%</span></div>
+        </div></div>
+  <div class="chart-grid">
+    <div class="chart-box"><h3>Schedule Cost by Method</h3>
+      <div class="chart-wrap"><canvas id="costChart"></canvas></div></div>
+    <div class="chart-box"><h3>Avg Treatment Time by Method</h3>
+      <div class="chart-wrap"><canvas id="trtChart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- TAB 2: Results Table -->
+<div id="pane-results" class="pane">
+  <div class="card"><h2>All Scenarios</h2><div class="ds-section"><div class="ds-title">Data_N15</div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Method</th><th>Plans</th><th>Filter/TMFE_eff</th><th>Schedule Cost</th><th>Avg TRT</th><th>Solve Time</th><th>Extra Info</th></tr></thead><tbody><tr>
+          <td><span class="badge" style="background:#eff6ff;color:#1E3A5F;border:1px solid #bfdbfe">Deterministic</span></td>
+          <td>258</td><td>7.00d</td>
+          <td>$3,348,865</td><td>20.2d</td><td>4.4s</td>
+          <td style="font-size:11px;color:var(--dim)">Nominal T_MF = 7d</td>
+        </tr><tr>
+          <td><span class="badge" style="background:#f0fdf4;color:#1B6B2E;border:1px solid #bbf7d0">CCP  α=0.2</span></td>
+          <td>138</td><td>8.12d</td>
+          <td>$6,389,162</td><td>18.9d</td><td>0.0s</td>
+          <td style="font-size:11px;color:var(--dim)">α=0.2  TMFE_eff=8.12d</td>
+        </tr><tr>
+          <td><span class="badge" style="background:#f0fdf4;color:#1B6B2E;border:1px solid #bbf7d0">CCP  α=0.1</span></td>
+          <td>138</td><td>8.87d</td>
+          <td>$6,389,162</td><td>19.7d</td><td>0.0s</td>
+          <td style="font-size:11px;color:var(--dim)">α=0.1  TMFE_eff=8.87d</td>
+        </tr><tr>
+          <td><span class="badge" style="background:#f0fdf4;color:#1B6B2E;border:1px solid #bbf7d0">CCP  α=0.05</span></td>
+          <td>0</td><td>9.53d</td>
+          <td><span class="inf">INFEASIBLE</span></td><td>—</td><td>—</td>
+          <td style="font-size:11px;color:var(--dim)">α=0.05  TMFE_eff=9.53d</td>
+        </tr><tr>
+          <td><span class="badge" style="background:#fff7ed;color:#92400E;border:1px solid #fed7aa">2S-Exp  δ=1.0d</span></td>
+          <td>138</td><td>8.53d</td>
+          <td>$3,380,682</td><td>17.8d</td><td>0.0s</td>
+          <td style="font-size:11px;color:var(--dim)">Filter=8.53d  P(exp)=3.6%  E[$exp]=$3,108</td>
+        </tr><tr>
+          <td><span class="badge" style="background:#fff7ed;color:#92400E;border:1px solid #fed7aa">2S-Exp  δ=2.0d</span></td>
+          <td>162</td><td>7.53d</td>
+          <td>$3,374,784</td><td>18.4d</td><td>0.0s</td>
+          <td style="font-size:11px;color:var(--dim)">Filter=7.53d  P(exp)=7.8%  E[$exp]=$4,063</td>
+        </tr><tr>
+          <td><span class="badge" style="background:#fff7ed;color:#92400E;border:1px solid #fed7aa">2S-Exp  δ=3.0d</span></td>
+          <td>258</td><td>6.53d</td>
+          <td>$3,367,017</td><td>20.2d</td><td>0.1s</td>
+          <td style="font-size:11px;color:var(--dim)">Filter=6.53d  P(exp)=32.2%  E[$exp]=$18,153</td>
+        </tr></tbody></table></div></div></div>
+</div>
+
+<!-- TAB 3: Charts -->
+<div id="pane-charts" class="pane">
+  <div class="chart-grid">
+    <div class="chart-box"><h3>Cost vs Plans Available</h3>
+      <div class="chart-wrap"><canvas id="scatterChart"></canvas></div></div>
+    <div class="chart-box"><h3>Plans Generated per Method</h3>
+      <div class="chart-wrap"><canvas id="plansChart"></canvas></div></div>
+  </div>
+</div>
+
+<!-- TAB 4: Findings -->
+<div id="pane-findings" class="pane">
+  <div class="card"><h2>Key Findings</h2>
+  <div style="border-left:4px solid #1B6B2E;padding:12px 16px;background:#f0fdf4;border-radius:0 8px 8px 0;margin-bottom:12px;border:1px solid #bbf7d0;border-left:4px solid #1B6B2E"><strong>Two-Stage Expediting vs Deterministic:</strong> The best two-stage scenario costs <strong>$3,367,017</strong> vs deterministic <strong>$3,348,865</strong> — a premium of only <strong>0.5%</strong>. On average, <strong>32.2%</strong> of patients require expedited return, meaning the active recourse is rarely triggered but available when needed.</div><div style="border-left:4px solid #92400E;padding:12px 16px;background:#fff7ed;border-radius:0 8px 8px 0;margin-bottom:12px;border:1px solid #fed7aa;border-left:4px solid #92400E"><strong>CCP vs Deterministic:</strong> The best feasible CCP scenario costs <strong>$6,389,162</strong> — a premium of <strong>90.8%</strong>. CCP pre-emptively inflates TMFE to 8.12d, restricting routes and raising facility costs. This front-loads robustness into the plan-selection stage.</div><div style="border-left:4px solid #1E3A5F;padding:12px 16px;background:#eff6ff;border-radius:0 8px 8px 0;margin-bottom:12px;border:1px solid #bfdbfe;border-left:4px solid #1E3A5F"><strong>Feasibility:</strong> CCP had <strong>1</strong> infeasible scenario(s) (strict deadline filter eliminates too many routes). Two-Stage Expediting had <strong>0</strong> infeasible scenario(s) (relaxed filter via δ). The expediting recourse creates more room for feasible routes.</div><div style="border-left:4px solid #5b21b6;padding:12px 16px;background:#f5f3ff;border-radius:0 8px 8px 0;margin-bottom:12px;border:1px solid #ddd6fe;border-left:4px solid #5b21b6"><strong>Modelling philosophy:</strong> All three methods use σ_L=0.2 for T_MF uncertainty. Deterministic ignores it. CCP enforces hard probabilistic deadlines (no recourse). Two-Stage Expediting allows the schedule to breathe — routes are selected with recourse in mind, and the cost of uncertainty is explicit in the objective as expected expediting cost.</div>
+  </div>
+</div>
+
+<script>
+function show(n){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("a"));
+  document.querySelectorAll(".pane").forEach(p=>p.classList.remove("a"));
+  const m={summary:0,results:1,charts:2,findings:3};
+  document.querySelectorAll(".tab")[m[n]].classList.add("a");
+  document.getElementById("pane-"+n).classList.add("a");
+  // Let Chart.js re-measure after the pane becomes visible
+  requestAnimationFrame(()=>window.dispatchEvent(new Event("resize")));
+}
+
+const DATA = [{"label": "Deterministic", "group": "det", "cost": 3.3488648999999997, "trt": 20.2, "plans": 258, "dataset": ""}, {"label": "CCP  \u03b1=0.2", "group": "ccp", "cost": 6.3891618, "trt": 18.92, "plans": 138, "dataset": ""}, {"label": "CCP  \u03b1=0.1", "group": "ccp", "cost": 6.3891618, "trt": 19.67, "plans": 138, "dataset": ""}, {"label": "2S-Exp  \u03b4=1.0d", "group": "2s", "cost": 3.3806821400000002, "trt": 17.8, "plans": 138, "dataset": ""}, {"label": "2S-Exp  \u03b4=2.0d", "group": "2s", "cost": 3.37478406, "trt": 18.4, "plans": 162, "dataset": ""}, {"label": "2S-Exp  \u03b4=3.0d", "group": "2s", "cost": 3.3670174900000003, "trt": 20.2, "plans": 258, "dataset": ""}];
+const GC = {det:"#1E3A5F",ccp:"#1B6B2E","2s":"#92400E"};
+const labels = DATA.map(d=>d.label);
+const costs  = DATA.map(d=>d.cost);
+const trts   = DATA.map(d=>d.trt);
+const plans  = DATA.map(d=>d.plans);
+const bgs    = DATA.map(d=>GC[d.group]+"99");
+const bds    = DATA.map(d=>GC[d.group]);
+
+function mkBar(id, labels, data, label, fmt){
+  new Chart(document.getElementById(id),{
+    type:"bar",
+    data:{labels,datasets:[{label,data,backgroundColor:bgs,borderColor:bds,borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>fmt(v)}},
+               x:{ticks:{font:{size:9},maxRotation:35}}}}
+  });
+}
+
+mkBar("costChart", labels, costs, "Cost ($M)", v=>"$"+v.toFixed(2)+"M");
+mkBar("trtChart",  labels, trts,  "Avg TRT (d)", v=>v.toFixed(1)+"d");
+mkBar("plansChart",labels, plans, "Plans", v=>v);
+
+// Force correct sizing after initial render
+requestAnimationFrame(()=>window.dispatchEvent(new Event("resize")));
+
+// Scatter: cost vs plans
+new Chart(document.getElementById("scatterChart"),{
+  type:"scatter",
+  data:{datasets:[
+    {label:"Deterministic",
+     data:DATA.filter(d=>d.group=="det").map(d=>({"x":d.plans,"y":d.cost})),
+     backgroundColor:"#1E3A5F99",borderColor:"#1E3A5F",pointRadius:8},
+    {label:"CCP",
+     data:DATA.filter(d=>d.group=="ccp").map(d=>({"x":d.plans,"y":d.cost})),
+     backgroundColor:"#1B6B2E99",borderColor:"#1B6B2E",pointRadius:8},
+    {label:"2S-Expediting",
+     data:DATA.filter(d=>d.group=="2s").map(d=>({"x":d.plans,"y":d.cost})),
+     backgroundColor:"#92400E99",borderColor:"#92400E",pointRadius:8},
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:"bottom",labels:{font:{size:10}}}},
+    scales:{
+      x:{title:{display:true,text:"Plans Generated"}},
+      y:{title:{display:true,text:"Cost ($M)"},
+         ticks:{callback:v=>"$"+v.toFixed(2)+"M"}}}}
+});
+</script>
+</body></html>
