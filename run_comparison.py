@@ -155,6 +155,7 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 @media(max-width:800px){{.chart-grid{{grid-template-columns:1fr}}}}
 .chart-box{{background:#fff;border:1px solid var(--brd);border-radius:var(--rad);padding:16px}}
 .chart-box h3{{font-size:12px;font-weight:700;color:var(--dim);margin-bottom:12px}}
+.chart-wrap{{position:relative;height:260px}}
 .tbl{{width:100%;border-collapse:collapse;font-size:12px}}
 .tbl th{{background:#f1f5f9;font-weight:700;padding:8px 10px;text-align:left;
          border-bottom:2px solid var(--brd);color:var(--dim);white-space:nowrap}}
@@ -192,9 +193,9 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   <div class="summary-grid">{cards_html}</div>
   <div class="chart-grid">
     <div class="chart-box"><h3>Schedule Cost by Method</h3>
-      <canvas id="costChart" height="260"></canvas></div>
+      <div class="chart-wrap"><canvas id="costChart"></canvas></div></div>
     <div class="chart-box"><h3>Avg Treatment Time by Method</h3>
-      <canvas id="trtChart" height="260"></canvas></div>
+      <div class="chart-wrap"><canvas id="trtChart"></canvas></div></div>
   </div>
 </div>
 
@@ -207,9 +208,9 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 <div id="pane-charts" class="pane">
   <div class="chart-grid">
     <div class="chart-box"><h3>Cost vs Plans Available</h3>
-      <canvas id="scatterChart" height="300"></canvas></div>
+      <div class="chart-wrap"><canvas id="scatterChart"></canvas></div></div>
     <div class="chart-box"><h3>Plans Generated per Method</h3>
-      <canvas id="plansChart" height="300"></canvas></div>
+      <div class="chart-wrap"><canvas id="plansChart"></canvas></div></div>
   </div>
 </div>
 
