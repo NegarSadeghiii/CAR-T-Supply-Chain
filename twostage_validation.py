@@ -447,7 +447,60 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   </div>
 
   <div class="card">
-    <h2>Experiment Design</h2>
+    <h2>Parameter Guide</h2>
+    <table class="tbl" style="margin-bottom:8px">
+      <thead><tr>
+        <th style="width:120px">Parameter</th>
+        <th style="width:100px">Value used</th>
+        <th>What it means</th>
+        <th>Effect of increasing</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>&sigma;_L (sigma_L)</strong></td>
+          <td style="text-align:center;font-weight:700;color:#166534">{sigma_L}</td>
+          <td>Spread of manufacturing time T_MF. T_MF ~ LogNormal with this log-scale std deviation.
+              &sigma;_L = 0 means T_MF is always exactly 7 days (deterministic).
+              &sigma;_L = 0.20 means roughly &plusmn;20% variation around the mean.</td>
+          <td>More uncertainty &rarr; higher P(expedite) &rarr; higher expected cost premium over deterministic.</td>
+        </tr>
+        <tr>
+          <td><strong>&delta; (delta)</strong></td>
+          <td style="text-align:center;font-weight:700;color:#166534">{delta}d</td>
+          <td>Days saved by triggering expedited return shipping.
+              When T_MF &gt; K_i (slack), expediting cuts return transport time by &delta; days,
+              allowing the patient to still meet their deadline.</td>
+          <td>Larger &delta; &rarr; more routes become feasible under recourse &rarr; more plans available &rarr; lower cost.</td>
+        </tr>
+        <tr>
+          <td><strong>&epsilon; (epsilon)</strong></td>
+          <td style="text-align:center;font-weight:700;color:#166534">{epsilon}</td>
+          <td>Plan filter strictness. Only routes where expediting can still rescue the deadline
+              with probability &ge; 1&minus;&epsilon; are kept.
+              &epsilon; = 0.05 means: even in the worst 5% of T_MF draws, the route must be recoverable.</td>
+          <td>Lower &epsilon; &rarr; stricter filter &rarr; fewer plans &rarr; higher cost or infeasibility.</td>
+        </tr>
+        <tr>
+          <td><strong>&tau; (tau)</strong></td>
+          <td style="text-align:center;font-weight:700;color:#166534">{tau}</td>
+          <td>Deadline tightness factor (0 to 1). Shrinks patient deadlines to stress-test the model.
+              &tau; = 0 uses original deadlines (easiest).
+              &tau; = 1 tightens deadlines to the minimum possible.</td>
+          <td>Higher &tau; &rarr; tighter deadlines &rarr; fewer feasible routes &rarr; higher cost or infeasibility.</td>
+        </tr>
+        <tr>
+          <td><strong>&pi; (pi)</strong></td>
+          <td style="text-align:center;font-weight:700;color:#166534">H:$8k M:$4k L:$1.5k</td>
+          <td>Cost of triggering expedited return for a High / Medium / Low urgency patient.
+              This enters the objective as E[$exp] = &pi;_p &sdot; P(T_MF &gt; K_i) per patient.</td>
+          <td>Higher &pi; &rarr; expediting is more expensive &rarr; solver avoids tight routes more aggressively.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Model Design</h2>
     <div class="insight">
       <strong>Deterministic ColGen</strong> solves the set-partitioning master problem using the nominal
       manufacturing time T_MF = 7 days. Plans are filtered purely by the deadline
