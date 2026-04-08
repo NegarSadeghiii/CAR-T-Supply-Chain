@@ -461,8 +461,8 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon):
         oos_table_rows += (
             f'<tr><td style="font-weight:700">N={n}</td>'
             f'<td style="text-align:right">${c["mean_cost"]:,.0f}</td>'
-            f'<td style="text-align:right">${c["std_cost"]:,.0f}</td>'
             f'<td style="color:{c_viol_col};font-weight:700;text-align:right">{c["pct_scen_viol"]:.1f}%</td>'
+            f'<td style="text-align:right">${c["p95_cost"]:,.0f}</td>'
             f'<td style="text-align:right">${t["mean_cost"]:,.0f}</td>'
             f'<td style="text-align:right">${t["std_cost"]:,.0f}</td>'
             f'<td style="color:{t_viol_col};font-weight:700;text-align:right">{t["pct_scen_viol"]:.1f}%</td>'
@@ -770,14 +770,14 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
     <div style="overflow-x:auto">
     <table class="tbl"><thead><tr>
       <th>N</th>
-      <th colspan="3" style="background:#dbeafe;color:#1e3a8a;text-align:center">CCP (α=0.10)</th>
-      <th colspan="4" style="background:#fed7aa;color:#92400e;text-align:center">Two-Stage Expediting</th>
+      <th style="background:#dbeafe;color:#1e3a8a">CCP Mean Cost</th>
+      <th style="background:#dbeafe;color:#1e3a8a">CCP % Violation</th>
+      <th style="background:#dbeafe;color:#1e3a8a">CCP 95th-pct Cost</th>
+      <th style="background:#fed7aa;color:#92400e">2S Mean Cost</th>
+      <th style="background:#fed7aa;color:#92400e">2S Std Cost</th>
+      <th style="background:#fed7aa;color:#92400e">2S % Violation</th>
+      <th style="background:#fed7aa;color:#92400e">2S % Expedited</th>
       <th>Cost Gap</th>
-    </tr><tr>
-      <th></th>
-      <th>Mean Cost</th><th>Std Cost</th><th>% Scen w/ Violation</th>
-      <th>Mean Cost</th><th>Std Cost</th><th>% Scen w/ Violation</th><th>% Expedited</th>
-      <th>(2S vs CCP)</th>
     </tr></thead><tbody>
     {oos_table_rows}
     </tbody></table></div>
