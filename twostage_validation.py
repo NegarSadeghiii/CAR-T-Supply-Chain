@@ -24,6 +24,10 @@ from cart_colgen_twostage import (
     run_experiment_twostage as ts_run,
     DEFAULT_PROCESS_2S      as TS_PROCESS,
 )
+from cart_colgen_ccp import (
+    run_experiment_ccp  as ccp_run,
+    DEFAULT_PROCESS_CCP as CCP_PROCESS,
+)
 
 DATASETS = [
     ('N=5',  'Data_N5.dat'),
@@ -163,7 +167,123 @@ def run_all(tau, sigma_L, delta, epsilon, time_limit, n_sim):
               f"P(exp)={s.get('avg_prob_expedite',0)*100:.1f}%")
         results.append(ts)
 
+        # CCP (alpha=0.10)
+        print('  CCP α=0.10     ...', end=' ', flush=True)
+        ccp_cfg = dict(CCP_PROCESS)
+        ccp_cfg['sigma_L'] = sigma_L
+        ccp_cfg['alpha']   = 0.10
+        try:
+            rc = ccp_run(tau=tau, data_file=df,
+                         process_config=ccp_cfg, time_limit=time_limit)
+            ccp = {
+                'N': n_val, 'label': label, 'solver': 'CCP',
+                'solved':       rc.get('solved', False),
+                'total_cost':   rc.get('total_cost', 0),
+                'avg_trt':      rc.get('avg_trt',    0),
+                'solve_time':   rc.get('solve_time', 0),
+                'num_plans':    rc.get('num_plans',  0),
+                'num_patients': rc.get('num_patients', n_val),
+                'tmfe_eff':     rc.get('tmfe_eff',   0),
+                'alpha':        ccp_cfg['alpha'],
+                'sigma_L':      sigma_L,
+                'patients':     rc.get('patients', []),
+                'error':        rc.get('error', ''),
+            }
+        except Exception as e:
+            ccp = {'N': n_val, 'label': label, 'solver': 'CCP',
+                   'solved': False, 'error': str(e), 'patients': []}
+        print(f"{'OK' if ccp['solved'] else 'FAIL'}  ",
+              f"cost={ccp.get('total_cost',0):,.0f}  ",
+              f"trt={ccp.get('avg_trt',0):.1f}d  ",
+              f"TMFE_eff={ccp.get('tmfe_eff',0):.2f}d")
+        results.append(ccp)
+
+        # Out-of-sample: evaluate CCP and Two-Stage on same scenarios
+        if ccp.get('solved') and ts.get('solved'):
+            pi_map_oos = ts.get('pi_map', {'high': 8000, 'medium': 4000, 'low': 1500})
+            oos = out_of_sample_validate(
+                ccp, ts, ts_cfg['tmfe'], sigma_L, delta, pi_map_oos,
+                n_sim=10000, seed=77
+            )
+            oos['N'] = n_val
+            results.append({'N': n_val, 'label': label, 'solver': 'OOS', 'data': oos})
+
     return results
+
+
+# ── Out-of-sample validation ──────────────────────────────────────────────────
+
+def out_of_sample_validate(ccp_r, ts_r, tmfe, sigma_L, delta, pi_map,
+                            n_sim=10000, seed=77):
+    """Evaluate CCP and Two-Stage solutions on the same n_sim T_MF scenarios."""
+    import statistics as _st
+    rng  = random.Random(seed)
+    mu_L = math.log(tmfe) - 0.5 * sigma_L ** 2
+    scenarios = [rng.lognormvariate(mu_L, sigma_L) for _ in range(n_sim)]
+
+    # CCP — no recourse: violation if T_MF > mfg_budget_p
+    tmfe_eff     = ccp_r.get('tmfe_eff', tmfe)
+    ccp_pats     = ccp_r.get('patients', [])
+    ccp_transport = ccp_r.get('total_cost', 0)
+    # mfg_budget per patient = max T_MF before deadline is missed
+    mfg_budgets = {
+        p['id']: p['deadline'] - (p['trt'] - tmfe_eff)
+        for p in ccp_pats
+    }
+
+    ccp_costs, ccp_viols = [], []
+    for tmf in scenarios:
+        v = sum(1 for p in ccp_pats if tmf > mfg_budgets.get(p['id'], 999))
+        ccp_costs.append(ccp_transport)   # cost is fixed — no recourse
+        ccp_viols.append(v)
+
+    # Two-Stage — recourse: expedite if T_MF > K_i
+    ts_pats = ts_r.get('patients', [])
+    ts_transport = ts_r.get('total_cost', 0) - ts_r.get('total_exp_expedite_cost', 0)
+
+    ts_costs, ts_viols, ts_exps = [], [], []
+    for tmf in scenarios:
+        ec, nv, ne = 0, 0, 0
+        for p in ts_pats:
+            K   = p.get('slack')
+            if K is None: continue
+            pi_p = pi_map.get(p.get('group', 'low'), 1500)
+            if tmf > K:
+                ec += pi_p; ne += 1
+                if tmf > K + delta:
+                    nv += 1
+        ts_costs.append(ts_transport + ec)
+        ts_viols.append(nv)
+        ts_exps.append(ne)
+
+    def _metrics(costs, viols, exps=None):
+        sc = sorted(costs)
+        n  = len(sc)
+        return {
+            'mean_cost':    round(_st.mean(costs)),
+            'std_cost':     round(_st.stdev(costs)),
+            'p5_cost':      round(sc[int(0.05 * n)]),
+            'p95_cost':     round(sc[int(0.95 * n)]),
+            'pct_scen_viol': round(sum(1 for v in viols if v > 0) / n * 100, 1),
+            'avg_viol_per_scen': round(_st.mean(viols), 3),
+            'pct_exp':      round(sum(exps) / (n * max(len(ts_pats), 1)) * 100, 1)
+                            if exps is not None else None,
+        }
+
+    return {
+        'n_sim':   n_sim,
+        'n_ccp':   len(ccp_pats),
+        'n_ts':    len(ts_pats),
+        'ccp':     _metrics(ccp_costs, ccp_viols),
+        'ts':      _metrics(ts_costs,  ts_viols, ts_exps),
+        'ccp_transport': ccp_transport,
+        'ts_transport':  ts_transport,
+        'tmfe_eff':  tmfe_eff,
+        'alpha':     ccp_r.get('alpha', 0.10),
+        # sample of 200 costs for chart
+        'ccp_sample': ccp_costs[:200],
+        'ts_sample':  ts_costs[:200],
+    }
 
 
 # ── HTML generator ────────────────────────────────────────────────────────────
@@ -319,6 +439,58 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon):
 
     n_labels_js = str(chart_ns)
 
+    # ── Out-of-sample data ─────────────────────────────────────────────────────
+    oos_rows  = [r for r in results if r.get('solver') == 'OOS']
+    ccp_rows  = [r for r in results if r.get('solver') == 'CCP' and r.get('solved')]
+    ccp_by_n  = {r['N']: r for r in ccp_rows}
+    oos_by_n  = {r['N']: r['data'] for r in oos_rows}
+
+    # OOS summary table rows
+    oos_table_rows = ''
+    for n in ns:
+        oos = oos_by_n.get(n)
+        ccp = ccp_by_n.get(n)
+        if not oos:
+            oos_table_rows += f'<tr><td style="font-weight:700">N={n}</td><td colspan="9" style="color:#9ca3af">Not available</td></tr>'
+            continue
+        c = oos['ccp']; t = oos['ts']
+        # cost gap: two-stage mean vs CCP mean
+        cost_gap = _pct(t['mean_cost'], c['mean_cost'])
+        oos_table_rows += (
+            f'<tr><td style="font-weight:700">N={n}</td>'
+            f'<td style="text-align:right">${c["mean_cost"]:,.0f}</td>'
+            f'<td style="text-align:right">$0</td>'
+            f'<td style="color:{"#dc2626" if c["pct_scen_viol"]>5 else "#166534"};font-weight:700;text-align:right">{c["pct_scen_viol"]:.1f}%</td>'
+            f'<td style="text-align:right">&mdash;</td>'
+            f'<td style="text-align:right">${t["mean_cost"]:,.0f}</td>'
+            f'<td style="text-align:right">${t["std_cost"]:,.0f}</td>'
+            f'<td style="color:{"#dc2626" if t["pct_scen_viol"]>5 else "#166534"};font-weight:700;text-align:right">{t["pct_scen_viol"]:.1f}%</td>'
+            f'<td style="text-align:right">{t["pct_exp"]:.1f}%</td>'
+            f'<td>{_gap_cell(cost_gap)}</td>'
+            f'</tr>'
+        )
+
+    # JS data for OOS cost distribution chart (N=largest)
+    largest_oos_n = max(oos_by_n.keys(), default=None)
+    oos_ccp_sample_js = '[]'; oos_ts_sample_js = '[]'
+    if largest_oos_n:
+        oos_d = oos_by_n[largest_oos_n]
+        oos_ccp_sample_js = '[' + ','.join(str(round(v/1e6,4)) for v in oos_d.get('ccp_sample',[])) + ']'
+        oos_ts_sample_js  = '[' + ','.join(str(round(v/1e6,4)) for v in oos_d.get('ts_sample', [])) + ']'
+
+    oos_viol_ccp_js = '[' + ','.join(
+        str(oos_by_n[n]['ccp']['pct_scen_viol']) if n in oos_by_n else 'null'
+        for n in chart_ns) + ']'
+    oos_viol_ts_js = '[' + ','.join(
+        str(oos_by_n[n]['ts']['pct_scen_viol']) if n in oos_by_n else 'null'
+        for n in chart_ns) + ']'
+    oos_cost_ccp_js = '[' + ','.join(
+        str(round(oos_by_n[n]['ccp']['mean_cost']/1e6,4)) if n in oos_by_n else 'null'
+        for n in chart_ns) + ']'
+    oos_cost_ts_js = '[' + ','.join(
+        str(round(oos_by_n[n]['ts']['mean_cost']/1e6,4)) if n in oos_by_n else 'null'
+        for n in chart_ns) + ']'
+
     # Key findings text
     findings = []
     if det_rows and ts_rows:
@@ -411,6 +583,7 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   <div class="tab"   onclick="show('table')">&#128196; Full Table</div>
   <div class="tab"   onclick="show('mc')">&#9989; Obj. Validation</div>
   <div class="tab"   onclick="show('patients')">&#128101; Patients</div>
+  <div class="tab"   onclick="show('oos')">&#127919; Out-of-Sample</div>
   <div class="tab"   onclick="show('findings')">&#128270; Findings</div>
 </div>
 
@@ -581,7 +754,69 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   </div>
 </div>
 
-<!-- TAB 6: Findings -->
+<!-- TAB 6: Out-of-Sample Validation -->
+<div id="pane-oos" class="pane">
+  <div class="card">
+    <h2>Out-of-Sample Validation — CCP vs Two-Stage (10 000 scenarios)</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.6">
+      The first-stage route decisions from both models are <strong>fixed</strong> and then evaluated
+      against 10 000 fresh T_MF draws from LogNormal(&sigma;_L={sigma_L}).
+      This tests how well each solution holds up under unseen uncertainty.<br>
+      &bull; <strong>CCP</strong>: no recourse — deadline violation occurs whenever T_MF &gt; mfg_budget.<br>
+      &bull; <strong>Two-Stage</strong>: expediting triggered if T_MF &gt; K_i (pays &pi;_p, saves &delta;d);
+        violation only if T_MF &gt; K_i + &delta;.
+    </p>
+    <div style="overflow-x:auto">
+    <table class="tbl"><thead><tr>
+      <th>N</th>
+      <th colspan="3" style="background:#dbeafe;color:#1e3a8a;text-align:center">CCP (α=0.10)</th>
+      <th colspan="4" style="background:#fed7aa;color:#92400e;text-align:center">Two-Stage Expediting</th>
+      <th>Cost Gap</th>
+    </tr><tr>
+      <th></th>
+      <th>Mean Cost</th><th>Std Cost</th><th>% Scen w/ Violation</th>
+      <th>Mean Cost</th><th>Std Cost</th><th>% Scen w/ Violation</th><th>% Expedited</th>
+      <th>(2S vs CCP)</th>
+    </tr></thead><tbody>
+    {oos_table_rows}
+    </tbody></table></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-box">
+      <h3>Mean Realized Cost ($M) vs N</h3>
+      <div class="chart-wrap"><canvas id="oosCostChart"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>% Scenarios with Deadline Violation vs N</h3>
+      <div class="chart-wrap"><canvas id="oosViolChart"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>Realized Cost Distribution (N={largest_oos_n}, first 200 scenarios)</h3>
+      <div class="chart-wrap"><canvas id="oosDistChart"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>Interpretation</h3>
+      <div style="padding:12px;font-size:12px;line-height:1.8;color:var(--dim)">
+        <div style="margin-bottom:8px">
+          <span style="display:inline-block;width:14px;height:14px;background:#1E3A5F;border-radius:2px;margin-right:6px;vertical-align:middle"></span>
+          <strong style="color:#1E3A5F">CCP</strong>: fixed cost across all scenarios (no recourse).
+          Lower mean cost but higher violation rate when T_MF exceeds the quantile.
+        </div>
+        <div style="margin-bottom:8px">
+          <span style="display:inline-block;width:14px;height:14px;background:#92400E;border-radius:2px;margin-right:6px;vertical-align:middle"></span>
+          <strong style="color:#92400E">Two-Stage</strong>: variable cost (transport + realized expediting).
+          Slightly higher mean but near-zero violations — recourse absorbs manufacturing delays.
+        </div>
+        <div style="border-left:3px solid #166534;padding:8px 12px;background:#f0fdf4;border-radius:0 6px 6px 0">
+          <strong>Key insight:</strong> CCP trades lower expected cost for exposure to hard deadline violations.
+          Two-Stage pays a small premium to guarantee a recourse action, virtually eliminating violations.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 7: Findings -->
 <div id="pane-findings" class="pane">
   <div class="card">
     <h2>Key Findings</h2>
@@ -605,7 +840,7 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 function show(n) {{
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('a'));
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('a'));
-  const m = {{summary:0,charts:1,table:2,mc:3,patients:4,findings:5}};
+  const m = {{summary:0,charts:1,table:2,mc:3,patients:4,oos:5,findings:6}};
   document.querySelectorAll('.tab')[m[n]].classList.add('a');
   document.getElementById('pane-' + n).classList.add('a');
   requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
@@ -697,6 +932,45 @@ new Chart(document.getElementById('donutChart'), {{
           label: ctx => ' $' + ctx.parsed.toLocaleString()
         }}
       }}
+    }}
+  }}
+}});
+
+// ── Out-of-Sample charts ──────────────────────────────────────────────────────
+const OOS_NS      = {n_labels_js};
+const OOS_CCP_C   = {oos_cost_ccp_js};
+const OOS_TS_C    = {oos_cost_ts_js};
+const OOS_CCP_V   = {oos_viol_ccp_js};
+const OOS_TS_V    = {oos_viol_ts_js};
+const OOS_CCP_S   = {oos_ccp_sample_js};
+const OOS_TS_S    = {oos_ts_sample_js};
+
+lineChart('oosCostChart', OOS_NS,
+  [detDS('CCP', OOS_CCP_C), tsDS('Two-Stage', OOS_TS_C)],
+  'Mean Realized Cost ($M)', v => '$' + v.toFixed(2) + 'M');
+
+lineChart('oosViolChart', OOS_NS,
+  [detDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
+  '% Scenarios with Violation', v => v.toFixed(1) + '%');
+
+new Chart(document.getElementById('oosDistChart'), {{
+  type: 'line',
+  data: {{
+    labels: Array.from({{length: OOS_CCP_S.length}}, (_,i) => i+1),
+    datasets: [
+      {{ label: 'CCP', data: OOS_CCP_S, borderColor: BLUE,   backgroundColor: BLUE+'22',
+         borderWidth:1.5, pointRadius:0, tension:0 }},
+      {{ label: 'Two-Stage', data: OOS_TS_S, borderColor: ORANGE, backgroundColor: ORANGE+'22',
+         borderWidth:1.5, pointRadius:0, tension:0, borderDash:[4,2] }},
+    ]
+  }},
+  options: {{
+    responsive:true, maintainAspectRatio:false,
+    plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }} }} }} }},
+    scales:{{
+      x:{{ display:false }},
+      y:{{ title:{{ display:true, text:'Realized Cost ($M)' }},
+           ticks:{{ callback: v => '$'+v.toFixed(2)+'M' }} }}
     }}
   }}
 }});

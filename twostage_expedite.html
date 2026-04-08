@@ -65,6 +65,7 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
   <div class="tab"   onclick="show('table')">&#128196; Full Table</div>
   <div class="tab"   onclick="show('mc')">&#9989; Obj. Validation</div>
   <div class="tab"   onclick="show('patients')">&#128101; Patients</div>
+  <div class="tab"   onclick="show('oos')">&#127919; Out-of-Sample</div>
   <div class="tab"   onclick="show('findings')">&#128270; Findings</div>
 </div>
 
@@ -207,13 +208,13 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
     <th>Avg P(exp)</th><th>E[$exp] tot.</th>
     <th>Cost Gap</th><th>TRT Gap</th>
   </tr></thead><tbody>
-  <tr><td style="font-weight:700">N=5</td><td>Yes</td><td>$3,119,660</td><td>20.6d</td><td>90</td><td>0.85s</td><td>Yes</td><td>$3,126,280</td><td>19.4d</td><td>66</td><td>0.03s</td><td>11.8%</td><td>$1,602</td><td><span style="color:#b45309;font-weight:700">+0.2%</span></td><td><span style="color:#166534;font-weight:700">-5.8%</span></td></tr>
-<tr><td style="font-weight:700">N=10</td><td>Yes</td><td>$6,245,099</td><td>20.3d</td><td>174</td><td>0.10s</td><td>Yes</td><td>$6,260,140</td><td>18.8d</td><td>114</td><td>0.07s</td><td>9.9%</td><td>$2,992</td><td><span style="color:#b45309;font-weight:700">+0.2%</span></td><td><span style="color:#166534;font-weight:700">-7.4%</span></td></tr>
-<tr><td style="font-weight:700">N=15</td><td>Yes</td><td>$3,348,865</td><td>20.2d</td><td>258</td><td>0.13s</td><td>Yes</td><td>$3,374,784</td><td>18.4d</td><td>162</td><td>0.06s</td><td>7.8%</td><td>$4,063</td><td><span style="color:#b45309;font-weight:700">+0.8%</span></td><td><span style="color:#166534;font-weight:700">-8.9%</span></td></tr>
-<tr><td style="font-weight:700">N=20</td><td>Yes</td><td>$3,467,529</td><td>20.1d</td><td>348</td><td>0.11s</td><td>Yes</td><td>$6,505,303</td><td>18.8d</td><td>228</td><td>0.13s</td><td>9.9%</td><td>$5,984</td><td><span style="color:#b45309;font-weight:700">+87.6%</span></td><td><span style="color:#166534;font-weight:700">-6.7%</span></td></tr>
+  <tr><td style="font-weight:700">N=5</td><td>Yes</td><td>$3,119,660</td><td>20.6d</td><td>90</td><td>0.44s</td><td>Yes</td><td>$3,126,280</td><td>19.4d</td><td>66</td><td>0.03s</td><td>11.8%</td><td>$1,602</td><td><span style="color:#b45309;font-weight:700">+0.2%</span></td><td><span style="color:#166534;font-weight:700">-5.8%</span></td></tr>
+<tr><td style="font-weight:700">N=10</td><td>Yes</td><td>$6,245,099</td><td>20.3d</td><td>174</td><td>0.07s</td><td>Yes</td><td>$6,260,140</td><td>18.8d</td><td>114</td><td>0.05s</td><td>9.9%</td><td>$2,992</td><td><span style="color:#b45309;font-weight:700">+0.2%</span></td><td><span style="color:#166534;font-weight:700">-7.4%</span></td></tr>
+<tr><td style="font-weight:700">N=15</td><td>Yes</td><td>$3,348,865</td><td>20.2d</td><td>258</td><td>0.05s</td><td>Yes</td><td>$3,374,784</td><td>18.4d</td><td>162</td><td>0.04s</td><td>7.8%</td><td>$4,063</td><td><span style="color:#b45309;font-weight:700">+0.8%</span></td><td><span style="color:#166534;font-weight:700">-8.9%</span></td></tr>
+<tr><td style="font-weight:700">N=20</td><td>Yes</td><td>$3,467,529</td><td>20.1d</td><td>348</td><td>0.08s</td><td>Yes</td><td>$6,505,303</td><td>18.8d</td><td>228</td><td>0.07s</td><td>9.9%</td><td>$5,984</td><td><span style="color:#b45309;font-weight:700">+87.6%</span></td><td><span style="color:#166534;font-weight:700">-6.7%</span></td></tr>
 <tr><td style="font-weight:700">N=25</td><td>Yes</td><td>$6,592,586</td><td>20.4d</td><td>438</td><td>0.20s</td><td>Yes</td><td>$6,632,813</td><td>18.8d</td><td>294</td><td>0.10s</td><td>9.4%</td><td>$7,268</td><td><span style="color:#b45309;font-weight:700">+0.6%</span></td><td><span style="color:#166534;font-weight:700">-7.7%</span></td></tr>
-<tr><td style="font-weight:700">N=40</td><td>Yes</td><td>$6,939,496</td><td>20.2d</td><td>696</td><td>0.22s</td><td>Yes</td><td>$7,003,242</td><td>18.6d</td><td>456</td><td>0.24s</td><td>8.8%</td><td>$11,331</td><td><span style="color:#b45309;font-weight:700">+0.9%</span></td><td><span style="color:#166534;font-weight:700">-7.8%</span></td></tr>
-<tr><td style="font-weight:700">N=50</td><td>Yes</td><td>$7,167,579</td><td>20.3d</td><td>870</td><td>0.51s</td><td>Yes</td><td>$7,248,319</td><td>18.6d</td><td>570</td><td>0.17s</td><td>8.2%</td><td>$13,686</td><td><span style="color:#b45309;font-weight:700">+1.1%</span></td><td><span style="color:#166534;font-weight:700">-8.6%</span></td></tr>
+<tr><td style="font-weight:700">N=40</td><td>Yes</td><td>$6,939,496</td><td>20.2d</td><td>696</td><td>0.13s</td><td>Yes</td><td>$7,003,242</td><td>18.6d</td><td>456</td><td>0.13s</td><td>8.8%</td><td>$11,331</td><td><span style="color:#b45309;font-weight:700">+0.9%</span></td><td><span style="color:#166534;font-weight:700">-7.8%</span></td></tr>
+<tr><td style="font-weight:700">N=50</td><td>Yes</td><td>$7,167,579</td><td>20.3d</td><td>870</td><td>0.40s</td><td>Yes</td><td>$7,248,319</td><td>18.6d</td><td>570</td><td>0.13s</td><td>8.2%</td><td>$13,686</td><td><span style="color:#b45309;font-weight:700">+1.1%</span></td><td><span style="color:#166534;font-weight:700">-8.6%</span></td></tr>
   </tbody></table>
   </div></div>
 </div>
@@ -4402,7 +4403,69 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
   </div>
 </div>
 
-<!-- TAB 6: Findings -->
+<!-- TAB 6: Out-of-Sample Validation -->
+<div id="pane-oos" class="pane">
+  <div class="card">
+    <h2>Out-of-Sample Validation — CCP vs Two-Stage (10 000 scenarios)</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.6">
+      The first-stage route decisions from both models are <strong>fixed</strong> and then evaluated
+      against 10 000 fresh T_MF draws from LogNormal(&sigma;_L=0.2).
+      This tests how well each solution holds up under unseen uncertainty.<br>
+      &bull; <strong>CCP</strong>: no recourse — deadline violation occurs whenever T_MF &gt; mfg_budget.<br>
+      &bull; <strong>Two-Stage</strong>: expediting triggered if T_MF &gt; K_i (pays &pi;_p, saves &delta;d);
+        violation only if T_MF &gt; K_i + &delta;.
+    </p>
+    <div style="overflow-x:auto">
+    <table class="tbl"><thead><tr>
+      <th>N</th>
+      <th colspan="3" style="background:#dbeafe;color:#1e3a8a;text-align:center">CCP (α=0.10)</th>
+      <th colspan="4" style="background:#fed7aa;color:#92400e;text-align:center">Two-Stage Expediting</th>
+      <th>Cost Gap</th>
+    </tr><tr>
+      <th></th>
+      <th>Mean Cost</th><th>Std Cost</th><th>% Scen w/ Violation</th>
+      <th>Mean Cost</th><th>Std Cost</th><th>% Scen w/ Violation</th><th>% Expedited</th>
+      <th>(2S vs CCP)</th>
+    </tr></thead><tbody>
+    <tr><td style="font-weight:700">N=5</td><td style="text-align:right">$3,128,119</td><td style="text-align:right">$0</td><td style="color:#dc2626;font-weight:700;text-align:right">8.8%</td><td style="text-align:right">&mdash;</td><td style="text-align:right">$3,126,284</td><td style="text-align:right">$4,046</td><td style="color:#166534;font-weight:700;text-align:right">3.0%</td><td style="text-align:right">11.8%</td><td><span style="color:#166534;font-weight:700">-0.1%</span></td></tr><tr><td style="font-weight:700">N=10</td><td style="text-align:right">$6,263,054</td><td style="text-align:right">$0</td><td style="color:#dc2626;font-weight:700;text-align:right">8.8%</td><td style="text-align:right">&mdash;</td><td style="text-align:right">$6,260,145</td><td style="text-align:right">$8,173</td><td style="color:#166534;font-weight:700;text-align:right">3.0%</td><td style="text-align:right">9.9%</td><td><span style="color:#166534;font-weight:700">-0.1%</span></td></tr><tr><td style="font-weight:700">N=15</td><td style="text-align:right">$6,389,162</td><td style="text-align:right">$0</td><td style="color:#dc2626;font-weight:700;text-align:right">8.8%</td><td style="text-align:right">&mdash;</td><td style="text-align:right">$3,374,791</td><td style="text-align:right">$11,985</td><td style="color:#166534;font-weight:700;text-align:right">3.0%</td><td style="text-align:right">7.8%</td><td><span style="color:#166534;font-weight:700">-47.2%</span></td></tr><tr><td style="font-weight:700">N=20</td><td style="text-align:right">$6,511,601</td><td style="text-align:right">$0</td><td style="color:#dc2626;font-weight:700;text-align:right">8.8%</td><td style="text-align:right">&mdash;</td><td style="text-align:right">$6,505,313</td><td style="text-align:right">$16,345</td><td style="color:#166534;font-weight:700;text-align:right">3.0%</td><td style="text-align:right">9.9%</td><td><span style="color:#166534;font-weight:700">-0.1%</span></td></tr><tr><td style="font-weight:700">N=25</td><td style="text-align:right">$6,639,780</td><td style="text-align:right">$0</td><td style="color:#dc2626;font-weight:700;text-align:right">8.8%</td><td style="text-align:right">&mdash;</td><td style="text-align:right">$6,632,826</td><td style="text-align:right">$20,014</td><td style="color:#166534;font-weight:700;text-align:right">3.0%</td><td style="text-align:right">9.4%</td><td><span style="color:#166534;font-weight:700">-0.1%</span></td></tr><tr><td style="font-weight:700">N=40</td><td style="text-align:right">$7,017,182</td><td style="text-align:right">$0</td><td style="color:#dc2626;font-weight:700;text-align:right">8.8%</td><td style="text-align:right">&mdash;</td><td style="text-align:right">$7,003,262</td><td style="text-align:right">$31,983</td><td style="color:#166534;font-weight:700;text-align:right">3.0%</td><td style="text-align:right">8.8%</td><td><span style="color:#166534;font-weight:700">-0.2%</span></td></tr><tr><td style="font-weight:700">N=50</td><td style="text-align:right">$8,848,049</td><td style="text-align:right">$0</td><td style="color:#dc2626;font-weight:700;text-align:right">8.8%</td><td style="text-align:right">&mdash;</td><td style="text-align:right">$7,248,344</td><td style="text-align:right">$39,467</td><td style="color:#166534;font-weight:700;text-align:right">3.0%</td><td style="text-align:right">8.2%</td><td><span style="color:#166534;font-weight:700">-18.1%</span></td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-box">
+      <h3>Mean Realized Cost ($M) vs N</h3>
+      <div class="chart-wrap"><canvas id="oosCostChart"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>% Scenarios with Deadline Violation vs N</h3>
+      <div class="chart-wrap"><canvas id="oosViolChart"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>Realized Cost Distribution (N=50, first 200 scenarios)</h3>
+      <div class="chart-wrap"><canvas id="oosDistChart"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>Interpretation</h3>
+      <div style="padding:12px;font-size:12px;line-height:1.8;color:var(--dim)">
+        <div style="margin-bottom:8px">
+          <span style="display:inline-block;width:14px;height:14px;background:#1E3A5F;border-radius:2px;margin-right:6px;vertical-align:middle"></span>
+          <strong style="color:#1E3A5F">CCP</strong>: fixed cost across all scenarios (no recourse).
+          Lower mean cost but higher violation rate when T_MF exceeds the quantile.
+        </div>
+        <div style="margin-bottom:8px">
+          <span style="display:inline-block;width:14px;height:14px;background:#92400E;border-radius:2px;margin-right:6px;vertical-align:middle"></span>
+          <strong style="color:#92400E">Two-Stage</strong>: variable cost (transport + realized expediting).
+          Slightly higher mean but near-zero violations — recourse absorbs manufacturing delays.
+        </div>
+        <div style="border-left:3px solid #166534;padding:8px 12px;background:#f0fdf4;border-radius:0 6px 6px 0">
+          <strong>Key insight:</strong> CCP trades lower expected cost for exposure to hard deadline violations.
+          Two-Stage pays a small premium to guarantee a recourse action, virtually eliminating violations.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 7: Findings -->
 <div id="pane-findings" class="pane">
   <div class="card">
     <h2>Key Findings</h2>
@@ -4426,7 +4489,7 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 function show(n) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('a'));
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('a'));
-  const m = {summary:0,charts:1,table:2,mc:3,patients:4,findings:5};
+  const m = {summary:0,charts:1,table:2,mc:3,patients:4,oos:5,findings:6};
   document.querySelectorAll('.tab')[m[n]].classList.add('a');
   document.getElementById('pane-' + n).classList.add('a');
   requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
@@ -4435,8 +4498,8 @@ function show(n) {
 const NS     = [5, 10, 15, 20, 25, 40, 50];
 const DET_C  = [3.1197,6.2451,3.3489,3.4675,6.5926,6.9395,7.1676];
 const TS_C   = [3.1263,6.2601,3.3748,6.5053,6.6328,7.0032,7.2483];
-const DET_T  = [0.85,0.1,0.13,0.11,0.2,0.22,0.51];
-const TS_T   = [0.032,0.066,0.056,0.133,0.102,0.237,0.174];
+const DET_T  = [0.44,0.07,0.05,0.08,0.2,0.13,0.4];
+const TS_T   = [0.028,0.05,0.042,0.067,0.103,0.128,0.129];
 const DET_TRT= [20.6,20.3,20.2,20.15,20.36,20.23,20.3];
 const TS_TRT = [19.4,18.8,18.4,18.8,18.8,18.65,18.56];
 const TS_PEXP= [11.79,9.88,7.83,9.88,9.41,8.82,8.18];
@@ -4518,6 +4581,45 @@ new Chart(document.getElementById('donutChart'), {
           label: ctx => ' $' + ctx.parsed.toLocaleString()
         }
       }
+    }
+  }
+});
+
+// ── Out-of-Sample charts ──────────────────────────────────────────────────────
+const OOS_NS      = [5, 10, 15, 20, 25, 40, 50];
+const OOS_CCP_C   = [3.1281,6.2631,6.3892,6.5116,6.6398,7.0172,8.848];
+const OOS_TS_C    = [3.1263,6.2601,3.3748,6.5053,6.6328,7.0033,7.2483];
+const OOS_CCP_V   = [8.8,8.8,8.8,8.8,8.8,8.8,8.8];
+const OOS_TS_V    = [3.0,3.0,3.0,3.0,3.0,3.0,3.0];
+const OOS_CCP_S   = [8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848];
+const OOS_TS_S    = [7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2511,7.2346,7.2346,7.2346,7.2346,7.2346,7.2511,7.3311,7.2346,7.2346,7.2346,7.2511,7.2346,7.2511,7.2346,7.2511,7.2511,7.2346,7.2346,7.3311,7.2346,7.2511,7.2511,7.2346,7.2346,7.2346,7.2346,7.2346,7.4371,7.2511,7.2346,7.2346,7.3311,7.2346,7.2346,7.2346,7.2346,7.4311,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2511,7.2346,7.2346,7.2346,7.2346,7.2346,7.3311,7.2346,7.2346,7.2346,7.3311,7.4311,7.2346,7.2511,7.2346,7.2511,7.2346,7.2346,7.2511,7.2346,7.2346,7.2346,7.2346,7.2346,7.3311,7.2346,7.2346,7.2346,7.2511,7.2346,7.2346,7.2346,7.2346,7.2346,7.2511,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2511,7.2511,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.3311,7.2346,7.2346,7.2346,7.2346,7.3311,7.2346,7.2346,7.2346,7.2346,7.2346,7.2511,7.2346,7.2346,7.2511,7.3311,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.3311,7.2346,7.2511,7.2346,7.2346,7.2346,7.2511,7.3311,7.2346,7.3311,7.4311,7.2346,7.2511,7.2346,7.2346,7.2511,7.2346,7.2346,7.2346,7.2346,7.2346,7.2511,7.2346,7.3311,7.2346,7.2346,7.3311,7.3311,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.3311,7.2511,7.2511,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2346,7.2511,7.2346];
+
+lineChart('oosCostChart', OOS_NS,
+  [detDS('CCP', OOS_CCP_C), tsDS('Two-Stage', OOS_TS_C)],
+  'Mean Realized Cost ($M)', v => '$' + v.toFixed(2) + 'M');
+
+lineChart('oosViolChart', OOS_NS,
+  [detDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
+  '% Scenarios with Violation', v => v.toFixed(1) + '%');
+
+new Chart(document.getElementById('oosDistChart'), {
+  type: 'line',
+  data: {
+    labels: Array.from({length: OOS_CCP_S.length}, (_,i) => i+1),
+    datasets: [
+      { label: 'CCP', data: OOS_CCP_S, borderColor: BLUE,   backgroundColor: BLUE+'22',
+         borderWidth:1.5, pointRadius:0, tension:0 },
+      { label: 'Two-Stage', data: OOS_TS_S, borderColor: ORANGE, backgroundColor: ORANGE+'22',
+         borderWidth:1.5, pointRadius:0, tension:0, borderDash:[4,2] },
+    ]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'bottom', labels:{ font:{ size:10 } } } },
+    scales:{
+      x:{ display:false },
+      y:{ title:{ display:true, text:'Realized Cost ($M)' },
+           ticks:{ callback: v => '$'+v.toFixed(2)+'M' } }
     }
   }
 });
