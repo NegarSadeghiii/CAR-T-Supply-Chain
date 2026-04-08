@@ -402,7 +402,321 @@ def build_patient_html(ts_rows):
     return "\n".join(out) if out else '<p style="color:#9ca3af">No patient data.</p>'
 
 
-def generate_html(results, output_path, tau, sigma_L, delta, epsilon):
+# ── Sensitivity analysis ───────────────────────────────────────────────────────
+
+def run_sensitivity(tau, epsilon, time_limit, n_sim_oos=5000):
+    """
+    Sweep sigma_L, alpha, and delta across two representative sizes (N=15, N=50).
+    Returns a dict with keys 'sigma_sweep', 'alpha_sweep', 'delta_sweep'.
+    """
+    import statistics as _st
+    sizes = [
+        ('N=15', 'Data_N15.dat'),
+        ('N=50', 'Data_N50.dat'),
+    ]
+    sigma_Ls = [0.10, 0.20, 0.30, 0.40]
+    alphas   = [0.05, 0.10, 0.20]
+    deltas   = [1.0,  2.0,  3.0]
+
+    sigma_sweep = []   # vary sigma_L, fix alpha=0.10, delta=2.0
+    alpha_sweep = []   # vary alpha,   fix sigma_L=0.20, delta=2.0
+    delta_sweep = []   # vary delta,   fix sigma_L=0.20, alpha=0.10
+
+    for label, fname in sizes:
+        df = os.path.join(BASE_DIR, fname)
+        if not os.path.exists(df):
+            continue
+        n_val = int(label.split('=')[1])
+
+        # ── sigma_L sweep ──────────────────────────────────────────────────
+        print(f'\n  [Sensitivity sigma_L] {label}')
+        for sL in sigma_Ls:
+            print(f'    sigma_L={sL} ...', end=' ', flush=True)
+            ts_cfg = dict(TS_PROCESS); ts_cfg['sigma_L']=sL; ts_cfg['delta']=2.0; ts_cfg['epsilon']=epsilon
+            ccp_cfg= dict(CCP_PROCESS); ccp_cfg['sigma_L']=sL; ccp_cfg['alpha']=0.10
+            try:
+                r_ts  = ts_run(tau=tau, data_file=df, process_config=ts_cfg,  time_limit=time_limit)
+                r_ccp = ccp_run(tau=tau, data_file=df, process_config=ccp_cfg, time_limit=time_limit)
+                pi_map = r_ts.get('pi_map', {'high':8000,'medium':4000,'low':1500})
+                oos = out_of_sample_validate(r_ccp, r_ts, ts_cfg['tmfe'], sL, 2.0,
+                                             pi_map, n_sim=n_sim_oos, seed=77)
+                sigma_sweep.append({
+                    'N': n_val, 'label': label, 'sigma_L': sL,
+                    'ts_cost':  r_ts.get('total_cost',0),
+                    'ccp_cost': r_ccp.get('total_cost',0),
+                    'cost_gap': _pct(r_ts.get('total_cost',0), r_ccp.get('total_cost',0)),
+                    'ccp_viol': oos['ccp']['pct_scen_viol'],
+                    'ts_viol':  oos['ts']['pct_scen_viol'],
+                    'ts_pexp':  r_ts.get('avg_prob_expedite',0)*100,
+                    'ts_solved': r_ts.get('solved',False),
+                    'ccp_solved': r_ccp.get('solved',False),
+                })
+                print(f"OK  ts={r_ts.get('total_cost',0):,.0f}  ccp={r_ccp.get('total_cost',0):,.0f}  "
+                      f"viol_ccp={oos['ccp']['pct_scen_viol']:.1f}%  viol_ts={oos['ts']['pct_scen_viol']:.1f}%")
+            except Exception as e:
+                sigma_sweep.append({'N':n_val,'label':label,'sigma_L':sL,'error':str(e),
+                                    'ts_solved':False,'ccp_solved':False})
+                print(f'ERROR: {e}')
+
+        # ── alpha sweep (CCP) ───────────────────────────────────────────────
+        print(f'\n  [Sensitivity alpha/CCP] {label}')
+        for al in alphas:
+            print(f'    alpha={al} ...', end=' ', flush=True)
+            ccp_cfg= dict(CCP_PROCESS); ccp_cfg['sigma_L']=0.20; ccp_cfg['alpha']=al
+            ts_cfg = dict(TS_PROCESS);  ts_cfg['sigma_L']=0.20;  ts_cfg['delta']=2.0; ts_cfg['epsilon']=epsilon
+            try:
+                r_ccp = ccp_run(tau=tau, data_file=df, process_config=ccp_cfg, time_limit=time_limit)
+                r_ts  = ts_run(tau=tau, data_file=df, process_config=ts_cfg,  time_limit=time_limit)
+                pi_map = r_ts.get('pi_map', {'high':8000,'medium':4000,'low':1500})
+                oos = out_of_sample_validate(r_ccp, r_ts, ts_cfg['tmfe'], 0.20, 2.0,
+                                             pi_map, n_sim=n_sim_oos, seed=77)
+                alpha_sweep.append({
+                    'N': n_val, 'label': label, 'alpha': al,
+                    'ccp_cost':  r_ccp.get('total_cost',0),
+                    'tmfe_eff':  r_ccp.get('tmfe_eff',0),
+                    'ccp_viol':  oos['ccp']['pct_scen_viol'],
+                    'ts_viol':   oos['ts']['pct_scen_viol'],
+                    'cost_gap':  _pct(r_ccp.get('total_cost',0), r_ts.get('total_cost',0)),
+                    'ccp_solved': r_ccp.get('solved',False),
+                })
+                print(f"OK  ccp={r_ccp.get('total_cost',0):,.0f}  tmfe_eff={r_ccp.get('tmfe_eff',0):.2f}  "
+                      f"viol={oos['ccp']['pct_scen_viol']:.1f}%")
+            except Exception as e:
+                alpha_sweep.append({'N':n_val,'label':label,'alpha':al,'error':str(e),'ccp_solved':False})
+                print(f'ERROR: {e}')
+
+        # ── delta sweep (Two-Stage) ─────────────────────────────────────────
+        print(f'\n  [Sensitivity delta/2S] {label}')
+        for dl in deltas:
+            print(f'    delta={dl} ...', end=' ', flush=True)
+            ts_cfg = dict(TS_PROCESS); ts_cfg['sigma_L']=0.20; ts_cfg['delta']=dl; ts_cfg['epsilon']=epsilon
+            ccp_cfg= dict(CCP_PROCESS); ccp_cfg['sigma_L']=0.20; ccp_cfg['alpha']=0.10
+            try:
+                r_ts  = ts_run(tau=tau, data_file=df, process_config=ts_cfg,  time_limit=time_limit)
+                r_ccp = ccp_run(tau=tau, data_file=df, process_config=ccp_cfg, time_limit=time_limit)
+                pi_map = r_ts.get('pi_map', {'high':8000,'medium':4000,'low':1500})
+                oos = out_of_sample_validate(r_ccp, r_ts, ts_cfg['tmfe'], 0.20, dl,
+                                             pi_map, n_sim=n_sim_oos, seed=77)
+                delta_sweep.append({
+                    'N': n_val, 'label': label, 'delta': dl,
+                    'ts_cost':  r_ts.get('total_cost',0),
+                    'ts_plans': r_ts.get('num_plans',0),
+                    'ts_viol':  oos['ts']['pct_scen_viol'],
+                    'ts_pexp':  r_ts.get('avg_prob_expedite',0)*100,
+                    'cost_gap': _pct(r_ts.get('total_cost',0), r_ccp.get('total_cost',0)),
+                    'ts_solved': r_ts.get('solved',False),
+                })
+                print(f"OK  ts={r_ts.get('total_cost',0):,.0f}  plans={r_ts.get('num_plans',0)}  "
+                      f"viol={oos['ts']['pct_scen_viol']:.1f}%  P(exp)={r_ts.get('avg_prob_expedite',0)*100:.1f}%")
+            except Exception as e:
+                delta_sweep.append({'N':n_val,'label':label,'delta':dl,'error':str(e),'ts_solved':False})
+                print(f'ERROR: {e}')
+
+    return {'sigma_sweep': sigma_sweep, 'alpha_sweep': alpha_sweep, 'delta_sweep': delta_sweep}
+
+
+# ── VSS ────────────────────────────────────────────────────────────────────────
+
+def compute_vss(det_results, ts_results, sigma_L, delta, pi_map_default,
+                n_sim=10000, seed=55):
+    """
+    VSS = EEV - RP
+    EEV: deterministic route decisions evaluated under n_sim scenarios WITH expediting recourse.
+    RP:  Two-Stage optimal cost (already solved).
+    """
+    import statistics as _st
+    rng  = random.Random(seed)
+    tmfe = TS_PROCESS['tmfe']
+    mu_L = math.log(tmfe) - 0.5 * sigma_L ** 2
+    scenarios = [rng.lognormvariate(mu_L, sigma_L) for _ in range(n_sim)]
+
+    vss_rows = []
+    det_by_n = {r['N']: r for r in det_results if r.get('solved')}
+    ts_by_n  = {r['N']: r for r in ts_results  if r.get('solved')}
+
+    for n, det in det_by_n.items():
+        ts = ts_by_n.get(n)
+        if not ts:
+            continue
+
+        # Deterministic patients — compute slack K_i using nominal tmfe
+        # K_i = deadline - (trt_det - tmfe) = mfg budget
+        det_pats  = det.get('patients', [])
+        pi_map    = ts.get('pi_map', pi_map_default)
+
+        # EEV: det routes + expediting recourse (delta from Two-Stage params)
+        eev_costs = []
+        for tmf in scenarios:
+            ec = 0
+            for p in det_pats:
+                # slack = deadline - (trt - tmfe) because trt = TLS+tmfe+TQC+TT
+                K = p['deadline'] - (p.get('trt', p.get('turnaround', tmfe)) - tmfe)
+                urg  = p.get('group', 'low')
+                pi_p = pi_map.get(urg, 1500)
+                if tmf > K:
+                    ec += pi_p          # expedite triggered
+            eev_costs.append(det.get('total_cost', 0) + ec)
+
+        eev_mean = _st.mean(eev_costs)
+        rp_cost  = ts.get('total_cost', 0)
+        vss      = eev_mean - rp_cost
+        vss_pct  = vss / eev_mean * 100 if eev_mean else 0
+
+        vss_rows.append({
+            'N':        n,
+            'det_cost': det.get('total_cost', 0),
+            'rp_cost':  rp_cost,
+            'eev_mean': round(eev_mean),
+            'eev_std':  round(_st.stdev(eev_costs)),
+            'vss':      round(vss),
+            'vss_pct':  round(vss_pct, 2),
+        })
+
+    return vss_rows
+
+
+def _sensitivity_html(sensitivity):
+    """Build HTML for the Sensitivity Analysis tab."""
+    if not sensitivity:
+        return '<p style="color:#9ca3af">No sensitivity data.</p>', '<p style="color:#9ca3af">No sensitivity data.</p>', '<p style="color:#9ca3af">No sensitivity data.</p>'
+
+    def _row_ok(r): return 'error' not in r
+
+    # sigma_L sweep table
+    sigma_rows = ''
+    for r in sensitivity.get('sigma_sweep', []):
+        if not _row_ok(r):
+            sigma_rows += f'<tr><td>{r["label"]}</td><td>{r["sigma_L"]}</td><td colspan="6" style="color:#dc2626">{r["error"][:60]}</td></tr>'
+            continue
+        gap = r.get('cost_gap', 0)
+        sigma_rows += (
+            f'<tr><td><strong>{r["label"]}</strong></td>'
+            f'<td style="text-align:center;font-weight:700">{r["sigma_L"]}</td>'
+            f'<td style="text-align:right">${r.get("ts_cost",0):,.0f}</td>'
+            f'<td style="text-align:right">${r.get("ccp_cost",0):,.0f}</td>'
+            f'<td>{_gap_cell(gap)}</td>'
+            f'<td style="text-align:right;color:{"#dc2626" if r.get("ccp_viol",0)>5 else "#166534"};font-weight:700">{r.get("ccp_viol",0):.1f}%</td>'
+            f'<td style="text-align:right;color:{"#dc2626" if r.get("ts_viol",0)>5 else "#166534"};font-weight:700">{r.get("ts_viol",0):.1f}%</td>'
+            f'<td style="text-align:right">{r.get("ts_pexp",0):.1f}%</td>'
+            f'</tr>'
+        )
+    sigma_html = f'''<div class="card"><h2>&#963;_L Sweep (alpha=0.10 fixed, delta=2d fixed)</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:12px">
+      How does manufacturing time variability affect cost and reliability?
+      Higher &#963;_L means more uncertainty around the nominal 7-day T_MF.
+    </p>
+    <div style="overflow-x:auto"><table class="tbl"><thead><tr>
+      <th>N</th><th>&#963;_L</th><th>2S Cost</th><th>CCP Cost</th><th>Cost Gap</th>
+      <th>CCP Violation%</th><th>2S Violation%</th><th>Avg P(exp)%</th>
+    </tr></thead><tbody>{sigma_rows}</tbody></table></div></div>'''
+
+    # alpha sweep table
+    alpha_rows = ''
+    for r in sensitivity.get('alpha_sweep', []):
+        if not _row_ok(r):
+            alpha_rows += f'<tr><td>{r["label"]}</td><td>{r["alpha"]}</td><td colspan="5" style="color:#dc2626">{r["error"][:60]}</td></tr>'
+            continue
+        gap = r.get('cost_gap', 0)
+        alpha_rows += (
+            f'<tr><td><strong>{r["label"]}</strong></td>'
+            f'<td style="text-align:center;font-weight:700">{r["alpha"]}</td>'
+            f'<td style="text-align:right">${r.get("ccp_cost",0):,.0f}</td>'
+            f'<td style="text-align:right">{r.get("tmfe_eff",0):.2f}d</td>'
+            f'<td>{_gap_cell(gap)}</td>'
+            f'<td style="text-align:right;color:{"#dc2626" if r.get("ccp_viol",0)>5 else "#166534"};font-weight:700">{r.get("ccp_viol",0):.1f}%</td>'
+            f'<td style="text-align:right;color:{"#dc2626" if r.get("ts_viol",0)>5 else "#166534"};font-weight:700">{r.get("ts_viol",0):.1f}%</td>'
+            f'</tr>'
+        )
+    alpha_html = f'''<div class="card"><h2>&#945; Sweep — CCP (sigma_L=0.20 fixed, delta=2d fixed)</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:12px">
+      How does the CCP service level parameter affect cost and violation rate?
+      Lower &#945; = stricter service guarantee = higher effective manufacturing budget = higher cost.
+    </p>
+    <div style="overflow-x:auto"><table class="tbl"><thead><tr>
+      <th>N</th><th>&#945;</th><th>CCP Cost</th><th>T_MF budget (eff.)</th>
+      <th>Cost Gap vs 2S</th><th>CCP Violation%</th><th>2S Violation%</th>
+    </tr></thead><tbody>{alpha_rows}</tbody></table></div></div>'''
+
+    # delta sweep table
+    delta_rows = ''
+    for r in sensitivity.get('delta_sweep', []):
+        if not _row_ok(r):
+            delta_rows += f'<tr><td>{r["label"]}</td><td>{r["delta"]}</td><td colspan="5" style="color:#dc2626">{r["error"][:60]}</td></tr>'
+            continue
+        gap = r.get('cost_gap', 0)
+        delta_rows += (
+            f'<tr><td><strong>{r["label"]}</strong></td>'
+            f'<td style="text-align:center;font-weight:700">{r["delta"]}d</td>'
+            f'<td style="text-align:right">${r.get("ts_cost",0):,.0f}</td>'
+            f'<td style="text-align:right">{r.get("ts_plans",0)}</td>'
+            f'<td>{_gap_cell(gap)}</td>'
+            f'<td style="text-align:right;color:{"#dc2626" if r.get("ts_viol",0)>5 else "#166534"};font-weight:700">{r.get("ts_viol",0):.1f}%</td>'
+            f'<td style="text-align:right">{r.get("ts_pexp",0):.1f}%</td>'
+            f'</tr>'
+        )
+    delta_html = f'''<div class="card"><h2>&#948; Sweep — Two-Stage (sigma_L=0.20 fixed, alpha=0.10 fixed)</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:12px">
+      How many days of expedited shipping buffer (&#948;) are needed to rescue delayed patients?
+      Larger &#948; = more routes become feasible under recourse = lower cost.
+    </p>
+    <div style="overflow-x:auto"><table class="tbl"><thead><tr>
+      <th>N</th><th>&#948;</th><th>2S Cost</th><th>Plans</th>
+      <th>Cost Gap vs CCP</th><th>2S Violation%</th><th>Avg P(exp)%</th>
+    </tr></thead><tbody>{delta_rows}</tbody></table></div></div>'''
+
+    return sigma_html, alpha_html, delta_html
+
+
+def _build_sigma_chart_js(sensitivity):
+    """Return JS arrays for sigma_L sensitivity charts (N=15 and N=50)."""
+    if not sensitivity:
+        return '', '', '', ''
+    sigma_sweep = sensitivity.get('sigma_sweep', [])
+    n15 = [r for r in sigma_sweep if r.get('N') == 15 and 'error' not in r]
+    n50 = [r for r in sigma_sweep if r.get('N') == 50 and 'error' not in r]
+    sls = [0.10, 0.20, 0.30, 0.40]
+
+    def _arr(rows, key, scale=1):
+        by_sl = {r['sigma_L']: r for r in rows}
+        def _val(s):
+            if s not in by_sl: return 'null'
+            v = by_sl[s].get(key)
+            if v is None: return 'null'
+            return str(round(v / scale, 4))
+        return '[' + ','.join(_val(s) for s in sls) + ']'
+
+    n15_gap  = _arr(n15, 'cost_gap')
+    n50_gap  = _arr(n50, 'cost_gap')
+    n15_by_sl = {r['sigma_L']: r for r in n15}
+    n50_by_sl = {r['sigma_L']: r for r in n50}
+    n15_viol = '[' + ','.join(str(round(n15_by_sl.get(s,{}).get('ccp_viol',0) or 0, 2)) for s in sls) + ']'
+    n50_viol = '[' + ','.join(str(round(n50_by_sl.get(s,{}).get('ccp_viol',0) or 0, 2)) for s in sls) + ']'
+    return n15_gap, n50_gap, n15_viol, n50_viol
+
+
+def _vss_html(vss_rows):
+    """Build HTML for the VSS tab."""
+    if not vss_rows:
+        return '<p style="color:#9ca3af">No VSS data (requires both Deterministic and Two-Stage to solve).</p>'
+    rows_html = ''
+    for r in vss_rows:
+        vss_sign = '+' if r['vss'] >= 0 else ''
+        vss_color = '#166534' if r['vss'] >= 0 else '#dc2626'
+        rows_html += (
+            f'<tr><td style="font-weight:700">N={r["N"]}</td>'
+            f'<td style="text-align:right">${r["det_cost"]:,.0f}</td>'
+            f'<td style="text-align:right">${r["rp_cost"]:,.0f}</td>'
+            f'<td style="text-align:right">${r["eev_mean"]:,.0f}</td>'
+            f'<td style="text-align:right">&plusmn;${r["eev_std"]:,.0f}</td>'
+            f'<td style="text-align:right;color:{vss_color};font-weight:700">{vss_sign}${r["vss"]:,.0f}</td>'
+            f'<td style="text-align:right;color:{vss_color};font-weight:700">{vss_sign}{r["vss_pct"]:.1f}%</td>'
+            f'</tr>'
+        )
+    return rows_html
+
+
+def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
+                  sensitivity=None, vss_rows=None):
     det_rows = [r for r in results if r['solver'] == 'Deterministic' and r.get('solved')]
     ts_rows  = [r for r in results if r['solver'] == 'Two-Stage Exp.' and r.get('solved')]
 
@@ -517,6 +831,20 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon):
         for i, f in enumerate(findings)
     )
 
+    # ── Sensitivity tab content ────────────────────────────────────────────────
+    if sensitivity:
+        sen_sigma_html, sen_alpha_html, sen_delta_html = _sensitivity_html(sensitivity)
+        n15_gap_js, n50_gap_js, n15_viol_js, n50_viol_js = _build_sigma_chart_js(sensitivity)
+        sigma_ls_js = '[0.10,0.20,0.30,0.40]'
+    else:
+        sen_sigma_html = sen_alpha_html = sen_delta_html = '<p style="color:#9ca3af">No sensitivity data.</p>'
+        n15_gap_js = n50_gap_js = n15_viol_js = n50_viol_js = '[]'
+        sigma_ls_js = '[]'
+
+    # ── VSS tab content ────────────────────────────────────────────────────────
+    vss_table_rows = _vss_html(vss_rows) if vss_rows else '<p style="color:#9ca3af">No VSS data.</p>'
+    avg_vss_pct = round(sum(r['vss_pct'] for r in (vss_rows or []))/max(1,len(vss_rows or [])), 2)
+
     HTML = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -586,6 +914,8 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   <div class="tab"   onclick="show('patients')">&#128101; Patients</div>
   <div class="tab"   onclick="show('oos')">&#127919; Out-of-Sample</div>
   <div class="tab"   onclick="show('findings')">&#128270; Findings</div>
+  <div class="tab"   onclick="show('sensitivity')">&#128202; Sensitivity</div>
+  <div class="tab"   onclick="show('vss')">&#127942; VSS</div>
 </div>
 
 <!-- TAB 1: Summary -->
@@ -837,11 +1167,70 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   </div>
 </div>
 
+<!-- TAB 8: Sensitivity -->
+<div id="pane-sensitivity" class="pane">
+  <div class="card" style="margin-bottom:10px">
+    <h2>Sensitivity Analysis — Conference Paper Results</h2>
+    <p style="font-size:12px;color:var(--dim);line-height:1.7">
+      Each sweep varies one parameter while holding the others fixed, evaluated on
+      representative instances <strong>N=15</strong> and <strong>N=50</strong>.
+      Out-of-sample validation uses 5 000 scenarios per configuration.
+    </p>
+  </div>
+  {sen_sigma_html}
+  {sen_alpha_html}
+  {sen_delta_html}
+  <div class="chart-grid" style="margin-top:16px">
+    <div class="chart-box">
+      <h3>&sigma;_L vs Cost Gap (2S vs CCP) — %</h3>
+      <div class="chart-wrap"><canvas id="senGapChart"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>&sigma;_L vs CCP Violation Rate — %</h3>
+      <div class="chart-wrap"><canvas id="senViolChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 9: VSS -->
+<div id="pane-vss" class="pane">
+  <div class="card">
+    <h2>Value of the Stochastic Solution (VSS)</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.7">
+      <strong>VSS = EEV &minus; RP</strong>, where:<br>
+      &bull; <strong>RP</strong> (Recourse Problem) = Two-Stage optimal cost (route selection with expediting recourse priced in)<br>
+      &bull; <strong>EEV</strong> (Expected value of the Expected Value solution) = deterministic routes evaluated under 10 000 T_MF
+      scenarios <em>with</em> expediting recourse applied post-hoc<br><br>
+      A positive VSS means using the stochastic model (Two-Stage) yields a lower expected cost than
+      naively taking the deterministic solution and hoping recourse will cover delays.
+      Average VSS across instances: <strong>{avg_vss_pct:+.1f}%</strong>.
+    </p>
+    <div style="overflow-x:auto">
+    <table class="tbl"><thead><tr>
+      <th>N</th>
+      <th style="background:#f1f5f9">Det. Cost (nominal)</th>
+      <th style="background:#fed7aa;color:#92400e">RP Cost (Two-Stage)</th>
+      <th style="background:#dbeafe;color:#1e3a8a">EEV Mean</th>
+      <th style="background:#dbeafe;color:#1e3a8a">EEV Std</th>
+      <th style="background:#d1fae5;color:#065f46">VSS ($)</th>
+      <th style="background:#d1fae5;color:#065f46">VSS %</th>
+    </tr></thead><tbody>
+    {vss_table_rows}
+    </tbody></table></div>
+    <div class="insight green" style="margin-top:14px">
+      <strong>Interpretation:</strong> A positive VSS confirms that the Two-Stage model extracts
+      genuine value from modelling uncertainty — the stochastic route selection is cheaper in
+      expectation than using the deterministic schedule with recourse bolted on. The larger the
+      VSS %, the more valuable the stochastic formulation is relative to a naive deterministic approach.
+    </div>
+  </div>
+</div>
+
 <script>
 function show(n) {{
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('a'));
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('a'));
-  const m = {{summary:0,charts:1,table:2,mc:3,patients:4,oos:5,findings:6}};
+  const m = {{summary:0,charts:1,table:2,mc:3,patients:4,oos:5,findings:6,sensitivity:7,vss:8}};
   document.querySelectorAll('.tab')[m[n]].classList.add('a');
   document.getElementById('pane-' + n).classList.add('a');
   requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
@@ -976,6 +1365,64 @@ new Chart(document.getElementById('oosDistChart'), {{
   }}
 }});
 
+// ── Sensitivity charts ────────────────────────────────────────────────────────
+const SEN_SLS   = {sigma_ls_js};
+const N15_GAP   = {n15_gap_js};
+const N50_GAP   = {n50_gap_js};
+const N15_VIOL  = {n15_viol_js};
+const N50_VIOL  = {n50_viol_js};
+const GREEN = '#166534';
+
+if (document.getElementById('senGapChart') && SEN_SLS.length > 0) {{
+  new Chart(document.getElementById('senGapChart'), {{
+    type: 'line',
+    data: {{
+      labels: SEN_SLS,
+      datasets: [
+        {{ label: 'N=15', data: N15_GAP,
+           borderColor: BLUE, backgroundColor: BLUE+'22',
+           pointBackgroundColor: BLUE, borderWidth:2, pointRadius:5, tension:0.3 }},
+        {{ label: 'N=50', data: N50_GAP,
+           borderColor: ORANGE, backgroundColor: ORANGE+'22',
+           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0.3, borderDash:[5,3] }},
+      ]
+    }},
+    options: {{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }} }} }} }},
+      scales:{{
+        x:{{ title:{{ display:true, text:'sigma_L' }} }},
+        y:{{ title:{{ display:true, text:'Cost Gap (%)' }},
+             ticks:{{ callback: v => v.toFixed(1)+'%' }} }}
+      }}
+    }}
+  }});
+
+  new Chart(document.getElementById('senViolChart'), {{
+    type: 'line',
+    data: {{
+      labels: SEN_SLS,
+      datasets: [
+        {{ label: 'N=15 CCP Viol%', data: N15_VIOL,
+           borderColor: BLUE, backgroundColor: BLUE+'22',
+           pointBackgroundColor: BLUE, borderWidth:2, pointRadius:5, tension:0.3 }},
+        {{ label: 'N=50 CCP Viol%', data: N50_VIOL,
+           borderColor: ORANGE, backgroundColor: ORANGE+'22',
+           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0.3, borderDash:[5,3] }},
+      ]
+    }},
+    options: {{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }} }} }} }},
+      scales:{{
+        x:{{ title:{{ display:true, text:'sigma_L' }} }},
+        y:{{ title:{{ display:true, text:'CCP Violation %' }},
+             ticks:{{ callback: v => v.toFixed(1)+'%' }} }}
+      }}
+    }}
+  }});
+}}
+
 requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
 </script>
 </body></html>"""
@@ -1009,6 +1456,29 @@ if __name__ == '__main__':
         epsilon=args.epsilon, time_limit=args.time_limit, n_sim=args.n_sim,
     )
 
+    det_res = [r for r in results if r['solver'] == 'Deterministic']
+    ts_res  = [r for r in results if r['solver'] == 'Two-Stage Exp.']
+    pi_map_default = {'high': 8000, 'medium': 4000, 'low': 1500}
+
+    print('\n' + '=' * 60)
+    print('Computing VSS …')
+    vss_rows = compute_vss(
+        det_results=det_res, ts_results=ts_res,
+        sigma_L=args.sigma_L, delta=args.delta,
+        pi_map_default=pi_map_default,
+        n_sim=10000, seed=55,
+    )
+    print(f'  VSS computed for {len(vss_rows)} instance(s).')
+
+    print('\n' + '=' * 60)
+    print('Running sensitivity analysis (sigma_L / alpha / delta sweeps) …')
+    print('  Note: this runs 2 solvers × (4+3+3) configs × 2 sizes = 40 solver calls.')
+    sensitivity = run_sensitivity(
+        tau=args.tau, epsilon=args.epsilon, time_limit=args.time_limit,
+        n_sim_oos=min(args.n_sim, 2000),
+    )
+
     out = os.path.join(BASE_DIR, args.output)
-    generate_html(results, out, args.tau, args.sigma_L, args.delta, args.epsilon)
+    generate_html(results, out, args.tau, args.sigma_L, args.delta, args.epsilon,
+                  sensitivity=sensitivity, vss_rows=vss_rows)
     print(f'\nDone. Open {args.output} in your browser.')
