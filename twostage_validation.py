@@ -451,20 +451,21 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon):
         oos = oos_by_n.get(n)
         ccp = ccp_by_n.get(n)
         if not oos:
-            oos_table_rows += f'<tr><td style="font-weight:700">N={n}</td><td colspan="9" style="color:#9ca3af">Not available</td></tr>'
+            oos_table_rows += f'<tr><td style="font-weight:700">N={n}</td><td colspan="8" style="color:#9ca3af">Not available</td></tr>'
             continue
         c = oos['ccp']; t = oos['ts']
         # cost gap: two-stage mean vs CCP mean
         cost_gap = _pct(t['mean_cost'], c['mean_cost'])
+        c_viol_col = '#dc2626' if c['pct_scen_viol'] > 5 else '#166534'
+        t_viol_col = '#dc2626' if t['pct_scen_viol'] > 5 else '#166534'
         oos_table_rows += (
             f'<tr><td style="font-weight:700">N={n}</td>'
             f'<td style="text-align:right">${c["mean_cost"]:,.0f}</td>'
-            f'<td style="text-align:right">$0</td>'
-            f'<td style="color:{"#dc2626" if c["pct_scen_viol"]>5 else "#166534"};font-weight:700;text-align:right">{c["pct_scen_viol"]:.1f}%</td>'
-            f'<td style="text-align:right">&mdash;</td>'
+            f'<td style="text-align:right">${c["std_cost"]:,.0f}</td>'
+            f'<td style="color:{c_viol_col};font-weight:700;text-align:right">{c["pct_scen_viol"]:.1f}%</td>'
             f'<td style="text-align:right">${t["mean_cost"]:,.0f}</td>'
             f'<td style="text-align:right">${t["std_cost"]:,.0f}</td>'
-            f'<td style="color:{"#dc2626" if t["pct_scen_viol"]>5 else "#166534"};font-weight:700;text-align:right">{t["pct_scen_viol"]:.1f}%</td>'
+            f'<td style="color:{t_viol_col};font-weight:700;text-align:right">{t["pct_scen_viol"]:.1f}%</td>'
             f'<td style="text-align:right">{t["pct_exp"]:.1f}%</td>'
             f'<td>{_gap_cell(cost_gap)}</td>'
             f'</tr>'
