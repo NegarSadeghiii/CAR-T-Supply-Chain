@@ -104,14 +104,16 @@ def run_all(tau, sigma_L, delta, epsilon, time_limit, n_sim):
             r = det_run(tau=tau, data_file=df, time_limit=time_limit)
             det = {
                 'N': n_val, 'label': label, 'solver': 'Deterministic',
-                'solved':       r.get('solved', False),
-                'total_cost':   r.get('total_cost', 0),
-                'avg_trt':      r.get('avg_trt',    0),
-                'solve_time':   r.get('solve_time', 0),
-                'num_plans':    r.get('num_plans',  0),
-                'num_patients': r.get('num_patients', n_val),
-                'error':        r.get('error', ''),
-                'patients':     r.get('patients', []),
+                'solved':           r.get('solved', False),
+                'total_cost':       r.get('total_cost', 0),
+                'transport_cost':   r.get('transport_cost', 0),
+                'facility_cost':    r.get('facility_cost', 0),
+                'avg_trt':          r.get('avg_trt',    0),
+                'solve_time':       r.get('solve_time', 0),
+                'num_plans':        r.get('num_plans',  0),
+                'num_patients':     r.get('num_patients', n_val),
+                'error':            r.get('error', ''),
+                'patients':         r.get('patients', []),
             }
         except Exception as e:
             det = {'N': n_val, 'label': label, 'solver': 'Deterministic',
@@ -140,6 +142,8 @@ def run_all(tau, sigma_L, delta, epsilon, time_limit, n_sim):
                 'N': n_val, 'label': label, 'solver': 'Two-Stage Exp.',
                 'solved':               r2.get('solved', False),
                 'total_cost':           r2.get('total_cost', 0),
+                'transport_cost':       r2.get('transport_cost', 0),
+                'facility_cost':        r2.get('facility_cost', 0),
                 'avg_trt':              r2.get('avg_trt',    0),
                 'solve_time':           r2.get('solve_time', 0),
                 'num_plans':            r2.get('num_plans',  0),
@@ -379,8 +383,9 @@ def build_patient_html(ts_rows):
             continue
         out.append(f'<h4 style="margin:14px 0 6px;color:#92400E">N={r["N"]} — Per-Patient Detail</h4>')
         out.append('<div style="overflow-x:auto"><table class="tbl"><thead><tr>')
+        _JL = {'j1': '🚌 Ground', 'j2': '✈ Air'}
         for h in ['Patient','Urgency','Deadline','TRT','On-time',
-                   'Facility','j_out','j_ret','P(expedite)','E[$exp]','Slack K_i']:
+                   'Facility','Outbound','Return','P(expedite)','E[$exp]','Slack K_i']:
             out.append(f'<th>{h}</th>')
         out.append('</tr></thead><tbody>')
         for p in pats:
@@ -400,8 +405,8 @@ def build_patient_html(ts_rows):
               <td style=\"text-align:right\">{trt}</td>
               <td style=\"text-align:center\">{ot_icon}</td>
               <td style=\"font-size:10px\">{p.get('facility','?')}</td>
-              <td>{p.get('j_out','?')}</td>
-              <td>{p.get('j_ret','?')}</td>
+              <td style=\"font-size:11px\">{_JL.get(p.get('j_out','?'), p.get('j_out','?'))}</td>
+              <td style=\"font-size:11px\">{_JL.get(p.get('j_ret','?'), p.get('j_ret','?'))}</td>
               <td style=\"color:{pexp_col};font-weight:700;text-align:right\">{pexp*100:.1f}%</td>
               <td style=\"text-align:right\">${eexp:,.0f}</td>
               <td style=\"text-align:right\">{slack_s}</td>
@@ -1155,6 +1160,61 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
         n15_ts_cost_js = n50_ts_cost_js = '[]'
         sigma_ls_js = '[]'
 
+    # ── Cost breakdown chart data ──────────────────────────────────────────────
+    # Stacked bar: transport / facility / material / exp-expediting per N for Det+2S
+    mat_per_n = {n: (10476 + 9312) * n for n in ns}
+    _cb_labels   = str(chart_ns)
+    _cb_det_tr   = '[' + ','.join(str(round(det_by_n[n]['transport_cost']/1e3,1)) if n in det_by_n else 'null' for n in chart_ns) + ']'
+    _cb_det_fac  = '[' + ','.join(str(round(det_by_n[n]['facility_cost']/1e3,1))  if n in det_by_n else 'null' for n in chart_ns) + ']'
+    _cb_det_mat  = '[' + ','.join(str(round(mat_per_n[n]/1e3,1)) for n in chart_ns) + ']'
+    _cb_ts_tr    = '[' + ','.join(str(round(ts_by_n[n]['transport_cost']/1e3,1))  if n in ts_by_n else 'null' for n in chart_ns) + ']'
+    _cb_ts_fac   = '[' + ','.join(str(round(ts_by_n[n]['facility_cost']/1e3,1))   if n in ts_by_n else 'null' for n in chart_ns) + ']'
+    _cb_ts_exp   = '[' + ','.join(str(round(ts_by_n[n].get('total_exp_expedite_cost',0)/1e3,1)) if n in ts_by_n else 'null' for n in chart_ns) + ']'
+    cost_breakdown_js = (
+        'const _cb_det_fac=' + _cb_det_fac + ';'
+        'const _cb_det_mat=' + _cb_det_mat + ';'
+        'const _cb_ts_tr='   + _cb_ts_tr   + ';'
+        'const _cb_ts_fac='  + _cb_ts_fac  + ';'
+        'const _cb_ts_exp='  + _cb_ts_exp  + ';'
+    )
+
+    # ── Tau feasibility sweep data ─────────────────────────────────────────────
+    tau_feas_html = ''
+    tau_cost_det_js = '[]'; tau_cost_ts_js = '[]'; tau_fac_det_js = '[]'; tau_fac_ts_js = '[]'
+    tau_labels_js = '[]'
+    if vss_tau_sweep:
+        # Collect det/ts cost per (tau, N) from the tau sweep — use N=15 as example
+        _tf_taus = sorted(set(r['tau'] for r in vss_tau_sweep))
+        _tf_n15_det = []; _tf_n15_ts = []; _tf_n25_det = []; _tf_n25_ts = []
+        _tf_n15_fac_det = []; _tf_n15_fac_ts = []
+        for _t in _tf_taus:
+            _r15 = next((r for r in vss_tau_sweep if r['N'] == 15 and r.get('tau') == _t), None)
+            _r25 = next((r for r in vss_tau_sweep if r['N'] == 25 and r.get('tau') == _t), None)
+            _tf_n15_det.append(str(round(_r15['det_cost']/1e6, 4)) if _r15 and _r15.get('det_cost') else 'null')
+            _tf_n15_ts.append( str(round(_r15['rp_cost']/1e6,  4)) if _r15 and _r15.get('rp_cost')  else 'null')
+            _tf_n25_det.append(str(round(_r25['det_cost']/1e6, 4)) if _r25 and _r25.get('det_cost') else 'null')
+            _tf_n25_ts.append( str(round(_r25['rp_cost']/1e6,  4)) if _r25 and _r25.get('rp_cost')  else 'null')
+        tau_labels_js   = str(_tf_taus)
+        tau_cost_det_js = '[' + ','.join(_tf_n15_det) + ']'
+        tau_cost_ts_js  = '[' + ','.join(_tf_n15_ts)  + ']'
+        tau_cost_det25_js = '[' + ','.join(_tf_n25_det) + ']'
+        tau_cost_ts25_js  = '[' + ','.join(_tf_n25_ts)  + ']'
+        # Build table
+        _tf_rows = ''
+        for _t in _tf_taus:
+            for _n in sorted(set(r['N'] for r in vss_tau_sweep)):
+                _r = next((r for r in vss_tau_sweep if r['N'] == _n and r.get('tau') == _t), None)
+                if _r:
+                    _dc = f"${_r['det_cost']:,.0f}" if _r.get('det_cost') else '—'
+                    _tc = f"${_r['rp_cost']:,.0f}"  if _r.get('rp_cost')  else '<span style="color:#dc2626">INFEASIBLE</span>'
+                    _tf_rows += f'<tr><td>{_t}</td><td>N={_n}</td><td>{_dc}</td><td>{_tc}</td></tr>'
+        tau_feas_html = f'''<div style="overflow-x:auto;margin-top:12px">
+<table class="tbl" style="max-width:600px"><thead><tr>
+  <th>&tau;</th><th>N</th><th>Det Cost</th><th>Two-Stage Cost</th>
+</tr></thead><tbody>{_tf_rows}</tbody></table></div>'''
+    else:
+        tau_cost_det25_js = tau_cost_ts25_js = '[]'
+
     # ── VSS tab content ────────────────────────────────────────────────────────
     vss_table_rows = _vss_html(vss_rows) if vss_rows else '<p style="color:#9ca3af">No VSS data.</p>'
     avg_vss_pct = round(sum(r['vss_pct'] for r in (vss_rows or []))/max(1,len(vss_rows or [])), 2)
@@ -1174,7 +1234,7 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
                 '{label:"N=' + str(_n) + '",data:[' + ','.join(_data) + '],'
                 'borderColor:"' + _col + '",backgroundColor:"' + _col + '22",'
                 'pointBackgroundColor:"' + _col + '",borderWidth:2,pointRadius:5,'
-                'tension:0.3,spanGaps:false}'
+                'tension:0,spanGaps:false}'
             )
         vss_tau_taus_js     = str(_tw_taus)
         vss_tau_datasets_js = '[' + ',\n'.join(_tw_datasets) + ']'
@@ -1197,7 +1257,7 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
                 '{label:"N=' + str(_n) + '",data:[' + ','.join(_data) + '],'
                 'borderColor:"' + _col + '",backgroundColor:"' + _col + '22",'
                 'pointBackgroundColor:"' + _col + '",borderWidth:2,pointRadius:5,'
-                'tension:0.3,spanGaps:false}'
+                'tension:0,spanGaps:false}'
             )
         vss_sweep_sls_js      = str(_sw_sls)
         vss_sweep_datasets_js = '[' + ',\n'.join(_sw_datasets) + ']'
@@ -1271,6 +1331,7 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   <div class="tab"   onclick="show('oos')">&#127919; CCP vs Two-Stage</div>
   <div class="tab"   onclick="show('mc')">&#9989; Obj. Validation</div>
   <div class="tab"   onclick="show('patients')">&#128101; Patients</div>
+  <div class="tab"   onclick="show('gantt')">&#128197; Patient Journey</div>
   <div class="tab"   onclick="show('findings')">&#128270; Findings</div>
   <div class="tab"   onclick="show('sensitivity')">&#128202; Sensitivity</div>
   <div class="tab"   onclick="show('vss')">&#127942; VSS</div>
@@ -1305,6 +1366,18 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
     <div class="chart-box">
       <h3>% Scenarios with Violation — CCP vs Two-Stage (OOS)</h3>
       <div class="chart-wrap"><canvas id="sumViolChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-box" style="grid-column:1/-1">
+      <h3>Cost Breakdown by Component — Two-Stage vs Deterministic</h3>
+      <p style="font-size:11px;color:var(--dim);margin:0 0 8px">
+        Stacked bars show where costs sit: facility fixed cost dominates at most N.
+        Transport is small (&lt;2%). Expediting is priced into Two-Stage column costs.
+        Material cost = $(10,476 + 9,312) &times; N is identical across all models.
+      </p>
+      <div class="chart-wrap" style="height:280px"><canvas id="costBreakdownChart"></canvas></div>
     </div>
   </div>
 
@@ -1421,6 +1494,50 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   <div class="card">
     <h2>Per-Patient Detail — Two-Stage Expediting Solution</h2>
     {pat_html}
+  </div>
+</div>
+
+<!-- TAB: Patient Journey (Gantt) -->
+<div id="pane-gantt" class="pane">
+  <div class="card">
+    <h2>Single Patient Journey — Gantt Chart</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.7">
+      Illustrative timeline for one patient under three transport and manufacturing scenarios.
+      Each bar shows the duration of each pipeline stage from the day of leukapheresis collection.
+      <strong>TLS</strong> = collection (1d) &nbsp;|&nbsp;
+      <strong>Outbound</strong> = transport to manufacturing facility &nbsp;|&nbsp;
+      <strong>Mfg</strong> = manufacturing (nominal 7d, can extend stochastically) &nbsp;|&nbsp;
+      <strong>QC</strong> = quality control (7d) &nbsp;|&nbsp;
+      <strong>Return</strong> = transport back to clinic.
+    </p>
+    <div style="height:320px"><canvas id="ganttChart"></canvas></div>
+    <div style="margin-top:16px;font-size:12px;line-height:1.8;color:#374151">
+      <strong>Reading the chart:</strong>
+      Row&nbsp;1 uses fast ground transit (j1, 1d each way) — short waits, total TRT = 17d.
+      Row&nbsp;2 uses slower transit (j2, 4d each way) — total TRT = 23d.
+      Row&nbsp;3 shows the <em>expediting recourse</em>: manufacturing runs 2 days late
+      (T_MF = 9d instead of 7d), but the Two-Stage model has pre-selected a route with
+      enough slack (K_i &ge; 9d) so no deadline violation occurs.
+      Row&nbsp;4 shows a <em>violation scenario</em>: T_MF = 12d exceeds K_i + &delta;,
+      and the patient misses their deadline even with expediting. Under CCP this scenario
+      is planned away by inflating TMFE to the 90th percentile; under Two-Stage it is
+      priced into the expected expediting cost and accepted at low probability (&le; &epsilon;).
+    </div>
+  </div>
+  <div class="card">
+    <h2>Pipeline Stage Durations — Reference</h2>
+    <table class="tbl" style="max-width:600px">
+      <thead><tr><th>Stage</th><th>Duration</th><th>Stochastic?</th><th>Model handles via</th></tr></thead>
+      <tbody>
+        <tr><td>Leukapheresis collection (TLS)</td><td>1 day</td><td>No</td><td>Fixed parameter</td></tr>
+        <tr><td>Outbound transport j1 (ground)</td><td>1 day</td><td>No</td><td>Route decision variable</td></tr>
+        <tr><td>Outbound transport j2 (alternate)</td><td>4 days</td><td>No</td><td>Route decision variable</td></tr>
+        <tr><td>Manufacturing (T_MF)</td><td>7d nominal, &sigma;_L={sigma_L}</td><td><strong>Yes</strong></td><td>Two-Stage: K_i filter + expediting cost<br>CCP: inflate to 90th-pct (8.87d)</td></tr>
+        <tr><td>QC (TQC)</td><td>7 days</td><td>No</td><td>Fixed parameter</td></tr>
+        <tr><td>Return transport j1 (ground)</td><td>1 day</td><td>No</td><td>Route decision variable; &minus;{delta}d if expedited</td></tr>
+        <tr><td>Return transport j2 (alternate)</td><td>4 days</td><td>No</td><td>Route decision variable; &minus;{delta}d if expedited</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -1568,6 +1685,45 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   </div>
 
   <div class="card">
+    <h2>Manufacturing Cost Impact — What the Model Actually Controls</h2>
+    <div class="insight">
+      <strong>What changes with scheduling:</strong>
+      The model selects <em>which</em> manufacturing facility each patient uses and
+      <em>when</em> their batch starts. This affects three cost categories:
+      <ul style="margin:6px 0 0 16px;line-height:1.8">
+        <li><strong>Facility fixed cost</strong> — (CIM + CVM) &times; T_max is charged for every
+            open facility regardless of load. Concentrating patients into one facility avoids
+            opening a second at $3M+ fixed cost. This is the dominant lever: facility cost
+            represents 85&ndash;90% of total cost at most N values.</li>
+        <li><strong>Transportation cost</strong> — Route selection (j1 vs j2, facility location)
+            drives outbound + return costs. This is small (&lt;2% of total) but the only cost
+            dimension that differs between j1 and j2 routes.</li>
+        <li><strong>Material cost</strong> — Fixed at $(10,476 + 9,312) &times; N. Identical
+            across all models. The schedule does <em>not</em> change material consumption.</li>
+      </ul>
+    </div>
+    <div class="insight orange" style="margin-top:10px">
+      <strong>What the model does NOT capture — rework cost:</strong>
+      In CAR-T manufacturing, a batch that fails QC must be reworked or restarted, adding
+      significant cost (often $50,000&ndash;$200,000 per failed batch). Manufacturing delays
+      (T_MF &gt; TMFE) may correlate with higher rework probability. If schedule tightness
+      increases rework risk, then Two-Stage&rsquo;s conservative route selection (K_i filter,
+      capacity buffered at 90th-pct) may indirectly reduce rework costs beyond what is
+      captured in the objective. Quantifying this link — e.g., via a rework probability
+      function of schedule slack — is a natural extension and would strengthen the case
+      for stochastic scheduling in CAR-T supply chains.
+    </div>
+    <div class="insight" style="margin-top:10px;background:#f0fdf4">
+      <strong>Advisor note:</strong>
+      The current cost function is transport-and-facility dominant. The model does influence
+      which facility opens (the most consequential decision), which transport mode is used,
+      and implicitly how much slack a patient has against their deadline. If rework or
+      batch failure costs were added to the objective as a function of schedule tightness,
+      the manufacturing-cost impact would become direct and measurable.
+    </div>
+  </div>
+
+  <div class="card">
     <h2>Automated Findings (computed from results)</h2>
     {findings_html}
     <div class="insight" style="margin-top:12px">
@@ -1609,6 +1765,30 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
       <h3>Two-Stage Realized Cost ($M) across &sigma;_L</h3>
       <div class="chart-wrap"><canvas id="senCostChart"></canvas></div>
     </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>&tau; Feasibility Sweep — When Does the Model Crash?</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.7">
+      &tau; compresses patient deadlines: deadline = base_due + tolerance &times; (1 &minus; &tau;).
+      At &tau; = 0 deadlines are at their widest; at &tau; = 1 they are at their tightest
+      (zero tolerance). As &tau; increases, routes with tight slack are progressively
+      eliminated by the K_i filter until no feasible routes remain.
+      The chart below shows total cost vs &tau; for both models, with infeasible points
+      dropped. This directly answers: <em>&ldquo;at what &tau; does the Two-Stage model
+      become infeasible?&rdquo;</em>
+    </p>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h3>Total Cost vs &tau; — Feasibility Boundary</h3>
+        <div class="chart-wrap"><canvas id="tauFeasChart"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <h3>Decision Sensitivity: Facilities Opened vs &tau;</h3>
+        <div class="chart-wrap"><canvas id="tauFacChart"></canvas></div>
+      </div>
+    </div>
+    {tau_feas_html}
   </div>
 </div>
 
@@ -1702,12 +1882,12 @@ function lineChart(id, labels, datasets, yLabel, fmt) {{
 const ccpDS = (label, data) => ({{
   label, data,
   borderColor: BLUE, backgroundColor: BLUE + '22',
-  pointBackgroundColor: BLUE, borderWidth: 2, pointRadius: 5, tension: 0.3
+  pointBackgroundColor: BLUE, borderWidth: 2, pointRadius: 5, tension: 0
 }});
 const tsDS  = (label, data) => ({{
   label, data,
   borderColor: ORANGE, backgroundColor: ORANGE + '22',
-  pointBackgroundColor: ORANGE, borderWidth: 2, pointRadius: 5, tension: 0.3,
+  pointBackgroundColor: ORANGE, borderWidth: 2, pointRadius: 5, tension: 0,
   borderDash: [5, 3]
 }});
 
@@ -1823,6 +2003,114 @@ if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {{
 }}
 
 requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+
+// ── Cost Breakdown stacked bar ────────────────────────────────────────────────
+const _cb_det_tr={_cb_det_tr};
+const {cost_breakdown_js}
+if (document.getElementById('costBreakdownChart')) {{
+  new Chart(document.getElementById('costBreakdownChart'), {{
+    type: 'bar',
+    data: {{
+      labels: NS.map(n => 'N='+n),
+      datasets: [
+        {{ label: 'Det — Facility ($K)',     data: _cb_det_fac,  backgroundColor: '#1E3A5F',   stack: 'det' }},
+        {{ label: 'Det — Transport ($K)',    data: _cb_det_tr,   backgroundColor: '#3b82f6',   stack: 'det' }},
+        {{ label: 'Det — Material ($K)',     data: _cb_det_mat,  backgroundColor: '#93c5fd',   stack: 'det' }},
+        {{ label: '2S — Facility ($K)',      data: _cb_ts_fac,   backgroundColor: '#92400E',   stack: 'ts'  }},
+        {{ label: '2S — Transport ($K)',     data: _cb_ts_tr,    backgroundColor: '#f97316',   stack: 'ts'  }},
+        {{ label: '2S — Material ($K)',      data: _cb_det_mat,  backgroundColor: '#fed7aa',   stack: 'ts'  }},
+        {{ label: '2S — Exp. Expediting($K)',data: _cb_ts_exp,   backgroundColor: '#dc2626',   stack: 'ts'  }},
+      ]
+    }},
+    options: {{
+      responsive: true, maintainAspectRatio: false,
+      plugins: {{
+        legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth: 12 }} }},
+        tooltip: {{ callbacks: {{ label: ctx => ctx.dataset.label + ': $' + ctx.raw.toFixed(0) + 'K' }} }}
+      }},
+      scales: {{
+        x: {{ title: {{ display: true, text: 'N (patients) — left bars = Det, right bars = Two-Stage' }} }},
+        y: {{ title: {{ display: true, text: 'Cost ($K)' }},
+              stacked: true, ticks: {{ callback: v => '$' + (v/1000).toFixed(0) + 'M' }} }}
+      }}
+    }}
+  }});
+}}
+
+// ── Gantt chart ───────────────────────────────────────────────────────────────
+if (document.getElementById('ganttChart')) {{
+  const G_PHASES = ['Leukapheresis', 'Outbound transport', 'Manufacturing', 'QC', 'Return transport'];
+  const G_COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#059669'];
+  // Rows: [label, [col_start, mfg_start, mfg_end, qc_end, ret_end], deadline, note]
+  const G_ROWS = [
+    ['Ground j1 — nominal (TRT=17d)',   [0,1,2,9,16,17], 26, ''],
+    ['Air j2 — nominal (TRT=23d)',      [0,1,5,12,19,23], 26, ''],
+    ['Ground j1 — late mfg T_MF=9d\n(expedited, deadline met)', [0,1,2,11,18,19], 26, ''],
+    ['Ground j1 — severe delay T_MF=12d\n(violation)', [0,1,2,14,21,22], 26, ''],
+  ];
+  const phases = [
+    {{ label:'Leukapheresis (TLS=1d)', backgroundColor:'#1d4ed8', data:G_ROWS.map(r=>([r[1][0],r[1][1]])) }},
+    {{ label:'Outbound transport',     backgroundColor:'#16a34a', data:G_ROWS.map(r=>([r[1][1],r[1][2]])) }},
+    {{ label:'Manufacturing (T_MF)',   backgroundColor:'#d97706', data:G_ROWS.map(r=>([r[1][2],r[1][3]])) }},
+    {{ label:'QC (7d)',                backgroundColor:'#7c3aed', data:G_ROWS.map(r=>([r[1][3],r[1][4]])) }},
+    {{ label:'Return transport',       backgroundColor:'#059669', data:G_ROWS.map(r=>([r[1][4],r[1][5]])) }},
+  ];
+  new Chart(document.getElementById('ganttChart'), {{
+    type: 'bar',
+    data: {{ labels: G_ROWS.map(r=>r[0]), datasets: phases }},
+    options: {{
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {{
+        legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth: 12 }} }},
+        annotation: {{}}
+      }},
+      scales: {{
+        x: {{
+          title: {{ display: true, text: 'Days from leukapheresis collection' }},
+          min: 0, max: 28,
+          ticks: {{ stepSize: 2 }}
+        }},
+        y: {{ stacked: true }}
+      }}
+    }}
+  }});
+}}
+
+// ── Tau feasibility charts ────────────────────────────────────────────────────
+const TAU_LABELS = {tau_labels_js};
+const TAU_DET15  = {tau_cost_det_js};
+const TAU_TS15   = {tau_cost_ts_js};
+const TAU_DET25  = {tau_cost_det25_js};
+const TAU_TS25   = {tau_cost_ts25_js};
+
+if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {{
+  new Chart(document.getElementById('tauFeasChart'), {{
+    type: 'line',
+    data: {{
+      labels: TAU_LABELS,
+      datasets: [
+        {{ label: 'Det N=15',  data: TAU_DET15, borderColor: BLUE,   backgroundColor: BLUE+'22',
+           pointBackgroundColor: BLUE,   borderWidth:2, pointRadius:5, tension:0, spanGaps:false }},
+        {{ label: '2S N=15',   data: TAU_TS15,  borderColor: ORANGE, backgroundColor: ORANGE+'22',
+           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0, borderDash:[5,3], spanGaps:false }},
+        {{ label: 'Det N=25',  data: TAU_DET25, borderColor: '#166534',  backgroundColor: '#16653422',
+           pointBackgroundColor: '#166534',  borderWidth:2, pointRadius:5, tension:0, spanGaps:false }},
+        {{ label: '2S N=25',   data: TAU_TS25,  borderColor: '#7c3aed', backgroundColor: '#7c3aed22',
+           pointBackgroundColor: '#7c3aed', borderWidth:2, pointRadius:5, tension:0, borderDash:[5,3], spanGaps:false }},
+      ]
+    }},
+    options: {{
+      responsive: true, maintainAspectRatio: false,
+      plugins: {{ legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }} }} }},
+        tooltip: {{ callbacks: {{ label: ctx => ctx.dataset.label + ': $' + (ctx.raw||0).toFixed(2)+'M' }} }} }},
+      scales: {{
+        x: {{ title: {{ display: true, text: '\u03c4 (deadline tightness, 0=loose \u2192 1=tight)' }} }},
+        y: {{ title: {{ display: true, text: 'Total Cost ($M)' }},
+              ticks: {{ callback: v => '$'+v.toFixed(1)+'M' }} }}
+      }}
+    }}
+  }});
+}}
 
 // ── VSS sweep chart ───────────────────────────────────────────────────────────
 const VSS_SLS      = {vss_sweep_sls_js};

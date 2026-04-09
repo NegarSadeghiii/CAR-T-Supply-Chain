@@ -64,6 +64,7 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
   <div class="tab"   onclick="show('oos')">&#127919; CCP vs Two-Stage</div>
   <div class="tab"   onclick="show('mc')">&#9989; Obj. Validation</div>
   <div class="tab"   onclick="show('patients')">&#128101; Patients</div>
+  <div class="tab"   onclick="show('gantt')">&#128197; Patient Journey</div>
   <div class="tab"   onclick="show('findings')">&#128270; Findings</div>
   <div class="tab"   onclick="show('sensitivity')">&#128202; Sensitivity</div>
   <div class="tab"   onclick="show('vss')">&#127942; VSS</div>
@@ -98,6 +99,18 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
     <div class="chart-box">
       <h3>% Scenarios with Violation — CCP vs Two-Stage (OOS)</h3>
       <div class="chart-wrap"><canvas id="sumViolChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-box" style="grid-column:1/-1">
+      <h3>Cost Breakdown by Component — Two-Stage vs Deterministic</h3>
+      <p style="font-size:11px;color:var(--dim);margin:0 0 8px">
+        Stacked bars show where costs sit: facility fixed cost dominates at most N.
+        Transport is small (&lt;2%). Expediting is priced into Two-Stage column costs.
+        Material cost = $(10,476 + 9,312) &times; N is identical across all models.
+      </p>
+      <div class="chart-wrap" style="height:280px"><canvas id="costBreakdownChart"></canvas></div>
     </div>
   </div>
 
@@ -2133,8 +2146,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <th>TRT</th>
 <th>On-time</th>
 <th>Facility</th>
-<th>j_out</th>
-<th>j_ret</th>
+<th>Outbound</th>
+<th>Return</th>
 <th>P(expedite)</th>
 <th>E[$exp]</th>
 <th>Slack K_i</th>
@@ -2146,8 +2159,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2159,8 +2172,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2172,8 +2185,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2185,8 +2198,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2198,8 +2211,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2213,8 +2226,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <th>TRT</th>
 <th>On-time</th>
 <th>Facility</th>
-<th>j_out</th>
-<th>j_ret</th>
+<th>Outbound</th>
+<th>Return</th>
 <th>P(expedite)</th>
 <th>E[$exp]</th>
 <th>Slack K_i</th>
@@ -2226,8 +2239,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2239,8 +2252,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2252,8 +2265,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2265,8 +2278,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2278,8 +2291,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2291,8 +2304,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2304,8 +2317,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2317,8 +2330,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2330,8 +2343,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2343,8 +2356,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2358,8 +2371,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <th>TRT</th>
 <th>On-time</th>
 <th>Facility</th>
-<th>j_out</th>
-<th>j_ret</th>
+<th>Outbound</th>
+<th>Return</th>
 <th>P(expedite)</th>
 <th>E[$exp]</th>
 <th>Slack K_i</th>
@@ -2371,8 +2384,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2384,8 +2397,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2397,8 +2410,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2410,8 +2423,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2423,8 +2436,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2436,8 +2449,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2449,8 +2462,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2462,8 +2475,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2475,8 +2488,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2488,8 +2501,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2501,8 +2514,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2514,8 +2527,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2527,8 +2540,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2540,8 +2553,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2553,8 +2566,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2568,8 +2581,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <th>TRT</th>
 <th>On-time</th>
 <th>Facility</th>
-<th>j_out</th>
-<th>j_ret</th>
+<th>Outbound</th>
+<th>Return</th>
 <th>P(expedite)</th>
 <th>E[$exp]</th>
 <th>Slack K_i</th>
@@ -2581,8 +2594,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2594,8 +2607,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2607,8 +2620,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2620,8 +2633,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2633,8 +2646,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2646,8 +2659,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2659,8 +2672,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2672,8 +2685,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2685,8 +2698,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2698,8 +2711,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">20</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j2</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#166534;font-weight:700;text-align:right">0.9%</td>
               <td style="text-align:right">$14</td>
               <td style="text-align:right">11.00d</td>
@@ -2711,8 +2724,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2724,8 +2737,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2737,8 +2750,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2750,8 +2763,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2763,8 +2776,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2776,8 +2789,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2789,8 +2802,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2802,8 +2815,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2815,8 +2828,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2828,8 +2841,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2843,8 +2856,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <th>TRT</th>
 <th>On-time</th>
 <th>Facility</th>
-<th>j_out</th>
-<th>j_ret</th>
+<th>Outbound</th>
+<th>Return</th>
 <th>P(expedite)</th>
 <th>E[$exp]</th>
 <th>Slack K_i</th>
@@ -2856,8 +2869,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2869,8 +2882,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2882,8 +2895,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2895,8 +2908,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2908,8 +2921,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2921,8 +2934,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2934,8 +2947,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2947,8 +2960,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2960,8 +2973,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -2973,8 +2986,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -2986,8 +2999,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -2999,8 +3012,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3012,8 +3025,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3025,8 +3038,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3038,8 +3051,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3051,8 +3064,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3064,8 +3077,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3077,8 +3090,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3090,8 +3103,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3103,8 +3116,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3116,8 +3129,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3129,8 +3142,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3142,8 +3155,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3155,8 +3168,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3168,8 +3181,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3183,8 +3196,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <th>TRT</th>
 <th>On-time</th>
 <th>Facility</th>
-<th>j_out</th>
-<th>j_ret</th>
+<th>Outbound</th>
+<th>Return</th>
 <th>P(expedite)</th>
 <th>E[$exp]</th>
 <th>Slack K_i</th>
@@ -3196,8 +3209,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3209,8 +3222,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3222,8 +3235,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">20</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j2</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#166534;font-weight:700;text-align:right">0.9%</td>
               <td style="text-align:right">$14</td>
               <td style="text-align:right">11.00d</td>
@@ -3235,8 +3248,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3248,8 +3261,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3261,8 +3274,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3274,8 +3287,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3287,8 +3300,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3300,8 +3313,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3313,8 +3326,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3326,8 +3339,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3339,8 +3352,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3352,8 +3365,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3365,8 +3378,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3378,8 +3391,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3391,8 +3404,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3404,8 +3417,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3417,8 +3430,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3430,8 +3443,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3443,8 +3456,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3456,8 +3469,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3469,8 +3482,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3482,8 +3495,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3495,8 +3508,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">20</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j2</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#166534;font-weight:700;text-align:right">0.9%</td>
               <td style="text-align:right">$14</td>
               <td style="text-align:right">11.00d</td>
@@ -3508,8 +3521,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3521,8 +3534,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3534,8 +3547,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3547,8 +3560,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3560,8 +3573,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3573,8 +3586,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3586,8 +3599,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3599,8 +3612,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3612,8 +3625,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3625,8 +3638,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3638,8 +3651,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3651,8 +3664,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m4</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3664,8 +3677,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3677,8 +3690,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3690,8 +3703,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3703,8 +3716,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m1</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3718,8 +3731,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <th>TRT</th>
 <th>On-time</th>
 <th>Facility</th>
-<th>j_out</th>
-<th>j_ret</th>
+<th>Outbound</th>
+<th>Return</th>
 <th>P(expedite)</th>
 <th>E[$exp]</th>
 <th>Slack K_i</th>
@@ -3731,8 +3744,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3744,8 +3757,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3757,8 +3770,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3770,8 +3783,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3783,8 +3796,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3796,8 +3809,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3809,8 +3822,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3822,8 +3835,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3835,8 +3848,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3848,8 +3861,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3861,8 +3874,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3874,8 +3887,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3887,8 +3900,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -3900,8 +3913,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3913,8 +3926,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3926,8 +3939,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3939,8 +3952,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3952,8 +3965,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3965,8 +3978,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -3978,8 +3991,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -3991,8 +4004,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4004,8 +4017,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4017,8 +4030,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -4030,8 +4043,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -4043,8 +4056,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -4056,8 +4069,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -4069,8 +4082,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -4082,8 +4095,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4095,8 +4108,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4108,8 +4121,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4121,8 +4134,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -4134,8 +4147,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -4147,8 +4160,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4160,8 +4173,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -4173,8 +4186,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">20</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j2</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#166534;font-weight:700;text-align:right">0.9%</td>
               <td style="text-align:right">$14</td>
               <td style="text-align:right">11.00d</td>
@@ -4186,8 +4199,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4199,8 +4212,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -4212,8 +4225,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -4225,8 +4238,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4238,8 +4251,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">23</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j2</td>
-              <td>j2</td>
+              <td style="font-size:11px">✈ Air</td>
+              <td style="font-size:11px">✈ Air</td>
               <td style="color:#dc2626;font-weight:700;text-align:right">22.1%</td>
               <td style="text-align:right">$332</td>
               <td style="text-align:right">8.00d</td>
@@ -4251,8 +4264,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -4264,8 +4277,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4277,8 +4290,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4290,8 +4303,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -4303,8 +4316,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4316,8 +4329,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4329,8 +4342,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -4342,8 +4355,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
@@ -4355,8 +4368,8 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#b45309;font-weight:700;text-align:right">8.8%</td>
               <td style="text-align:right">$700</td>
               <td style="text-align:right">9.00d</td>
@@ -4368,13 +4381,57 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
               <td style="text-align:right">17</td>
               <td style="text-align:center"><span style="color:#166534;font-weight:700">&#10003;</span></td>
               <td style="font-size:10px">m3</td>
-              <td>j1</td>
-              <td>j1</td>
+              <td style="font-size:11px">🚌 Ground</td>
+              <td style="font-size:11px">🚌 Ground</td>
               <td style="color:#166534;font-weight:700;text-align:right">3.0%</td>
               <td style="text-align:right">$119</td>
               <td style="text-align:right">10.00d</td>
             </tr>
 </tbody></table></div>
+  </div>
+</div>
+
+<!-- TAB: Patient Journey (Gantt) -->
+<div id="pane-gantt" class="pane">
+  <div class="card">
+    <h2>Single Patient Journey — Gantt Chart</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.7">
+      Illustrative timeline for one patient under three transport and manufacturing scenarios.
+      Each bar shows the duration of each pipeline stage from the day of leukapheresis collection.
+      <strong>TLS</strong> = collection (1d) &nbsp;|&nbsp;
+      <strong>Outbound</strong> = transport to manufacturing facility &nbsp;|&nbsp;
+      <strong>Mfg</strong> = manufacturing (nominal 7d, can extend stochastically) &nbsp;|&nbsp;
+      <strong>QC</strong> = quality control (7d) &nbsp;|&nbsp;
+      <strong>Return</strong> = transport back to clinic.
+    </p>
+    <div style="height:320px"><canvas id="ganttChart"></canvas></div>
+    <div style="margin-top:16px;font-size:12px;line-height:1.8;color:#374151">
+      <strong>Reading the chart:</strong>
+      Row&nbsp;1 uses fast ground transit (j1, 1d each way) — short waits, total TRT = 17d.
+      Row&nbsp;2 uses slower transit (j2, 4d each way) — total TRT = 23d.
+      Row&nbsp;3 shows the <em>expediting recourse</em>: manufacturing runs 2 days late
+      (T_MF = 9d instead of 7d), but the Two-Stage model has pre-selected a route with
+      enough slack (K_i &ge; 9d) so no deadline violation occurs.
+      Row&nbsp;4 shows a <em>violation scenario</em>: T_MF = 12d exceeds K_i + &delta;,
+      and the patient misses their deadline even with expediting. Under CCP this scenario
+      is planned away by inflating TMFE to the 90th percentile; under Two-Stage it is
+      priced into the expected expediting cost and accepted at low probability (&le; &epsilon;).
+    </div>
+  </div>
+  <div class="card">
+    <h2>Pipeline Stage Durations — Reference</h2>
+    <table class="tbl" style="max-width:600px">
+      <thead><tr><th>Stage</th><th>Duration</th><th>Stochastic?</th><th>Model handles via</th></tr></thead>
+      <tbody>
+        <tr><td>Leukapheresis collection (TLS)</td><td>1 day</td><td>No</td><td>Fixed parameter</td></tr>
+        <tr><td>Outbound transport j1 (ground)</td><td>1 day</td><td>No</td><td>Route decision variable</td></tr>
+        <tr><td>Outbound transport j2 (alternate)</td><td>4 days</td><td>No</td><td>Route decision variable</td></tr>
+        <tr><td>Manufacturing (T_MF)</td><td>7d nominal, &sigma;_L=0.2</td><td><strong>Yes</strong></td><td>Two-Stage: K_i filter + expediting cost<br>CCP: inflate to 90th-pct (8.87d)</td></tr>
+        <tr><td>QC (TQC)</td><td>7 days</td><td>No</td><td>Fixed parameter</td></tr>
+        <tr><td>Return transport j1 (ground)</td><td>1 day</td><td>No</td><td>Route decision variable; &minus;2.0d if expedited</td></tr>
+        <tr><td>Return transport j2 (alternate)</td><td>4 days</td><td>No</td><td>Route decision variable; &minus;2.0d if expedited</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
@@ -4522,6 +4579,45 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
   </div>
 
   <div class="card">
+    <h2>Manufacturing Cost Impact — What the Model Actually Controls</h2>
+    <div class="insight">
+      <strong>What changes with scheduling:</strong>
+      The model selects <em>which</em> manufacturing facility each patient uses and
+      <em>when</em> their batch starts. This affects three cost categories:
+      <ul style="margin:6px 0 0 16px;line-height:1.8">
+        <li><strong>Facility fixed cost</strong> — (CIM + CVM) &times; T_max is charged for every
+            open facility regardless of load. Concentrating patients into one facility avoids
+            opening a second at $3M+ fixed cost. This is the dominant lever: facility cost
+            represents 85&ndash;90% of total cost at most N values.</li>
+        <li><strong>Transportation cost</strong> — Route selection (j1 vs j2, facility location)
+            drives outbound + return costs. This is small (&lt;2% of total) but the only cost
+            dimension that differs between j1 and j2 routes.</li>
+        <li><strong>Material cost</strong> — Fixed at $(10,476 + 9,312) &times; N. Identical
+            across all models. The schedule does <em>not</em> change material consumption.</li>
+      </ul>
+    </div>
+    <div class="insight orange" style="margin-top:10px">
+      <strong>What the model does NOT capture — rework cost:</strong>
+      In CAR-T manufacturing, a batch that fails QC must be reworked or restarted, adding
+      significant cost (often $50,000&ndash;$200,000 per failed batch). Manufacturing delays
+      (T_MF &gt; TMFE) may correlate with higher rework probability. If schedule tightness
+      increases rework risk, then Two-Stage&rsquo;s conservative route selection (K_i filter,
+      capacity buffered at 90th-pct) may indirectly reduce rework costs beyond what is
+      captured in the objective. Quantifying this link — e.g., via a rework probability
+      function of schedule slack — is a natural extension and would strengthen the case
+      for stochastic scheduling in CAR-T supply chains.
+    </div>
+    <div class="insight" style="margin-top:10px;background:#f0fdf4">
+      <strong>Advisor note:</strong>
+      The current cost function is transport-and-facility dominant. The model does influence
+      which facility opens (the most consequential decision), which transport mode is used,
+      and implicitly how much slack a patient has against their deadline. If rework or
+      batch failure costs were added to the objective as a function of schedule tightness,
+      the manufacturing-cost impact would become direct and measurable.
+    </div>
+  </div>
+
+  <div class="card">
     <h2>Automated Findings (computed from results)</h2>
     <div class="insight orange">Average out-of-sample cost gap (Two-Stage vs CCP): <strong>-0.1%</strong>. Two-Stage pays a small expected-cost premium in exchange for an adaptive recourse action.</div><div class="insight ">Average probability of expediting across all patients and instances: <strong>9.8%</strong>. Expediting recourse is rarely triggered, keeping the realized cost premium small.</div><div class="insight green">CCP average violation rate: <strong>51.2%</strong> vs Two-Stage: <strong>22.8%</strong>. Two-Stage virtually eliminates deadline violations through the expediting recourse action. Monte Carlo validation max error: <strong>27.8%</strong> (confirms LogNormal formula).</div>
     <div class="insight" style="margin-top:12px">
@@ -4594,6 +4690,33 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
       <h3>Two-Stage Realized Cost ($M) across &sigma;_L</h3>
       <div class="chart-wrap"><canvas id="senCostChart"></canvas></div>
     </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2>&tau; Feasibility Sweep — When Does the Model Crash?</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.7">
+      &tau; compresses patient deadlines: deadline = base_due + tolerance &times; (1 &minus; &tau;).
+      At &tau; = 0 deadlines are at their widest; at &tau; = 1 they are at their tightest
+      (zero tolerance). As &tau; increases, routes with tight slack are progressively
+      eliminated by the K_i filter until no feasible routes remain.
+      The chart below shows total cost vs &tau; for both models, with infeasible points
+      dropped. This directly answers: <em>&ldquo;at what &tau; does the Two-Stage model
+      become infeasible?&rdquo;</em>
+    </p>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h3>Total Cost vs &tau; — Feasibility Boundary</h3>
+        <div class="chart-wrap"><canvas id="tauFeasChart"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <h3>Decision Sensitivity: Facilities Opened vs &tau;</h3>
+        <div class="chart-wrap"><canvas id="tauFacChart"></canvas></div>
+      </div>
+    </div>
+    <div style="overflow-x:auto;margin-top:12px">
+<table class="tbl" style="max-width:600px"><thead><tr>
+  <th>&tau;</th><th>N</th><th>Det Cost</th><th>Two-Stage Cost</th>
+</tr></thead><tbody><tr><td>0.0</td><td>N=5</td><td>$3,119,660</td><td>$3,126,280</td></tr><tr><td>0.0</td><td>N=10</td><td>$6,245,099</td><td>$6,261,463</td></tr><tr><td>0.0</td><td>N=15</td><td>$3,348,865</td><td>$6,385,223</td></tr><tr><td>0.0</td><td>N=20</td><td>$3,467,529</td><td>$6,508,253</td></tr><tr><td>0.0</td><td>N=25</td><td>$6,592,586</td><td>$6,636,660</td></tr><tr><td>0.1</td><td>N=5</td><td>$3,124,678</td><td>$3,126,664</td></tr><tr><td>0.1</td><td>N=10</td><td>$6,257,148</td><td>$6,262,135</td></tr><tr><td>0.1</td><td>N=15</td><td>$3,370,721</td><td>$6,386,185</td></tr><tr><td>0.1</td><td>N=20</td><td>$6,499,319</td><td>$6,509,482</td></tr><tr><td>0.1</td><td>N=25</td><td>$6,625,545</td><td>$6,638,165</td></tr><tr><td>0.2</td><td>N=5</td><td>$3,124,678</td><td>$3,129,416</td></tr><tr><td>0.2</td><td>N=10</td><td>$6,257,148</td><td>$6,265,799</td></tr><tr><td>0.2</td><td>N=15</td><td>$3,370,721</td><td>$6,393,355</td></tr><tr><td>0.2</td><td>N=20</td><td>$6,499,319</td><td>$6,517,091</td></tr><tr><td>0.2</td><td>N=25</td><td>$6,625,545</td><td>$6,646,567</td></tr><tr><td>0.3</td><td>N=5</td><td>$3,128,119</td><td>$3,129,634</td></tr><tr><td>0.3</td><td>N=10</td><td>$6,260,983</td><td>$6,266,258</td></tr><tr><td>0.3</td><td>N=15</td><td>$3,377,574</td><td>$6,394,056</td></tr><tr><td>0.3</td><td>N=20</td><td>$6,506,635</td><td>$6,518,010</td></tr><tr><td>0.3</td><td>N=25</td><td>$6,634,916</td><td>$6,647,704</td></tr><tr><td>0.4</td><td>N=5</td><td>$3,128,119</td><td>$3,129,897</td></tr><tr><td>0.4</td><td>N=10</td><td>$6,260,983</td><td>$6,266,809</td></tr><tr><td>0.4</td><td>N=15</td><td>$3,377,574</td><td>$6,394,894</td></tr><tr><td>0.4</td><td>N=20</td><td>$6,506,635</td><td>$6,519,112</td></tr><tr><td>0.4</td><td>N=25</td><td>$6,634,916</td><td>$6,649,069</td></tr><tr><td>0.5</td><td>N=5</td><td>$3,128,119</td><td>$3,130,218</td></tr><tr><td>0.5</td><td>N=10</td><td>$6,260,983</td><td>$6,267,471</td></tr><tr><td>0.5</td><td>N=15</td><td>$3,377,574</td><td>$6,395,896</td></tr><tr><td>0.5</td><td>N=20</td><td>$6,506,635</td><td>$6,520,435</td></tr><tr><td>0.5</td><td>N=25</td><td>$6,634,916</td><td>$6,650,713</td></tr></tbody></table></div>
   </div>
 </div>
 
@@ -4732,12 +4855,12 @@ function lineChart(id, labels, datasets, yLabel, fmt) {
 const ccpDS = (label, data) => ({
   label, data,
   borderColor: BLUE, backgroundColor: BLUE + '22',
-  pointBackgroundColor: BLUE, borderWidth: 2, pointRadius: 5, tension: 0.3
+  pointBackgroundColor: BLUE, borderWidth: 2, pointRadius: 5, tension: 0
 });
 const tsDS  = (label, data) => ({
   label, data,
   borderColor: ORANGE, backgroundColor: ORANGE + '22',
-  pointBackgroundColor: ORANGE, borderWidth: 2, pointRadius: 5, tension: 0.3,
+  pointBackgroundColor: ORANGE, borderWidth: 2, pointRadius: 5, tension: 0,
   borderDash: [5, 3]
 });
 
@@ -4854,13 +4977,123 @@ if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {
 
 requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
 
+// ── Cost Breakdown stacked bar ────────────────────────────────────────────────
+const _cb_det_tr=[13.0,31.8,44.3,64.1,82.5,132.6,162.8];
+const const _cb_det_fac=[3007.7,6015.4,3007.7,3007.7,6015.4,6015.4,6015.4];const _cb_det_mat=[98.9,197.9,296.8,395.8,494.7,791.5,989.4];const _cb_ts_tr=[19.6,48.2,73.0,97.1,126.6,203.2,320.1];const _cb_ts_fac=[3007.7,6015.4,6015.4,6015.4,6015.4,6015.4,7519.2];const _cb_ts_exp=[1.6,3.0,4.4,5.7,7.6,11.3,14.6];
+if (document.getElementById('costBreakdownChart')) {
+  new Chart(document.getElementById('costBreakdownChart'), {
+    type: 'bar',
+    data: {
+      labels: NS.map(n => 'N='+n),
+      datasets: [
+        { label: 'Det — Facility ($K)',     data: _cb_det_fac,  backgroundColor: '#1E3A5F',   stack: 'det' },
+        { label: 'Det — Transport ($K)',    data: _cb_det_tr,   backgroundColor: '#3b82f6',   stack: 'det' },
+        { label: 'Det — Material ($K)',     data: _cb_det_mat,  backgroundColor: '#93c5fd',   stack: 'det' },
+        { label: '2S — Facility ($K)',      data: _cb_ts_fac,   backgroundColor: '#92400E',   stack: 'ts'  },
+        { label: '2S — Transport ($K)',     data: _cb_ts_tr,    backgroundColor: '#f97316',   stack: 'ts'  },
+        { label: '2S — Material ($K)',      data: _cb_det_mat,  backgroundColor: '#fed7aa',   stack: 'ts'  },
+        { label: '2S — Exp. Expediting($K)',data: _cb_ts_exp,   backgroundColor: '#dc2626',   stack: 'ts'  },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.raw.toFixed(0) + 'K' } }
+      },
+      scales: {
+        x: { title: { display: true, text: 'N (patients) — left bars = Det, right bars = Two-Stage' } },
+        y: { title: { display: true, text: 'Cost ($K)' },
+              stacked: true, ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'M' } }
+      }
+    }
+  });
+}
+
+// ── Gantt chart ───────────────────────────────────────────────────────────────
+if (document.getElementById('ganttChart')) {
+  const G_PHASES = ['Leukapheresis', 'Outbound transport', 'Manufacturing', 'QC', 'Return transport'];
+  const G_COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#059669'];
+  // Rows: [label, [col_start, mfg_start, mfg_end, qc_end, ret_end], deadline, note]
+  const G_ROWS = [
+    ['Ground j1 — nominal (TRT=17d)',   [0,1,2,9,16,17], 26, ''],
+    ['Air j2 — nominal (TRT=23d)',      [0,1,5,12,19,23], 26, ''],
+    ['Ground j1 — late mfg T_MF=9d
+(expedited, deadline met)', [0,1,2,11,18,19], 26, ''],
+    ['Ground j1 — severe delay T_MF=12d
+(violation)', [0,1,2,14,21,22], 26, ''],
+  ];
+  const phases = [
+    { label:'Leukapheresis (TLS=1d)', backgroundColor:'#1d4ed8', data:G_ROWS.map(r=>([r[1][0],r[1][1]])) },
+    { label:'Outbound transport',     backgroundColor:'#16a34a', data:G_ROWS.map(r=>([r[1][1],r[1][2]])) },
+    { label:'Manufacturing (T_MF)',   backgroundColor:'#d97706', data:G_ROWS.map(r=>([r[1][2],r[1][3]])) },
+    { label:'QC (7d)',                backgroundColor:'#7c3aed', data:G_ROWS.map(r=>([r[1][3],r[1][4]])) },
+    { label:'Return transport',       backgroundColor:'#059669', data:G_ROWS.map(r=>([r[1][4],r[1][5]])) },
+  ];
+  new Chart(document.getElementById('ganttChart'), {
+    type: 'bar',
+    data: { labels: G_ROWS.map(r=>r[0]), datasets: phases },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } },
+        annotation: {}
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Days from leukapheresis collection' },
+          min: 0, max: 28,
+          ticks: { stepSize: 2 }
+        },
+        y: { stacked: true }
+      }
+    }
+  });
+}
+
+// ── Tau feasibility charts ────────────────────────────────────────────────────
+const TAU_LABELS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
+const TAU_DET15  = [3.3489,3.3707,3.3707,3.3776,3.3776,3.3776];
+const TAU_TS15   = [6.3852,6.3862,6.3934,6.3941,6.3949,6.3959];
+const TAU_DET25  = [6.5926,6.6255,6.6255,6.6349,6.6349,6.6349];
+const TAU_TS25   = [6.6367,6.6382,6.6466,6.6477,6.6491,6.6507];
+
+if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {
+  new Chart(document.getElementById('tauFeasChart'), {
+    type: 'line',
+    data: {
+      labels: TAU_LABELS,
+      datasets: [
+        { label: 'Det N=15',  data: TAU_DET15, borderColor: BLUE,   backgroundColor: BLUE+'22',
+           pointBackgroundColor: BLUE,   borderWidth:2, pointRadius:5, tension:0, spanGaps:false },
+        { label: '2S N=15',   data: TAU_TS15,  borderColor: ORANGE, backgroundColor: ORANGE+'22',
+           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0, borderDash:[5,3], spanGaps:false },
+        { label: 'Det N=25',  data: TAU_DET25, borderColor: '#166534',  backgroundColor: '#16653422',
+           pointBackgroundColor: '#166534',  borderWidth:2, pointRadius:5, tension:0, spanGaps:false },
+        { label: '2S N=25',   data: TAU_TS25,  borderColor: '#7c3aed', backgroundColor: '#7c3aed22',
+           pointBackgroundColor: '#7c3aed', borderWidth:2, pointRadius:5, tension:0, borderDash:[5,3], spanGaps:false },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + (ctx.raw||0).toFixed(2)+'M' } } },
+      scales: {
+        x: { title: { display: true, text: 'τ (deadline tightness, 0=loose → 1=tight)' } },
+        y: { title: { display: true, text: 'Total Cost ($M)' },
+              ticks: { callback: v => '$'+v.toFixed(1)+'M' } }
+      }
+    }
+  });
+}
+
 // ── VSS sweep chart ───────────────────────────────────────────────────────────
 const VSS_SLS      = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4];
-const VSS_DATASETS = [{label:"N=5",data:[0.0,-0.0,-0.05,-0.15,-0.16,null,null],borderColor:"#1E3A5F",backgroundColor:"#1E3A5F22",pointBackgroundColor:"#1E3A5F",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
-{label:"N=10",data:[0.0,-0.01,-0.07,-0.17,-0.19,null,null],borderColor:"#92400E",backgroundColor:"#92400E22",pointBackgroundColor:"#92400E",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
-{label:"N=15",data:[-89.43,-89.49,-89.63,-89.87,-89.9,null,null],borderColor:"#166534",backgroundColor:"#16653422",pointBackgroundColor:"#166534",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
-{label:"N=20",data:[-86.26,-86.31,-86.45,-86.75,-86.78,null,null],borderColor:"#7c3aed",backgroundColor:"#7c3aed22",pointBackgroundColor:"#7c3aed",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
-{label:"N=25",data:[-0.0,-0.04,-0.24,-0.43,-0.46,null,null],borderColor:"#dc2626",backgroundColor:"#dc262622",pointBackgroundColor:"#dc2626",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false}];
+const VSS_DATASETS = [{label:"N=5",data:[0.0,-0.0,-0.05,-0.15,-0.16,null,null],borderColor:"#1E3A5F",backgroundColor:"#1E3A5F22",pointBackgroundColor:"#1E3A5F",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
+{label:"N=10",data:[0.0,-0.01,-0.07,-0.17,-0.19,null,null],borderColor:"#92400E",backgroundColor:"#92400E22",pointBackgroundColor:"#92400E",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
+{label:"N=15",data:[-89.43,-89.49,-89.63,-89.87,-89.9,null,null],borderColor:"#166534",backgroundColor:"#16653422",pointBackgroundColor:"#166534",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
+{label:"N=20",data:[-86.26,-86.31,-86.45,-86.75,-86.78,null,null],borderColor:"#7c3aed",backgroundColor:"#7c3aed22",pointBackgroundColor:"#7c3aed",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
+{label:"N=25",data:[-0.0,-0.04,-0.24,-0.43,-0.46,null,null],borderColor:"#dc2626",backgroundColor:"#dc262622",pointBackgroundColor:"#dc2626",borderWidth:2,pointRadius:5,tension:0,spanGaps:false}];
 
 if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {
   new Chart(document.getElementById('vssSweepChart'), {
@@ -4900,11 +5133,11 @@ if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {
 
 // ── VSS tau chart ─────────────────────────────────────────────────────────────
 const VSS_TAUS         = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
-const VSS_TAU_DATASETS = [{label:"N=5",data:[-0.05,-0.0,-0.07,-0.0,-0.0,-0.0],borderColor:"#1E3A5F",backgroundColor:"#1E3A5F22",pointBackgroundColor:"#1E3A5F",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
-{label:"N=10",data:[-0.07,-0.02,-0.07,-0.03,-0.03,-0.03],borderColor:"#92400E",backgroundColor:"#92400E22",pointBackgroundColor:"#92400E",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
-{label:"N=15",data:[-89.63,-89.18,-89.34,-89.03,-89.01,-88.99],borderColor:"#166534",backgroundColor:"#16653422",pointBackgroundColor:"#166534",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
-{label:"N=20",data:[-86.45,-0.04,-0.14,-0.08,-0.08,-0.08],borderColor:"#7c3aed",backgroundColor:"#7c3aed22",pointBackgroundColor:"#7c3aed",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
-{label:"N=25",data:[-0.24,-0.06,-0.15,-0.07,-0.07,-0.07],borderColor:"#dc2626",backgroundColor:"#dc262622",pointBackgroundColor:"#dc2626",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false}];
+const VSS_TAU_DATASETS = [{label:"N=5",data:[-0.05,-0.0,-0.07,-0.0,-0.0,-0.0],borderColor:"#1E3A5F",backgroundColor:"#1E3A5F22",pointBackgroundColor:"#1E3A5F",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
+{label:"N=10",data:[-0.07,-0.02,-0.07,-0.03,-0.03,-0.03],borderColor:"#92400E",backgroundColor:"#92400E22",pointBackgroundColor:"#92400E",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
+{label:"N=15",data:[-89.63,-89.18,-89.34,-89.03,-89.01,-88.99],borderColor:"#166534",backgroundColor:"#16653422",pointBackgroundColor:"#166534",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
+{label:"N=20",data:[-86.45,-0.04,-0.14,-0.08,-0.08,-0.08],borderColor:"#7c3aed",backgroundColor:"#7c3aed22",pointBackgroundColor:"#7c3aed",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
+{label:"N=25",data:[-0.24,-0.06,-0.15,-0.07,-0.07,-0.07],borderColor:"#dc2626",backgroundColor:"#dc262622",pointBackgroundColor:"#dc2626",borderWidth:2,pointRadius:5,tension:0,spanGaps:false}];
 
 if (document.getElementById('vssTauChart') && VSS_TAUS.length > 0) {
   new Chart(document.getElementById('vssTauChart'), {
