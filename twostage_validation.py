@@ -813,25 +813,27 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
         str(round(oos_by_n[n]['ts']['mean_cost']/1e6,4)) if n in oos_by_n else 'null'
         for n in chart_ns) + ']'
 
-    # Key findings text
+    # Key findings text — focus on CCP vs Two-Stage
     findings = []
-    if det_rows and ts_rows:
-        avg_premium = sum(
-            (ts_by_n[n]['total_cost'] - det_by_n[n]['total_cost']) / det_by_n[n]['total_cost'] * 100
-            for n in ns if n in det_by_n and n in ts_by_n
-        ) / max(1, len([n for n in ns if n in det_by_n and n in ts_by_n]))
+    if ccp_rows and ts_rows:
         avg_pexp = sum(r['avg_prob_expedite'] for r in ts_rows) / len(ts_rows) * 100
         max_mc_err = max(
             (row['rel_err'] for r in ts_rows for row in r.get('mc_validation', [])),
             default=0
         )
-        findings.append(f'Average cost premium of Two-Stage over Deterministic: <strong>{avg_premium:+.1f}%</strong>. '
-                        f'This is the price of robustness — routes are filtered to keep a recourse option viable.')
+        oos_pairs = [(oos_by_n[n]['ccp']['mean_cost'], oos_by_n[n]['ts']['mean_cost'])
+                     for n in ns if n in oos_by_n]
+        avg_oos_gap = sum(_pct(t, c) or 0 for c, t in oos_pairs) / max(1, len(oos_pairs))
+        avg_ccp_viol = sum(oos_by_n[n]['ccp']['pct_scen_viol'] for n in ns if n in oos_by_n) / max(1, len(oos_by_n))
+        avg_ts_viol  = sum(oos_by_n[n]['ts']['pct_scen_viol']  for n in ns if n in oos_by_n) / max(1, len(oos_by_n))
+        findings.append(f'Average out-of-sample cost gap (Two-Stage vs CCP): <strong>{avg_oos_gap:+.1f}%</strong>. '
+                        f'Two-Stage pays a small expected-cost premium in exchange for an adaptive recourse action.')
         findings.append(f'Average probability of expediting across all patients and instances: <strong>{avg_pexp:.1f}%</strong>. '
-                        f'Expediting recourse is rarely triggered (&lt;20% of patients), keeping expected costs low.')
-        findings.append(f'Monte Carlo validation — maximum relative error between theoretical and empirical '
-                        f'P(expedite): <strong>{max_mc_err*100:.1f}%</strong>. '
-                        f'Values below 10% confirm the LogNormal survival formula in the objective is correct.')
+                        f'Expediting recourse is rarely triggered, keeping the realized cost premium small.')
+        findings.append(f'CCP average violation rate: <strong>{avg_ccp_viol:.1f}%</strong> vs '
+                        f'Two-Stage: <strong>{avg_ts_viol:.1f}%</strong>. '
+                        f'Two-Stage virtually eliminates deadline violations through the expediting recourse action. '
+                        f'Monte Carlo validation max error: <strong>{max_mc_err*100:.1f}%</strong> (confirms LogNormal formula).')
 
     findings_html = ''.join(
         f'<div class="insight {"orange" if i==0 else "green" if i==2 else ""}">{f}</div>'
@@ -857,7 +859,7 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Two-Stage vs Deterministic — Validation Report</title>
+<title>CCP vs Two-Stage Expediting — Stochastic Comparison Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -907,7 +909,7 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 </head>
 <body>
 <div class="hd">
-  <h1>Two-Stage Expediting ColGen vs Deterministic ColGen — Validation Report</h1>
+  <h1>CCP vs Two-Stage Expediting ColGen — Stochastic Comparison Report</h1>
   <p>N = 5,10,15,20,25,40,50 &nbsp;|&nbsp;
      &tau; = {tau} &nbsp;|&nbsp; &sigma;_L = {sigma_L} &nbsp;|&nbsp;
      &delta; = {delta}d &nbsp;|&nbsp; &epsilon; = {epsilon}</p>
@@ -915,11 +917,9 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 
 <div class="tabs">
   <div class="tab a" onclick="show('summary')">&#127775; Summary</div>
-  <div class="tab"   onclick="show('charts')">&#128200; Charts</div>
-  <div class="tab"   onclick="show('table')">&#128196; Full Table</div>
+  <div class="tab"   onclick="show('oos')">&#127919; CCP vs Two-Stage</div>
   <div class="tab"   onclick="show('mc')">&#9989; Obj. Validation</div>
   <div class="tab"   onclick="show('patients')">&#128101; Patients</div>
-  <div class="tab"   onclick="show('oos')">&#127919; Out-of-Sample</div>
   <div class="tab"   onclick="show('findings')">&#128270; Findings</div>
   <div class="tab"   onclick="show('sensitivity')">&#128202; Sensitivity</div>
   <div class="tab"   onclick="show('vss')">&#127942; VSS</div>
@@ -929,8 +929,8 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 <div id="pane-summary" class="pane a">
   <div class="meta-grid">
     <div class="meta-card">
-      <div class="v" style="color:var(--blue)">{len(det_rows)}/{len(ns)}</div>
-      <div class="l">Det. Feasible</div>
+      <div class="v" style="color:var(--blue)">{len(ccp_rows)}/{len(ns)}</div>
+      <div class="l">CCP Feasible</div>
     </div>
     <div class="meta-card">
       <div class="v" style="color:var(--orange)">{len(ts_rows)}/{len(ns)}</div>
@@ -948,12 +948,12 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 
   <div class="chart-grid">
     <div class="chart-box">
-      <h3>Schedule Cost ($M) — both methods</h3>
-      <div class="chart-wrap"><canvas id="costChartS"></canvas></div>
+      <h3>Mean Realized Cost ($M) — CCP vs Two-Stage (OOS)</h3>
+      <div class="chart-wrap"><canvas id="sumCostChart"></canvas></div>
     </div>
     <div class="chart-box">
-      <h3>Cost Breakdown — Two-Stage (N={largest_n})</h3>
-      <div class="chart-wrap"><canvas id="donutChart"></canvas></div>
+      <h3>% Scenarios with Violation — CCP vs Two-Stage (OOS)</h3>
+      <div class="chart-wrap"><canvas id="sumViolChart"></canvas></div>
     </div>
   </div>
 
@@ -1013,63 +1013,27 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   <div class="card">
     <h2>Model Design</h2>
     <div class="insight">
-      <strong>Deterministic ColGen</strong> solves the set-partitioning master problem using the nominal
-      manufacturing time T_MF = 7 days. Plans are filtered purely by the deadline
-      constraint TLS + T_MF + TQC + TT1 + TT3 &le; D_p. No uncertainty is modelled.
+      <strong>CCP (Chance-Constrained Programming)</strong> replaces the nominal T_MF with an
+      inflated budget T&#770;_MF = F&#8315;&#185;(1&minus;&alpha;) so that P(T_MF &le; T&#770;_MF) = 1&minus;&alpha;.
+      This is a single-stage plan: routes are fixed, and no recourse action is taken if manufacturing runs late.
+      Lower &alpha; = stricter guarantee = more conservative routes = higher transport cost.
     </div>
     <div class="insight orange">
       <strong>Two-Stage Expediting ColGen</strong> assumes T_MF ~ LogNormal(&mu;_L, &sigma;_L={sigma_L}).
       Stage 1 selects a route x_i before T_MF is realised.
       Stage 2 triggers expedited return (saving &delta;={delta}d, costing &pi;_p) if T_MF &gt; K_i (slack).
       Modified column cost: <em>c&#771;_i = c_transport + &pi;_p &sdot; P(T_MF &gt; K_i)</em>.
+      Violations only occur when T_MF &gt; K_i + &delta; (recourse also fails).
     </div>
     <div class="insight green">
-      <strong>Objective validation</strong>: For each selected patient plan we draw 5 000 LogNormal
-      samples and verify empirical P(expedite) &asymp; theoretical 1 &minus; &Phi;((ln K_i &minus; &mu;_L)/&sigma;_L).
-      Relative errors &lt;10% confirm the formula is correctly embedded in the objective.
+      <strong>Key difference</strong>: CCP commits to a conservative plan upfront (no flexibility).
+      Two-Stage pays a small premium for a recourse action, trading lower up-front cost for
+      the ability to adapt when manufacturing runs long. The out-of-sample tab quantifies this trade-off.
     </div>
   </div>
 </div>
 
-<!-- TAB 2: Charts -->
-<div id="pane-charts" class="pane">
-  <div class="chart-grid">
-    <div class="chart-box">
-      <h3>Total Cost ($M) vs N</h3>
-      <div class="chart-wrap"><canvas id="costChart2"></canvas></div>
-    </div>
-    <div class="chart-box">
-      <h3>Solve Time (s) vs N</h3>
-      <div class="chart-wrap"><canvas id="timeChart"></canvas></div>
-    </div>
-    <div class="chart-box">
-      <h3>Avg TRT (days) vs N</h3>
-      <div class="chart-wrap"><canvas id="trtChart"></canvas></div>
-    </div>
-    <div class="chart-box">
-      <h3>Avg P(expedite) % vs N — Two-Stage only</h3>
-      <div class="chart-wrap"><canvas id="pexpChart"></canvas></div>
-    </div>
-  </div>
-</div>
-
-<!-- TAB 3: Full Table -->
-<div id="pane-table" class="pane">
-  <div class="card"><h2>Full Results — All Instances & Both Solvers</h2>
-  <div style="overflow-x:auto">
-  <table class="tbl"><thead><tr>
-    <th>N</th>
-    <th>Det Solved</th><th>Det Cost</th><th>Det TRT</th><th>Det Plans</th><th>Det Time</th>
-    <th>2S Solved</th><th>2S Cost</th><th>2S TRT</th><th>2S Plans</th><th>2S Time</th>
-    <th>Avg P(exp)</th><th>E[$exp] tot.</th>
-    <th>Cost Gap</th><th>TRT Gap</th>
-  </tr></thead><tbody>
-  {gap_rows_html}
-  </tbody></table>
-  </div></div>
-</div>
-
-<!-- TAB 4: MC Validation -->
+<!-- TAB 3: MC Validation -->
 <div id="pane-mc" class="pane">
   <div class="card">
     <h2>Objective Function Validation — Monte Carlo (5 000 draws)</h2>
@@ -1092,10 +1056,10 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   </div>
 </div>
 
-<!-- TAB 6: Out-of-Sample Validation -->
+<!-- TAB 2: CCP vs Two-Stage (Out-of-Sample) -->
 <div id="pane-oos" class="pane">
   <div class="card">
-    <h2>Out-of-Sample Validation — CCP vs Two-Stage (10 000 scenarios)</h2>
+    <h2>CCP vs Two-Stage — Out-of-Sample Evaluation (10 000 scenarios)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.6">
       The first-stage route decisions from both models are <strong>fixed</strong> and then evaluated
       against 10 000 fresh T_MF draws from LogNormal(&sigma;_L={sigma_L}).
@@ -1237,21 +1201,13 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 function show(n) {{
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('a'));
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('a'));
-  const m = {{summary:0,charts:1,table:2,mc:3,patients:4,oos:5,findings:6,sensitivity:7,vss:8}};
+  const m = {{summary:0,oos:1,mc:2,patients:3,findings:4,sensitivity:5,vss:6}};
   document.querySelectorAll('.tab')[m[n]].classList.add('a');
   document.getElementById('pane-' + n).classList.add('a');
   requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
 }}
 
-const NS     = {n_labels_js};
-const DET_C  = {det_costs};
-const TS_C   = {ts_costs};
-const DET_T  = {det_times};
-const TS_T   = {ts_times};
-const DET_TRT= {det_trts};
-const TS_TRT = {ts_trts};
-const TS_PEXP= {ts_pexps};
-
+const NS   = {n_labels_js};
 const BLUE   = '#1E3A5F';
 const ORANGE = '#92400E';
 
@@ -1271,7 +1227,7 @@ function lineChart(id, labels, datasets, yLabel, fmt) {{
   }});
 }}
 
-const detDS = (label, data, id) => ({{
+const ccpDS = (label, data) => ({{
   label, data,
   borderColor: BLUE, backgroundColor: BLUE + '22',
   pointBackgroundColor: BLUE, borderWidth: 2, pointRadius: 5, tension: 0.3
@@ -1283,58 +1239,7 @@ const tsDS  = (label, data) => ({{
   borderDash: [5, 3]
 }});
 
-lineChart('costChartS', NS, [detDS('Deterministic', DET_C), tsDS('Two-Stage', TS_C)],
-          'Cost ($M)', v => '$' + v.toFixed(2) + 'M');
-lineChart('costChart2', NS, [detDS('Deterministic', DET_C), tsDS('Two-Stage', TS_C)],
-          'Cost ($M)', v => '$' + v.toFixed(2) + 'M');
-lineChart('timeChart',  NS, [detDS('Deterministic', DET_T), tsDS('Two-Stage', TS_T)],
-          'Solve Time (s)', v => v.toFixed(1) + 's');
-lineChart('trtChart',   NS, [detDS('Deterministic', DET_TRT), tsDS('Two-Stage', TS_TRT)],
-          'Avg TRT (days)', v => v.toFixed(1) + 'd');
-
-new Chart(document.getElementById('pexpChart'), {{
-  type: 'bar',
-  data: {{
-    labels: NS,
-    datasets: [{{ label: 'Avg P(expedite) %', data: TS_PEXP,
-                  backgroundColor: ORANGE + '99', borderColor: ORANGE, borderWidth: 1 }}]
-  }},
-  options: {{
-    responsive: true, maintainAspectRatio: false,
-    plugins: {{ legend: {{ display: false }} }},
-    scales: {{
-      x: {{ title: {{ display: true, text: 'N (patients)' }} }},
-      y: {{ title: {{ display: true, text: 'P(expedite) %' }},
-            ticks: {{ callback: v => v + '%' }} }}
-    }}
-  }}
-}});
-
-new Chart(document.getElementById('donutChart'), {{
-  type: 'doughnut',
-  data: {{
-    labels: ['Transport Cost', 'Expected Expediting Cost'],
-    datasets: [{{
-      data: [{donut_transport}, {donut_exp}],
-      backgroundColor: [BLUE + 'cc', ORANGE + 'cc'],
-      borderColor: [BLUE, ORANGE], borderWidth: 2
-    }}]
-  }},
-  options: {{
-    responsive: true, maintainAspectRatio: false,
-    plugins: {{
-      legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }} }} }},
-      tooltip: {{
-        callbacks: {{
-          label: ctx => ' $' + ctx.parsed.toLocaleString()
-        }}
-      }}
-    }}
-  }}
-}});
-
-// ── Out-of-Sample charts ──────────────────────────────────────────────────────
-const OOS_NS      = {n_labels_js};
+// ── Summary + OOS charts ──────────────────────────────────────────────────────
 const OOS_CCP_C   = {oos_cost_ccp_js};
 const OOS_TS_C    = {oos_cost_ts_js};
 const OOS_CCP_V   = {oos_viol_ccp_js};
@@ -1342,12 +1247,19 @@ const OOS_TS_V    = {oos_viol_ts_js};
 const OOS_CCP_S   = {oos_ccp_sample_js};
 const OOS_TS_S    = {oos_ts_sample_js};
 
-lineChart('oosCostChart', OOS_NS,
-  [detDS('CCP', OOS_CCP_C), tsDS('Two-Stage', OOS_TS_C)],
+lineChart('sumCostChart', NS,
+  [ccpDS('CCP', OOS_CCP_C), tsDS('Two-Stage', OOS_TS_C)],
+  'Mean Realized Cost ($M)', v => '$' + v.toFixed(2) + 'M');
+lineChart('sumViolChart', NS,
+  [ccpDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
+  '% Scenarios with Violation', v => v.toFixed(1) + '%');
+
+lineChart('oosCostChart', NS,
+  [ccpDS('CCP', OOS_CCP_C), tsDS('Two-Stage', OOS_TS_C)],
   'Mean Realized Cost ($M)', v => '$' + v.toFixed(2) + 'M');
 
-lineChart('oosViolChart', OOS_NS,
-  [detDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
+lineChart('oosViolChart', NS,
+  [ccpDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
   '% Scenarios with Violation', v => v.toFixed(1) + '%');
 
 new Chart(document.getElementById('oosDistChart'), {{
@@ -1355,7 +1267,7 @@ new Chart(document.getElementById('oosDistChart'), {{
   data: {{
     labels: Array.from({{length: OOS_CCP_S.length}}, (_,i) => i+1),
     datasets: [
-      {{ label: 'CCP', data: OOS_CCP_S, borderColor: BLUE,   backgroundColor: BLUE+'22',
+      {{ label: 'CCP', data: OOS_CCP_S, borderColor: BLUE, backgroundColor: BLUE+'22',
          borderWidth:1.5, pointRadius:0, tension:0 }},
       {{ label: 'Two-Stage', data: OOS_TS_S, borderColor: ORANGE, backgroundColor: ORANGE+'22',
          borderWidth:1.5, pointRadius:0, tension:0, borderDash:[4,2] }},

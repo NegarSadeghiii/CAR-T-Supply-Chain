@@ -53,7 +53,7 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 </head>
 <body>
 <div class="hd">
-  <h1>Two-Stage Expediting ColGen vs Deterministic ColGen — Validation Report</h1>
+  <h1>CCP vs Two-Stage Expediting ColGen — Stochastic Comparison Report</h1>
   <p>N = 5,10,15,20,25,40,50 &nbsp;|&nbsp;
      &tau; = 0.0 &nbsp;|&nbsp; &sigma;_L = 0.2 &nbsp;|&nbsp;
      &delta; = 2.0d &nbsp;|&nbsp; &epsilon; = 0.05</p>
@@ -61,11 +61,9 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 
 <div class="tabs">
   <div class="tab a" onclick="show('summary')">&#127775; Summary</div>
-  <div class="tab"   onclick="show('charts')">&#128200; Charts</div>
-  <div class="tab"   onclick="show('table')">&#128196; Full Table</div>
+  <div class="tab"   onclick="show('oos')">&#127919; CCP vs Two-Stage</div>
   <div class="tab"   onclick="show('mc')">&#9989; Obj. Validation</div>
   <div class="tab"   onclick="show('patients')">&#128101; Patients</div>
-  <div class="tab"   onclick="show('oos')">&#127919; Out-of-Sample</div>
   <div class="tab"   onclick="show('findings')">&#128270; Findings</div>
   <div class="tab"   onclick="show('sensitivity')">&#128202; Sensitivity</div>
   <div class="tab"   onclick="show('vss')">&#127942; VSS</div>
@@ -76,7 +74,7 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
   <div class="meta-grid">
     <div class="meta-card">
       <div class="v" style="color:var(--blue)">7/7</div>
-      <div class="l">Det. Feasible</div>
+      <div class="l">CCP Feasible</div>
     </div>
     <div class="meta-card">
       <div class="v" style="color:var(--orange)">7/7</div>
@@ -94,12 +92,12 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 
   <div class="chart-grid">
     <div class="chart-box">
-      <h3>Schedule Cost ($M) — both methods</h3>
-      <div class="chart-wrap"><canvas id="costChartS"></canvas></div>
+      <h3>Mean Realized Cost ($M) — CCP vs Two-Stage (OOS)</h3>
+      <div class="chart-wrap"><canvas id="sumCostChart"></canvas></div>
     </div>
     <div class="chart-box">
-      <h3>Cost Breakdown — Two-Stage (N=50)</h3>
-      <div class="chart-wrap"><canvas id="donutChart"></canvas></div>
+      <h3>% Scenarios with Violation — CCP vs Two-Stage (OOS)</h3>
+      <div class="chart-wrap"><canvas id="sumViolChart"></canvas></div>
     </div>
   </div>
 
@@ -159,69 +157,27 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
   <div class="card">
     <h2>Model Design</h2>
     <div class="insight">
-      <strong>Deterministic ColGen</strong> solves the set-partitioning master problem using the nominal
-      manufacturing time T_MF = 7 days. Plans are filtered purely by the deadline
-      constraint TLS + T_MF + TQC + TT1 + TT3 &le; D_p. No uncertainty is modelled.
+      <strong>CCP (Chance-Constrained Programming)</strong> replaces the nominal T_MF with an
+      inflated budget T&#770;_MF = F&#8315;&#185;(1&minus;&alpha;) so that P(T_MF &le; T&#770;_MF) = 1&minus;&alpha;.
+      This is a single-stage plan: routes are fixed, and no recourse action is taken if manufacturing runs late.
+      Lower &alpha; = stricter guarantee = more conservative routes = higher transport cost.
     </div>
     <div class="insight orange">
       <strong>Two-Stage Expediting ColGen</strong> assumes T_MF ~ LogNormal(&mu;_L, &sigma;_L=0.2).
       Stage 1 selects a route x_i before T_MF is realised.
       Stage 2 triggers expedited return (saving &delta;=2.0d, costing &pi;_p) if T_MF &gt; K_i (slack).
       Modified column cost: <em>c&#771;_i = c_transport + &pi;_p &sdot; P(T_MF &gt; K_i)</em>.
+      Violations only occur when T_MF &gt; K_i + &delta; (recourse also fails).
     </div>
     <div class="insight green">
-      <strong>Objective validation</strong>: For each selected patient plan we draw 5 000 LogNormal
-      samples and verify empirical P(expedite) &asymp; theoretical 1 &minus; &Phi;((ln K_i &minus; &mu;_L)/&sigma;_L).
-      Relative errors &lt;10% confirm the formula is correctly embedded in the objective.
+      <strong>Key difference</strong>: CCP commits to a conservative plan upfront (no flexibility).
+      Two-Stage pays a small premium for a recourse action, trading lower up-front cost for
+      the ability to adapt when manufacturing runs long. The out-of-sample tab quantifies this trade-off.
     </div>
   </div>
 </div>
 
-<!-- TAB 2: Charts -->
-<div id="pane-charts" class="pane">
-  <div class="chart-grid">
-    <div class="chart-box">
-      <h3>Total Cost ($M) vs N</h3>
-      <div class="chart-wrap"><canvas id="costChart2"></canvas></div>
-    </div>
-    <div class="chart-box">
-      <h3>Solve Time (s) vs N</h3>
-      <div class="chart-wrap"><canvas id="timeChart"></canvas></div>
-    </div>
-    <div class="chart-box">
-      <h3>Avg TRT (days) vs N</h3>
-      <div class="chart-wrap"><canvas id="trtChart"></canvas></div>
-    </div>
-    <div class="chart-box">
-      <h3>Avg P(expedite) % vs N — Two-Stage only</h3>
-      <div class="chart-wrap"><canvas id="pexpChart"></canvas></div>
-    </div>
-  </div>
-</div>
-
-<!-- TAB 3: Full Table -->
-<div id="pane-table" class="pane">
-  <div class="card"><h2>Full Results — All Instances & Both Solvers</h2>
-  <div style="overflow-x:auto">
-  <table class="tbl"><thead><tr>
-    <th>N</th>
-    <th>Det Solved</th><th>Det Cost</th><th>Det TRT</th><th>Det Plans</th><th>Det Time</th>
-    <th>2S Solved</th><th>2S Cost</th><th>2S TRT</th><th>2S Plans</th><th>2S Time</th>
-    <th>Avg P(exp)</th><th>E[$exp] tot.</th>
-    <th>Cost Gap</th><th>TRT Gap</th>
-  </tr></thead><tbody>
-  <tr><td style="font-weight:700">N=5</td><td>Yes</td><td>$3,119,660</td><td>20.6d</td><td>90</td><td>5.54s</td><td>Yes</td><td>$3,126,280</td><td>19.4d</td><td>66</td><td>0.02s</td><td>11.8%</td><td>$1,602</td><td><span style="color:#b45309;font-weight:700">+0.2%</span></td><td><span style="color:#166534;font-weight:700">-5.8%</span></td></tr>
-<tr><td style="font-weight:700">N=10</td><td>Yes</td><td>$6,245,099</td><td>20.3d</td><td>174</td><td>0.06s</td><td>Yes</td><td>$6,260,140</td><td>18.8d</td><td>114</td><td>0.04s</td><td>9.9%</td><td>$2,992</td><td><span style="color:#b45309;font-weight:700">+0.2%</span></td><td><span style="color:#166534;font-weight:700">-7.4%</span></td></tr>
-<tr><td style="font-weight:700">N=15</td><td>Yes</td><td>$3,348,865</td><td>20.2d</td><td>258</td><td>0.05s</td><td>Yes</td><td>$3,374,784</td><td>18.4d</td><td>162</td><td>0.04s</td><td>7.8%</td><td>$4,063</td><td><span style="color:#b45309;font-weight:700">+0.8%</span></td><td><span style="color:#166534;font-weight:700">-8.9%</span></td></tr>
-<tr><td style="font-weight:700">N=20</td><td>Yes</td><td>$3,467,529</td><td>20.1d</td><td>348</td><td>0.07s</td><td>Yes</td><td>$6,505,303</td><td>18.8d</td><td>228</td><td>0.06s</td><td>9.9%</td><td>$5,984</td><td><span style="color:#b45309;font-weight:700">+87.6%</span></td><td><span style="color:#166534;font-weight:700">-6.7%</span></td></tr>
-<tr><td style="font-weight:700">N=25</td><td>Yes</td><td>$6,592,586</td><td>20.4d</td><td>438</td><td>0.16s</td><td>Yes</td><td>$6,632,813</td><td>18.8d</td><td>294</td><td>0.10s</td><td>9.4%</td><td>$7,268</td><td><span style="color:#b45309;font-weight:700">+0.6%</span></td><td><span style="color:#166534;font-weight:700">-7.7%</span></td></tr>
-<tr><td style="font-weight:700">N=40</td><td>Yes</td><td>$6,939,496</td><td>20.2d</td><td>696</td><td>0.12s</td><td>Yes</td><td>$7,003,242</td><td>18.6d</td><td>456</td><td>0.10s</td><td>8.8%</td><td>$11,331</td><td><span style="color:#b45309;font-weight:700">+0.9%</span></td><td><span style="color:#166534;font-weight:700">-7.8%</span></td></tr>
-<tr><td style="font-weight:700">N=50</td><td>Yes</td><td>$7,167,579</td><td>20.3d</td><td>870</td><td>0.33s</td><td>Yes</td><td>$7,248,319</td><td>18.6d</td><td>570</td><td>0.10s</td><td>8.2%</td><td>$13,686</td><td><span style="color:#b45309;font-weight:700">+1.1%</span></td><td><span style="color:#166534;font-weight:700">-8.6%</span></td></tr>
-  </tbody></table>
-  </div></div>
-</div>
-
-<!-- TAB 4: MC Validation -->
+<!-- TAB 3: MC Validation -->
 <div id="pane-mc" class="pane">
   <div class="card">
     <h2>Objective Function Validation — Monte Carlo (5 000 draws)</h2>
@@ -4405,10 +4361,10 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
   </div>
 </div>
 
-<!-- TAB 6: Out-of-Sample Validation -->
+<!-- TAB 2: CCP vs Two-Stage (Out-of-Sample) -->
 <div id="pane-oos" class="pane">
   <div class="card">
-    <h2>Out-of-Sample Validation — CCP vs Two-Stage (10 000 scenarios)</h2>
+    <h2>CCP vs Two-Stage — Out-of-Sample Evaluation (10 000 scenarios)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.6">
       The first-stage route decisions from both models are <strong>fixed</strong> and then evaluated
       against 10 000 fresh T_MF draws from LogNormal(&sigma;_L=0.2).
@@ -4471,7 +4427,7 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <div id="pane-findings" class="pane">
   <div class="card">
     <h2>Key Findings</h2>
-    <div class="insight orange">Average cost premium of Two-Stage over Deterministic: <strong>+13.1%</strong>. This is the price of robustness — routes are filtered to keep a recourse option viable.</div><div class="insight ">Average probability of expediting across all patients and instances: <strong>9.4%</strong>. Expediting recourse is rarely triggered (&lt;20% of patients), keeping expected costs low.</div><div class="insight green">Monte Carlo validation — maximum relative error between theoretical and empirical P(expedite): <strong>41.6%</strong>. Values below 10% confirm the LogNormal survival formula in the objective is correct.</div>
+    <div class="insight orange">Average out-of-sample cost gap (Two-Stage vs CCP): <strong>-9.4%</strong>. Two-Stage pays a small expected-cost premium in exchange for an adaptive recourse action.</div><div class="insight ">Average probability of expediting across all patients and instances: <strong>9.4%</strong>. Expediting recourse is rarely triggered, keeping the realized cost premium small.</div><div class="insight green">CCP average violation rate: <strong>51.2%</strong> vs Two-Stage: <strong>21.7%</strong>. Two-Stage virtually eliminates deadline violations through the expediting recourse action. Monte Carlo validation max error: <strong>41.6%</strong> (confirms LogNormal formula).</div>
     <div class="insight" style="margin-top:12px">
       <strong>Scalability:</strong> Both solvers scale to N=50 within the time limit.
       Two-Stage Expediting has a slightly higher plan-generation phase (survival probability
@@ -4574,21 +4530,13 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 function show(n) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('a'));
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('a'));
-  const m = {summary:0,charts:1,table:2,mc:3,patients:4,oos:5,findings:6,sensitivity:7,vss:8};
+  const m = {summary:0,oos:1,mc:2,patients:3,findings:4,sensitivity:5,vss:6};
   document.querySelectorAll('.tab')[m[n]].classList.add('a');
   document.getElementById('pane-' + n).classList.add('a');
   requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
 }
 
-const NS     = [5, 10, 15, 20, 25, 40, 50];
-const DET_C  = [3.1197,6.2451,3.3489,3.4675,6.5926,6.9395,7.1676];
-const TS_C   = [3.1263,6.2601,3.3748,6.5053,6.6328,7.0032,7.2483];
-const DET_T  = [5.54,0.06,0.05,0.07,0.16,0.12,0.33];
-const TS_T   = [0.024,0.043,0.037,0.055,0.095,0.1,0.102];
-const DET_TRT= [20.6,20.3,20.2,20.15,20.36,20.23,20.3];
-const TS_TRT = [19.4,18.8,18.4,18.8,18.8,18.65,18.56];
-const TS_PEXP= [11.79,9.88,7.83,9.88,9.41,8.82,8.18];
-
+const NS   = [5, 10, 15, 20, 25, 40, 50];
 const BLUE   = '#1E3A5F';
 const ORANGE = '#92400E';
 
@@ -4608,7 +4556,7 @@ function lineChart(id, labels, datasets, yLabel, fmt) {
   });
 }
 
-const detDS = (label, data, id) => ({
+const ccpDS = (label, data) => ({
   label, data,
   borderColor: BLUE, backgroundColor: BLUE + '22',
   pointBackgroundColor: BLUE, borderWidth: 2, pointRadius: 5, tension: 0.3
@@ -4620,58 +4568,7 @@ const tsDS  = (label, data) => ({
   borderDash: [5, 3]
 });
 
-lineChart('costChartS', NS, [detDS('Deterministic', DET_C), tsDS('Two-Stage', TS_C)],
-          'Cost ($M)', v => '$' + v.toFixed(2) + 'M');
-lineChart('costChart2', NS, [detDS('Deterministic', DET_C), tsDS('Two-Stage', TS_C)],
-          'Cost ($M)', v => '$' + v.toFixed(2) + 'M');
-lineChart('timeChart',  NS, [detDS('Deterministic', DET_T), tsDS('Two-Stage', TS_T)],
-          'Solve Time (s)', v => v.toFixed(1) + 's');
-lineChart('trtChart',   NS, [detDS('Deterministic', DET_TRT), tsDS('Two-Stage', TS_TRT)],
-          'Avg TRT (days)', v => v.toFixed(1) + 'd');
-
-new Chart(document.getElementById('pexpChart'), {
-  type: 'bar',
-  data: {
-    labels: NS,
-    datasets: [{ label: 'Avg P(expedite) %', data: TS_PEXP,
-                  backgroundColor: ORANGE + '99', borderColor: ORANGE, borderWidth: 1 }]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { title: { display: true, text: 'N (patients)' } },
-      y: { title: { display: true, text: 'P(expedite) %' },
-            ticks: { callback: v => v + '%' } }
-    }
-  }
-});
-
-new Chart(document.getElementById('donutChart'), {
-  type: 'doughnut',
-  data: {
-    labels: ['Transport Cost', 'Expected Expediting Cost'],
-    datasets: [{
-      data: [7234633, 13686],
-      backgroundColor: [BLUE + 'cc', ORANGE + 'cc'],
-      borderColor: [BLUE, ORANGE], borderWidth: 2
-    }]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: {
-      legend: { position: 'bottom', labels: { font: { size: 10 } } },
-      tooltip: {
-        callbacks: {
-          label: ctx => ' $' + ctx.parsed.toLocaleString()
-        }
-      }
-    }
-  }
-});
-
-// ── Out-of-Sample charts ──────────────────────────────────────────────────────
-const OOS_NS      = [5, 10, 15, 20, 25, 40, 50];
+// ── Summary + OOS charts ──────────────────────────────────────────────────────
 const OOS_CCP_C   = [3.1281,6.2631,6.3892,6.5116,6.6398,7.0172,8.848];
 const OOS_TS_C    = [3.1263,6.2601,3.3748,6.5053,6.6328,7.0032,7.2483];
 const OOS_CCP_V   = [15.5,30.8,42.8,50.9,59.2,75.8,83.2];
@@ -4679,12 +4576,19 @@ const OOS_TS_V    = [7.6,11.2,13.2,21.4,24.8,35.4,38.5];
 const OOS_CCP_S   = [8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848,8.848];
 const OOS_TS_S    = [7.2431,7.2511,7.2461,7.2501,7.2506,7.2406,7.2436,7.2496,7.2361,7.2456,7.2426,7.2431,7.2616,7.2476,7.2471,7.2456,7.2376,7.2581,7.2536,7.2516,7.2511,7.2546,7.2551,7.2481,7.2391,7.2456,7.2576,7.2441,7.2631,7.2391,7.2551,7.2496,7.2466,7.2441,7.2511,7.2496,7.2446,7.2551,7.2511,7.2441,7.2431,7.2536,7.2536,7.2446,7.2496,7.2416,7.2431,7.2391,7.2376,7.2536,7.2431,7.2431,7.2631,7.2406,7.2391,7.2471,7.2521,7.2361,7.2511,7.2541,7.2536,7.2376,7.2516,7.2446,7.2521,7.2511,7.2361,7.2416,7.2476,7.2521,7.2441,7.2521,7.2536,7.2551,7.2506,7.2406,7.2471,7.2441,7.2576,7.2456,7.2596,7.2376,7.2456,7.2441,7.2766,7.2496,7.2471,7.2376,7.2421,7.2456,7.2391,7.2456,7.2456,7.2431,7.2506,7.2526,7.2496,7.2416,7.2641,7.2556,7.2471,7.2421,7.2446,7.2506,7.2391,7.2816,7.2446,7.2416,7.2391,7.2476,7.2441,7.2416,7.2631,7.2401,7.2401,7.2391,7.2511,7.2456,7.2661,7.2551,7.2486,7.2481,7.2391,7.2376,7.2416,7.2361,7.2576,7.2646,7.2391,7.2391,7.2421,7.2416,7.2471,7.2456,7.2471,7.2391,7.2431,7.2431,7.2391,7.2696,7.2481,7.2406,7.2501,7.2481,7.2581,7.2551,7.2551,7.2391,7.2376,7.2591,7.2376,7.2536,7.2441,7.2551,7.2476,7.2406,7.2441,7.2406,7.2566,7.2416,7.2536,7.2496,7.2631,7.2481,7.2431,7.2591,7.2526,7.2471,7.2601,7.2671,7.2496,7.2511,7.2416,7.2456,7.2461,7.2391,7.2576,7.2376,7.2526,7.2551,7.2441,7.2401,7.2471,7.2481,7.2646,7.2376,7.2551,7.2401,7.2391,7.2376,7.2536,7.2376,7.2631,7.2456,7.2401,7.2431,7.2631,7.2496,7.2601,7.2526];
 
-lineChart('oosCostChart', OOS_NS,
-  [detDS('CCP', OOS_CCP_C), tsDS('Two-Stage', OOS_TS_C)],
+lineChart('sumCostChart', NS,
+  [ccpDS('CCP', OOS_CCP_C), tsDS('Two-Stage', OOS_TS_C)],
+  'Mean Realized Cost ($M)', v => '$' + v.toFixed(2) + 'M');
+lineChart('sumViolChart', NS,
+  [ccpDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
+  '% Scenarios with Violation', v => v.toFixed(1) + '%');
+
+lineChart('oosCostChart', NS,
+  [ccpDS('CCP', OOS_CCP_C), tsDS('Two-Stage', OOS_TS_C)],
   'Mean Realized Cost ($M)', v => '$' + v.toFixed(2) + 'M');
 
-lineChart('oosViolChart', OOS_NS,
-  [detDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
+lineChart('oosViolChart', NS,
+  [ccpDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
   '% Scenarios with Violation', v => v.toFixed(1) + '%');
 
 new Chart(document.getElementById('oosDistChart'), {
@@ -4692,7 +4596,7 @@ new Chart(document.getElementById('oosDistChart'), {
   data: {
     labels: Array.from({length: OOS_CCP_S.length}, (_,i) => i+1),
     datasets: [
-      { label: 'CCP', data: OOS_CCP_S, borderColor: BLUE,   backgroundColor: BLUE+'22',
+      { label: 'CCP', data: OOS_CCP_S, borderColor: BLUE, backgroundColor: BLUE+'22',
          borderWidth:1.5, pointRadius:0, tension:0 },
       { label: 'Two-Stage', data: OOS_TS_S, borderColor: ORANGE, backgroundColor: ORANGE+'22',
          borderWidth:1.5, pointRadius:0, tension:0, borderDash:[4,2] },
