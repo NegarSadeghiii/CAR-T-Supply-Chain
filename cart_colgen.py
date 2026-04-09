@@ -284,31 +284,49 @@ def solve_master(plan_data, time_limit=300, solver_name='appsi_highs'):
         return lhs <= rhs
     model.capacity = Constraint(range(len(cap_data)), rule=cap_rule)
 
-    # Solve — try appsi_highs first, fall back to glpk / cbc
+    # Solve — try appsi_highs / highs, fall back to glpk, then cbc
     def _try_solve(sname):
-        s = SolverFactory(sname)
-        if not s.available():
-            return None, None
         try:
-            if sname == 'appsi_highs':
-                s.options['time_limit'] = time_limit
+            s = SolverFactory(sname)
+            try:
+                avail = s.available(exception_flag=False)
+            except TypeError:
+                avail = s.available()
+            except Exception:
+                avail = False
+            if not avail:
+                return None, None
+            if sname in ('appsi_highs', 'highs'):
+                try: s.options['time_limit'] = time_limit
+                except Exception: pass
             elif sname == 'glpk':
-                s.options['tmlim'] = time_limit
+                try: s.options['tmlim'] = time_limit
+                except Exception: pass
             elif sname == 'cbc':
-                s.options['sec'] = time_limit
+                try: s.options['sec'] = time_limit
+                except Exception: pass
             r = s.solve(model, tee=False)
             return s, r
         except Exception:
             return None, None
 
-    solvers_to_try = [solver_name] if solver_name != 'appsi_highs' else ['appsi_highs', 'glpk', 'cbc']
+    solvers_to_try = ['appsi_highs', 'highs', 'glpk', 'cbc']
+    if solver_name not in ('appsi_highs', 'highs'):
+        solvers_to_try = [solver_name] + solvers_to_try
     results = None
+    used_solver = None
     for sn in solvers_to_try:
-        _, results = _try_solve(sn)
+        used_solver, results = _try_solve(sn)
         if results is not None:
             break
 
     if results is None:
+        import warnings
+        warnings.warn(
+            "No MIP solver found (tried appsi_highs, highs, glpk, cbc). "
+            "Install one with:  pip install highspy  OR  sudo apt-get install glpk-utils",
+            RuntimeWarning, stacklevel=2,
+        )
         return model, {'solved': False, 'termination': 'no_solver_available'}
 
     ok = (results.solver.status == SolverStatus.ok and
