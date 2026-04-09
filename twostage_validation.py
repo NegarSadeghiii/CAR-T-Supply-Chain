@@ -215,74 +215,82 @@ def run_all(tau, sigma_L, delta, epsilon, time_limit, n_sim):
 
 def out_of_sample_validate(ccp_r, ts_r, tmfe, sigma_L, delta, pi_map,
                             n_sim=10000, seed=77):
-    """Evaluate CCP and Two-Stage solutions on the same n_sim T_MF scenarios."""
+    """Evaluate CCP and Two-Stage solutions on n_sim scenarios.
+    Each patient gets their own independent T_MF draw per scenario
+    (CAR-T manufacturing is patient-specific).
+    """
     import statistics as _st
     rng  = random.Random(seed)
     mu_L = math.log(tmfe) - 0.5 * sigma_L ** 2
-    scenarios = [rng.lognormvariate(mu_L, sigma_L) for _ in range(n_sim)]
 
-    # CCP — no recourse: violation if T_MF > mfg_budget_p
-    tmfe_eff     = ccp_r.get('tmfe_eff', tmfe)
-    ccp_pats     = ccp_r.get('patients', [])
+    # CCP — no recourse: violation if T_MF_p > mfg_budget_p
+    tmfe_eff      = ccp_r.get('tmfe_eff', tmfe)
+    ccp_pats      = ccp_r.get('patients', [])
     ccp_transport = ccp_r.get('total_cost', 0)
-    # mfg_budget per patient = max T_MF before deadline is missed
-    mfg_budgets = {
+    mfg_budgets   = {
         p['id']: p['deadline'] - (p['trt'] - tmfe_eff)
         for p in ccp_pats
     }
 
     ccp_costs, ccp_viols = [], []
-    for tmf in scenarios:
-        v = sum(1 for p in ccp_pats if tmf > mfg_budgets.get(p['id'], 999))
+    for _ in range(n_sim):
+        nv = 0
+        for p in ccp_pats:
+            tmf_p = rng.lognormvariate(mu_L, sigma_L)   # per-patient draw
+            if tmf_p > mfg_budgets.get(p['id'], 999):
+                nv += 1
         ccp_costs.append(ccp_transport)   # cost is fixed — no recourse
-        ccp_viols.append(v)
+        ccp_viols.append(nv)
 
-    # Two-Stage — recourse: expedite if T_MF > K_i
-    ts_pats = ts_r.get('patients', [])
+    # Two-Stage — recourse: expedite if T_MF_p > K_p
+    ts_pats      = ts_r.get('patients', [])
     ts_transport = ts_r.get('total_cost', 0) - ts_r.get('total_exp_expedite_cost', 0)
 
     ts_costs, ts_viols, ts_exps = [], [], []
-    for tmf in scenarios:
+    for _ in range(n_sim):
         ec, nv, ne = 0, 0, 0
         for p in ts_pats:
-            K   = p.get('slack')
-            if K is None: continue
-            pi_p = pi_map.get(p.get('group', 'low'), 1500)
-            if tmf > K:
+            K = p.get('slack')
+            if K is None:
+                continue
+            tmf_p = rng.lognormvariate(mu_L, sigma_L)   # per-patient draw
+            pi_p  = pi_map.get(p.get('group', 'low'), 1500)
+            if tmf_p > K:
                 ec += pi_p; ne += 1
-                if tmf > K + delta:
+                if tmf_p > K + delta:
                     nv += 1
         ts_costs.append(ts_transport + ec)
         ts_viols.append(nv)
         ts_exps.append(ne)
 
+    n_ts = max(len(ts_pats), 1)
+
     def _metrics(costs, viols, exps=None):
         sc = sorted(costs)
         n  = len(sc)
         return {
-            'mean_cost':    round(_st.mean(costs)),
-            'std_cost':     round(_st.stdev(costs)),
-            'p5_cost':      round(sc[int(0.05 * n)]),
-            'p95_cost':     round(sc[int(0.95 * n)]),
-            'pct_scen_viol': round(sum(1 for v in viols if v > 0) / n * 100, 1),
+            'mean_cost':         round(_st.mean(costs)),
+            'std_cost':          round(_st.stdev(costs)),
+            'p5_cost':           round(sc[int(0.05 * n)]),
+            'p95_cost':          round(sc[int(0.95 * n)]),
+            'pct_scen_viol':     round(sum(1 for v in viols if v > 0) / n * 100, 1),
             'avg_viol_per_scen': round(_st.mean(viols), 3),
-            'pct_exp':      round(sum(exps) / (n * max(len(ts_pats), 1)) * 100, 1)
-                            if exps is not None else None,
+            'pct_exp':           round(sum(exps) / (n * n_ts) * 100, 1)
+                                 if exps is not None else None,
         }
 
     return {
-        'n_sim':   n_sim,
-        'n_ccp':   len(ccp_pats),
-        'n_ts':    len(ts_pats),
-        'ccp':     _metrics(ccp_costs, ccp_viols),
-        'ts':      _metrics(ts_costs,  ts_viols, ts_exps),
+        'n_sim':         n_sim,
+        'n_ccp':         len(ccp_pats),
+        'n_ts':          len(ts_pats),
+        'ccp':           _metrics(ccp_costs, ccp_viols),
+        'ts':            _metrics(ts_costs,  ts_viols, ts_exps),
         'ccp_transport': ccp_transport,
         'ts_transport':  ts_transport,
-        'tmfe_eff':  tmfe_eff,
-        'alpha':     ccp_r.get('alpha', 0.10),
-        # sample of 200 costs for chart
-        'ccp_sample': ccp_costs[:200],
-        'ts_sample':  ts_costs[:200],
+        'tmfe_eff':      tmfe_eff,
+        'alpha':         ccp_r.get('alpha', 0.10),
+        'ccp_sample':    ccp_costs[:200],
+        'ts_sample':     ts_costs[:200],
     }
 
 
@@ -528,7 +536,6 @@ def compute_vss(det_results, ts_results, sigma_L, delta, pi_map_default,
     rng  = random.Random(seed)
     tmfe = TS_PROCESS['tmfe']
     mu_L = math.log(tmfe) - 0.5 * sigma_L ** 2
-    scenarios = [rng.lognormvariate(mu_L, sigma_L) for _ in range(n_sim)]
 
     vss_rows = []
     det_by_n = {r['N']: r for r in det_results if r.get('solved')}
@@ -546,15 +553,15 @@ def compute_vss(det_results, ts_results, sigma_L, delta, pi_map_default,
 
         # EEV: det routes + expediting recourse (delta from Two-Stage params)
         eev_costs = []
-        for tmf in scenarios:
+        for _ in range(n_sim):
             ec = 0
             for p in det_pats:
-                # slack = deadline - (trt - tmfe) because trt = TLS+tmfe+TQC+TT
+                tmf_p = rng.lognormvariate(mu_L, sigma_L)   # per-patient draw
                 K = p['deadline'] - (p.get('trt', p.get('turnaround', tmfe)) - tmfe)
                 urg  = p.get('group', 'low')
                 pi_p = pi_map.get(urg, 1500)
-                if tmf > K:
-                    ec += pi_p          # expedite triggered
+                if tmf_p > K:
+                    ec += pi_p
             eev_costs.append(det.get('total_cost', 0) + ec)
 
         eev_mean = _st.mean(eev_costs)
