@@ -3,6 +3,7 @@
 
 # Optimisation
 pyomo>=6.0
+highspy>=1.5          # HiGHS solver Python bindings (used by appsi_highs in pyomo)
 
 # Simulation (stochastic layer)
 simpy>=4.0

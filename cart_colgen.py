@@ -284,11 +284,32 @@ def solve_master(plan_data, time_limit=300, solver_name='appsi_highs'):
         return lhs <= rhs
     model.capacity = Constraint(range(len(cap_data)), rule=cap_rule)
 
-    # Solve
-    solver = SolverFactory(solver_name)
-    if solver_name == 'appsi_highs':
-        solver.options['time_limit'] = time_limit
-    results = solver.solve(model, tee=False)
+    # Solve — try appsi_highs first, fall back to glpk / cbc
+    def _try_solve(sname):
+        s = SolverFactory(sname)
+        if not s.available():
+            return None, None
+        try:
+            if sname == 'appsi_highs':
+                s.options['time_limit'] = time_limit
+            elif sname == 'glpk':
+                s.options['tmlim'] = time_limit
+            elif sname == 'cbc':
+                s.options['sec'] = time_limit
+            r = s.solve(model, tee=False)
+            return s, r
+        except Exception:
+            return None, None
+
+    solvers_to_try = [solver_name] if solver_name != 'appsi_highs' else ['appsi_highs', 'glpk', 'cbc']
+    results = None
+    for sn in solvers_to_try:
+        _, results = _try_solve(sn)
+        if results is not None:
+            break
+
+    if results is None:
+        return model, {'solved': False, 'termination': 'no_solver_available'}
 
     ok = (results.solver.status == SolverStatus.ok and
           results.solver.termination_condition in
