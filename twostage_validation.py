@@ -1995,7 +1995,7 @@ requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
 
 // ── Cost Breakdown stacked bar ────────────────────────────────────────────────
 const _cb_det_tr={_cb_det_tr};
-const {cost_breakdown_js}
+{cost_breakdown_js}
 if (document.getElementById('costBreakdownChart')) {{
   new Chart(document.getElementById('costBreakdownChart'), {{
     type: 'bar',
