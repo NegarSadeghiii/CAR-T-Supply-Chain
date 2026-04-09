@@ -118,7 +118,10 @@ def generate_plans_twostage(data, tau=0.0, urgency_config=None,
     Key differences from deterministic generate_plans():
     1. Plan filter: K_i + delta >= F^{-1}(1-epsilon)   [not K_i >= TMFE]
     2. Column cost: transport_cost + pi_p * Pr(T_MF > K_i)
-    3. Capacity window: uses nominal TMFE (unchanged)
+    3. Capacity window: uses ceil(F^{-1}(1-epsilon)) — the (1-epsilon) quantile
+       of T_MF — so slot reservation is consistent with the route filter's
+       risk threshold (not the mean TMFE). This prevents slot overflow when
+       actual manufacturing exceeds the nominal 7-day mean.
     """
     if urgency_config is None:
         urgency_config = DEFAULT_URGENCY
@@ -146,6 +149,13 @@ def generate_plans_twostage(data, tau=0.0, urgency_config=None,
     # => K_i >= filter_threshold
     tmfe_quantile = _lognormal_quantile(1.0 - epsilon, TMFE, sigma_L)
     filter_threshold = tmfe_quantile - delta   # minimum slack required
+
+    # Capacity slot quantile: F^{-1}(0.90) — 90th percentile of T_MF.
+    # Matches CCP's alpha=0.10 so both models plan capacity at the same
+    # risk level. Using 1-epsilon (95th pct) over-constrains scheduling
+    # at large N, forcing unnecessarily expensive facility choices.
+    cap_alpha   = float(process_config.get('cap_alpha', 0.10))
+    tmfe_cap_q  = _lognormal_quantile(1.0 - cap_alpha, TMFE, sigma_L)
 
     TT1  = {j: int(data['TT1'][j]) for j in J}
     TT3  = {j: int(data['TT3'][j]) for j in J}
@@ -218,7 +228,11 @@ def generate_plans_twostage(data, tau=0.0, urgency_config=None,
                     total_cost = transport_cost + exp_expedite_cost
 
                     mfg_start = arr + TLS + TT1[j_out]
-                    mfg_end   = mfg_start + TMFE  # capacity uses nominal duration
+                    # Capacity slot uses ceil(F^{-1}(1-cap_alpha)) — 90th pct
+                    # of T_MF (matching CCP's alpha=0.10). Prevents slot
+                    # overflow without over-constraining scheduling at large N.
+                    TMFE_cap  = math.ceil(tmfe_cap_q)
+                    mfg_end   = mfg_start + TMFE_cap
 
                     # Nominal TRT (with standard return)
                     trt_nominal = TLS + TT1[j_out] + TMFE + TQC + TT3[j_ret]
@@ -259,7 +273,8 @@ def generate_plans_twostage(data, tau=0.0, urgency_config=None,
         'CVM':               CVM,
         'fac_cost_total':    fac_cost_total,
         'T_max':             T_max,
-        'TMFE':              TMFE,
+        'TMFE':              math.ceil(tmfe_cap_q),  # capacity window = slot duration (90th pct)
+        'TMFE_nominal':      TMFE,                   # original mean, kept for reference
         'MAX_FAC':           MAX_FAC,
         'deadlines':         deadlines,
         'group_map':         group_map,
