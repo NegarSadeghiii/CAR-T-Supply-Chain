@@ -157,22 +157,39 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
   <div class="card">
     <h2>Model Design</h2>
     <div class="insight">
-      <strong>CCP (Chance-Constrained Programming)</strong> replaces the nominal T_MF with an
-      inflated budget T&#770;_MF = F&#8315;&#185;(1&minus;&alpha;) so that P(T_MF &le; T&#770;_MF) = 1&minus;&alpha;.
-      This is a single-stage plan: routes are fixed, and no recourse action is taken if manufacturing runs late.
-      Lower &alpha; = stricter guarantee = more conservative routes = higher transport cost.
+      <strong>Why LogNormal for T_MF?</strong>
+      We model the manufacturing time T_MF as LogNormal(&mu;_L, &sigma;_L=0.2).
+      Biological processes are always positive, typically close to their mean, but
+      occasionally run much longer &mdash; a skewed, right-tailed shape that LogNormal
+      captures naturally. The parameter &sigma;_L controls the spread: at 0.20, you
+      get roughly &plusmn;20&thinsp;% variation around the 7-day nominal. Mean is preserved via
+      &mu;_L = ln(T&#772;_MF) &minus; &sigma;_L&sup2;/2.
+    </div>
+    <div class="insight">
+      <strong>CCP (Chance-Constrained Programming)</strong> takes a conservative,
+      single-stage approach. Instead of planning with the nominal 7-day T_MF, it inflates
+      the manufacturing budget to T&#770;_MF = F&#8315;&#185;(1&minus;&alpha;) &mdash; long enough that the
+      plan holds in 90&thinsp;% of scenarios. Every route decision is locked in before
+      manufacturing starts. If T_MF runs over the inflated budget, there is no backup:
+      the deadline is simply missed.
     </div>
     <div class="insight orange">
-      <strong>Two-Stage Expediting ColGen</strong> assumes T_MF ~ LogNormal(&mu;_L, &sigma;_L=0.2).
-      Stage 1 selects a route x_i before T_MF is realised.
-      Stage 2 triggers expedited return (saving &delta;=2.0d, costing &pi;_p) if T_MF &gt; K_i (slack).
-      Modified column cost: <em>c&#771;_i = c_transport + &pi;_p &sdot; P(T_MF &gt; K_i)</em>.
-      Violations only occur when T_MF &gt; K_i + &delta; (recourse also fails).
+      <strong>Two-Stage Expediting ColGen</strong> is more flexible. Routes are still
+      chosen before manufacturing, but now there is a recourse action: if T_MF exceeds
+      K_i &mdash; the maximum overtime the route can absorb &mdash; expedited return shipping
+      is triggered, saving &delta;=2.0d on the return leg at cost &pi;_p per patient.
+      A violation only occurs when T_MF &gt; K_i + &delta; (even expediting cannot save it).
+      The model prices this risk directly into the column cost:
+      <em>c&#771;_i = c_transport + &pi;_p &sdot; P(T_MF &gt; K_i)</em>, so routes with high
+      expediting probability are penalised at selection time. &epsilon;=0.05 is a hard
+      filter: any route where even expediting leaves &gt;&thinsp;5&thinsp;% chance of a violation
+      is discarded entirely.
     </div>
     <div class="insight green">
-      <strong>Key difference</strong>: CCP commits to a conservative plan upfront (no flexibility).
-      Two-Stage pays a small premium for a recourse action, trading lower up-front cost for
-      the ability to adapt when manufacturing runs long. The out-of-sample tab quantifies this trade-off.
+      <strong>Key difference</strong>: CCP commits upfront to a costly conservative plan
+      and cannot adapt. Two-Stage carries a small expected-cost premium for the ability
+      to react when manufacturing runs late. The out-of-sample tab quantifies the
+      cost&thinsp;&ndash;&thinsp;reliability trade-off.
     </div>
   </div>
 </div>
@@ -4365,13 +4382,23 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <div id="pane-oos" class="pane">
   <div class="card">
     <h2>CCP vs Two-Stage — Out-of-Sample Evaluation (10 000 scenarios)</h2>
-    <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.6">
-      The first-stage route decisions from both models are <strong>fixed</strong> and then evaluated
-      against 10 000 fresh T_MF draws from LogNormal(&sigma;_L=0.2).
-      This tests how well each solution holds up under unseen uncertainty.<br>
-      &bull; <strong>CCP</strong>: no recourse — deadline violation occurs whenever T_MF &gt; mfg_budget.<br>
-      &bull; <strong>Two-Stage</strong>: expediting triggered if T_MF &gt; K_i (pays &pi;_p, saves &delta;d);
-        violation only if T_MF &gt; K_i + &delta;.
+    <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.7">
+      Both solutions are evaluated against <strong>10&thinsp;000 fresh scenarios</strong> they
+      have never seen &mdash; each scenario draws an independent T_MF per patient from
+      LogNormal(&sigma;_L=0.2), simulating the real-world uncertainty the deployed
+      schedule would face. Each patient gets their own draw because CAR-T manufacturing
+      is patient-specific: one batch running late tells you nothing about another.<br><br>
+      &bull; <strong>CCP</strong>: no recourse action exists &mdash; a deadline violation
+        occurs in any scenario where T_MF exceeds the inflated manufacturing budget.<br>
+      &bull; <strong>Two-Stage</strong>: whenever T_MF &gt; K_i the expediting option is
+        triggered (costs &pi;_p, saves &delta;=2.0d). A violation only occurs if
+        T_MF &gt; K_i + &delta; &mdash; i.e., even expediting cannot recover the deadline.<br><br>
+      What we found: CCP violates deadlines in roughly <strong>8&ndash;9&thinsp;% of scenarios</strong>
+      (individual patient level), while Two-Stage keeps violations down to around
+      <strong>3&thinsp;%</strong>. The trade-off is that Two-Stage costs slightly more on
+      average because it pre-prices the expediting risk into every route choice. This is
+      the core reliability advantage: a slightly more expensive but far more
+      resilient schedule.
     </p>
     <div style="overflow-x:auto">
     <table class="tbl"><thead><tr>
@@ -4425,20 +4452,90 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 
 <!-- TAB 7: Findings -->
 <div id="pane-findings" class="pane">
+
   <div class="card">
-    <h2>Key Findings</h2>
+    <h2>What This Work Is About</h2>
+    <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.8">
+      We built two smarter versions of a scheduling model for CAR-T cell therapy.
+      The main challenge is that the time it takes to manufacture the cells for a
+      patient is not fixed &mdash; it varies. We modelled this variability using a
+      LogNormal distribution, which means manufacturing time is always positive,
+      usually close to 7 days, but occasionally runs much longer. We chose LogNormal
+      because biological processes tend to behave this way &mdash; they are skewed,
+      not symmetric. The parameter &sigma;_L controls how spread out that variability
+      is. At 0.20, you are looking at roughly &plusmn;20&thinsp;% around the average.
+    </p>
+
+    <div class="insight">
+      <strong>CCP versus Two-Stage</strong><br>
+      The first model, <strong>CCP</strong>, takes a conservative approach. Instead of
+      planning with the average 7-day manufacturing time, it assumes a longer worst-case
+      value upfront &mdash; long enough that the plan will still work 90&thinsp;% of the time.
+      Everything is decided before manufacturing starts, and if things go wrong there is
+      nothing to do: the plan either holds or it does not.<br><br>
+      The second model, <strong>Two-Stage Expediting</strong>, is more flexible. You
+      still pick the route before manufacturing starts, but now you have a backup plan.
+      If manufacturing runs too long and the patient&rsquo;s deadline is at risk, you pay
+      for expedited return shipping &mdash; saving &delta; days on the return leg. The
+      question is: how much overtime can this particular route absorb before you need to
+      call in that backup? That is what <strong>K_i</strong> represents &mdash; the maximum
+      manufacturing time the route can handle before things start breaking down. If
+      manufacturing exceeds K_i, you expedite. If it exceeds K_i plus &delta;, even
+      expediting will not be enough. The model prices this risk directly into the
+      objective, so routes with a high chance of needing expediting are penalised in the
+      cost. &epsilon; is a safety filter that discards any route where even with expediting
+      there is still more than a 5&thinsp;% chance of missing the deadline.
+    </div>
+
+    <div class="insight orange">
+      <strong>Out-of-sample comparison</strong><br>
+      To compare the two models fairly, we ran both solutions through 10&thinsp;000 fresh
+      scenarios they had never seen &mdash; asking: how does each hold up in the real world?
+      Each patient receives their own independent manufacturing draw per scenario, because
+      CAR-T batches are patient-specific. For CCP, since there is no backup action, any
+      scenario where manufacturing runs past the planned limit causes a deadline violation.
+      For Two-Stage, the expediting option absorbs most of those cases.
+      What we found is that CCP violates deadlines in around <strong>8&ndash;9&thinsp;%</strong>
+      of scenarios, while Two-Stage keeps violations down to around
+      <strong>3&thinsp;%</strong>. The trade-off is that Two-Stage costs slightly more on
+      average because it pre-prices the expediting risk into every route. So it is really
+      a choice between a cheaper but more fragile plan, and a slightly more expensive but
+      much more resilient one.
+    </div>
+
+    <div class="insight green">
+      <strong>Violation superiority of Two-Stage</strong><br>
+      The gap between 8&ndash;9&thinsp;% (CCP) and 3&thinsp;% (Two-Stage) violations is not
+      just a statistical artefact &mdash; it reflects a structural difference in how the
+      two models handle risk. CCP bets everything on its inflated budget being enough;
+      the moment T_MF exceeds that single threshold, the patient&rsquo;s deadline is broken
+      with no recovery. Two-Stage, by contrast, has a second line of defence: once T_MF
+      crosses K_i, expediting is activated. A hard violation only occurs when manufacturing
+      is so late that even expediting &mdash; which saves &delta;=2.0 days &mdash; cannot
+      recover the deadline. This layered structure compresses the &ldquo;failure region&rdquo;
+      from one threshold to two, which is why Two-Stage violations are roughly
+      <strong>3&times; lower</strong> than CCP despite having a similar or lower transport cost.
+      As N grows and more patients are scheduled, this reliability advantage compounds:
+      the probability that at least one patient misses a deadline is much lower under
+      Two-Stage than under CCP (see the violation-vs-N chart in the OOS tab).
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Automated Findings (computed from results)</h2>
     <div class="insight orange">Average out-of-sample cost gap (Two-Stage vs CCP): <strong>-9.4%</strong>. Two-Stage pays a small expected-cost premium in exchange for an adaptive recourse action.</div><div class="insight ">Average probability of expediting across all patients and instances: <strong>9.4%</strong>. Expediting recourse is rarely triggered, keeping the realized cost premium small.</div><div class="insight green">CCP average violation rate: <strong>51.2%</strong> vs Two-Stage: <strong>21.7%</strong>. Two-Stage virtually eliminates deadline violations through the expediting recourse action. Monte Carlo validation max error: <strong>41.6%</strong> (confirms LogNormal formula).</div>
     <div class="insight" style="margin-top:12px">
       <strong>Scalability:</strong> Both solvers scale to N=50 within the time limit.
-      Two-Stage Expediting has a slightly higher plan-generation phase (survival probability
-      computation per column) but the master IP solve time is comparable because the plan
-      count is slightly smaller (tighter feasibility filter K_i &ge; F&sup;&#8315;&sup1;(1&minus;&epsilon;) &minus; &delta;).
+      Two-Stage has a slightly higher plan-generation phase (survival probability
+      computation per column) but the master IP solve time is comparable because the
+      plan count is slightly smaller (tighter feasibility filter K_i &ge; F&#8315;&#185;(1&minus;&epsilon;) &minus; &delta;).
     </div>
     <div class="insight orange">
-      <strong>When Two-Stage wins:</strong> When &sigma;_L is large (high T_MF variability),
-      the deterministic schedule is exposed to deadline violations. Two-Stage pre-prices
-      this risk into the objective, producing schedules that trade a small cost premium
-      for a guaranteed recourse action (expedited return) when manufacturing runs long.
+      <strong>When Two-Stage wins:</strong> When &sigma;_L is large, the deterministic
+      schedule is exposed to deadline violations. Two-Stage pre-prices this risk into the
+      objective, producing schedules that trade a small cost premium for a guaranteed
+      recourse action when manufacturing runs long. Even at moderate &sigma;_L the
+      violation advantage is substantial (see OOS tab).
     </div>
   </div>
 </div>
