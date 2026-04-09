@@ -1232,9 +1232,7 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
             _col    = _tw_colors[_i % len(_tw_colors)]
             _tw_datasets.append(
                 '{label:"N=' + str(_n) + '",data:[' + ','.join(_data) + '],'
-                'borderColor:"' + _col + '",backgroundColor:"' + _col + '22",'
-                'pointBackgroundColor:"' + _col + '",borderWidth:2,pointRadius:5,'
-                'tension:0,spanGaps:false}'
+                'backgroundColor:"' + _col + 'cc",borderColor:"' + _col + '",borderWidth:1}'
             )
         vss_tau_taus_js     = str(_tw_taus)
         vss_tau_datasets_js = '[' + ',\n'.join(_tw_datasets) + ']'
@@ -1255,9 +1253,7 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
             _col   = _sw_colors[_i % len(_sw_colors)]
             _sw_datasets.append(
                 '{label:"N=' + str(_n) + '",data:[' + ','.join(_data) + '],'
-                'borderColor:"' + _col + '",backgroundColor:"' + _col + '22",'
-                'pointBackgroundColor:"' + _col + '",borderWidth:2,pointRadius:5,'
-                'tension:0,spanGaps:false}'
+                'backgroundColor:"' + _col + 'cc",borderColor:"' + _col + '",borderWidth:1}'
             )
         vss_sweep_sls_js      = str(_sw_sls)
         vss_sweep_datasets_js = '[' + ',\n'.join(_sw_datasets) + ']'
@@ -1865,7 +1861,7 @@ const ORANGE = '#92400E';
 
 function lineChart(id, labels, datasets, yLabel, fmt) {{
   new Chart(document.getElementById(id), {{
-    type: 'line',
+    type: 'bar',
     data: {{ labels, datasets }},
     options: {{
       responsive: true, maintainAspectRatio: false,
@@ -1881,14 +1877,11 @@ function lineChart(id, labels, datasets, yLabel, fmt) {{
 
 const ccpDS = (label, data) => ({{
   label, data,
-  borderColor: BLUE, backgroundColor: BLUE + '22',
-  pointBackgroundColor: BLUE, borderWidth: 2, pointRadius: 5, tension: 0
+  backgroundColor: BLUE + 'cc', borderColor: BLUE, borderWidth: 1
 }});
 const tsDS  = (label, data) => ({{
   label, data,
-  borderColor: ORANGE, backgroundColor: ORANGE + '22',
-  pointBackgroundColor: ORANGE, borderWidth: 2, pointRadius: 5, tension: 0,
-  borderDash: [5, 3]
+  backgroundColor: ORANGE + 'cc', borderColor: ORANGE, borderWidth: 1
 }});
 
 // ── Summary + OOS charts ──────────────────────────────────────────────────────
@@ -1976,18 +1969,14 @@ if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {{
 
   // Line: Two-Stage cost vs sigma_L
   new Chart(document.getElementById('senCostChart'), {{
-    type: 'line',
+    type: 'bar',
     data: {{
-      labels: SEN_SLS,
+      labels: SEN_SLS.map(v => 'σ=' + v),
       datasets: [
         {{ label: 'N=15', data: N15_TS_COST,
-           borderColor: BLUE, backgroundColor: BLUE+'22',
-           pointBackgroundColor: BLUE, borderWidth:2, pointRadius:5, tension:0.3,
-           spanGaps: false }},
+           backgroundColor: BLUE+'cc', borderColor: BLUE, borderWidth:1 }},
         {{ label: 'N=50', data: N50_TS_COST,
-           borderColor: ORANGE, backgroundColor: ORANGE+'22',
-           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0.3,
-           borderDash:[5,3], spanGaps: false }},
+           backgroundColor: ORANGE+'cc', borderColor: ORANGE, borderWidth:1 }},
       ]
     }},
     options: {{
@@ -2085,18 +2074,14 @@ const TAU_TS25   = {tau_cost_ts25_js};
 
 if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {{
   new Chart(document.getElementById('tauFeasChart'), {{
-    type: 'line',
+    type: 'bar',
     data: {{
-      labels: TAU_LABELS,
+      labels: TAU_LABELS.map(v => '\u03c4=' + v),
       datasets: [
-        {{ label: 'Det N=15',  data: TAU_DET15, borderColor: BLUE,   backgroundColor: BLUE+'22',
-           pointBackgroundColor: BLUE,   borderWidth:2, pointRadius:5, tension:0, spanGaps:false }},
-        {{ label: '2S N=15',   data: TAU_TS15,  borderColor: ORANGE, backgroundColor: ORANGE+'22',
-           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0, borderDash:[5,3], spanGaps:false }},
-        {{ label: 'Det N=25',  data: TAU_DET25, borderColor: '#166534',  backgroundColor: '#16653422',
-           pointBackgroundColor: '#166534',  borderWidth:2, pointRadius:5, tension:0, spanGaps:false }},
-        {{ label: '2S N=25',   data: TAU_TS25,  borderColor: '#7c3aed', backgroundColor: '#7c3aed22',
-           pointBackgroundColor: '#7c3aed', borderWidth:2, pointRadius:5, tension:0, borderDash:[5,3], spanGaps:false }},
+        {{ label: 'Det N=15',  data: TAU_DET15, backgroundColor: BLUE+'cc',     borderColor: BLUE,      borderWidth:1 }},
+        {{ label: '2S N=15',   data: TAU_TS15,  backgroundColor: ORANGE+'cc',   borderColor: ORANGE,    borderWidth:1 }},
+        {{ label: 'Det N=25',  data: TAU_DET25, backgroundColor: '#166534cc',   borderColor: '#166534', borderWidth:1 }},
+        {{ label: '2S N=25',   data: TAU_TS25,  backgroundColor: '#7c3aedcc',   borderColor: '#7c3aed', borderWidth:1 }},
       ]
     }},
     options: {{
@@ -2118,15 +2103,10 @@ const VSS_DATASETS = {vss_sweep_datasets_js};
 
 if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {{
   new Chart(document.getElementById('vssSweepChart'), {{
-    type: 'line',
+    type: 'bar',
     data: {{
-      labels: VSS_SLS,
-      datasets: [
-        ...VSS_DATASETS,
-        {{ label: 'Breakeven (VSS=0)', data: VSS_SLS.map(() => 0),
-           borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6, 4],
-           pointRadius: 0, fill: false, order: 99 }}
-      ]
+      labels: VSS_SLS.map(v => 'σ=' + v),
+      datasets: VSS_DATASETS
     }},
     options: {{
       responsive: true, maintainAspectRatio: false,
@@ -2137,6 +2117,13 @@ if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {{
             label: ctx => ctx.dataset.label + ': ' +
               (ctx.raw !== null ? ctx.raw.toFixed(1) + '%' : 'n/a')
           }}
+        }},
+        annotation: {{
+          annotations: {{
+            breakeven: {{ type: 'line', yMin: 0, yMax: 0,
+              borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
+              label: {{ content: 'Breakeven', display: true, position: 'end', font: {{ size:9 }} }} }}
+          }}
         }}
       }},
       scales: {{
@@ -2144,7 +2131,6 @@ if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {{
         y: {{
           title: {{ display: true, text: 'VSS (%)' }},
           ticks: {{ callback: v => v.toFixed(1) + '%' }},
-          min: -5, max: 10,
           grid: {{ color: ctx => ctx.tick.value === 0 ? '#dc262666' : '#e5e7eb' }}
         }}
       }}
@@ -2158,15 +2144,10 @@ const VSS_TAU_DATASETS = {vss_tau_datasets_js};
 
 if (document.getElementById('vssTauChart') && VSS_TAUS.length > 0) {{
   new Chart(document.getElementById('vssTauChart'), {{
-    type: 'line',
+    type: 'bar',
     data: {{
-      labels: VSS_TAUS,
-      datasets: [
-        ...VSS_TAU_DATASETS,
-        {{ label: 'Breakeven (VSS=0)', data: VSS_TAUS.map(() => 0),
-           borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6, 4],
-           pointRadius: 0, fill: false, order: 99 }}
-      ]
+      labels: VSS_TAUS.map(v => '\u03c4=' + v),
+      datasets: VSS_TAU_DATASETS
     }},
     options: {{
       responsive: true, maintainAspectRatio: false,
@@ -2177,6 +2158,13 @@ if (document.getElementById('vssTauChart') && VSS_TAUS.length > 0) {{
             label: ctx => ctx.dataset.label + ': ' +
               (ctx.raw !== null ? ctx.raw.toFixed(1) + '%' : 'n/a')
           }}
+        }},
+        annotation: {{
+          annotations: {{
+            breakeven: {{ type: 'line', yMin: 0, yMax: 0,
+              borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
+              label: {{ content: 'Breakeven', display: true, position: 'end', font: {{ size:9 }} }} }}
+          }}
         }}
       }},
       scales: {{
@@ -2184,7 +2172,6 @@ if (document.getElementById('vssTauChart') && VSS_TAUS.length > 0) {{
         y: {{
           title: {{ display: true, text: 'VSS (%)' }},
           ticks: {{ callback: v => v.toFixed(2) + '%' }},
-          min: -1, max: 1,
           grid: {{ color: ctx => ctx.tick.value === 0 ? '#dc262666' : '#e5e7eb' }}
         }}
       }}

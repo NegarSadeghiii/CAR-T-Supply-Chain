@@ -4838,7 +4838,7 @@ const ORANGE = '#92400E';
 
 function lineChart(id, labels, datasets, yLabel, fmt) {
   new Chart(document.getElementById(id), {
-    type: 'line',
+    type: 'bar',
     data: { labels, datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -4854,14 +4854,11 @@ function lineChart(id, labels, datasets, yLabel, fmt) {
 
 const ccpDS = (label, data) => ({
   label, data,
-  borderColor: BLUE, backgroundColor: BLUE + '22',
-  pointBackgroundColor: BLUE, borderWidth: 2, pointRadius: 5, tension: 0
+  backgroundColor: BLUE + 'cc', borderColor: BLUE, borderWidth: 1
 });
 const tsDS  = (label, data) => ({
   label, data,
-  borderColor: ORANGE, backgroundColor: ORANGE + '22',
-  pointBackgroundColor: ORANGE, borderWidth: 2, pointRadius: 5, tension: 0,
-  borderDash: [5, 3]
+  backgroundColor: ORANGE + 'cc', borderColor: ORANGE, borderWidth: 1
 });
 
 // ── Summary + OOS charts ──────────────────────────────────────────────────────
@@ -4949,18 +4946,14 @@ if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {
 
   // Line: Two-Stage cost vs sigma_L
   new Chart(document.getElementById('senCostChart'), {
-    type: 'line',
+    type: 'bar',
     data: {
-      labels: SEN_SLS,
+      labels: SEN_SLS.map(v => 'σ=' + v),
       datasets: [
         { label: 'N=15', data: N15_TS_COST,
-           borderColor: BLUE, backgroundColor: BLUE+'22',
-           pointBackgroundColor: BLUE, borderWidth:2, pointRadius:5, tension:0.3,
-           spanGaps: false },
+           backgroundColor: BLUE+'cc', borderColor: BLUE, borderWidth:1 },
         { label: 'N=50', data: N50_TS_COST,
-           borderColor: ORANGE, backgroundColor: ORANGE+'22',
-           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0.3,
-           borderDash:[5,3], spanGaps: false },
+           backgroundColor: ORANGE+'cc', borderColor: ORANGE, borderWidth:1 },
       ]
     },
     options: {
@@ -5060,18 +5053,14 @@ const TAU_TS25   = [6.6367,6.6382,6.6466,6.6477,6.6491,6.6507];
 
 if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {
   new Chart(document.getElementById('tauFeasChart'), {
-    type: 'line',
+    type: 'bar',
     data: {
-      labels: TAU_LABELS,
+      labels: TAU_LABELS.map(v => 'τ=' + v),
       datasets: [
-        { label: 'Det N=15',  data: TAU_DET15, borderColor: BLUE,   backgroundColor: BLUE+'22',
-           pointBackgroundColor: BLUE,   borderWidth:2, pointRadius:5, tension:0, spanGaps:false },
-        { label: '2S N=15',   data: TAU_TS15,  borderColor: ORANGE, backgroundColor: ORANGE+'22',
-           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0, borderDash:[5,3], spanGaps:false },
-        { label: 'Det N=25',  data: TAU_DET25, borderColor: '#166534',  backgroundColor: '#16653422',
-           pointBackgroundColor: '#166534',  borderWidth:2, pointRadius:5, tension:0, spanGaps:false },
-        { label: '2S N=25',   data: TAU_TS25,  borderColor: '#7c3aed', backgroundColor: '#7c3aed22',
-           pointBackgroundColor: '#7c3aed', borderWidth:2, pointRadius:5, tension:0, borderDash:[5,3], spanGaps:false },
+        { label: 'Det N=15',  data: TAU_DET15, backgroundColor: BLUE+'cc',     borderColor: BLUE,      borderWidth:1 },
+        { label: '2S N=15',   data: TAU_TS15,  backgroundColor: ORANGE+'cc',   borderColor: ORANGE,    borderWidth:1 },
+        { label: 'Det N=25',  data: TAU_DET25, backgroundColor: '#166534cc',   borderColor: '#166534', borderWidth:1 },
+        { label: '2S N=25',   data: TAU_TS25,  backgroundColor: '#7c3aedcc',   borderColor: '#7c3aed', borderWidth:1 },
       ]
     },
     options: {
@@ -5089,23 +5078,18 @@ if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {
 
 // ── VSS sweep chart ───────────────────────────────────────────────────────────
 const VSS_SLS      = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4];
-const VSS_DATASETS = [{label:"N=5",data:[0.0,-0.0,-0.05,-0.15,-0.16,null,null],borderColor:"#1E3A5F",backgroundColor:"#1E3A5F22",pointBackgroundColor:"#1E3A5F",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
-{label:"N=10",data:[0.0,-0.01,-0.07,-0.17,-0.19,null,null],borderColor:"#92400E",backgroundColor:"#92400E22",pointBackgroundColor:"#92400E",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
-{label:"N=15",data:[-89.43,-89.49,-89.63,-89.87,-89.9,null,null],borderColor:"#166534",backgroundColor:"#16653422",pointBackgroundColor:"#166534",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
-{label:"N=20",data:[-86.26,-86.31,-86.45,-86.75,-86.78,null,null],borderColor:"#7c3aed",backgroundColor:"#7c3aed22",pointBackgroundColor:"#7c3aed",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
-{label:"N=25",data:[-0.0,-0.04,-0.24,-0.43,-0.46,null,null],borderColor:"#dc2626",backgroundColor:"#dc262622",pointBackgroundColor:"#dc2626",borderWidth:2,pointRadius:5,tension:0,spanGaps:false}];
+const VSS_DATASETS = [{label:"N=5",data:[0.0,-0.0,-0.05,-0.15,-0.16,null,null],backgroundColor:"#1E3A5Fcc",borderColor:"#1E3A5F",borderWidth:1},
+{label:"N=10",data:[0.0,-0.01,-0.07,-0.17,-0.19,null,null],backgroundColor:"#92400Ecc",borderColor:"#92400E",borderWidth:1},
+{label:"N=15",data:[-89.43,-89.49,-89.63,-89.87,-89.9,null,null],backgroundColor:"#166534cc",borderColor:"#166534",borderWidth:1},
+{label:"N=20",data:[-86.26,-86.31,-86.45,-86.75,-86.78,null,null],backgroundColor:"#7c3aedcc",borderColor:"#7c3aed",borderWidth:1},
+{label:"N=25",data:[-0.0,-0.04,-0.24,-0.43,-0.46,null,null],backgroundColor:"#dc2626cc",borderColor:"#dc2626",borderWidth:1}];
 
 if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {
   new Chart(document.getElementById('vssSweepChart'), {
-    type: 'line',
+    type: 'bar',
     data: {
-      labels: VSS_SLS,
-      datasets: [
-        ...VSS_DATASETS,
-        { label: 'Breakeven (VSS=0)', data: VSS_SLS.map(() => 0),
-           borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6, 4],
-           pointRadius: 0, fill: false, order: 99 }
-      ]
+      labels: VSS_SLS.map(v => 'σ=' + v),
+      datasets: VSS_DATASETS
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -5116,6 +5100,13 @@ if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {
             label: ctx => ctx.dataset.label + ': ' +
               (ctx.raw !== null ? ctx.raw.toFixed(1) + '%' : 'n/a')
           }
+        },
+        annotation: {
+          annotations: {
+            breakeven: { type: 'line', yMin: 0, yMax: 0,
+              borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
+              label: { content: 'Breakeven', display: true, position: 'end', font: { size:9 } } }
+          }
         }
       },
       scales: {
@@ -5123,7 +5114,6 @@ if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {
         y: {
           title: { display: true, text: 'VSS (%)' },
           ticks: { callback: v => v.toFixed(1) + '%' },
-          min: -5, max: 10,
           grid: { color: ctx => ctx.tick.value === 0 ? '#dc262666' : '#e5e7eb' }
         }
       }
@@ -5133,23 +5123,18 @@ if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {
 
 // ── VSS tau chart ─────────────────────────────────────────────────────────────
 const VSS_TAUS         = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
-const VSS_TAU_DATASETS = [{label:"N=5",data:[-0.05,-0.0,-0.07,-0.0,-0.0,-0.0],borderColor:"#1E3A5F",backgroundColor:"#1E3A5F22",pointBackgroundColor:"#1E3A5F",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
-{label:"N=10",data:[-0.07,-0.02,-0.07,-0.03,-0.03,-0.03],borderColor:"#92400E",backgroundColor:"#92400E22",pointBackgroundColor:"#92400E",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
-{label:"N=15",data:[-89.63,-89.18,-89.34,-89.03,-89.01,-88.99],borderColor:"#166534",backgroundColor:"#16653422",pointBackgroundColor:"#166534",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
-{label:"N=20",data:[-86.45,-0.04,-0.14,-0.08,-0.08,-0.08],borderColor:"#7c3aed",backgroundColor:"#7c3aed22",pointBackgroundColor:"#7c3aed",borderWidth:2,pointRadius:5,tension:0,spanGaps:false},
-{label:"N=25",data:[-0.24,-0.06,-0.15,-0.07,-0.07,-0.07],borderColor:"#dc2626",backgroundColor:"#dc262622",pointBackgroundColor:"#dc2626",borderWidth:2,pointRadius:5,tension:0,spanGaps:false}];
+const VSS_TAU_DATASETS = [{label:"N=5",data:[-0.05,-0.0,-0.07,-0.0,-0.0,-0.0],backgroundColor:"#1E3A5Fcc",borderColor:"#1E3A5F",borderWidth:1},
+{label:"N=10",data:[-0.07,-0.02,-0.07,-0.03,-0.03,-0.03],backgroundColor:"#92400Ecc",borderColor:"#92400E",borderWidth:1},
+{label:"N=15",data:[-89.63,-89.18,-89.34,-89.03,-89.01,-88.99],backgroundColor:"#166534cc",borderColor:"#166534",borderWidth:1},
+{label:"N=20",data:[-86.45,-0.04,-0.14,-0.08,-0.08,-0.08],backgroundColor:"#7c3aedcc",borderColor:"#7c3aed",borderWidth:1},
+{label:"N=25",data:[-0.24,-0.06,-0.15,-0.07,-0.07,-0.07],backgroundColor:"#dc2626cc",borderColor:"#dc2626",borderWidth:1}];
 
 if (document.getElementById('vssTauChart') && VSS_TAUS.length > 0) {
   new Chart(document.getElementById('vssTauChart'), {
-    type: 'line',
+    type: 'bar',
     data: {
-      labels: VSS_TAUS,
-      datasets: [
-        ...VSS_TAU_DATASETS,
-        { label: 'Breakeven (VSS=0)', data: VSS_TAUS.map(() => 0),
-           borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6, 4],
-           pointRadius: 0, fill: false, order: 99 }
-      ]
+      labels: VSS_TAUS.map(v => 'τ=' + v),
+      datasets: VSS_TAU_DATASETS
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -5160,6 +5145,13 @@ if (document.getElementById('vssTauChart') && VSS_TAUS.length > 0) {
             label: ctx => ctx.dataset.label + ': ' +
               (ctx.raw !== null ? ctx.raw.toFixed(1) + '%' : 'n/a')
           }
+        },
+        annotation: {
+          annotations: {
+            breakeven: { type: 'line', yMin: 0, yMax: 0,
+              borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
+              label: { content: 'Breakeven', display: true, position: 'end', font: { size:9 } } }
+          }
         }
       },
       scales: {
@@ -5167,7 +5159,6 @@ if (document.getElementById('vssTauChart') && VSS_TAUS.length > 0) {
         y: {
           title: { display: true, text: 'VSS (%)' },
           ticks: { callback: v => v.toFixed(2) + '%' },
-          min: -1, max: 1,
           grid: { color: ctx => ctx.tick.value === 0 ? '#dc262666' : '#e5e7eb' }
         }
       }
