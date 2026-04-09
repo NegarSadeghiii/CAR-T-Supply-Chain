@@ -4446,48 +4446,56 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <!-- TAB 8: Sensitivity -->
 <div id="pane-sensitivity" class="pane">
   <div class="card" style="margin-bottom:10px">
-    <h2>Sensitivity Analysis — Conference Paper Results</h2>
+    <h2>Sensitivity Analysis</h2>
     <p style="font-size:12px;color:var(--dim);line-height:1.7">
       Each sweep varies one parameter while holding the others fixed, evaluated on
       representative instances <strong>N=15</strong> and <strong>N=50</strong>.
       Out-of-sample validation uses 5 000 scenarios per configuration.
+      &ldquo;Infeasible&rdquo; means no route satisfies the deadline constraint under that parameter setting.
     </p>
   </div>
-  <div class="card"><h2>&#963;_L Sweep (alpha=0.10 fixed, delta=2d fixed)</h2>
+  <div class="card"><h2>&#963;_L Sweep (&#945;=0.10 fixed, &#948;=2d fixed)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:12px">
       How does manufacturing time variability affect cost and reliability?
       Higher &#963;_L means more uncertainty around the nominal 7-day T_MF.
     </p>
     <div style="overflow-x:auto"><table class="tbl"><thead><tr>
-      <th>N</th><th>&#963;_L</th><th>2S Cost</th><th>CCP Cost</th><th>Cost Gap</th>
-      <th>CCP Violation%</th><th>2S Violation%</th><th>Avg P(exp)%</th>
-    </tr></thead><tbody><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.1</td><td style="text-align:right">$3,364,595</td><td style="text-align:right">$6,379,458</td><td><span style="color:#166534;font-weight:700">-47.3%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">31.0%</td><td style="text-align:right;color:#166534;font-weight:700">2.9%</td><td style="text-align:right">18.3%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.2</td><td style="text-align:right">$3,374,784</td><td style="text-align:right">$6,389,162</td><td><span style="color:#166534;font-weight:700">-47.2%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">41.8%</td><td style="text-align:right;color:#dc2626;font-weight:700">13.3%</td><td style="text-align:right">7.8%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.3</td><td style="text-align:right">$3,384,636</td><td style="text-align:right">$0</td><td>—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">34.0%</td><td style="text-align:right">9.3%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.4</td><td style="text-align:right">$0</td><td style="text-align:right">$0</td><td>—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right">0.0%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.1</td><td style="text-align:right">$7,217,087</td><td style="text-align:right">$8,811,745</td><td><span style="color:#166534;font-weight:700">-18.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">73.5%</td><td style="text-align:right;color:#dc2626;font-weight:700">9.6%</td><td style="text-align:right">18.8%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.2</td><td style="text-align:right">$7,248,319</td><td style="text-align:right">$8,848,049</td><td><span style="color:#166534;font-weight:700">-18.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">84.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">39.0%</td><td style="text-align:right">8.2%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.3</td><td style="text-align:right">$7,278,368</td><td style="text-align:right">$0</td><td>—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">74.6%</td><td style="text-align:right">9.2%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.4</td><td style="text-align:right">$0</td><td style="text-align:right">$0</td><td>—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right">0.0%</td></tr></tbody></table></div></div>
-  <div class="card"><h2>&#945; Sweep — CCP (sigma_L=0.20 fixed, delta=2d fixed)</h2>
+      <th>N</th><th style="text-align:center">&#963;_L</th>
+      <th style="text-align:right">2S Cost</th><th style="text-align:right">CCP Cost</th>
+      <th style="text-align:right">Cost Gap</th>
+      <th style="text-align:right">CCP Violation%</th><th style="text-align:right">2S Violation%</th>
+      <th style="text-align:right">Avg P(exp)%</th>
+    </tr></thead><tbody><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.1</td><td style="text-align:right">$3,364,595</td><td style="text-align:right">$6,379,458</td><td style="text-align:right"><span style="color:#166534;font-weight:700">-47.3%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">31.0%</td><td style="text-align:right;color:#166534;font-weight:700">2.9%</td><td style="text-align:right">18.3%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.2</td><td style="text-align:right">$3,374,784</td><td style="text-align:right">$6,389,162</td><td style="text-align:right"><span style="color:#166534;font-weight:700">-47.2%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">41.8%</td><td style="text-align:right;color:#dc2626;font-weight:700">13.3%</td><td style="text-align:right">7.8%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.3</td><td style="text-align:right">$3,384,636</td><td style="text-align:right"><span style="color:#9ca3af">infeasible</span></td><td style="text-align:right">—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">34.0%</td><td style="text-align:right">9.3%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.4</td><td style="text-align:right"><span style="color:#9ca3af">infeasible</span></td><td style="text-align:right"><span style="color:#9ca3af">infeasible</span></td><td style="text-align:right">—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right">0.0%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.1</td><td style="text-align:right">$7,217,087</td><td style="text-align:right">$8,811,745</td><td style="text-align:right"><span style="color:#166534;font-weight:700">-18.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">73.5%</td><td style="text-align:right;color:#dc2626;font-weight:700">9.6%</td><td style="text-align:right">18.8%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.2</td><td style="text-align:right">$7,248,319</td><td style="text-align:right">$8,848,049</td><td style="text-align:right"><span style="color:#166534;font-weight:700">-18.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">84.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">39.0%</td><td style="text-align:right">8.2%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.3</td><td style="text-align:right">$7,278,368</td><td style="text-align:right"><span style="color:#9ca3af">infeasible</span></td><td style="text-align:right">—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">74.6%</td><td style="text-align:right">9.2%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.4</td><td style="text-align:right"><span style="color:#9ca3af">infeasible</span></td><td style="text-align:right"><span style="color:#9ca3af">infeasible</span></td><td style="text-align:right">—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right">0.0%</td></tr></tbody></table></div></div>
+  <div class="card"><h2>&#945; Sweep — CCP (&#963;_L=0.20 fixed, &#948;=2d fixed)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:12px">
       How does the CCP service level parameter affect cost and violation rate?
       Lower &#945; = stricter service guarantee = higher effective manufacturing budget = higher cost.
     </p>
     <div style="overflow-x:auto"><table class="tbl"><thead><tr>
-      <th>N</th><th>&#945;</th><th>CCP Cost</th><th>T_MF budget (eff.)</th>
-      <th>Cost Gap vs 2S</th><th>CCP Violation%</th><th>2S Violation%</th>
-    </tr></thead><tbody><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.05</td><td style="text-align:right">$0</td><td style="text-align:right">9.53d</td><td>—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">13.8%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.1</td><td style="text-align:right">$6,389,162</td><td style="text-align:right">8.87d</td><td><span style="color:#b45309;font-weight:700">+89.3%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">41.8%</td><td style="text-align:right;color:#dc2626;font-weight:700">13.3%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.2</td><td style="text-align:right">$6,389,162</td><td style="text-align:right">8.12d</td><td><span style="color:#b45309;font-weight:700">+89.3%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">41.8%</td><td style="text-align:right;color:#dc2626;font-weight:700">13.3%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.05</td><td style="text-align:right">$0</td><td style="text-align:right">9.53d</td><td>—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">38.0%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.1</td><td style="text-align:right">$8,848,049</td><td style="text-align:right">8.87d</td><td><span style="color:#b45309;font-weight:700">+22.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">84.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">39.0%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.2</td><td style="text-align:right">$8,848,049</td><td style="text-align:right">8.12d</td><td><span style="color:#b45309;font-weight:700">+22.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">84.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">39.0%</td></tr></tbody></table></div></div>
-  <div class="card"><h2>&#948; Sweep — Two-Stage (sigma_L=0.20 fixed, alpha=0.10 fixed)</h2>
+      <th>N</th><th style="text-align:center">&#945;</th>
+      <th style="text-align:right">CCP Cost</th><th style="text-align:right">T_MF budget (eff.)</th>
+      <th style="text-align:right">Cost Gap vs 2S</th>
+      <th style="text-align:right">CCP Violation%</th><th style="text-align:right">2S Violation%</th>
+    </tr></thead><tbody><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.05</td><td style="text-align:right"><span style="color:#9ca3af">infeasible</span></td><td style="text-align:right">9.53d</td><td style="text-align:right">—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">13.8%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.1</td><td style="text-align:right">$6,389,162</td><td style="text-align:right">8.87d</td><td style="text-align:right"><span style="color:#b45309;font-weight:700">+89.3%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">41.8%</td><td style="text-align:right;color:#dc2626;font-weight:700">13.3%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">0.2</td><td style="text-align:right">$6,389,162</td><td style="text-align:right">8.12d</td><td style="text-align:right"><span style="color:#b45309;font-weight:700">+89.3%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">41.8%</td><td style="text-align:right;color:#dc2626;font-weight:700">13.3%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.05</td><td style="text-align:right"><span style="color:#9ca3af">infeasible</span></td><td style="text-align:right">9.53d</td><td style="text-align:right">—</td><td style="text-align:right;color:#166534;font-weight:700">0.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">38.0%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.1</td><td style="text-align:right">$8,848,049</td><td style="text-align:right">8.87d</td><td style="text-align:right"><span style="color:#b45309;font-weight:700">+22.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">84.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">39.0%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">0.2</td><td style="text-align:right">$8,848,049</td><td style="text-align:right">8.12d</td><td style="text-align:right"><span style="color:#b45309;font-weight:700">+22.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">84.0%</td><td style="text-align:right;color:#dc2626;font-weight:700">39.0%</td></tr></tbody></table></div></div>
+  <div class="card"><h2>&#948; Sweep — Two-Stage (&#963;_L=0.20 fixed, &#945;=0.10 fixed)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:12px">
       How many days of expedited shipping buffer (&#948;) are needed to rescue delayed patients?
       Larger &#948; = more routes become feasible under recourse = lower cost.
     </p>
     <div style="overflow-x:auto"><table class="tbl"><thead><tr>
-      <th>N</th><th>&#948;</th><th>2S Cost</th><th>Plans</th>
-      <th>Cost Gap vs CCP</th><th>2S Violation%</th><th>Avg P(exp)%</th>
-    </tr></thead><tbody><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">1.0d</td><td style="text-align:right">$3,380,682</td><td style="text-align:right">138</td><td><span style="color:#166534;font-weight:700">-47.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">16.4%</td><td style="text-align:right">3.6%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">2.0d</td><td style="text-align:right">$3,374,784</td><td style="text-align:right">162</td><td><span style="color:#166534;font-weight:700">-47.2%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">13.3%</td><td style="text-align:right">7.8%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">3.0d</td><td style="text-align:right">$3,367,017</td><td style="text-align:right">258</td><td><span style="color:#166534;font-weight:700">-47.3%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">24.8%</td><td style="text-align:right">32.2%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">1.0d</td><td style="text-align:right">$7,265,494</td><td style="text-align:right">480</td><td><span style="color:#166534;font-weight:700">-17.9%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">42.8%</td><td style="text-align:right">3.5%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">2.0d</td><td style="text-align:right">$7,248,319</td><td style="text-align:right">570</td><td><span style="color:#166534;font-weight:700">-18.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">39.0%</td><td style="text-align:right">8.2%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">3.0d</td><td style="text-align:right">$7,225,419</td><td style="text-align:right">870</td><td><span style="color:#166534;font-weight:700">-18.3%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">59.2%</td><td style="text-align:right">31.0%</td></tr></tbody></table></div></div>
+      <th>N</th><th style="text-align:center">&#948;</th>
+      <th style="text-align:right">2S Cost</th><th style="text-align:right">Plans</th>
+      <th style="text-align:right">Cost Gap vs CCP</th>
+      <th style="text-align:right">2S Violation%</th><th style="text-align:right">Avg P(exp)%</th>
+    </tr></thead><tbody><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">1.0d</td><td style="text-align:right">$3,380,682</td><td style="text-align:right">138</td><td style="text-align:right"><span style="color:#166534;font-weight:700">-47.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">16.4%</td><td style="text-align:right">3.6%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">2.0d</td><td style="text-align:right">$3,374,784</td><td style="text-align:right">162</td><td style="text-align:right"><span style="color:#166534;font-weight:700">-47.2%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">13.3%</td><td style="text-align:right">7.8%</td></tr><tr><td><strong>N=15</strong></td><td style="text-align:center;font-weight:700">3.0d</td><td style="text-align:right">$3,367,017</td><td style="text-align:right">258</td><td style="text-align:right"><span style="color:#166534;font-weight:700">-47.3%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">24.8%</td><td style="text-align:right">32.2%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">1.0d</td><td style="text-align:right">$7,265,494</td><td style="text-align:right">480</td><td style="text-align:right"><span style="color:#166534;font-weight:700">-17.9%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">42.8%</td><td style="text-align:right">3.5%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">2.0d</td><td style="text-align:right">$7,248,319</td><td style="text-align:right">570</td><td style="text-align:right"><span style="color:#166534;font-weight:700">-18.1%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">39.0%</td><td style="text-align:right">8.2%</td></tr><tr><td><strong>N=50</strong></td><td style="text-align:center;font-weight:700">3.0d</td><td style="text-align:right">$7,225,419</td><td style="text-align:right">870</td><td style="text-align:right"><span style="color:#166534;font-weight:700">-18.3%</span></td><td style="text-align:right;color:#dc2626;font-weight:700">59.2%</td><td style="text-align:right">31.0%</td></tr></tbody></table></div></div>
   <div class="chart-grid" style="margin-top:16px">
     <div class="chart-box">
-      <h3>&sigma;_L vs Cost Gap (2S vs CCP) — %</h3>
-      <div class="chart-wrap"><canvas id="senGapChart"></canvas></div>
+      <h3>Violation Rate: CCP vs Two-Stage across &sigma;_L</h3>
+      <div class="chart-wrap"><canvas id="senViolBarChart"></canvas></div>
     </div>
     <div class="chart-box">
-      <h3>&sigma;_L vs CCP Violation Rate — %</h3>
-      <div class="chart-wrap"><canvas id="senViolChart"></canvas></div>
+      <h3>Two-Stage Realized Cost ($M) across &sigma;_L</h3>
+      <div class="chart-wrap"><canvas id="senCostChart"></canvas></div>
     </div>
   </div>
 </div>
@@ -4614,58 +4622,66 @@ new Chart(document.getElementById('oosDistChart'), {
 });
 
 // ── Sensitivity charts ────────────────────────────────────────────────────────
-const SEN_SLS   = [0.10,0.20,0.30,0.40];
-const N15_GAP   = [-47.26,-47.18,null,null];
-const N50_GAP   = [-18.1,-18.08,null,null];
-const N15_VIOL  = [31.0,41.8,0,0];
-const N50_VIOL  = [73.5,84.0,0,0];
+const SEN_SLS      = [0.10,0.20,0.30,0.40];
+const N15_CCP_VIOL = [31.0,41.8,0,0];
+const N50_CCP_VIOL = [73.5,84.0,0,0];
+const N15_TS_VIOL  = [2.9,13.3,34.0,0];
+const N50_TS_VIOL  = [9.6,39.0,74.6,0];
+const N15_TS_COST  = [3.3646,3.3748,3.3846,0.0];
+const N50_TS_COST  = [7.2171,7.2483,7.2784,0.0];
 const GREEN = '#166534';
 
-if (document.getElementById('senGapChart') && SEN_SLS.length > 0) {
-  new Chart(document.getElementById('senGapChart'), {
-    type: 'line',
+if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {
+  // Grouped bar: CCP vs 2S violation rate across sigma_L
+  new Chart(document.getElementById('senViolBarChart'), {
+    type: 'bar',
     data: {
-      labels: SEN_SLS,
+      labels: SEN_SLS.map(v => 'σ=' + v),
       datasets: [
-        { label: 'N=15', data: N15_GAP,
-           borderColor: BLUE, backgroundColor: BLUE+'22',
-           pointBackgroundColor: BLUE, borderWidth:2, pointRadius:5, tension:0.3 },
-        { label: 'N=50', data: N50_GAP,
-           borderColor: ORANGE, backgroundColor: ORANGE+'22',
-           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0.3, borderDash:[5,3] },
+        { label: 'CCP N=15', data: N15_CCP_VIOL,
+           backgroundColor: BLUE + 'bb', borderColor: BLUE, borderWidth:1 },
+        { label: '2S N=15',  data: N15_TS_VIOL,
+           backgroundColor: BLUE + '44', borderColor: BLUE, borderWidth:1, borderDash:[4,2] },
+        { label: 'CCP N=50', data: N50_CCP_VIOL,
+           backgroundColor: ORANGE + 'bb', borderColor: ORANGE, borderWidth:1 },
+        { label: '2S N=50',  data: N50_TS_VIOL,
+           backgroundColor: ORANGE + '44', borderColor: ORANGE, borderWidth:1 },
       ]
     },
     options: {
       responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ position:'bottom', labels:{ font:{ size:10 } } } },
+      plugins:{ legend:{ position:'bottom', labels:{ font:{ size:10 }, boxWidth:12 } } },
       scales:{
-        x:{ title:{ display:true, text:'sigma_L' } },
-        y:{ title:{ display:true, text:'Cost Gap (%)' },
-             ticks:{ callback: v => v.toFixed(1)+'%' } }
+        x:{ title:{ display:true, text:'σ_L (manufacturing variability)' } },
+        y:{ title:{ display:true, text:'% Scenarios with Violation' },
+             ticks:{ callback: v => v+'%' }, min:0 }
       }
     }
   });
 
-  new Chart(document.getElementById('senViolChart'), {
+  // Line: Two-Stage cost vs sigma_L
+  new Chart(document.getElementById('senCostChart'), {
     type: 'line',
     data: {
       labels: SEN_SLS,
       datasets: [
-        { label: 'N=15 CCP Viol%', data: N15_VIOL,
+        { label: 'N=15', data: N15_TS_COST,
            borderColor: BLUE, backgroundColor: BLUE+'22',
-           pointBackgroundColor: BLUE, borderWidth:2, pointRadius:5, tension:0.3 },
-        { label: 'N=50 CCP Viol%', data: N50_VIOL,
+           pointBackgroundColor: BLUE, borderWidth:2, pointRadius:5, tension:0.3,
+           spanGaps: false },
+        { label: 'N=50', data: N50_TS_COST,
            borderColor: ORANGE, backgroundColor: ORANGE+'22',
-           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0.3, borderDash:[5,3] },
+           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0.3,
+           borderDash:[5,3], spanGaps: false },
       ]
     },
     options: {
       responsive:true, maintainAspectRatio:false,
       plugins:{ legend:{ position:'bottom', labels:{ font:{ size:10 } } } },
       scales:{
-        x:{ title:{ display:true, text:'sigma_L' } },
-        y:{ title:{ display:true, text:'CCP Violation %' },
-             ticks:{ callback: v => v.toFixed(1)+'%' } }
+        x:{ title:{ display:true, text:'σ_L (manufacturing variability)' } },
+        y:{ title:{ display:true, text:'Two-Stage Cost ($M)' },
+             ticks:{ callback: v => '$'+v.toFixed(2)+'M' } }
       }
     }
   });

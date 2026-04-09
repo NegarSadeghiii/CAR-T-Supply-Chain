@@ -596,25 +596,30 @@ def _sensitivity_html(sensitivity):
             sigma_rows += f'<tr><td>{r["label"]}</td><td>{r["sigma_L"]}</td><td colspan="6" style="color:#dc2626">{r["error"][:60]}</td></tr>'
             continue
         gap = r.get('cost_gap', 0)
+        ts_c  = f'${r.get("ts_cost",0):,.0f}'  if r.get("ts_cost") else '<span style="color:#9ca3af">infeasible</span>'
+        ccp_c = f'${r.get("ccp_cost",0):,.0f}' if r.get("ccp_cost") else '<span style="color:#9ca3af">infeasible</span>'
         sigma_rows += (
             f'<tr><td><strong>{r["label"]}</strong></td>'
             f'<td style="text-align:center;font-weight:700">{r["sigma_L"]}</td>'
-            f'<td style="text-align:right">${r.get("ts_cost",0):,.0f}</td>'
-            f'<td style="text-align:right">${r.get("ccp_cost",0):,.0f}</td>'
-            f'<td>{_gap_cell(gap)}</td>'
+            f'<td style="text-align:right">{ts_c}</td>'
+            f'<td style="text-align:right">{ccp_c}</td>'
+            f'<td style="text-align:right">{_gap_cell(gap)}</td>'
             f'<td style="text-align:right;color:{"#dc2626" if r.get("ccp_viol",0)>5 else "#166534"};font-weight:700">{r.get("ccp_viol",0):.1f}%</td>'
             f'<td style="text-align:right;color:{"#dc2626" if r.get("ts_viol",0)>5 else "#166534"};font-weight:700">{r.get("ts_viol",0):.1f}%</td>'
             f'<td style="text-align:right">{r.get("ts_pexp",0):.1f}%</td>'
             f'</tr>'
         )
-    sigma_html = f'''<div class="card"><h2>&#963;_L Sweep (alpha=0.10 fixed, delta=2d fixed)</h2>
+    sigma_html = f'''<div class="card"><h2>&#963;_L Sweep (&#945;=0.10 fixed, &#948;=2d fixed)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:12px">
       How does manufacturing time variability affect cost and reliability?
       Higher &#963;_L means more uncertainty around the nominal 7-day T_MF.
     </p>
     <div style="overflow-x:auto"><table class="tbl"><thead><tr>
-      <th>N</th><th>&#963;_L</th><th>2S Cost</th><th>CCP Cost</th><th>Cost Gap</th>
-      <th>CCP Violation%</th><th>2S Violation%</th><th>Avg P(exp)%</th>
+      <th>N</th><th style="text-align:center">&#963;_L</th>
+      <th style="text-align:right">2S Cost</th><th style="text-align:right">CCP Cost</th>
+      <th style="text-align:right">Cost Gap</th>
+      <th style="text-align:right">CCP Violation%</th><th style="text-align:right">2S Violation%</th>
+      <th style="text-align:right">Avg P(exp)%</th>
     </tr></thead><tbody>{sigma_rows}</tbody></table></div></div>'''
 
     # alpha sweep table
@@ -624,24 +629,27 @@ def _sensitivity_html(sensitivity):
             alpha_rows += f'<tr><td>{r["label"]}</td><td>{r["alpha"]}</td><td colspan="5" style="color:#dc2626">{r["error"][:60]}</td></tr>'
             continue
         gap = r.get('cost_gap', 0)
+        ccp_c = f'${r.get("ccp_cost",0):,.0f}' if r.get("ccp_cost") else '<span style="color:#9ca3af">infeasible</span>'
         alpha_rows += (
             f'<tr><td><strong>{r["label"]}</strong></td>'
             f'<td style="text-align:center;font-weight:700">{r["alpha"]}</td>'
-            f'<td style="text-align:right">${r.get("ccp_cost",0):,.0f}</td>'
+            f'<td style="text-align:right">{ccp_c}</td>'
             f'<td style="text-align:right">{r.get("tmfe_eff",0):.2f}d</td>'
-            f'<td>{_gap_cell(gap)}</td>'
+            f'<td style="text-align:right">{_gap_cell(gap)}</td>'
             f'<td style="text-align:right;color:{"#dc2626" if r.get("ccp_viol",0)>5 else "#166534"};font-weight:700">{r.get("ccp_viol",0):.1f}%</td>'
             f'<td style="text-align:right;color:{"#dc2626" if r.get("ts_viol",0)>5 else "#166534"};font-weight:700">{r.get("ts_viol",0):.1f}%</td>'
             f'</tr>'
         )
-    alpha_html = f'''<div class="card"><h2>&#945; Sweep — CCP (sigma_L=0.20 fixed, delta=2d fixed)</h2>
+    alpha_html = f'''<div class="card"><h2>&#945; Sweep — CCP (&#963;_L=0.20 fixed, &#948;=2d fixed)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:12px">
       How does the CCP service level parameter affect cost and violation rate?
       Lower &#945; = stricter service guarantee = higher effective manufacturing budget = higher cost.
     </p>
     <div style="overflow-x:auto"><table class="tbl"><thead><tr>
-      <th>N</th><th>&#945;</th><th>CCP Cost</th><th>T_MF budget (eff.)</th>
-      <th>Cost Gap vs 2S</th><th>CCP Violation%</th><th>2S Violation%</th>
+      <th>N</th><th style="text-align:center">&#945;</th>
+      <th style="text-align:right">CCP Cost</th><th style="text-align:right">T_MF budget (eff.)</th>
+      <th style="text-align:right">Cost Gap vs 2S</th>
+      <th style="text-align:right">CCP Violation%</th><th style="text-align:right">2S Violation%</th>
     </tr></thead><tbody>{alpha_rows}</tbody></table></div></div>'''
 
     # delta sweep table
@@ -651,24 +659,27 @@ def _sensitivity_html(sensitivity):
             delta_rows += f'<tr><td>{r["label"]}</td><td>{r["delta"]}</td><td colspan="5" style="color:#dc2626">{r["error"][:60]}</td></tr>'
             continue
         gap = r.get('cost_gap', 0)
+        ts_c = f'${r.get("ts_cost",0):,.0f}' if r.get("ts_cost") else '<span style="color:#9ca3af">infeasible</span>'
         delta_rows += (
             f'<tr><td><strong>{r["label"]}</strong></td>'
             f'<td style="text-align:center;font-weight:700">{r["delta"]}d</td>'
-            f'<td style="text-align:right">${r.get("ts_cost",0):,.0f}</td>'
+            f'<td style="text-align:right">{ts_c}</td>'
             f'<td style="text-align:right">{r.get("ts_plans",0)}</td>'
-            f'<td>{_gap_cell(gap)}</td>'
+            f'<td style="text-align:right">{_gap_cell(gap)}</td>'
             f'<td style="text-align:right;color:{"#dc2626" if r.get("ts_viol",0)>5 else "#166534"};font-weight:700">{r.get("ts_viol",0):.1f}%</td>'
             f'<td style="text-align:right">{r.get("ts_pexp",0):.1f}%</td>'
             f'</tr>'
         )
-    delta_html = f'''<div class="card"><h2>&#948; Sweep — Two-Stage (sigma_L=0.20 fixed, alpha=0.10 fixed)</h2>
+    delta_html = f'''<div class="card"><h2>&#948; Sweep — Two-Stage (&#963;_L=0.20 fixed, &#945;=0.10 fixed)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:12px">
       How many days of expedited shipping buffer (&#948;) are needed to rescue delayed patients?
       Larger &#948; = more routes become feasible under recourse = lower cost.
     </p>
     <div style="overflow-x:auto"><table class="tbl"><thead><tr>
-      <th>N</th><th>&#948;</th><th>2S Cost</th><th>Plans</th>
-      <th>Cost Gap vs CCP</th><th>2S Violation%</th><th>Avg P(exp)%</th>
+      <th>N</th><th style="text-align:center">&#948;</th>
+      <th style="text-align:right">2S Cost</th><th style="text-align:right">Plans</th>
+      <th style="text-align:right">Cost Gap vs CCP</th>
+      <th style="text-align:right">2S Violation%</th><th style="text-align:right">Avg P(exp)%</th>
     </tr></thead><tbody>{delta_rows}</tbody></table></div></div>'''
 
     return sigma_html, alpha_html, delta_html
@@ -677,28 +688,26 @@ def _sensitivity_html(sensitivity):
 def _build_sigma_chart_js(sensitivity):
     """Return JS arrays for sigma_L sensitivity charts (N=15 and N=50)."""
     if not sensitivity:
-        return '', '', '', ''
+        return '', '', '', '', '', ''
     sigma_sweep = sensitivity.get('sigma_sweep', [])
     n15 = [r for r in sigma_sweep if r.get('N') == 15 and 'error' not in r]
     n50 = [r for r in sigma_sweep if r.get('N') == 50 and 'error' not in r]
     sls = [0.10, 0.20, 0.30, 0.40]
 
-    def _arr(rows, key, scale=1):
-        by_sl = {r['sigma_L']: r for r in rows}
-        def _val(s):
-            if s not in by_sl: return 'null'
-            v = by_sl[s].get(key)
-            if v is None: return 'null'
-            return str(round(v / scale, 4))
-        return '[' + ','.join(_val(s) for s in sls) + ']'
+    def _v(by_sl, s, key):
+        v = by_sl.get(s, {}).get(key)
+        return str(round(v or 0, 2))
 
-    n15_gap  = _arr(n15, 'cost_gap')
-    n50_gap  = _arr(n50, 'cost_gap')
     n15_by_sl = {r['sigma_L']: r for r in n15}
     n50_by_sl = {r['sigma_L']: r for r in n50}
-    n15_viol = '[' + ','.join(str(round(n15_by_sl.get(s,{}).get('ccp_viol',0) or 0, 2)) for s in sls) + ']'
-    n50_viol = '[' + ','.join(str(round(n50_by_sl.get(s,{}).get('ccp_viol',0) or 0, 2)) for s in sls) + ']'
-    return n15_gap, n50_gap, n15_viol, n50_viol
+
+    n15_ccp_viol = '[' + ','.join(_v(n15_by_sl, s, 'ccp_viol') for s in sls) + ']'
+    n50_ccp_viol = '[' + ','.join(_v(n50_by_sl, s, 'ccp_viol') for s in sls) + ']'
+    n15_ts_viol  = '[' + ','.join(_v(n15_by_sl, s, 'ts_viol')  for s in sls) + ']'
+    n50_ts_viol  = '[' + ','.join(_v(n50_by_sl, s, 'ts_viol')  for s in sls) + ']'
+    n15_ts_cost  = '[' + ','.join(str(round((n15_by_sl.get(s,{}).get('ts_cost') or 0)/1e6, 4)) for s in sls) + ']'
+    n50_ts_cost  = '[' + ','.join(str(round((n50_by_sl.get(s,{}).get('ts_cost') or 0)/1e6, 4)) for s in sls) + ']'
+    return n15_ccp_viol, n50_ccp_viol, n15_ts_viol, n50_ts_viol, n15_ts_cost, n50_ts_cost
 
 
 def _vss_html(vss_rows):
@@ -843,11 +852,12 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
     # ── Sensitivity tab content ────────────────────────────────────────────────
     if sensitivity:
         sen_sigma_html, sen_alpha_html, sen_delta_html = _sensitivity_html(sensitivity)
-        n15_gap_js, n50_gap_js, n15_viol_js, n50_viol_js = _build_sigma_chart_js(sensitivity)
+        n15_ccp_viol_js, n50_ccp_viol_js, n15_ts_viol_js, n50_ts_viol_js, n15_ts_cost_js, n50_ts_cost_js = _build_sigma_chart_js(sensitivity)
         sigma_ls_js = '[0.10,0.20,0.30,0.40]'
     else:
         sen_sigma_html = sen_alpha_html = sen_delta_html = '<p style="color:#9ca3af">No sensitivity data.</p>'
-        n15_gap_js = n50_gap_js = n15_viol_js = n50_viol_js = '[]'
+        n15_ccp_viol_js = n50_ccp_viol_js = n15_ts_viol_js = n50_ts_viol_js = '[]'
+        n15_ts_cost_js = n50_ts_cost_js = '[]'
         sigma_ls_js = '[]'
 
     # ── VSS tab content ────────────────────────────────────────────────────────
@@ -1141,11 +1151,12 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 <!-- TAB 8: Sensitivity -->
 <div id="pane-sensitivity" class="pane">
   <div class="card" style="margin-bottom:10px">
-    <h2>Sensitivity Analysis — Conference Paper Results</h2>
+    <h2>Sensitivity Analysis</h2>
     <p style="font-size:12px;color:var(--dim);line-height:1.7">
       Each sweep varies one parameter while holding the others fixed, evaluated on
       representative instances <strong>N=15</strong> and <strong>N=50</strong>.
       Out-of-sample validation uses 5 000 scenarios per configuration.
+      &ldquo;Infeasible&rdquo; means no route satisfies the deadline constraint under that parameter setting.
     </p>
   </div>
   {sen_sigma_html}
@@ -1153,12 +1164,12 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
   {sen_delta_html}
   <div class="chart-grid" style="margin-top:16px">
     <div class="chart-box">
-      <h3>&sigma;_L vs Cost Gap (2S vs CCP) — %</h3>
-      <div class="chart-wrap"><canvas id="senGapChart"></canvas></div>
+      <h3>Violation Rate: CCP vs Two-Stage across &sigma;_L</h3>
+      <div class="chart-wrap"><canvas id="senViolBarChart"></canvas></div>
     </div>
     <div class="chart-box">
-      <h3>&sigma;_L vs CCP Violation Rate — %</h3>
-      <div class="chart-wrap"><canvas id="senViolChart"></canvas></div>
+      <h3>Two-Stage Realized Cost ($M) across &sigma;_L</h3>
+      <div class="chart-wrap"><canvas id="senCostChart"></canvas></div>
     </div>
   </div>
 </div>
@@ -1285,58 +1296,66 @@ new Chart(document.getElementById('oosDistChart'), {{
 }});
 
 // ── Sensitivity charts ────────────────────────────────────────────────────────
-const SEN_SLS   = {sigma_ls_js};
-const N15_GAP   = {n15_gap_js};
-const N50_GAP   = {n50_gap_js};
-const N15_VIOL  = {n15_viol_js};
-const N50_VIOL  = {n50_viol_js};
+const SEN_SLS      = {sigma_ls_js};
+const N15_CCP_VIOL = {n15_ccp_viol_js};
+const N50_CCP_VIOL = {n50_ccp_viol_js};
+const N15_TS_VIOL  = {n15_ts_viol_js};
+const N50_TS_VIOL  = {n50_ts_viol_js};
+const N15_TS_COST  = {n15_ts_cost_js};
+const N50_TS_COST  = {n50_ts_cost_js};
 const GREEN = '#166534';
 
-if (document.getElementById('senGapChart') && SEN_SLS.length > 0) {{
-  new Chart(document.getElementById('senGapChart'), {{
-    type: 'line',
+if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {{
+  // Grouped bar: CCP vs 2S violation rate across sigma_L
+  new Chart(document.getElementById('senViolBarChart'), {{
+    type: 'bar',
     data: {{
-      labels: SEN_SLS,
+      labels: SEN_SLS.map(v => 'σ=' + v),
       datasets: [
-        {{ label: 'N=15', data: N15_GAP,
-           borderColor: BLUE, backgroundColor: BLUE+'22',
-           pointBackgroundColor: BLUE, borderWidth:2, pointRadius:5, tension:0.3 }},
-        {{ label: 'N=50', data: N50_GAP,
-           borderColor: ORANGE, backgroundColor: ORANGE+'22',
-           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0.3, borderDash:[5,3] }},
+        {{ label: 'CCP N=15', data: N15_CCP_VIOL,
+           backgroundColor: BLUE + 'bb', borderColor: BLUE, borderWidth:1 }},
+        {{ label: '2S N=15',  data: N15_TS_VIOL,
+           backgroundColor: BLUE + '44', borderColor: BLUE, borderWidth:1, borderDash:[4,2] }},
+        {{ label: 'CCP N=50', data: N50_CCP_VIOL,
+           backgroundColor: ORANGE + 'bb', borderColor: ORANGE, borderWidth:1 }},
+        {{ label: '2S N=50',  data: N50_TS_VIOL,
+           backgroundColor: ORANGE + '44', borderColor: ORANGE, borderWidth:1 }},
       ]
     }},
     options: {{
       responsive:true, maintainAspectRatio:false,
-      plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }} }} }} }},
+      plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }}, boxWidth:12 }} }} }},
       scales:{{
-        x:{{ title:{{ display:true, text:'sigma_L' }} }},
-        y:{{ title:{{ display:true, text:'Cost Gap (%)' }},
-             ticks:{{ callback: v => v.toFixed(1)+'%' }} }}
+        x:{{ title:{{ display:true, text:'σ_L (manufacturing variability)' }} }},
+        y:{{ title:{{ display:true, text:'% Scenarios with Violation' }},
+             ticks:{{ callback: v => v+'%' }}, min:0 }}
       }}
     }}
   }});
 
-  new Chart(document.getElementById('senViolChart'), {{
+  // Line: Two-Stage cost vs sigma_L
+  new Chart(document.getElementById('senCostChart'), {{
     type: 'line',
     data: {{
       labels: SEN_SLS,
       datasets: [
-        {{ label: 'N=15 CCP Viol%', data: N15_VIOL,
+        {{ label: 'N=15', data: N15_TS_COST,
            borderColor: BLUE, backgroundColor: BLUE+'22',
-           pointBackgroundColor: BLUE, borderWidth:2, pointRadius:5, tension:0.3 }},
-        {{ label: 'N=50 CCP Viol%', data: N50_VIOL,
+           pointBackgroundColor: BLUE, borderWidth:2, pointRadius:5, tension:0.3,
+           spanGaps: false }},
+        {{ label: 'N=50', data: N50_TS_COST,
            borderColor: ORANGE, backgroundColor: ORANGE+'22',
-           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0.3, borderDash:[5,3] }},
+           pointBackgroundColor: ORANGE, borderWidth:2, pointRadius:5, tension:0.3,
+           borderDash:[5,3], spanGaps: false }},
       ]
     }},
     options: {{
       responsive:true, maintainAspectRatio:false,
       plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }} }} }} }},
       scales:{{
-        x:{{ title:{{ display:true, text:'sigma_L' }} }},
-        y:{{ title:{{ display:true, text:'CCP Violation %' }},
-             ticks:{{ callback: v => v.toFixed(1)+'%' }} }}
+        x:{{ title:{{ display:true, text:'σ_L (manufacturing variability)' }} }},
+        y:{{ title:{{ display:true, text:'Two-Stage Cost ($M)' }},
+             ticks:{{ callback: v => '$'+v.toFixed(2)+'M' }} }}
       }}
     }}
   }});
