@@ -1849,7 +1849,7 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 function show(n) {{
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('a'));
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('a'));
-  const m = {{summary:0,oos:1,mc:2,patients:3,findings:4,sensitivity:5,vss:6}};
+  const m = {{summary:0,oos:1,mc:2,patients:3,gantt:4,findings:5,sensitivity:6,vss:7}};
   document.querySelectorAll('.tab')[m[n]].classList.add('a');
   document.getElementById('pane-' + n).classList.add('a');
   requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
@@ -2034,8 +2034,8 @@ if (document.getElementById('ganttChart')) {{
   const G_ROWS = [
     ['Ground j1 — nominal (TRT=17d)',   [0,1,2,9,16,17], 26, ''],
     ['Air j2 — nominal (TRT=23d)',      [0,1,5,12,19,23], 26, ''],
-    ['Ground j1 — late mfg T_MF=9d\n(expedited, deadline met)', [0,1,2,11,18,19], 26, ''],
-    ['Ground j1 — severe delay T_MF=12d\n(violation)', [0,1,2,14,21,22], 26, ''],
+    ['Ground j1 — late mfg T_MF=9d (expedited, deadline met)', [0,1,2,11,18,19], 26, ''],
+    ['Ground j1 — severe delay T_MF=12d (violation)', [0,1,2,14,21,22], 26, ''],
   ];
   const phases = [
     {{ label:'Leukapheresis (TLS=1d)', backgroundColor:'#1d4ed8', data:G_ROWS.map(r=>([r[1][0],r[1][1]])) }},
