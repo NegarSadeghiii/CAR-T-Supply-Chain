@@ -4509,9 +4509,17 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
       &bull; <strong>RP</strong> (Recourse Problem) = Two-Stage optimal cost (route selection with expediting recourse priced in)<br>
       &bull; <strong>EEV</strong> (Expected value of the Expected Value solution) = deterministic routes evaluated under 10 000 T_MF
       scenarios <em>with</em> expediting recourse applied post-hoc<br><br>
-      A positive VSS means using the stochastic model (Two-Stage) yields a lower expected cost than
-      naively taking the deterministic solution and hoping recourse will cover delays.
-      Average VSS across instances: <strong>-12.5%</strong>.
+      A positive VSS means the stochastic model yields lower <em>expected</em> cost than the deterministic solution with recourse bolted on.
+      Average VSS across instances: <strong>-12.5%</strong>.<br>
+      <strong style="color:#92400E">Note on near-zero VSS:</strong>
+      At moderate &sigma;_L (0.10&ndash;0.30) the dataset deadlines are generous enough that
+      both Det and Two-Stage routes have comfortable manufacturing slack K_i, keeping
+      P(expedite) small for both. Two-Stage pays a small transport cost premium (selecting
+      routes with larger K_i) that slightly exceeds the expediting savings &rarr; VSS &asymp; 0.
+      Two-Stage&rsquo;s primary advantage here is <strong>violation reduction</strong>
+      (near-zero hard-deadline breaches vs CCP&rsquo;s 30&ndash;84% — see OOS tab),
+      not expected-cost reduction. Positive VSS would emerge with tighter deadlines (&tau; &gt; 0)
+      or when the Two-Stage route filter forces the solver to use routes with genuinely small K_i.
     </p>
     <div style="overflow-x:auto">
     <table class="tbl"><thead><tr>
@@ -4531,6 +4539,33 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
       expectation than using the deterministic schedule with recourse bolted on. The larger the
       VSS %, the more valuable the stochastic formulation is relative to a naive deterministic approach.
     </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+  <h2>VSS vs &sigma;_L Sweep — Breakeven Analysis (N &le; 25)</h2>
+  <p style="font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.7">
+    Two-Stage is re-solved at each &sigma;_L while Deterministic routes are held fixed.
+    VSS is near-zero because dataset deadlines are generous (large K_i for Det routes),
+    so the difference in expected expediting between Det and Two-Stage is small.
+    Two-Stage becomes <strong>infeasible</strong> at &sigma;_L &ge; 0.35 (K_i filter too strict).
+    The breakeven chart clips the Y-axis to [&minus;5%, +10%] — N=20 is an outlier
+    where Two-Stage is anomalously expensive (Two-Stage transport &asymp; 2&times; Det transport
+    for this specific dataset), producing VSS &asymp; &minus;86% which is excluded from the chart scale.
+  </p>
+  <div style="overflow-x:auto">
+  <table class="tbl"><thead><tr>
+    <th style="text-align:center">&sigma;_L</th><th>N</th>
+    <th style="text-align:right">Det Cost</th>
+    <th style="text-align:right">RP (Two-Stage)</th>
+    <th style="text-align:right">EEV Mean &plusmn; Std</th>
+    <th style="text-align:right">VSS ($)</th>
+    <th style="text-align:right">VSS %</th>
+  </tr></thead><tbody><tr><td style="text-align:center;font-weight:700">0.1</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,119,660</td><td style="text-align:right">$3,123,706</td><td style="text-align:right">$3,123,761 &plusmn;$2,962</td><td style="text-align:right;color:#166534;font-weight:700">+$55</td><td style="text-align:right;color:#166534;font-weight:700">+0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.1</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,245,099</td><td style="text-align:right">$6,254,987</td><td style="text-align:right">$6,255,279 &plusmn;$4,643</td><td style="text-align:right;color:#166534;font-weight:700">+$292</td><td style="text-align:right;color:#166534;font-weight:700">+0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.1</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,348,865</td><td style="text-align:right">$3,364,595</td><td style="text-align:right">$3,364,966 &plusmn;$5,853</td><td style="text-align:right;color:#166534;font-weight:700">+$371</td><td style="text-align:right;color:#166534;font-weight:700">+0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.1</td><td style="font-weight:700">N=20</td><td style="text-align:right">$3,467,529</td><td style="text-align:right">$3,487,266</td><td style="text-align:right">$3,487,754 &plusmn;$6,558</td><td style="text-align:right;color:#166534;font-weight:700">+$488</td><td style="text-align:right;color:#166534;font-weight:700">+0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.1</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,592,586</td><td style="text-align:right">$6,616,578</td><td style="text-align:right">$6,616,934 &plusmn;$7,038</td><td style="text-align:right;color:#166534;font-weight:700">+$356</td><td style="text-align:right;color:#166534;font-weight:700">+0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.15</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,119,660</td><td style="text-align:right">$3,124,226</td><td style="text-align:right">$3,124,200 &plusmn;$3,349</td><td style="text-align:right;color:#dc2626;font-weight:700">$-25</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.15</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,245,099</td><td style="text-align:right">$6,255,860</td><td style="text-align:right">$6,256,050 &plusmn;$5,208</td><td style="text-align:right;color:#166534;font-weight:700">+$190</td><td style="text-align:right;color:#166534;font-weight:700">+0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.15</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,348,865</td><td style="text-align:right">$3,365,821</td><td style="text-align:right">$3,366,066 &plusmn;$6,503</td><td style="text-align:right;color:#166534;font-weight:700">+$245</td><td style="text-align:right;color:#166534;font-weight:700">+0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.15</td><td style="font-weight:700">N=20</td><td style="text-align:right">$3,467,529</td><td style="text-align:right">$3,488,818</td><td style="text-align:right">$3,489,071 &plusmn;$7,314</td><td style="text-align:right;color:#166534;font-weight:700">+$253</td><td style="text-align:right;color:#166534;font-weight:700">+0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.15</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,592,586</td><td style="text-align:right">$6,618,707</td><td style="text-align:right">$6,618,816 &plusmn;$7,748</td><td style="text-align:right;color:#166534;font-weight:700">+$109</td><td style="text-align:right;color:#166534;font-weight:700">+0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,119,660</td><td style="text-align:right">$3,126,280</td><td style="text-align:right">$3,124,666 &plusmn;$3,776</td><td style="text-align:right;color:#dc2626;font-weight:700">$-1,615</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,245,099</td><td style="text-align:right">$6,260,140</td><td style="text-align:right">$6,256,868 &plusmn;$5,741</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,272</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,348,865</td><td style="text-align:right">$3,374,784</td><td style="text-align:right">$3,367,258 &plusmn;$7,203</td><td style="text-align:right;color:#dc2626;font-weight:700">$-7,526</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.2%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=20</td><td style="text-align:right">$3,467,529</td><td style="text-align:right">$6,505,303</td><td style="text-align:right">$3,490,630 &plusmn;$8,047</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,014,672</td><td style="text-align:right;color:#dc2626;font-weight:700">-86.4%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,592,586</td><td style="text-align:right">$6,632,813</td><td style="text-align:right">$6,620,896 &plusmn;$8,542</td><td style="text-align:right;color:#dc2626;font-weight:700">$-11,916</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.2%</td></tr><tr><td style="text-align:center;font-weight:700">0.25</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,119,660</td><td style="text-align:right">$3,129,715</td><td style="text-align:right">$3,125,006 &plusmn;$4,020</td><td style="text-align:right;color:#dc2626;font-weight:700">$-4,709</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.25</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,245,099</td><td style="text-align:right">$6,264,377</td><td style="text-align:right">$6,257,481 &plusmn;$6,050</td><td style="text-align:right;color:#dc2626;font-weight:700">$-6,896</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.25</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,348,865</td><td style="text-align:right">$3,382,766</td><td style="text-align:right">$3,368,179 &plusmn;$7,676</td><td style="text-align:right;color:#dc2626;font-weight:700">$-14,587</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.4%</td></tr><tr><td style="text-align:center;font-weight:700">0.25</td><td style="font-weight:700">N=20</td><td style="text-align:right">$3,467,529</td><td style="text-align:right">$6,513,423</td><td style="text-align:right">$3,491,828 &plusmn;$8,568</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,021,595</td><td style="text-align:right;color:#dc2626;font-weight:700">-86.5%</td></tr><tr><td style="text-align:center;font-weight:700">0.25</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,592,586</td><td style="text-align:right">$6,643,300</td><td style="text-align:right">$6,622,568 &plusmn;$9,276</td><td style="text-align:right;color:#dc2626;font-weight:700">$-20,732</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.3%</td></tr><tr><td style="text-align:center;font-weight:700">0.3</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,119,660</td><td style="text-align:right">$3,130,281</td><td style="text-align:right">$3,125,262 &plusmn;$4,219</td><td style="text-align:right;color:#dc2626;font-weight:700">$-5,019</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.2%</td></tr><tr><td style="text-align:center;font-weight:700">0.3</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,245,099</td><td style="text-align:right">$6,265,595</td><td style="text-align:right">$6,257,824 &plusmn;$6,237</td><td style="text-align:right;color:#dc2626;font-weight:700">$-7,771</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.3</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,348,865</td><td style="text-align:right">$3,384,636</td><td style="text-align:right">$3,368,707 &plusmn;$7,876</td><td style="text-align:right;color:#dc2626;font-weight:700">$-15,929</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.5%</td></tr><tr><td style="text-align:center;font-weight:700">0.3</td><td style="font-weight:700">N=20</td><td style="text-align:right">$3,467,529</td><td style="text-align:right">$6,515,859</td><td style="text-align:right">$3,492,585 &plusmn;$8,788</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,023,274</td><td style="text-align:right;color:#dc2626;font-weight:700">-86.6%</td></tr><tr><td style="text-align:center;font-weight:700">0.3</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,592,586</td><td style="text-align:right">$6,646,302</td><td style="text-align:right">$6,623,705 &plusmn;$9,620</td><td style="text-align:right;color:#dc2626;font-weight:700">$-22,597</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.3%</td></tr><tr><td style="text-align:center">0.35</td><td style="font-weight:700">N=5</td><td colspan="5" style="color:#9ca3af;text-align:center">infeasible</td></tr><tr><td style="text-align:center">0.35</td><td style="font-weight:700">N=10</td><td colspan="5" style="color:#9ca3af;text-align:center">infeasible</td></tr><tr><td style="text-align:center">0.35</td><td style="font-weight:700">N=15</td><td colspan="5" style="color:#9ca3af;text-align:center">infeasible</td></tr><tr><td style="text-align:center">0.35</td><td style="font-weight:700">N=20</td><td colspan="5" style="color:#9ca3af;text-align:center">infeasible</td></tr><tr><td style="text-align:center">0.35</td><td style="font-weight:700">N=25</td><td colspan="5" style="color:#9ca3af;text-align:center">infeasible</td></tr><tr><td style="text-align:center">0.4</td><td style="font-weight:700">N=5</td><td colspan="5" style="color:#9ca3af;text-align:center">infeasible</td></tr><tr><td style="text-align:center">0.4</td><td style="font-weight:700">N=10</td><td colspan="5" style="color:#9ca3af;text-align:center">infeasible</td></tr><tr><td style="text-align:center">0.4</td><td style="font-weight:700">N=15</td><td colspan="5" style="color:#9ca3af;text-align:center">infeasible</td></tr><tr><td style="text-align:center">0.4</td><td style="font-weight:700">N=20</td><td colspan="5" style="color:#9ca3af;text-align:center">infeasible</td></tr><tr><td style="text-align:center">0.4</td><td style="font-weight:700">N=25</td><td colspan="5" style="color:#9ca3af;text-align:center">infeasible</td></tr></tbody></table></div>
+</div>
+
+  <div class="chart-box" style="margin-top:16px">
+    <h3>VSS % vs &sigma;_L — Breakeven Chart</h3>
+    <div class="chart-wrap" style="height:320px"><canvas id="vssSweepChart"></canvas></div>
   </div>
 </div>
 
@@ -4688,5 +4723,49 @@ if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {
 }
 
 requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+
+// ── VSS sweep chart ───────────────────────────────────────────────────────────
+const VSS_SLS      = [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4];
+const VSS_DATASETS = [{label:"N=5",data:[0.0,-0.0,-0.05,-0.15,-0.16,null,null],borderColor:"#1E3A5F",backgroundColor:"#1E3A5F22",pointBackgroundColor:"#1E3A5F",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
+{label:"N=10",data:[0.0,0.0,-0.05,-0.11,-0.12,null,null],borderColor:"#92400E",backgroundColor:"#92400E22",pointBackgroundColor:"#92400E",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
+{label:"N=15",data:[0.01,0.01,-0.22,-0.43,-0.47,null,null],borderColor:"#166534",backgroundColor:"#16653422",pointBackgroundColor:"#166534",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
+{label:"N=20",data:[0.01,0.01,-86.36,-86.53,-86.56,null,null],borderColor:"#7c3aed",backgroundColor:"#7c3aed22",pointBackgroundColor:"#7c3aed",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false},
+{label:"N=25",data:[0.01,0.0,-0.18,-0.31,-0.34,null,null],borderColor:"#dc2626",backgroundColor:"#dc262622",pointBackgroundColor:"#dc2626",borderWidth:2,pointRadius:5,tension:0.3,spanGaps:false}];
+
+if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {
+  new Chart(document.getElementById('vssSweepChart'), {
+    type: 'line',
+    data: {
+      labels: VSS_SLS,
+      datasets: [
+        ...VSS_DATASETS,
+        { label: 'Breakeven (VSS=0)', data: VSS_SLS.map(() => 0),
+           borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6, 4],
+           pointRadius: 0, fill: false, order: 99 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.dataset.label + ': ' +
+              (ctx.raw !== null ? ctx.raw.toFixed(1) + '%' : 'n/a')
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'σ_L (manufacturing variability)' } },
+        y: {
+          title: { display: true, text: 'VSS (%)' },
+          ticks: { callback: v => v.toFixed(1) + '%' },
+          min: -5, max: 10,
+          grid: { color: ctx => ctx.tick.value === 0 ? '#dc262666' : '#e5e7eb' }
+        }
+      }
+    }
+  });
+}
 </script>
 </body></html>

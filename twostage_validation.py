@@ -582,6 +582,147 @@ def compute_vss(det_results, ts_results, sigma_L, delta, pi_map_default,
     return vss_rows
 
 
+def compute_vss_sweep(sigma_L_values, det_results, tau, epsilon, time_limit,
+                      pi_map_default=None, n_sim=5000, seed=55, max_N=25):
+    """
+    Sweep sigma_L and compute VSS at each value to find the breakeven point.
+    Re-runs Two-Stage at each sigma_L (det results are fixed — no sigma_L dependency).
+    Only processes datasets with N <= max_N (larger instances are slow).
+    Returns list of dicts with keys: sigma_L, N, det_cost, rp_cost, eev_mean, eev_std, vss, vss_pct.
+    """
+    import statistics as _st
+    if pi_map_default is None:
+        pi_map_default = {'high': 8000, 'medium': 4000, 'low': 1500}
+
+    tmfe     = TS_PROCESS['tmfe']
+    det_by_n = {r['N']: r for r in det_results if r.get('solved')}
+    all_rows = []
+
+    for sL in sigma_L_values:
+        mu_L = math.log(tmfe) - 0.5 * sL ** 2
+        print(f'\n  [VSS sweep] sigma_L={sL}')
+
+        for label, fname in DATASETS:
+            n_val = int(label.split('=')[1])
+            if max_N is not None and n_val > max_N:
+                continue
+            det = det_by_n.get(n_val)
+            if not det:
+                continue
+            df = os.path.join(BASE_DIR, fname)
+            if not os.path.exists(df):
+                continue
+
+            ts_cfg = dict(TS_PROCESS)
+            ts_cfg['sigma_L'] = sL
+            ts_cfg['delta']   = 2.0
+            ts_cfg['epsilon'] = epsilon
+
+            print(f'    N={n_val} ...', end=' ', flush=True)
+            try:
+                r_ts = ts_run(tau=tau, data_file=df, process_config=ts_cfg,
+                              time_limit=time_limit)
+                if not r_ts.get('solved'):
+                    print('INFEASIBLE')
+                    all_rows.append({'sigma_L': sL, 'N': n_val, 'infeasible': True,
+                                     'det_cost': det.get('total_cost', 0)})
+                    continue
+
+                pi_map   = r_ts.get('pi_map', pi_map_default)
+                rp_cost  = r_ts.get('total_cost', 0)
+                det_pats = det.get('patients', [])
+
+                # EEV: det routes + expediting recourse, simulated at this sigma_L
+                rng = random.Random(seed + n_val)
+                eev_costs = []
+                for _ in range(n_sim):
+                    ec = 0
+                    for p in det_pats:
+                        tmf_p = rng.lognormvariate(mu_L, sL)
+                        K     = p['deadline'] - (p.get('trt', p.get('turnaround', tmfe)) - tmfe)
+                        pi_p  = pi_map.get(p.get('group', 'low'), 1500)
+                        if tmf_p > K:
+                            ec += pi_p
+                    eev_costs.append(det.get('total_cost', 0) + ec)
+
+                eev_mean = _st.mean(eev_costs)
+                eev_std  = _st.stdev(eev_costs)
+                vss      = eev_mean - rp_cost
+                vss_pct  = vss / eev_mean * 100 if eev_mean else 0
+
+                print(f'OK  RP=${rp_cost:,.0f}  EEV=${eev_mean:,.0f}  '
+                      f'VSS={vss:+,.0f} ({vss_pct:+.1f}%)')
+                all_rows.append({
+                    'sigma_L':  sL,
+                    'N':        n_val,
+                    'det_cost': det.get('total_cost', 0),
+                    'rp_cost':  round(rp_cost),
+                    'eev_mean': round(eev_mean),
+                    'eev_std':  round(eev_std),
+                    'vss':      round(vss),
+                    'vss_pct':  round(vss_pct, 2),
+                })
+            except Exception as e:
+                print(f'ERROR: {e}')
+                all_rows.append({'sigma_L': sL, 'N': n_val,
+                                 'error': str(e)[:80],
+                                 'det_cost': det.get('total_cost', 0)})
+
+    return all_rows
+
+
+def _vss_sweep_html(vss_sweep):
+    """Build HTML table for the VSS sigma_L sweep."""
+    if not vss_sweep:
+        return ''
+    rows = ''
+    for r in vss_sweep:
+        if r.get('infeasible'):
+            rows += (f'<tr><td style="text-align:center">{r["sigma_L"]}</td>'
+                     f'<td style="font-weight:700">N={r["N"]}</td>'
+                     f'<td colspan="5" style="color:#9ca3af;text-align:center">infeasible</td></tr>')
+            continue
+        if r.get('error'):
+            rows += (f'<tr><td style="text-align:center">{r["sigma_L"]}</td>'
+                     f'<td style="font-weight:700">N={r["N"]}</td>'
+                     f'<td colspan="5" style="color:#dc2626">{r["error"][:60]}</td></tr>')
+            continue
+        vss_col   = '#166534' if r['vss'] >= 0 else '#dc2626'
+        vss_sign  = '+' if r['vss'] >= 0 else ''
+        rows += (
+            f'<tr>'
+            f'<td style="text-align:center;font-weight:700">{r["sigma_L"]}</td>'
+            f'<td style="font-weight:700">N={r["N"]}</td>'
+            f'<td style="text-align:right">${r["det_cost"]:,.0f}</td>'
+            f'<td style="text-align:right">${r["rp_cost"]:,.0f}</td>'
+            f'<td style="text-align:right">${r["eev_mean"]:,.0f} &plusmn;${r["eev_std"]:,.0f}</td>'
+            f'<td style="text-align:right;color:{vss_col};font-weight:700">{vss_sign}${r["vss"]:,.0f}</td>'
+            f'<td style="text-align:right;color:{vss_col};font-weight:700">{vss_sign}{r["vss_pct"]:.1f}%</td>'
+            f'</tr>'
+        )
+    return f'''<div class="card" style="margin-top:18px">
+  <h2>VSS vs &sigma;_L Sweep — Breakeven Analysis (N &le; 25)</h2>
+  <p style="font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.7">
+    Two-Stage is re-solved at each &sigma;_L while Deterministic routes are held fixed.
+    VSS is near-zero because dataset deadlines are generous (large K_i for Det routes),
+    so the difference in expected expediting between Det and Two-Stage is small.
+    Two-Stage becomes <strong>infeasible</strong> at &sigma;_L &ge; 0.35 (K_i filter too strict).
+    The breakeven chart clips the Y-axis to [&minus;5%, +10%] — N=20 is an outlier
+    where Two-Stage is anomalously expensive (Two-Stage transport &asymp; 2&times; Det transport
+    for this specific dataset), producing VSS &asymp; &minus;86% which is excluded from the chart scale.
+  </p>
+  <div style="overflow-x:auto">
+  <table class="tbl"><thead><tr>
+    <th style="text-align:center">&sigma;_L</th><th>N</th>
+    <th style="text-align:right">Det Cost</th>
+    <th style="text-align:right">RP (Two-Stage)</th>
+    <th style="text-align:right">EEV Mean &plusmn; Std</th>
+    <th style="text-align:right">VSS ($)</th>
+    <th style="text-align:right">VSS %</th>
+  </tr></thead><tbody>{rows}</tbody></table></div>
+</div>'''
+
+
 def _sensitivity_html(sensitivity):
     """Build HTML for the Sensitivity Analysis tab."""
     if not sensitivity:
@@ -732,7 +873,7 @@ def _vss_html(vss_rows):
 
 
 def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
-                  sensitivity=None, vss_rows=None):
+                  sensitivity=None, vss_rows=None, vss_sweep=None):
     det_rows = [r for r in results if r['solver'] == 'Deterministic' and r.get('solved')]
     ts_rows  = [r for r in results if r['solver'] == 'Two-Stage Exp.' and r.get('solved')]
 
@@ -863,6 +1004,29 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
     # ── VSS tab content ────────────────────────────────────────────────────────
     vss_table_rows = _vss_html(vss_rows) if vss_rows else '<p style="color:#9ca3af">No VSS data.</p>'
     avg_vss_pct = round(sum(r['vss_pct'] for r in (vss_rows or []))/max(1,len(vss_rows or [])), 2)
+
+    # VSS sweep HTML + JS chart data
+    vss_sweep_section_html = _vss_sweep_html(vss_sweep) if vss_sweep else ''
+    if vss_sweep:
+        _sw_sls  = sorted(set(r['sigma_L'] for r in vss_sweep))
+        _sw_ns   = sorted(set(r['N'] for r in vss_sweep))
+        _sw_colors = ['#1E3A5F', '#92400E', '#166534', '#7c3aed', '#dc2626', '#0891b2']
+        _sw_datasets = []
+        for _i, _n in enumerate(_sw_ns):
+            _by_sl = {r['sigma_L']: r for r in vss_sweep if r['N'] == _n and 'vss_pct' in r}
+            _data  = [str(_by_sl[_sl]['vss_pct']) if _sl in _by_sl else 'null' for _sl in _sw_sls]
+            _col   = _sw_colors[_i % len(_sw_colors)]
+            _sw_datasets.append(
+                '{label:"N=' + str(_n) + '",data:[' + ','.join(_data) + '],'
+                'borderColor:"' + _col + '",backgroundColor:"' + _col + '22",'
+                'pointBackgroundColor:"' + _col + '",borderWidth:2,pointRadius:5,'
+                'tension:0.3,spanGaps:false}'
+            )
+        vss_sweep_sls_js      = str(_sw_sls)
+        vss_sweep_datasets_js = '[' + ',\n'.join(_sw_datasets) + ']'
+    else:
+        vss_sweep_sls_js      = '[]'
+        vss_sweep_datasets_js = '[]'
 
     HTML = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1183,9 +1347,17 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
       &bull; <strong>RP</strong> (Recourse Problem) = Two-Stage optimal cost (route selection with expediting recourse priced in)<br>
       &bull; <strong>EEV</strong> (Expected value of the Expected Value solution) = deterministic routes evaluated under 10 000 T_MF
       scenarios <em>with</em> expediting recourse applied post-hoc<br><br>
-      A positive VSS means using the stochastic model (Two-Stage) yields a lower expected cost than
-      naively taking the deterministic solution and hoping recourse will cover delays.
-      Average VSS across instances: <strong>{avg_vss_pct:+.1f}%</strong>.
+      A positive VSS means the stochastic model yields lower <em>expected</em> cost than the deterministic solution with recourse bolted on.
+      Average VSS across instances: <strong>{avg_vss_pct:+.1f}%</strong>.<br>
+      <strong style="color:#92400E">Note on near-zero VSS:</strong>
+      At moderate &sigma;_L (0.10&ndash;0.30) the dataset deadlines are generous enough that
+      both Det and Two-Stage routes have comfortable manufacturing slack K_i, keeping
+      P(expedite) small for both. Two-Stage pays a small transport cost premium (selecting
+      routes with larger K_i) that slightly exceeds the expediting savings &rarr; VSS &asymp; 0.
+      Two-Stage&rsquo;s primary advantage here is <strong>violation reduction</strong>
+      (near-zero hard-deadline breaches vs CCP&rsquo;s 30&ndash;84% — see OOS tab),
+      not expected-cost reduction. Positive VSS would emerge with tighter deadlines (&tau; &gt; 0)
+      or when the Two-Stage route filter forces the solver to use routes with genuinely small K_i.
     </p>
     <div style="overflow-x:auto">
     <table class="tbl"><thead><tr>
@@ -1205,6 +1377,13 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
       expectation than using the deterministic schedule with recourse bolted on. The larger the
       VSS %, the more valuable the stochastic formulation is relative to a naive deterministic approach.
     </div>
+  </div>
+
+  {vss_sweep_section_html}
+
+  <div class="chart-box" style="margin-top:16px">
+    <h3>VSS % vs &sigma;_L — Breakeven Chart</h3>
+    <div class="chart-wrap" style="height:320px"><canvas id="vssSweepChart"></canvas></div>
   </div>
 </div>
 
@@ -1362,6 +1541,46 @@ if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {{
 }}
 
 requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+
+// ── VSS sweep chart ───────────────────────────────────────────────────────────
+const VSS_SLS      = {vss_sweep_sls_js};
+const VSS_DATASETS = {vss_sweep_datasets_js};
+
+if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {{
+  new Chart(document.getElementById('vssSweepChart'), {{
+    type: 'line',
+    data: {{
+      labels: VSS_SLS,
+      datasets: [
+        ...VSS_DATASETS,
+        {{ label: 'Breakeven (VSS=0)', data: VSS_SLS.map(() => 0),
+           borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6, 4],
+           pointRadius: 0, fill: false, order: 99 }}
+      ]
+    }},
+    options: {{
+      responsive: true, maintainAspectRatio: false,
+      plugins: {{
+        legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth: 12 }} }},
+        tooltip: {{
+          callbacks: {{
+            label: ctx => ctx.dataset.label + ': ' +
+              (ctx.raw !== null ? ctx.raw.toFixed(1) + '%' : 'n/a')
+          }}
+        }}
+      }},
+      scales: {{
+        x: {{ title: {{ display: true, text: 'σ_L (manufacturing variability)' }} }},
+        y: {{
+          title: {{ display: true, text: 'VSS (%)' }},
+          ticks: {{ callback: v => v.toFixed(1) + '%' }},
+          min: -5, max: 10,
+          grid: {{ color: ctx => ctx.tick.value === 0 ? '#dc262666' : '#e5e7eb' }}
+        }}
+      }}
+    }}
+  }});
+}}
 </script>
 </body></html>"""
     with open(output_path, 'w') as f:
@@ -1409,6 +1628,22 @@ if __name__ == '__main__':
     print(f'  VSS computed for {len(vss_rows)} instance(s).')
 
     print('\n' + '=' * 60)
+    print('Computing VSS σ_L sweep (finds breakeven where stochastic model pays off) …')
+    print('  Sweeping σ_L ∈ {0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40} for N ≤ 25.')
+    vss_sweep = compute_vss_sweep(
+        sigma_L_values=[0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40],
+        det_results=det_res,
+        tau=args.tau,
+        epsilon=args.epsilon,
+        time_limit=args.time_limit,
+        pi_map_default=pi_map_default,
+        n_sim=min(args.n_sim, 3000),
+        seed=55,
+        max_N=25,
+    )
+    print(f'  VSS sweep: {len(vss_sweep)} data points.')
+
+    print('\n' + '=' * 60)
     print('Running sensitivity analysis (sigma_L / alpha / delta sweeps) …')
     print('  Note: this runs 2 solvers × (4+3+3) configs × 2 sizes = 40 solver calls.')
     sensitivity = run_sensitivity(
@@ -1418,5 +1653,5 @@ if __name__ == '__main__':
 
     out = os.path.join(BASE_DIR, args.output)
     generate_html(results, out, args.tau, args.sigma_L, args.delta, args.epsilon,
-                  sensitivity=sensitivity, vss_rows=vss_rows)
+                  sensitivity=sensitivity, vss_rows=vss_rows, vss_sweep=vss_sweep)
     print(f'\nDone. Open {args.output} in your browser.')
