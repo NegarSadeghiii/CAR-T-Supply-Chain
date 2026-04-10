@@ -4794,7 +4794,20 @@ function show(n) {
   const m = {summary:0,oos:1,mc:2,patients:3,gantt:4,findings:5,sensitivity:6,vss:7};
   document.querySelectorAll('.tab')[m[n]].classList.add('a');
   document.getElementById('pane-' + n).classList.add('a');
-  requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+  requestAnimationFrame(() => {
+    window.dispatchEvent(new Event('resize'));
+    Object.values(_CR).forEach(c => { try { c.resize(); } catch(e) {} });
+  });
+}
+
+// Chart registry — keeps instances so we can resize on tab switch
+const _CR = {};
+function _mkChart(id, cfg) {
+  const el = typeof id === 'string' ? document.getElementById(id) : id;
+  if (!el) return null;
+  const c = new Chart(el, cfg);
+  _CR[id] = c;
+  return c;
 }
 
 const NS   = [5, 10, 15, 20, 25, 40, 50];
@@ -4802,7 +4815,7 @@ const BLUE   = '#1E3A5F';
 const ORANGE = '#92400E';
 
 function lineChart(id, labels, datasets, yLabel, fmt) {
-  new Chart(document.getElementById(id), {
+  _mkChart(id, {
     type: 'bar',
     data: { labels, datasets },
     options: {
@@ -4849,7 +4862,7 @@ lineChart('oosViolChart', NS,
   [ccpDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
   '% Scenarios with Violation', v => v.toFixed(1) + '%');
 
-new Chart(document.getElementById('oosDistChart'), {
+_mkChart('oosDistChart', {
   type: 'line',
   data: {
     labels: Array.from({length: OOS_CCP_S.length}, (_,i) => i+1),
@@ -4883,7 +4896,7 @@ const GREEN = '#166534';
 
 if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {
   // Grouped bar: CCP vs 2S violation rate across sigma_L
-  new Chart(document.getElementById('senViolBarChart'), {
+  _mkChart('senViolBarChart', {
     type: 'bar',
     data: {
       labels: SEN_SLS.map(v => 'σ=' + v),
@@ -4910,7 +4923,7 @@ if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {
   });
 
   // Line: Two-Stage cost vs sigma_L
-  new Chart(document.getElementById('senCostChart'), {
+  _mkChart('senCostChart', {
     type: 'bar',
     data: {
       labels: SEN_SLS.map(v => 'σ=' + v),
@@ -4939,7 +4952,7 @@ requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
 const _cb_det_tr=[13.0,31.8,44.3,64.1,82.5,132.6,162.8];
 const _cb_det_fac=[3007.7,6015.4,3007.7,3007.7,6015.4,6015.4,6015.4];const _cb_det_mat=[98.9,197.9,296.8,395.8,494.7,791.5,989.4];const _cb_ts_tr=[19.6,48.2,73.0,97.1,126.6,203.2,320.1];const _cb_ts_fac=[3007.7,6015.4,6015.4,6015.4,6015.4,6015.4,7519.2];const _cb_ts_exp=[1.6,3.0,4.4,5.7,7.6,11.3,14.6];
 if (document.getElementById('costBreakdownChart')) {
-  new Chart(document.getElementById('costBreakdownChart'), {
+  _mkChart('costBreakdownChart', {
     type: 'bar',
     data: {
       labels: NS.map(n => 'N='+n),
@@ -5029,7 +5042,8 @@ if (document.getElementById('costBreakdownChart')) {
     wrap.appendChild(canvasWrap);
     container.appendChild(wrap);
 
-    new Chart(canvas, {
+    canvas.id = 'gantt_fac_' + facIdx;
+    _mkChart('gantt_fac_' + facIdx, {
       type: 'bar',
       data: {
         labels: yLabels,
@@ -5115,7 +5129,7 @@ const TAU_TS25    = [6.5565,6.5578,6.5683,6.5914,6.6426,6.6777];
 const TAU_CCP25   = [6.5564,6.5564,6.5654,6.5975,6.6398,null];
 
 if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {
-  new Chart(document.getElementById('tauFeasChart'), {
+  _mkChart('tauFeasChart', {
     type: 'bar',
     data: {
       labels: TAU_LABELS.map(v => 'τ=' + v),
@@ -5150,7 +5164,7 @@ const VSS_DATASETS = [{label:"N=5",data:[0.0,-0.0,-0.05,-0.15,-0.16,null,null],b
 {label:"N=25",data:[-0.0,-0.04,-0.24,-0.43,-0.46,null,null],backgroundColor:"#dc2626cc",borderColor:"#dc2626",borderWidth:1}];
 
 if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {
-  new Chart(document.getElementById('vssSweepChart'), {
+  _mkChart('vssSweepChart', {
     type: 'bar',
     data: {
       labels: VSS_SLS.map(v => 'σ=' + v),
@@ -5195,7 +5209,7 @@ const VSS_TAU_DATASETS = [{label:"N=5",data:[-0.02,-0.01,0.04,-0.0,-0.03,-96.19]
 {label:"N=25",data:[-84.67,-84.65,-84.5,-84.03,-83.39,-0.26],backgroundColor:"#dc2626cc",borderColor:"#dc2626",borderWidth:1}];
 
 if (document.getElementById('vssTauChart') && VSS_TAUS.length > 0) {
-  new Chart(document.getElementById('vssTauChart'), {
+  _mkChart('vssTauChart', {
     type: 'bar',
     data: {
       labels: VSS_TAUS.map(v => 'τ=' + v),

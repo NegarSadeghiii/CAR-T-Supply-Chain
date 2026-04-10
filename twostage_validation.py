@@ -1874,7 +1874,20 @@ function show(n) {{
   const m = {{summary:0,oos:1,mc:2,patients:3,gantt:4,findings:5,sensitivity:6,vss:7}};
   document.querySelectorAll('.tab')[m[n]].classList.add('a');
   document.getElementById('pane-' + n).classList.add('a');
-  requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+  requestAnimationFrame(() => {{
+    window.dispatchEvent(new Event('resize'));
+    Object.values(_CR).forEach(c => {{ try {{ c.resize(); }} catch(e) {{}} }});
+  }});
+}}
+
+// Chart registry — keeps instances so we can resize on tab switch
+const _CR = {{}};
+function _mkChart(id, cfg) {{
+  const el = typeof id === 'string' ? document.getElementById(id) : id;
+  if (!el) return null;
+  const c = new Chart(el, cfg);
+  _CR[id] = c;
+  return c;
 }}
 
 const NS   = {n_labels_js};
@@ -1882,7 +1895,7 @@ const BLUE   = '#1E3A5F';
 const ORANGE = '#92400E';
 
 function lineChart(id, labels, datasets, yLabel, fmt) {{
-  new Chart(document.getElementById(id), {{
+  _mkChart(id, {{
     type: 'bar',
     data: {{ labels, datasets }},
     options: {{
@@ -1929,7 +1942,7 @@ lineChart('oosViolChart', NS,
   [ccpDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
   '% Scenarios with Violation', v => v.toFixed(1) + '%');
 
-new Chart(document.getElementById('oosDistChart'), {{
+_mkChart('oosDistChart', {{
   type: 'line',
   data: {{
     labels: Array.from({{length: OOS_CCP_S.length}}, (_,i) => i+1),
@@ -1963,7 +1976,7 @@ const GREEN = '#166534';
 
 if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {{
   // Grouped bar: CCP vs 2S violation rate across sigma_L
-  new Chart(document.getElementById('senViolBarChart'), {{
+  _mkChart('senViolBarChart', {{
     type: 'bar',
     data: {{
       labels: SEN_SLS.map(v => 'σ=' + v),
@@ -1990,7 +2003,7 @@ if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {{
   }});
 
   // Line: Two-Stage cost vs sigma_L
-  new Chart(document.getElementById('senCostChart'), {{
+  _mkChart('senCostChart', {{
     type: 'bar',
     data: {{
       labels: SEN_SLS.map(v => 'σ=' + v),
@@ -2019,7 +2032,7 @@ requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
 const _cb_det_tr={_cb_det_tr};
 {cost_breakdown_js}
 if (document.getElementById('costBreakdownChart')) {{
-  new Chart(document.getElementById('costBreakdownChart'), {{
+  _mkChart('costBreakdownChart', {{
     type: 'bar',
     data: {{
       labels: NS.map(n => 'N='+n),
@@ -2109,7 +2122,8 @@ if (document.getElementById('costBreakdownChart')) {{
     wrap.appendChild(canvasWrap);
     container.appendChild(wrap);
 
-    new Chart(canvas, {{
+    canvas.id = 'gantt_fac_' + facIdx;
+    _mkChart('gantt_fac_' + facIdx, {{
       type: 'bar',
       data: {{
         labels: yLabels,
@@ -2195,7 +2209,7 @@ const TAU_TS25    = {tau_cost_ts25_js};
 const TAU_CCP25   = {tau_cost_ccp25_js};
 
 if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {{
-  new Chart(document.getElementById('tauFeasChart'), {{
+  _mkChart('tauFeasChart', {{
     type: 'bar',
     data: {{
       labels: TAU_LABELS.map(v => '\u03c4=' + v),
@@ -2226,7 +2240,7 @@ const VSS_SLS      = {vss_sweep_sls_js};
 const VSS_DATASETS = {vss_sweep_datasets_js};
 
 if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {{
-  new Chart(document.getElementById('vssSweepChart'), {{
+  _mkChart('vssSweepChart', {{
     type: 'bar',
     data: {{
       labels: VSS_SLS.map(v => 'σ=' + v),
@@ -2267,7 +2281,7 @@ const VSS_TAUS         = {vss_tau_taus_js};
 const VSS_TAU_DATASETS = {vss_tau_datasets_js};
 
 if (document.getElementById('vssTauChart') && VSS_TAUS.length > 0) {{
-  new Chart(document.getElementById('vssTauChart'), {{
+  _mkChart('vssTauChart', {{
     type: 'bar',
     data: {{
       labels: VSS_TAUS.map(v => '\u03c4=' + v),
