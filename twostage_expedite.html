@@ -4815,12 +4815,17 @@ function show(n) {
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('a'));
   const m = {summary:0,oos:1,mc:2,patients:3,gantt:4,findings:5,sensitivity:6,vss:7};
   document.querySelectorAll('.tab')[m[n]].classList.add('a');
-  document.getElementById('pane-' + n).classList.add('a');
+  const _pane = document.getElementById('pane-' + n);
+  _pane.classList.add('a');
+  // Force layout reflow: reading offsetHeight causes the browser to flush pending
+  // style changes (display:none→block) before Chart.js measures canvas dimensions.
+  // Without this, Chart.js sees 0×0 and renders nothing.
+  void _pane.offsetHeight;
+  if (_INIT[n] && !_DONE[n]) {
+    try { _INIT[n](); } catch(e) { console.error('chart init error on tab', n, ':', e); }
+    _DONE[n] = true;
+  }
   requestAnimationFrame(() => {
-    if (_INIT[n] && !_DONE[n]) {
-      try { _INIT[n](); } catch(e) { console.error('chart init', n, e); }
-      _DONE[n] = true;
-    }
     Object.values(_CR).forEach(c => { try { c.resize(); } catch(e) {} });
   });
 }
