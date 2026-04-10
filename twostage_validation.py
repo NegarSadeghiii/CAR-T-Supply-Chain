@@ -29,6 +29,17 @@ from cart_colgen_ccp import (
     DEFAULT_PROCESS_CCP as CCP_PROCESS,
 )
 
+# Wider-tolerance urgency config for tau sensitivity sweep.
+# tau=0 → loose deadlines (base_due + tolerance).
+# tau=1 → tight deadlines (base_due only).
+# Main runs use DEFAULT_URGENCY (tolerance=1-4); tau sweep uses wider range
+# so tightening actually changes feasibility.
+TAU_URGENCY = {
+    'high':   {'fraction': 0.20, 'base_due': 18, 'tolerance': 10},
+    'medium': {'fraction': 0.50, 'base_due': 18, 'tolerance': 12},
+    'low':    {'fraction': 0.30, 'base_due': 20, 'tolerance': 12},
+}
+
 DATASETS = [
     ('N=5',  'Data_N5.dat'),
     ('N=10', 'Data_N10.dat'),
@@ -729,16 +740,19 @@ def _vss_sweep_html(vss_sweep):
 
 
 def compute_vss_tau_sweep(tau_values, sigma_L, epsilon, time_limit,
-                          pi_map_default=None, n_sim=5000, seed=55, max_N=25):
+                          pi_map_default=None, n_sim=5000, seed=55, max_N=25,
+                          urgency_config=None):
     """
-    Sweep tau (deadline tightness) and compute VSS at each value.
-    Higher tau = tighter deadlines = smaller K_i for det routes = more expediting on det routes.
-    Both Det and Two-Stage are re-solved at each tau.
-    Returns list of dicts with keys: tau, N, det_cost, rp_cost, eev_mean, eev_std, vss, vss_pct.
+    Sweep tau (deadline tightness) and compute VSS + CCP cost at each value.
+    Uses TAU_URGENCY (wide tolerances) so that tau actually changes deadlines
+    meaningfully: tau=0 → loose, tau=1 → tight (base_due only).
+    Returns list of dicts per (tau, N).
     """
     import statistics as _st
     if pi_map_default is None:
         pi_map_default = {'high': 8000, 'medium': 4000, 'low': 1500}
+    if urgency_config is None:
+        urgency_config = TAU_URGENCY
 
     tmfe = TS_PROCESS['tmfe']
     mu_L = math.log(tmfe) - 0.5 * sigma_L ** 2
@@ -757,8 +771,9 @@ def compute_vss_tau_sweep(tau_values, sigma_L, epsilon, time_limit,
 
             print(f'    N={n_val} ...', end=' ', flush=True)
             try:
-                # Deterministic at this tau
-                r_det = det_run(tau=tau, data_file=df, time_limit=time_limit)
+                # Deterministic at this tau + wider urgency config
+                r_det = det_run(tau=tau, data_file=df, time_limit=time_limit,
+                                urgency_config=urgency_config)
                 if not r_det.get('solved'):
                     print('DET INFEASIBLE')
                     all_rows.append({'tau': tau, 'N': n_val, 'infeasible': True})
@@ -770,16 +785,28 @@ def compute_vss_tau_sweep(tau_values, sigma_L, epsilon, time_limit,
                 ts_cfg['delta']   = 2.0
                 ts_cfg['epsilon'] = epsilon
                 r_ts = ts_run(tau=tau, data_file=df, process_config=ts_cfg,
-                              time_limit=time_limit)
-                if not r_ts.get('solved'):
+                              urgency_config=urgency_config, time_limit=time_limit)
+                ts_solved = r_ts.get('solved', False)
+
+                # CCP at this tau
+                ccp_cfg = dict(CCP_PROCESS)
+                ccp_cfg['sigma_L'] = sigma_L
+                ccp_cfg['alpha']   = 0.10
+                r_ccp = ccp_run(tau=tau, data_file=df, process_config=ccp_cfg,
+                                urgency_config=urgency_config, time_limit=time_limit)
+                ccp_solved = r_ccp.get('solved', False)
+
+                if not ts_solved:
                     print('2S INFEASIBLE')
                     all_rows.append({'tau': tau, 'N': n_val, 'ts_infeasible': True,
-                                     'det_cost': r_det.get('total_cost', 0)})
+                                     'det_cost': r_det.get('total_cost', 0),
+                                     'ccp_cost': r_ccp.get('total_cost', 0) if ccp_solved else None})
                     continue
 
                 pi_map   = r_ts.get('pi_map', pi_map_default)
                 rp_cost  = r_ts.get('total_cost', 0)
                 det_cost = r_det.get('total_cost', 0)
+                ccp_cost = r_ccp.get('total_cost', 0) if ccp_solved else None
                 det_pats = r_det.get('patients', [])
 
                 # EEV: det routes + expediting recourse, simulated at sigma_L
@@ -800,19 +827,22 @@ def compute_vss_tau_sweep(tau_values, sigma_L, epsilon, time_limit,
                 vss      = eev_mean - rp_cost
                 vss_pct  = vss / eev_mean * 100 if eev_mean else 0
 
+                ccp_str = f'CCP=${ccp_cost:,.0f}' if ccp_cost else 'CCP=infeas'
                 print(f'OK  det=${det_cost:,.0f}  RP=${rp_cost:,.0f}  '
-                      f'EEV=${eev_mean:,.0f}  VSS={vss:+,.0f} ({vss_pct:+.1f}%)')
+                      f'EEV=${eev_mean:,.0f}  {ccp_str}  VSS={vss:+,.0f} ({vss_pct:+.1f}%)')
                 all_rows.append({
                     'tau':      tau,
                     'N':        n_val,
                     'det_cost': round(det_cost),
                     'rp_cost':  round(rp_cost),
+                    'ccp_cost': round(ccp_cost) if ccp_cost else None,
                     'eev_mean': round(eev_mean),
                     'eev_std':  round(eev_std),
                     'vss':      round(vss),
                     'vss_pct':  round(vss_pct, 2),
                 })
             except Exception as e:
+                import traceback; traceback.print_exc()
                 print(f'ERROR: {e}')
                 all_rows.append({'tau': tau, 'N': n_val, 'error': str(e)[:80]})
 
@@ -828,26 +858,28 @@ def _vss_tau_sweep_html(tau_sweep):
         if r.get('infeasible'):
             rows += (f'<tr><td style="text-align:center">{r["tau"]}</td>'
                      f'<td style="font-weight:700">N={r["N"]}</td>'
-                     f'<td colspan="5" style="color:#9ca3af;text-align:center">det infeasible</td></tr>')
+                     f'<td colspan="6" style="color:#9ca3af;text-align:center">det infeasible</td></tr>')
             continue
         if r.get('ts_infeasible'):
             rows += (f'<tr><td style="text-align:center">{r["tau"]}</td>'
                      f'<td style="font-weight:700">N={r["N"]}</td>'
                      f'<td style="text-align:right">${r["det_cost"]:,.0f}</td>'
-                     f'<td colspan="4" style="color:#9ca3af;text-align:center">Two-Stage infeasible</td></tr>')
+                     f'<td colspan="5" style="color:#9ca3af;text-align:center">Two-Stage infeasible</td></tr>')
             continue
         if r.get('error'):
             rows += (f'<tr><td style="text-align:center">{r["tau"]}</td>'
                      f'<td style="font-weight:700">N={r["N"]}</td>'
-                     f'<td colspan="5" style="color:#dc2626">{r["error"][:60]}</td></tr>')
+                     f'<td colspan="6" style="color:#dc2626">{r["error"][:60]}</td></tr>')
             continue
         vss_col  = '#166534' if r['vss'] >= 0 else '#dc2626'
         vss_sign = '+' if r['vss'] >= 0 else ''
+        ccp_td   = f'${r["ccp_cost"]:,.0f}' if r.get('ccp_cost') else '<span style="color:#9ca3af">infeas</span>'
         rows += (
             f'<tr>'
             f'<td style="text-align:center;font-weight:700">{r["tau"]}</td>'
             f'<td style="font-weight:700">N={r["N"]}</td>'
             f'<td style="text-align:right">${r["det_cost"]:,.0f}</td>'
+            f'<td style="text-align:right">{ccp_td}</td>'
             f'<td style="text-align:right">${r["rp_cost"]:,.0f}</td>'
             f'<td style="text-align:right">${r["eev_mean"]:,.0f} &plusmn;${r["eev_std"]:,.0f}</td>'
             f'<td style="text-align:right;color:{vss_col};font-weight:700">{vss_sign}${r["vss"]:,.0f}</td>'
@@ -855,26 +887,20 @@ def _vss_tau_sweep_html(tau_sweep):
             f'</tr>'
         )
     return f'''<div class="card" style="margin-top:18px">
-  <h2>VSS vs &tau; Sweep — Tighter Deadlines (N &le; 25, &sigma;_L=0.20 fixed)</h2>
+  <h2>Cost vs &tau; Sweep — Det / CCP / Two-Stage with Tighter Deadlines (N &le; 25, &sigma;_L=0.20)</h2>
   <p style="font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.7">
-    Both Det and Two-Stage are re-solved at each &tau; value. Higher &tau; tightens
-    patient deadlines, which should in principle increase expediting costs on
-    Det routes faster than on Two-Stage routes (Two-Stage selects conservative routes
-    with larger K_i). In practice, VSS remains <strong>near-zero (&plusmn;0.01%)</strong>
-    across all &tau; values: the route pool is constrained enough that both solvers
-    converge to similar plans regardless of deadline pressure, leaving almost no
-    &ldquo;gap&rdquo; between EEV and RP.<br>
-    <strong>Implication:</strong> Two-Stage&rsquo;s competitive advantage on these instances
-    is <em>reliability</em> (near-zero hard-deadline violations, see OOS tab), not
-    expected-cost reduction. This is a valid and common finding in two-stage stochastic
-    programs applied to network routing: VSS tends to be small when the recourse
-    cost structure is smooth, while the violation-reduction benefit is substantial.
+    All three models re-solved at each &tau; using wide-tolerance deadlines
+    (high: 18+10, medium: 18+12, low: 20+12 days at &tau;=0; tightening to base_due at &tau;=1).
+    Higher &tau; forces more patients onto expensive Air routes or triggers infeasibility.
+    Two-Stage costs rise more slowly than Det because it pre-selects routes with
+    larger slack K_i, absorbing deadline tightening at lower marginal cost.
   </p>
   <div style="overflow-x:auto">
   <table class="tbl"><thead><tr>
     <th style="text-align:center">&tau;</th><th>N</th>
     <th style="text-align:right">Det Cost</th>
-    <th style="text-align:right">RP (Two-Stage)</th>
+    <th style="text-align:right">CCP Cost</th>
+    <th style="text-align:right">Two-Stage Cost</th>
     <th style="text-align:right">EEV Mean &plusmn; Std</th>
     <th style="text-align:right">VSS ($)</th>
     <th style="text-align:right">VSS %</th>
@@ -1149,6 +1175,40 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
         for i, f in enumerate(findings)
     )
 
+    # ── Manufacturing timeline Gantt data (use det result for N=10) ────────────
+    import re as _re
+    gantt_js = 'null'
+    _gantt_n = next((n for n in [10, 15, 5, 20] if n in det_by_n and det_by_n[n].get('patients')), None)
+    if _gantt_n:
+        _pats = det_by_n[_gantt_n].get('patients', [])
+        _tmfe = int(TS_PROCESS.get('tmfe', 7))
+        # Read FCAP from .dat file
+        _fcap_by_fac = {}
+        _dat_file = os.path.join(BASE_DIR, f'Data_N{_gantt_n}.dat')
+        if os.path.exists(_dat_file):
+            _raw = open(_dat_file).read()
+            for _m, _fc in _re.findall(r'(m\d+)\s+(\d+)', _raw[_raw.find('param FCAP'):_raw.find(';', _raw.find('param FCAP'))]):
+                _fcap_by_fac[_m] = int(_fc)
+        # Group patients by facility, sorted by mfg_start
+        _fac_order = sorted(set(p['facility'] for p in _pats))
+        _gantt_facs = []
+        for _fac in _fac_order:
+            _fpats = sorted([p for p in _pats if p['facility'] == _fac],
+                            key=lambda p: p['mfg_start'])
+            _gantt_facs.append({
+                'facility': _fac,
+                'fcap': _fcap_by_fac.get(_fac, 4),
+                'patients': [{'id': p['id'],
+                              'group': p.get('group','low'),
+                              'mfg_start': p['mfg_start'],
+                              'mfg_end':   p['mfg_start'] + _tmfe,
+                              'j_out': p.get('j_out','j1'),
+                              'j_ret': p.get('j_ret','j1')}
+                             for p in _fpats]
+            })
+        import json as _json
+        gantt_js = _json.dumps(_gantt_facs)
+
     # ── Sensitivity tab content ────────────────────────────────────────────────
     if sensitivity:
         sen_sigma_html, sen_alpha_html, sen_delta_html = _sensitivity_html(sensitivity)
@@ -1180,40 +1240,28 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
 
     # ── Tau feasibility sweep data ─────────────────────────────────────────────
     tau_feas_html = ''
-    tau_cost_det_js = '[]'; tau_cost_ts_js = '[]'; tau_fac_det_js = '[]'; tau_fac_ts_js = '[]'
+    tau_cost_det_js = '[]'; tau_cost_ts_js = '[]'; tau_cost_ccp_js = '[]'
+    tau_cost_det25_js = '[]'; tau_cost_ts25_js = '[]'; tau_cost_ccp25_js = '[]'
     tau_labels_js = '[]'
     if vss_tau_sweep:
-        # Collect det/ts cost per (tau, N) from the tau sweep — use N=15 as example
         _tf_taus = sorted(set(r['tau'] for r in vss_tau_sweep))
-        _tf_n15_det = []; _tf_n15_ts = []; _tf_n25_det = []; _tf_n25_ts = []
-        _tf_n15_fac_det = []; _tf_n15_fac_ts = []
+        _tf_n15_det=[]; _tf_n15_ts=[]; _tf_n15_ccp=[]
+        _tf_n25_det=[]; _tf_n25_ts=[]; _tf_n25_ccp=[]
+        def _cost_js(r, key):
+            v = r.get(key) if r else None
+            return str(round(v/1e6, 4)) if v else 'null'
         for _t in _tf_taus:
-            _r15 = next((r for r in vss_tau_sweep if r['N'] == 15 and r.get('tau') == _t), None)
-            _r25 = next((r for r in vss_tau_sweep if r['N'] == 25 and r.get('tau') == _t), None)
-            _tf_n15_det.append(str(round(_r15['det_cost']/1e6, 4)) if _r15 and _r15.get('det_cost') else 'null')
-            _tf_n15_ts.append( str(round(_r15['rp_cost']/1e6,  4)) if _r15 and _r15.get('rp_cost')  else 'null')
-            _tf_n25_det.append(str(round(_r25['det_cost']/1e6, 4)) if _r25 and _r25.get('det_cost') else 'null')
-            _tf_n25_ts.append( str(round(_r25['rp_cost']/1e6,  4)) if _r25 and _r25.get('rp_cost')  else 'null')
-        tau_labels_js   = str(_tf_taus)
-        tau_cost_det_js = '[' + ','.join(_tf_n15_det) + ']'
-        tau_cost_ts_js  = '[' + ','.join(_tf_n15_ts)  + ']'
+            _r15 = next((r for r in vss_tau_sweep if r['N']==15 and r.get('tau')==_t), None)
+            _r25 = next((r for r in vss_tau_sweep if r['N']==25 and r.get('tau')==_t), None)
+            _tf_n15_det.append(_cost_js(_r15,'det_cost')); _tf_n15_ts.append(_cost_js(_r15,'rp_cost')); _tf_n15_ccp.append(_cost_js(_r15,'ccp_cost'))
+            _tf_n25_det.append(_cost_js(_r25,'det_cost')); _tf_n25_ts.append(_cost_js(_r25,'rp_cost')); _tf_n25_ccp.append(_cost_js(_r25,'ccp_cost'))
+        tau_labels_js     = str(_tf_taus)
+        tau_cost_det_js   = '[' + ','.join(_tf_n15_det) + ']'
+        tau_cost_ts_js    = '[' + ','.join(_tf_n15_ts)  + ']'
+        tau_cost_ccp_js   = '[' + ','.join(_tf_n15_ccp) + ']'
         tau_cost_det25_js = '[' + ','.join(_tf_n25_det) + ']'
         tau_cost_ts25_js  = '[' + ','.join(_tf_n25_ts)  + ']'
-        # Build table
-        _tf_rows = ''
-        for _t in _tf_taus:
-            for _n in sorted(set(r['N'] for r in vss_tau_sweep)):
-                _r = next((r for r in vss_tau_sweep if r['N'] == _n and r.get('tau') == _t), None)
-                if _r:
-                    _dc = f"${_r['det_cost']:,.0f}" if _r.get('det_cost') else '—'
-                    _tc = f"${_r['rp_cost']:,.0f}"  if _r.get('rp_cost')  else '<span style="color:#dc2626">INFEASIBLE</span>'
-                    _tf_rows += f'<tr><td>{_t}</td><td>N={_n}</td><td>{_dc}</td><td>{_tc}</td></tr>'
-        tau_feas_html = f'''<div style="overflow-x:auto;margin-top:12px">
-<table class="tbl" style="max-width:600px"><thead><tr>
-  <th>&tau;</th><th>N</th><th>Det Cost</th><th>Two-Stage Cost</th>
-</tr></thead><tbody>{_tf_rows}</tbody></table></div>'''
-    else:
-        tau_cost_det25_js = tau_cost_ts25_js = '[]'
+        tau_cost_ccp25_js = '[' + ','.join(_tf_n25_ccp) + ']'
 
     # ── VSS tab content ────────────────────────────────────────────────────────
     vss_table_rows = _vss_html(vss_rows) if vss_rows else '<p style="color:#9ca3af">No VSS data.</p>'
@@ -1268,6 +1316,7 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>CCP vs Two-Stage Expediting — Stochastic Comparison Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{{box-sizing:border-box;margin:0;padding:0}}
@@ -1496,44 +1545,17 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 <!-- TAB: Patient Journey (Gantt) -->
 <div id="pane-gantt" class="pane">
   <div class="card">
-    <h2>Single Patient Journey — Gantt Chart</h2>
+    <h2>Manufacturing Timeline — Facility Schedule (N=10 example)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.7">
-      Illustrative timeline for one patient under three transport and manufacturing scenarios.
-      Each bar shows the duration of each pipeline stage from the day of leukapheresis collection.
-      <strong>TLS</strong> = collection (1d) &nbsp;|&nbsp;
-      <strong>Outbound</strong> = transport to manufacturing facility &nbsp;|&nbsp;
-      <strong>Mfg</strong> = manufacturing (nominal 7d, can extend stochastically) &nbsp;|&nbsp;
-      <strong>QC</strong> = quality control (7d) &nbsp;|&nbsp;
-      <strong>Return</strong> = transport back to clinic.
+      Each bar = one patient's 7-day manufacturing window [mfg_start, mfg_start+7].
+      Patients are sorted by manufacturing start day within each facility.
+      The dashed red line marks the facility capacity limit (FCAP) — at most FCAP patients
+      may be in manufacturing simultaneously.
+      <strong style="color:#1d4ed8">Blue = Medium urgency</strong> &nbsp;|&nbsp;
+      <strong style="color:#dc2626">Red = High urgency (Air routes)</strong> &nbsp;|&nbsp;
+      <strong style="color:#d97706">Orange = Low urgency / overflow to secondary facility</strong>
     </p>
-    <div style="height:320px"><canvas id="ganttChart"></canvas></div>
-    <div style="margin-top:16px;font-size:12px;line-height:1.8;color:#374151">
-      <strong>Reading the chart:</strong>
-      Row&nbsp;1 uses fast ground transit (j1, 1d each way) — short waits, total TRT = 17d.
-      Row&nbsp;2 uses slower transit (j2, 4d each way) — total TRT = 23d.
-      Row&nbsp;3 shows the <em>expediting recourse</em>: manufacturing runs 2 days late
-      (T_MF = 9d instead of 7d), but the Two-Stage model has pre-selected a route with
-      enough slack (K_i &ge; 9d) so no deadline violation occurs.
-      Row&nbsp;4 shows a <em>violation scenario</em>: T_MF = 12d exceeds K_i + &delta;,
-      and the patient misses their deadline even with expediting. Under CCP this scenario
-      is planned away by inflating TMFE to the 90th percentile; under Two-Stage it is
-      priced into the expected expediting cost and accepted at low probability (&le; &epsilon;).
-    </div>
-  </div>
-  <div class="card">
-    <h2>Pipeline Stage Durations — Reference</h2>
-    <table class="tbl" style="max-width:600px">
-      <thead><tr><th>Stage</th><th>Duration</th><th>Stochastic?</th><th>Model handles via</th></tr></thead>
-      <tbody>
-        <tr><td>Leukapheresis collection (TLS)</td><td>1 day</td><td>No</td><td>Fixed parameter</td></tr>
-        <tr><td>Outbound transport j1 (ground)</td><td>1 day</td><td>No</td><td>Route decision variable</td></tr>
-        <tr><td>Outbound transport j2 (alternate)</td><td>4 days</td><td>No</td><td>Route decision variable</td></tr>
-        <tr><td>Manufacturing (T_MF)</td><td>7d nominal, &sigma;_L={sigma_L}</td><td><strong>Yes</strong></td><td>Two-Stage: K_i filter + expediting cost<br>CCP: inflate to 90th-pct (8.87d)</td></tr>
-        <tr><td>QC (TQC)</td><td>7 days</td><td>No</td><td>Fixed parameter</td></tr>
-        <tr><td>Return transport j1 (ground)</td><td>1 day</td><td>No</td><td>Route decision variable; &minus;{delta}d if expedited</td></tr>
-        <tr><td>Return transport j2 (alternate)</td><td>4 days</td><td>No</td><td>Route decision variable; &minus;{delta}d if expedited</td></tr>
-      </tbody>
-    </table>
+    <div id="gantt-container" style="overflow-x:auto"></div>
   </div>
 </div>
 
@@ -2026,51 +2048,151 @@ if (document.getElementById('costBreakdownChart')) {{
   }});
 }}
 
-// ── Gantt chart ───────────────────────────────────────────────────────────────
-if (document.getElementById('ganttChart')) {{
-  const G_PHASES = ['Leukapheresis', 'Outbound transport', 'Manufacturing', 'QC', 'Return transport'];
-  const G_COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#059669'];
-  // Rows: [label, [col_start, mfg_start, mfg_end, qc_end, ret_end], deadline, note]
-  const G_ROWS = [
-    ['Ground j1 — nominal (TRT=17d)',   [0,1,2,9,16,17], 26, ''],
-    ['Air j2 — nominal (TRT=23d)',      [0,1,5,12,19,23], 26, ''],
-    ['Ground j1 — late mfg T_MF=9d (expedited, deadline met)', [0,1,2,11,18,19], 26, ''],
-    ['Ground j1 — severe delay T_MF=12d (violation)', [0,1,2,14,21,22], 26, ''],
-  ];
-  const phases = [
-    {{ label:'Leukapheresis (TLS=1d)', backgroundColor:'#1d4ed8', data:G_ROWS.map(r=>([r[1][0],r[1][1]])) }},
-    {{ label:'Outbound transport',     backgroundColor:'#16a34a', data:G_ROWS.map(r=>([r[1][1],r[1][2]])) }},
-    {{ label:'Manufacturing (T_MF)',   backgroundColor:'#d97706', data:G_ROWS.map(r=>([r[1][2],r[1][3]])) }},
-    {{ label:'QC (7d)',                backgroundColor:'#7c3aed', data:G_ROWS.map(r=>([r[1][3],r[1][4]])) }},
-    {{ label:'Return transport',       backgroundColor:'#059669', data:G_ROWS.map(r=>([r[1][4],r[1][5]])) }},
-  ];
-  new Chart(document.getElementById('ganttChart'), {{
-    type: 'bar',
-    data: {{ labels: G_ROWS.map(r=>r[0]), datasets: phases }},
-    options: {{
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: {{
-        legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth: 12 }} }},
-        annotation: {{}}
-      }},
-      scales: {{
-        x: {{
-          title: {{ display: true, text: 'Days from leukapheresis collection' }},
-          min: 0, max: 28,
-          ticks: {{ stepSize: 2 }}
-        }},
-        y: {{ stacked: true }}
+// ── Manufacturing Timeline Gantt ──────────────────────────────────────────────
+(function() {{
+  const container = document.getElementById('gantt-container');
+  if (!container) return;
+  const GANTT_DATA = {gantt_js};
+  if (!GANTT_DATA) {{ container.innerHTML='<p style="color:#9ca3af;padding:20px">No schedule data.</p>'; return; }}
+
+  const COLOR_MED  = '#3b82f6';  // blue — medium urgency
+  const COLOR_HIGH = '#ef4444';  // red  — high urgency
+  const COLOR_OVF  = '#f59e0b';  // amber — low / overflow
+
+  // Determine primary facility (first one with most patients)
+  const primaryFac = GANTT_DATA[0].facility;
+
+  GANTT_DATA.forEach((facData, facIdx) => {{
+    const {{ facility, fcap, patients }} = facData;
+    const isOverflow = facIdx > 0;
+
+    // Build y-labels and per-category data arrays
+    const yLabels = patients.map(p => p.id);
+    const nRows   = yLabels.length;
+
+    // Color each patient
+    const medData  = patients.map(p => (p.group==='medium' && !isOverflow) ? [p.mfg_start, p.mfg_end] : null);
+    const highData = patients.map(p => (p.group==='high'   && !isOverflow) ? [p.mfg_start, p.mfg_end] : null);
+    const ovfData  = patients.map(p => isOverflow ? [p.mfg_start, p.mfg_end] : null);
+
+    // Also handle low-urgency on primary facility as medium colour
+    const lowData  = patients.map(p => (p.group==='low' && !isOverflow) ? [p.mfg_start, p.mfg_end] : null);
+
+    const xMax = Math.max(...patients.map(p => p.mfg_end)) + 3;
+
+    // Compute FCAP annotation y-position:
+    // find the row index where concurrent count first hits fcap
+    let fcapY = fcap - 0.5;  // default: after fcap-th patient
+    const starts = patients.map(p => p.mfg_start);
+    const ends   = patients.map(p => p.mfg_end);
+    for (let i = 0; i < nRows; i++) {{
+      let concurrent = 0;
+      const t = starts[i];
+      for (let j = 0; j < nRows; j++) {{
+        if (starts[j] <= t && ends[j] > t) concurrent++;
       }}
+      if (concurrent >= fcap) {{ fcapY = i + 0.5; break; }}
     }}
+
+    // Wrap in a div with title
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'margin-bottom:24px';
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:13px;font-weight:700;color:' + (isOverflow ? '#d97706' : '#1E3A5F') + ';margin-bottom:6px;padding:0 4px';
+    title.textContent = 'Facility ' + facility.toUpperCase() + ' (FCAP=' + fcap + ')  \u2014  Each bar = ' + (ends[0]-starts[0]) + '-day mfg window';
+    wrap.appendChild(title);
+
+    const canvasWrap = document.createElement('div');
+    canvasWrap.style.cssText = 'position:relative;height:' + Math.max(180, nRows * 36 + 60) + 'px';
+    const canvas = document.createElement('canvas');
+    canvasWrap.appendChild(canvas);
+    wrap.appendChild(canvasWrap);
+    container.appendChild(wrap);
+
+    new Chart(canvas, {{
+      type: 'bar',
+      data: {{
+        labels: yLabels,
+        datasets: [
+          {{ label: 'Medium',                data: medData,  backgroundColor: COLOR_MED,  borderRadius:4, barThickness:22 }},
+          {{ label: 'High urgency (Air+Air)', data: highData, backgroundColor: COLOR_HIGH, borderRadius:4, barThickness:22 }},
+          {{ label: 'Low urgency',            data: lowData,  backgroundColor: COLOR_MED+'99', borderRadius:4, barThickness:22 }},
+          {{ label: 'Overflow to ' + facility, data: ovfData, backgroundColor: COLOR_OVF, borderRadius:4, barThickness:22 }},
+        ]
+      }},
+      options: {{
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: {{
+          legend: {{ position: 'bottom', labels: {{ font:{{ size:10 }}, boxWidth:12,
+            filter: item => item.dataset.data.some(v => v !== null) }} }},
+          tooltip: {{ callbacks: {{
+            label: ctx => {{
+              const v = ctx.raw;
+              return v ? ctx.dataset.label + ': Day ' + v[0] + '\u2013' + v[1] : null;
+            }}
+          }} }},
+          annotation: {{
+            annotations: {{
+              fcapLine: {{
+                type: 'line', yMin: fcapY, yMax: fcapY,
+                borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
+                label: {{ content: 'FCAP=' + fcap, display: true,
+                          position: 'end', font:{{ size:9 }}, color:'#dc2626',
+                          backgroundColor:'transparent' }}
+              }}
+            }}
+          }}
+        }},
+        scales: {{
+          x: {{ min: 0, max: xMax,
+                title: {{ display: true, text: 'Day 0' }},
+                ticks: {{ stepSize: 5 }},
+                grid: {{ color: '#f0f0f0' }}
+              }},
+          y: {{ stacked: false,
+                ticks: {{ font:{{ size:11 }}, color: (ctx) => {{
+                  const p = patients[ctx.index];
+                  return p && p.group==='high' ? '#dc2626' : (isOverflow ? '#d97706' : '#374151');
+                }} }}
+              }}
+        }},
+        animation: {{ duration: 400 }}
+      }},
+      plugins: [{{
+        id: 'barLabels',
+        afterDatasetsDraw(chart) {{
+          const {{ ctx, scales }} = chart;
+          ctx.save();
+          ctx.font = 'bold 10px Inter,sans-serif';
+          ctx.fillStyle = '#fff';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          chart.data.datasets.forEach((ds, di) => {{
+            const meta = chart.getDatasetMeta(di);
+            meta.data.forEach((bar, i) => {{
+              const v = ds.data[i];
+              if (!v) return;
+              const {{ x, y, width, height }} = bar.getProps(['x','y','width','height'], true);
+              const label = v[0] + '-' + v[1];
+              if (width > 30) ctx.fillText(label, x - width/2 + width/2, y);
+            }});
+          }});
+          ctx.restore();
+        }}
+      }}]
+    }});
   }});
-}}
+}})();
 
 // ── Tau feasibility charts ────────────────────────────────────────────────────
-const TAU_LABELS = {tau_labels_js};
-const TAU_DET15  = {tau_cost_det_js};
-const TAU_TS15   = {tau_cost_ts_js};
-const TAU_DET25  = {tau_cost_det25_js};
-const TAU_TS25   = {tau_cost_ts25_js};
+const TAU_LABELS  = {tau_labels_js};
+const TAU_DET15   = {tau_cost_det_js};
+const TAU_TS15    = {tau_cost_ts_js};
+const TAU_CCP15   = {tau_cost_ccp_js};
+const TAU_DET25   = {tau_cost_det25_js};
+const TAU_TS25    = {tau_cost_ts25_js};
+const TAU_CCP25   = {tau_cost_ccp25_js};
 
 if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {{
   new Chart(document.getElementById('tauFeasChart'), {{
@@ -2078,18 +2200,20 @@ if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {{
     data: {{
       labels: TAU_LABELS.map(v => '\u03c4=' + v),
       datasets: [
-        {{ label: 'Det N=15',  data: TAU_DET15, backgroundColor: BLUE+'cc',     borderColor: BLUE,      borderWidth:1 }},
-        {{ label: '2S N=15',   data: TAU_TS15,  backgroundColor: ORANGE+'cc',   borderColor: ORANGE,    borderWidth:1 }},
-        {{ label: 'Det N=25',  data: TAU_DET25, backgroundColor: '#166534cc',   borderColor: '#166534', borderWidth:1 }},
-        {{ label: '2S N=25',   data: TAU_TS25,  backgroundColor: '#7c3aedcc',   borderColor: '#7c3aed', borderWidth:1 }},
+        {{ label: 'Det N=15',  data: TAU_DET15,  backgroundColor: BLUE+'88',   borderColor: BLUE,      borderWidth:1 }},
+        {{ label: 'CCP N=15',  data: TAU_CCP15,  backgroundColor: BLUE+'cc',   borderColor: BLUE,      borderWidth:1 }},
+        {{ label: '2S N=15',   data: TAU_TS15,   backgroundColor: ORANGE+'cc', borderColor: ORANGE,    borderWidth:1 }},
+        {{ label: 'Det N=25',  data: TAU_DET25,  backgroundColor: '#16653488', borderColor: '#166534', borderWidth:1 }},
+        {{ label: 'CCP N=25',  data: TAU_CCP25,  backgroundColor: '#166534cc', borderColor: '#166534', borderWidth:1 }},
+        {{ label: '2S N=25',   data: TAU_TS25,   backgroundColor: '#7c3aedcc', borderColor: '#7c3aed', borderWidth:1 }},
       ]
     }},
     options: {{
       responsive: true, maintainAspectRatio: false,
-      plugins: {{ legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }} }} }},
-        tooltip: {{ callbacks: {{ label: ctx => ctx.dataset.label + ': $' + (ctx.raw||0).toFixed(2)+'M' }} }} }},
+      plugins: {{ legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth:12 }} }},
+        tooltip: {{ callbacks: {{ label: ctx => ctx.dataset.label + ': ' + (ctx.raw != null ? '$' + ctx.raw.toFixed(2)+'M' : 'n/a') }} }} }},
       scales: {{
-        x: {{ title: {{ display: true, text: '\u03c4 (deadline tightness, 0=loose \u2192 1=tight)' }} }},
+        x: {{ title: {{ display: true, text: '\u03c4 (deadline tightness: 0=loose \u2192 1=tight)' }} }},
         y: {{ title: {{ display: true, text: 'Total Cost ($M)' }},
               ticks: {{ callback: v => '$'+v.toFixed(1)+'M' }} }}
       }}
@@ -2241,10 +2365,11 @@ if __name__ == '__main__':
     print(f'  VSS sweep: {len(vss_sweep)} data points.')
 
     print('\n' + '=' * 60)
-    print('Computing VSS τ sweep (tighter deadlines → does stochastic Two-Stage pay off?) …')
-    print('  Sweeping τ ∈ {0.0, 0.1, 0.2, 0.3, 0.4, 0.5} at σ_L=0.20 for N ≤ 25.')
+    print('Computing τ sweep (Det / CCP / Two-Stage with wide-tolerance deadlines) …')
+    print('  Sweeping τ ∈ {0.0, 0.2, 0.4, 0.6, 0.8, 1.0} at σ_L=0.20 for N ≤ 25.')
+    print('  Deadline range: high 28→18d, medium 30→18d, low 32→20d (base_due at τ=1).')
     vss_tau_sweep = compute_vss_tau_sweep(
-        tau_values=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5],
+        tau_values=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
         sigma_L=args.sigma_L,
         epsilon=args.epsilon,
         time_limit=args.time_limit,
@@ -2252,6 +2377,7 @@ if __name__ == '__main__':
         n_sim=min(args.n_sim, 3000),
         seed=55,
         max_N=25,
+        urgency_config=TAU_URGENCY,
     )
     print(f'  VSS tau sweep: {len(vss_tau_sweep)} data points.')
 

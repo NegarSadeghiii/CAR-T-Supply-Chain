@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>CCP vs Two-Stage Expediting — Stochastic Comparison Report</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -4394,44 +4395,17 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <!-- TAB: Patient Journey (Gantt) -->
 <div id="pane-gantt" class="pane">
   <div class="card">
-    <h2>Single Patient Journey — Gantt Chart</h2>
+    <h2>Manufacturing Timeline — Facility Schedule (N=10 example)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.7">
-      Illustrative timeline for one patient under three transport and manufacturing scenarios.
-      Each bar shows the duration of each pipeline stage from the day of leukapheresis collection.
-      <strong>TLS</strong> = collection (1d) &nbsp;|&nbsp;
-      <strong>Outbound</strong> = transport to manufacturing facility &nbsp;|&nbsp;
-      <strong>Mfg</strong> = manufacturing (nominal 7d, can extend stochastically) &nbsp;|&nbsp;
-      <strong>QC</strong> = quality control (7d) &nbsp;|&nbsp;
-      <strong>Return</strong> = transport back to clinic.
+      Each bar = one patient's 7-day manufacturing window [mfg_start, mfg_start+7].
+      Patients are sorted by manufacturing start day within each facility.
+      The dashed red line marks the facility capacity limit (FCAP) — at most FCAP patients
+      may be in manufacturing simultaneously.
+      <strong style="color:#1d4ed8">Blue = Medium urgency</strong> &nbsp;|&nbsp;
+      <strong style="color:#dc2626">Red = High urgency (Air routes)</strong> &nbsp;|&nbsp;
+      <strong style="color:#d97706">Orange = Low urgency / overflow to secondary facility</strong>
     </p>
-    <div style="height:320px"><canvas id="ganttChart"></canvas></div>
-    <div style="margin-top:16px;font-size:12px;line-height:1.8;color:#374151">
-      <strong>Reading the chart:</strong>
-      Row&nbsp;1 uses fast ground transit (j1, 1d each way) — short waits, total TRT = 17d.
-      Row&nbsp;2 uses slower transit (j2, 4d each way) — total TRT = 23d.
-      Row&nbsp;3 shows the <em>expediting recourse</em>: manufacturing runs 2 days late
-      (T_MF = 9d instead of 7d), but the Two-Stage model has pre-selected a route with
-      enough slack (K_i &ge; 9d) so no deadline violation occurs.
-      Row&nbsp;4 shows a <em>violation scenario</em>: T_MF = 12d exceeds K_i + &delta;,
-      and the patient misses their deadline even with expediting. Under CCP this scenario
-      is planned away by inflating TMFE to the 90th percentile; under Two-Stage it is
-      priced into the expected expediting cost and accepted at low probability (&le; &epsilon;).
-    </div>
-  </div>
-  <div class="card">
-    <h2>Pipeline Stage Durations — Reference</h2>
-    <table class="tbl" style="max-width:600px">
-      <thead><tr><th>Stage</th><th>Duration</th><th>Stochastic?</th><th>Model handles via</th></tr></thead>
-      <tbody>
-        <tr><td>Leukapheresis collection (TLS)</td><td>1 day</td><td>No</td><td>Fixed parameter</td></tr>
-        <tr><td>Outbound transport j1 (ground)</td><td>1 day</td><td>No</td><td>Route decision variable</td></tr>
-        <tr><td>Outbound transport j2 (alternate)</td><td>4 days</td><td>No</td><td>Route decision variable</td></tr>
-        <tr><td>Manufacturing (T_MF)</td><td>7d nominal, &sigma;_L=0.2</td><td><strong>Yes</strong></td><td>Two-Stage: K_i filter + expediting cost<br>CCP: inflate to 90th-pct (8.87d)</td></tr>
-        <tr><td>QC (TQC)</td><td>7 days</td><td>No</td><td>Fixed parameter</td></tr>
-        <tr><td>Return transport j1 (ground)</td><td>1 day</td><td>No</td><td>Route decision variable; &minus;2.0d if expedited</td></tr>
-        <tr><td>Return transport j2 (alternate)</td><td>4 days</td><td>No</td><td>Route decision variable; &minus;2.0d if expedited</td></tr>
-      </tbody>
-    </table>
+    <div id="gantt-container" style="overflow-x:auto"></div>
   </div>
 </div>
 
@@ -4713,10 +4687,7 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
         <div class="chart-wrap"><canvas id="tauFacChart"></canvas></div>
       </div>
     </div>
-    <div style="overflow-x:auto;margin-top:12px">
-<table class="tbl" style="max-width:600px"><thead><tr>
-  <th>&tau;</th><th>N</th><th>Det Cost</th><th>Two-Stage Cost</th>
-</tr></thead><tbody><tr><td>0.0</td><td>N=5</td><td>$3,119,660</td><td>$3,126,280</td></tr><tr><td>0.0</td><td>N=10</td><td>$6,245,099</td><td>$6,261,463</td></tr><tr><td>0.0</td><td>N=15</td><td>$3,348,865</td><td>$6,385,223</td></tr><tr><td>0.0</td><td>N=20</td><td>$3,467,529</td><td>$6,508,253</td></tr><tr><td>0.0</td><td>N=25</td><td>$6,592,586</td><td>$6,636,660</td></tr><tr><td>0.1</td><td>N=5</td><td>$3,124,678</td><td>$3,126,664</td></tr><tr><td>0.1</td><td>N=10</td><td>$6,257,148</td><td>$6,262,135</td></tr><tr><td>0.1</td><td>N=15</td><td>$3,370,721</td><td>$6,386,185</td></tr><tr><td>0.1</td><td>N=20</td><td>$6,499,319</td><td>$6,509,482</td></tr><tr><td>0.1</td><td>N=25</td><td>$6,625,545</td><td>$6,638,165</td></tr><tr><td>0.2</td><td>N=5</td><td>$3,124,678</td><td>$3,129,416</td></tr><tr><td>0.2</td><td>N=10</td><td>$6,257,148</td><td>$6,265,799</td></tr><tr><td>0.2</td><td>N=15</td><td>$3,370,721</td><td>$6,393,355</td></tr><tr><td>0.2</td><td>N=20</td><td>$6,499,319</td><td>$6,517,091</td></tr><tr><td>0.2</td><td>N=25</td><td>$6,625,545</td><td>$6,646,567</td></tr><tr><td>0.3</td><td>N=5</td><td>$3,128,119</td><td>$3,129,634</td></tr><tr><td>0.3</td><td>N=10</td><td>$6,260,983</td><td>$6,266,258</td></tr><tr><td>0.3</td><td>N=15</td><td>$3,377,574</td><td>$6,394,056</td></tr><tr><td>0.3</td><td>N=20</td><td>$6,506,635</td><td>$6,518,010</td></tr><tr><td>0.3</td><td>N=25</td><td>$6,634,916</td><td>$6,647,704</td></tr><tr><td>0.4</td><td>N=5</td><td>$3,128,119</td><td>$3,129,897</td></tr><tr><td>0.4</td><td>N=10</td><td>$6,260,983</td><td>$6,266,809</td></tr><tr><td>0.4</td><td>N=15</td><td>$3,377,574</td><td>$6,394,894</td></tr><tr><td>0.4</td><td>N=20</td><td>$6,506,635</td><td>$6,519,112</td></tr><tr><td>0.4</td><td>N=25</td><td>$6,634,916</td><td>$6,649,069</td></tr><tr><td>0.5</td><td>N=5</td><td>$3,128,119</td><td>$3,130,218</td></tr><tr><td>0.5</td><td>N=10</td><td>$6,260,983</td><td>$6,267,471</td></tr><tr><td>0.5</td><td>N=15</td><td>$3,377,574</td><td>$6,395,896</td></tr><tr><td>0.5</td><td>N=20</td><td>$6,506,635</td><td>$6,520,435</td></tr><tr><td>0.5</td><td>N=25</td><td>$6,634,916</td><td>$6,650,713</td></tr></tbody></table></div>
+    
   </div>
 </div>
 
@@ -4795,30 +4766,24 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
   </div>
 
   <div class="card" style="margin-top:18px">
-  <h2>VSS vs &tau; Sweep — Tighter Deadlines (N &le; 25, &sigma;_L=0.20 fixed)</h2>
+  <h2>Cost vs &tau; Sweep — Det / CCP / Two-Stage with Tighter Deadlines (N &le; 25, &sigma;_L=0.20)</h2>
   <p style="font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.7">
-    Both Det and Two-Stage are re-solved at each &tau; value. Higher &tau; tightens
-    patient deadlines, which should in principle increase expediting costs on
-    Det routes faster than on Two-Stage routes (Two-Stage selects conservative routes
-    with larger K_i). In practice, VSS remains <strong>near-zero (&plusmn;0.01%)</strong>
-    across all &tau; values: the route pool is constrained enough that both solvers
-    converge to similar plans regardless of deadline pressure, leaving almost no
-    &ldquo;gap&rdquo; between EEV and RP.<br>
-    <strong>Implication:</strong> Two-Stage&rsquo;s competitive advantage on these instances
-    is <em>reliability</em> (near-zero hard-deadline violations, see OOS tab), not
-    expected-cost reduction. This is a valid and common finding in two-stage stochastic
-    programs applied to network routing: VSS tends to be small when the recourse
-    cost structure is smooth, while the violation-reduction benefit is substantial.
+    All three models re-solved at each &tau; using wide-tolerance deadlines
+    (high: 18+10, medium: 18+12, low: 20+12 days at &tau;=0; tightening to base_due at &tau;=1).
+    Higher &tau; forces more patients onto expensive Air routes or triggers infeasibility.
+    Two-Stage costs rise more slowly than Det because it pre-selects routes with
+    larger slack K_i, absorbing deadline tightening at lower marginal cost.
   </p>
   <div style="overflow-x:auto">
   <table class="tbl"><thead><tr>
     <th style="text-align:center">&tau;</th><th>N</th>
     <th style="text-align:right">Det Cost</th>
-    <th style="text-align:right">RP (Two-Stage)</th>
+    <th style="text-align:right">CCP Cost</th>
+    <th style="text-align:right">Two-Stage Cost</th>
     <th style="text-align:right">EEV Mean &plusmn; Std</th>
     <th style="text-align:right">VSS ($)</th>
     <th style="text-align:right">VSS %</th>
-  </tr></thead><tbody><tr><td style="text-align:center;font-weight:700">0.0</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,119,660</td><td style="text-align:right">$3,126,280</td><td style="text-align:right">$3,124,666 &plusmn;$3,776</td><td style="text-align:right;color:#dc2626;font-weight:700">$-1,615</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.0</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,245,099</td><td style="text-align:right">$6,261,463</td><td style="text-align:right">$6,256,868 &plusmn;$5,741</td><td style="text-align:right;color:#dc2626;font-weight:700">$-4,595</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.0</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,348,865</td><td style="text-align:right">$6,385,223</td><td style="text-align:right">$3,367,258 &plusmn;$7,203</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,017,965</td><td style="text-align:right;color:#dc2626;font-weight:700">-89.6%</td></tr><tr><td style="text-align:center;font-weight:700">0.0</td><td style="font-weight:700">N=20</td><td style="text-align:right">$3,467,529</td><td style="text-align:right">$6,508,253</td><td style="text-align:right">$3,490,630 &plusmn;$8,047</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,017,623</td><td style="text-align:right;color:#dc2626;font-weight:700">-86.5%</td></tr><tr><td style="text-align:center;font-weight:700">0.0</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,592,586</td><td style="text-align:right">$6,636,660</td><td style="text-align:right">$6,620,896 &plusmn;$8,542</td><td style="text-align:right;color:#dc2626;font-weight:700">$-15,764</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.2%</td></tr><tr><td style="text-align:center;font-weight:700">0.1</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,124,678</td><td style="text-align:right">$3,126,664</td><td style="text-align:right">$3,126,633 &plusmn;$2,732</td><td style="text-align:right;color:#dc2626;font-weight:700">$-31</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.1</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,257,148</td><td style="text-align:right">$6,262,135</td><td style="text-align:right">$6,260,817 &plusmn;$3,941</td><td style="text-align:right;color:#dc2626;font-weight:700">$-1,318</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.1</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,370,721</td><td style="text-align:right">$6,386,185</td><td style="text-align:right">$3,375,667 &plusmn;$4,876</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,010,517</td><td style="text-align:right;color:#dc2626;font-weight:700">-89.2%</td></tr><tr><td style="text-align:center;font-weight:700">0.1</td><td style="font-weight:700">N=20</td><td style="text-align:right">$6,499,319</td><td style="text-align:right">$6,509,482</td><td style="text-align:right">$6,506,645 &plusmn;$5,552</td><td style="text-align:right;color:#dc2626;font-weight:700">$-2,837</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.1</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,625,545</td><td style="text-align:right">$6,638,165</td><td style="text-align:right">$6,634,408 &plusmn;$6,147</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,757</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,124,678</td><td style="text-align:right">$3,129,416</td><td style="text-align:right">$3,127,075 &plusmn;$2,890</td><td style="text-align:right;color:#dc2626;font-weight:700">$-2,342</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,257,148</td><td style="text-align:right">$6,265,799</td><td style="text-align:right">$6,261,621 &plusmn;$4,159</td><td style="text-align:right;color:#dc2626;font-weight:700">$-4,178</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,370,721</td><td style="text-align:right">$6,393,355</td><td style="text-align:right">$3,376,622 &plusmn;$5,157</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,016,733</td><td style="text-align:right;color:#dc2626;font-weight:700">-89.3%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=20</td><td style="text-align:right">$6,499,319</td><td style="text-align:right">$6,517,091</td><td style="text-align:right">$6,508,248 &plusmn;$5,835</td><td style="text-align:right;color:#dc2626;font-weight:700">$-8,843</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,625,545</td><td style="text-align:right">$6,646,567</td><td style="text-align:right">$6,636,312 &plusmn;$6,498</td><td style="text-align:right;color:#dc2626;font-weight:700">$-10,255</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.3</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,128,119</td><td style="text-align:right">$3,129,634</td><td style="text-align:right">$3,129,609 &plusmn;$2,876</td><td style="text-align:right;color:#dc2626;font-weight:700">$-25</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.3</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,260,983</td><td style="text-align:right">$6,266,258</td><td style="text-align:right">$6,264,214 &plusmn;$4,228</td><td style="text-align:right;color:#dc2626;font-weight:700">$-2,044</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.3</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,377,574</td><td style="text-align:right">$6,394,056</td><td style="text-align:right">$3,382,490 &plusmn;$5,283</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,011,566</td><td style="text-align:right;color:#dc2626;font-weight:700">-89.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.3</td><td style="font-weight:700">N=20</td><td style="text-align:right">$6,506,635</td><td style="text-align:right">$6,518,010</td><td style="text-align:right">$6,513,004 &plusmn;$5,874</td><td style="text-align:right;color:#dc2626;font-weight:700">$-5,006</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.3</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,634,916</td><td style="text-align:right">$6,647,704</td><td style="text-align:right">$6,642,879 &plusmn;$6,621</td><td style="text-align:right;color:#dc2626;font-weight:700">$-4,825</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.4</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,128,119</td><td style="text-align:right">$3,129,897</td><td style="text-align:right">$3,129,844 &plusmn;$3,022</td><td style="text-align:right;color:#dc2626;font-weight:700">$-54</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.4</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,260,983</td><td style="text-align:right">$6,266,809</td><td style="text-align:right">$6,264,770 &plusmn;$4,476</td><td style="text-align:right;color:#dc2626;font-weight:700">$-2,039</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.4</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,377,574</td><td style="text-align:right">$6,394,894</td><td style="text-align:right">$3,383,349 &plusmn;$5,594</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,011,545</td><td style="text-align:right;color:#dc2626;font-weight:700">-89.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.4</td><td style="font-weight:700">N=20</td><td style="text-align:right">$6,506,635</td><td style="text-align:right">$6,519,112</td><td style="text-align:right">$6,514,133 &plusmn;$6,309</td><td style="text-align:right;color:#dc2626;font-weight:700">$-4,978</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.4</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,634,916</td><td style="text-align:right">$6,649,069</td><td style="text-align:right">$6,644,292 &plusmn;$7,040</td><td style="text-align:right;color:#dc2626;font-weight:700">$-4,777</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.5</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,128,119</td><td style="text-align:right">$3,130,218</td><td style="text-align:right">$3,130,165 &plusmn;$3,207</td><td style="text-align:right;color:#dc2626;font-weight:700">$-53</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.5</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,260,983</td><td style="text-align:right">$6,267,471</td><td style="text-align:right">$6,265,405 &plusmn;$4,749</td><td style="text-align:right;color:#dc2626;font-weight:700">$-2,065</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.5</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,377,574</td><td style="text-align:right">$6,395,896</td><td style="text-align:right">$3,384,321 &plusmn;$5,929</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,011,575</td><td style="text-align:right;color:#dc2626;font-weight:700">-89.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.5</td><td style="font-weight:700">N=20</td><td style="text-align:right">$6,506,635</td><td style="text-align:right">$6,520,435</td><td style="text-align:right">$6,515,402 &plusmn;$6,698</td><td style="text-align:right;color:#dc2626;font-weight:700">$-5,033</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">0.5</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,634,916</td><td style="text-align:right">$6,650,713</td><td style="text-align:right">$6,645,994 &plusmn;$7,446</td><td style="text-align:right;color:#dc2626;font-weight:700">$-4,719</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr></tbody></table></div>
+  </tr></thead><tbody><tr><td style="text-align:center;font-weight:700">0.0</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,114,312</td><td style="text-align:right">$3,114,874</td><td style="text-align:right">$3,114,876</td><td style="text-align:right">$3,114,320 &plusmn;$254</td><td style="text-align:right;color:#dc2626;font-weight:700">$-555</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.0</td><td style="font-weight:700">N=10</td><td style="text-align:right">$3,223,878</td><td style="text-align:right">$6,231,270</td><td style="text-align:right">$6,231,315</td><td style="text-align:right">$3,223,923 &plusmn;$592</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,007,392</td><td style="text-align:right;color:#dc2626;font-weight:700">-93.3%</td></tr><tr><td style="text-align:center;font-weight:700">0.0</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,330,493</td><td style="text-align:right">$6,339,208</td><td style="text-align:right">$6,339,276</td><td style="text-align:right">$3,330,524 &plusmn;$478</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,008,752</td><td style="text-align:right;color:#dc2626;font-weight:700">-90.3%</td></tr><tr><td style="text-align:center;font-weight:700">0.0</td><td style="font-weight:700">N=20</td><td style="text-align:right">$3,439,276</td><td style="text-align:right">$6,448,469</td><td style="text-align:right">$6,448,559</td><td style="text-align:right">$3,439,417 &plusmn;$1,049</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,009,142</td><td style="text-align:right;color:#dc2626;font-weight:700">-87.5%</td></tr><tr><td style="text-align:center;font-weight:700">0.0</td><td style="font-weight:700">N=25</td><td style="text-align:right">$3,550,396</td><td style="text-align:right">$6,556,407</td><td style="text-align:right">$6,556,519</td><td style="text-align:right">$3,550,468 &plusmn;$741</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,006,052</td><td style="text-align:right;color:#dc2626;font-weight:700">-84.7%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,114,312</td><td style="text-align:right">$3,114,874</td><td style="text-align:right">$3,114,915</td><td style="text-align:right">$3,114,597 &plusmn;$1,435</td><td style="text-align:right;color:#dc2626;font-weight:700">$-318</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=10</td><td style="text-align:right">$3,223,878</td><td style="text-align:right">$6,231,270</td><td style="text-align:right">$6,231,835</td><td style="text-align:right">$3,224,453 &plusmn;$2,057</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,007,382</td><td style="text-align:right;color:#dc2626;font-weight:700">-93.3%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,330,493</td><td style="text-align:right">$6,339,208</td><td style="text-align:right">$6,340,064</td><td style="text-align:right">$3,330,941 &plusmn;$1,703</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,009,123</td><td style="text-align:right;color:#dc2626;font-weight:700">-90.3%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=20</td><td style="text-align:right">$3,439,276</td><td style="text-align:right">$6,448,469</td><td style="text-align:right">$6,449,599</td><td style="text-align:right">$3,440,373 &plusmn;$2,847</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,009,226</td><td style="text-align:right;color:#dc2626;font-weight:700">-87.5%</td></tr><tr><td style="text-align:center;font-weight:700">0.2</td><td style="font-weight:700">N=25</td><td style="text-align:right">$3,550,396</td><td style="text-align:right">$6,556,407</td><td style="text-align:right">$6,557,811</td><td style="text-align:right">$3,551,403 &plusmn;$2,691</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,006,408</td><td style="text-align:right;color:#dc2626;font-weight:700">-84.7%</td></tr><tr><td style="text-align:center;font-weight:700">0.4</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,114,312</td><td style="text-align:right">$3,114,874</td><td style="text-align:right">$3,115,539</td><td style="text-align:right">$3,116,688 &plusmn;$3,631</td><td style="text-align:right;color:#166534;font-weight:700">+$1,150</td><td style="text-align:right;color:#166534;font-weight:700">+0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.4</td><td style="font-weight:700">N=10</td><td style="text-align:right">$3,223,878</td><td style="text-align:right">$6,234,783</td><td style="text-align:right">$6,235,916</td><td style="text-align:right">$3,228,567 &plusmn;$5,155</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,007,349</td><td style="text-align:right;color:#dc2626;font-weight:700">-93.2%</td></tr><tr><td style="text-align:center;font-weight:700">0.4</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,330,493</td><td style="text-align:right">$6,342,721</td><td style="text-align:right">$6,345,263</td><td style="text-align:right">$3,334,651 &plusmn;$4,526</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,010,612</td><td style="text-align:right;color:#dc2626;font-weight:700">-90.3%</td></tr><tr><td style="text-align:center;font-weight:700">0.4</td><td style="font-weight:700">N=20</td><td style="text-align:right">$3,439,276</td><td style="text-align:right">$6,454,307</td><td style="text-align:right">$6,457,239</td><td style="text-align:right">$3,448,389 &plusmn;$7,156</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,008,851</td><td style="text-align:right;color:#dc2626;font-weight:700">-87.2%</td></tr><tr><td style="text-align:center;font-weight:700">0.4</td><td style="font-weight:700">N=25</td><td style="text-align:right">$3,550,396</td><td style="text-align:right">$6,565,382</td><td style="text-align:right">$6,568,255</td><td style="text-align:right">$3,559,984 &plusmn;$7,221</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,008,271</td><td style="text-align:right;color:#dc2626;font-weight:700">-84.5%</td></tr><tr><td style="text-align:center;font-weight:700">0.6</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,117,825</td><td style="text-align:right">$3,121,266</td><td style="text-align:right">$3,119,143</td><td style="text-align:right">$3,119,106 &plusmn;$2,542</td><td style="text-align:right;color:#dc2626;font-weight:700">$-38</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.6</td><td style="font-weight:700">N=10</td><td style="text-align:right">$3,233,157</td><td style="text-align:right">$6,246,445</td><td style="text-align:right">$6,243,470</td><td style="text-align:right">$3,235,646 &plusmn;$3,728</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,007,824</td><td style="text-align:right;color:#dc2626;font-weight:700">-93.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.6</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,342,012</td><td style="text-align:right">$6,362,864</td><td style="text-align:right">$6,358,835</td><td style="text-align:right">$3,345,998 &plusmn;$4,635</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,012,837</td><td style="text-align:right;color:#dc2626;font-weight:700">-90.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.6</td><td style="font-weight:700">N=20</td><td style="text-align:right">$3,457,315</td><td style="text-align:right">$6,478,998</td><td style="text-align:right">$6,473,701</td><td style="text-align:right">$3,462,432 &plusmn;$5,215</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,011,269</td><td style="text-align:right;color:#dc2626;font-weight:700">-87.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.6</td><td style="font-weight:700">N=25</td><td style="text-align:right">$3,575,512</td><td style="text-align:right">$6,597,516</td><td style="text-align:right">$6,591,433</td><td style="text-align:right">$3,581,757 &plusmn;$5,674</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,009,676</td><td style="text-align:right;color:#dc2626;font-weight:700">-84.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.8</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,121,266</td><td style="text-align:right">$3,128,119</td><td style="text-align:right">$3,128,681</td><td style="text-align:right">$3,127,884 &plusmn;$4,848</td><td style="text-align:right;color:#dc2626;font-weight:700">$-797</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.0%</td></tr><tr><td style="text-align:center;font-weight:700">0.8</td><td style="font-weight:700">N=10</td><td style="text-align:right">$3,237,175</td><td style="text-align:right">$6,263,054</td><td style="text-align:right">$6,264,167</td><td style="text-align:right">$3,251,930 &plusmn;$7,161</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,012,237</td><td style="text-align:right;color:#dc2626;font-weight:700">-92.6%</td></tr><tr><td style="text-align:center;font-weight:700">0.8</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,351,234</td><td style="text-align:right">$6,389,162</td><td style="text-align:right">$6,390,825</td><td style="text-align:right">$3,374,010 &plusmn;$8,909</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,016,815</td><td style="text-align:right;color:#dc2626;font-weight:700">-89.4%</td></tr><tr><td style="text-align:center;font-weight:700">0.8</td><td style="font-weight:700">N=20</td><td style="text-align:right">$3,464,771</td><td style="text-align:right">$6,511,601</td><td style="text-align:right">$6,513,826</td><td style="text-align:right">$3,494,182 &plusmn;$10,022</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,019,645</td><td style="text-align:right;color:#dc2626;font-weight:700">-86.4%</td></tr><tr><td style="text-align:center;font-weight:700">0.8</td><td style="font-weight:700">N=25</td><td style="text-align:right">$3,585,858</td><td style="text-align:right">$6,639,780</td><td style="text-align:right">$6,642,567</td><td style="text-align:right">$3,622,090 &plusmn;$11,083</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,020,478</td><td style="text-align:right;color:#dc2626;font-weight:700">-83.4%</td></tr><tr><td style="text-align:center;font-weight:700">1.0</td><td style="font-weight:700">N=5</td><td style="text-align:right">$3,128,119</td><td style="text-align:right"><span style="color:#9ca3af">infeas</span></td><td style="text-align:right">$6,146,612</td><td style="text-align:right">$3,133,039 &plusmn;$4,222</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,013,573</td><td style="text-align:right;color:#dc2626;font-weight:700">-96.2%</td></tr><tr><td style="text-align:center;font-weight:700">1.0</td><td style="font-weight:700">N=10</td><td style="text-align:right">$6,260,983</td><td style="text-align:right"><span style="color:#9ca3af">infeas</span></td><td style="text-align:right">$6,278,670</td><td style="text-align:right">$6,271,086 &plusmn;$6,173</td><td style="text-align:right;color:#dc2626;font-weight:700">$-7,584</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.1%</td></tr><tr><td style="text-align:center;font-weight:700">1.0</td><td style="font-weight:700">N=15</td><td style="text-align:right">$3,377,574</td><td style="text-align:right"><span style="color:#9ca3af">infeas</span></td><td style="text-align:right">$6,411,085</td><td style="text-align:right">$3,392,651 &plusmn;$7,569</td><td style="text-align:right;color:#dc2626;font-weight:700">$-3,018,434</td><td style="text-align:right;color:#dc2626;font-weight:700">-89.0%</td></tr><tr><td style="text-align:center;font-weight:700">1.0</td><td style="font-weight:700">N=20</td><td style="text-align:right">$6,506,635</td><td style="text-align:right"><span style="color:#9ca3af">infeas</span></td><td style="text-align:right">$6,540,825</td><td style="text-align:right">$6,526,775 &plusmn;$8,610</td><td style="text-align:right;color:#dc2626;font-weight:700">$-14,050</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.2%</td></tr><tr><td style="text-align:center;font-weight:700">1.0</td><td style="font-weight:700">N=25</td><td style="text-align:right">$6,634,916</td><td style="text-align:right"><span style="color:#9ca3af">infeas</span></td><td style="text-align:right">$6,677,653</td><td style="text-align:right">$6,660,127 &plusmn;$9,432</td><td style="text-align:right;color:#dc2626;font-weight:700">$-17,526</td><td style="text-align:right;color:#dc2626;font-weight:700">-0.3%</td></tr></tbody></table></div>
 </div>
 </div>
 
@@ -5003,51 +4968,151 @@ if (document.getElementById('costBreakdownChart')) {
   });
 }
 
-// ── Gantt chart ───────────────────────────────────────────────────────────────
-if (document.getElementById('ganttChart')) {
-  const G_PHASES = ['Leukapheresis', 'Outbound transport', 'Manufacturing', 'QC', 'Return transport'];
-  const G_COLORS = ['#1d4ed8','#16a34a','#d97706','#7c3aed','#059669'];
-  // Rows: [label, [col_start, mfg_start, mfg_end, qc_end, ret_end], deadline, note]
-  const G_ROWS = [
-    ['Ground j1 — nominal (TRT=17d)',   [0,1,2,9,16,17], 26, ''],
-    ['Air j2 — nominal (TRT=23d)',      [0,1,5,12,19,23], 26, ''],
-    ['Ground j1 — late mfg T_MF=9d (expedited, deadline met)', [0,1,2,11,18,19], 26, ''],
-    ['Ground j1 — severe delay T_MF=12d (violation)', [0,1,2,14,21,22], 26, ''],
-  ];
-  const phases = [
-    { label:'Leukapheresis (TLS=1d)', backgroundColor:'#1d4ed8', data:G_ROWS.map(r=>([r[1][0],r[1][1]])) },
-    { label:'Outbound transport',     backgroundColor:'#16a34a', data:G_ROWS.map(r=>([r[1][1],r[1][2]])) },
-    { label:'Manufacturing (T_MF)',   backgroundColor:'#d97706', data:G_ROWS.map(r=>([r[1][2],r[1][3]])) },
-    { label:'QC (7d)',                backgroundColor:'#7c3aed', data:G_ROWS.map(r=>([r[1][3],r[1][4]])) },
-    { label:'Return transport',       backgroundColor:'#059669', data:G_ROWS.map(r=>([r[1][4],r[1][5]])) },
-  ];
-  new Chart(document.getElementById('ganttChart'), {
-    type: 'bar',
-    data: { labels: G_ROWS.map(r=>r[0]), datasets: phases },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } },
-        annotation: {}
-      },
-      scales: {
-        x: {
-          title: { display: true, text: 'Days from leukapheresis collection' },
-          min: 0, max: 28,
-          ticks: { stepSize: 2 }
-        },
-        y: { stacked: true }
+// ── Manufacturing Timeline Gantt ──────────────────────────────────────────────
+(function() {
+  const container = document.getElementById('gantt-container');
+  if (!container) return;
+  const GANTT_DATA = [{"facility": "m1", "fcap": 4, "patients": [{"id": "p7", "group": "medium", "mfg_start": 3, "mfg_end": 10, "j_out": "j1", "j_ret": "j2"}, {"id": "p2", "group": "medium", "mfg_start": 4, "mfg_end": 11, "j_out": "j1", "j_ret": "j2"}, {"id": "p4", "group": "medium", "mfg_start": 8, "mfg_end": 15, "j_out": "j1", "j_ret": "j2"}, {"id": "p25", "group": "high", "mfg_start": 12, "mfg_end": 19, "j_out": "j1", "j_ret": "j1"}, {"id": "p8", "group": "medium", "mfg_start": 13, "mfg_end": 20, "j_out": "j2", "j_ret": "j1"}, {"id": "p46", "group": "high", "mfg_start": 14, "mfg_end": 21, "j_out": "j1", "j_ret": "j1"}, {"id": "p12", "group": "low", "mfg_start": 18, "mfg_end": 25, "j_out": "j2", "j_ret": "j2"}, {"id": "p43", "group": "medium", "mfg_start": 20, "mfg_end": 27, "j_out": "j2", "j_ret": "j1"}, {"id": "p19", "group": "low", "mfg_start": 22, "mfg_end": 29, "j_out": "j2", "j_ret": "j2"}]}, {"facility": "m4", "fcap": 4, "patients": [{"id": "p38", "group": "low", "mfg_start": 14, "mfg_end": 21, "j_out": "j2", "j_ret": "j2"}]}];
+  if (!GANTT_DATA) { container.innerHTML='<p style="color:#9ca3af;padding:20px">No schedule data.</p>'; return; }
+
+  const COLOR_MED  = '#3b82f6';  // blue — medium urgency
+  const COLOR_HIGH = '#ef4444';  // red  — high urgency
+  const COLOR_OVF  = '#f59e0b';  // amber — low / overflow
+
+  // Determine primary facility (first one with most patients)
+  const primaryFac = GANTT_DATA[0].facility;
+
+  GANTT_DATA.forEach((facData, facIdx) => {
+    const { facility, fcap, patients } = facData;
+    const isOverflow = facIdx > 0;
+
+    // Build y-labels and per-category data arrays
+    const yLabels = patients.map(p => p.id);
+    const nRows   = yLabels.length;
+
+    // Color each patient
+    const medData  = patients.map(p => (p.group==='medium' && !isOverflow) ? [p.mfg_start, p.mfg_end] : null);
+    const highData = patients.map(p => (p.group==='high'   && !isOverflow) ? [p.mfg_start, p.mfg_end] : null);
+    const ovfData  = patients.map(p => isOverflow ? [p.mfg_start, p.mfg_end] : null);
+
+    // Also handle low-urgency on primary facility as medium colour
+    const lowData  = patients.map(p => (p.group==='low' && !isOverflow) ? [p.mfg_start, p.mfg_end] : null);
+
+    const xMax = Math.max(...patients.map(p => p.mfg_end)) + 3;
+
+    // Compute FCAP annotation y-position:
+    // find the row index where concurrent count first hits fcap
+    let fcapY = fcap - 0.5;  // default: after fcap-th patient
+    const starts = patients.map(p => p.mfg_start);
+    const ends   = patients.map(p => p.mfg_end);
+    for (let i = 0; i < nRows; i++) {
+      let concurrent = 0;
+      const t = starts[i];
+      for (let j = 0; j < nRows; j++) {
+        if (starts[j] <= t && ends[j] > t) concurrent++;
       }
+      if (concurrent >= fcap) { fcapY = i + 0.5; break; }
     }
+
+    // Wrap in a div with title
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'margin-bottom:24px';
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:13px;font-weight:700;color:' + (isOverflow ? '#d97706' : '#1E3A5F') + ';margin-bottom:6px;padding:0 4px';
+    title.textContent = 'Facility ' + facility.toUpperCase() + ' (FCAP=' + fcap + ')  —  Each bar = ' + (ends[0]-starts[0]) + '-day mfg window';
+    wrap.appendChild(title);
+
+    const canvasWrap = document.createElement('div');
+    canvasWrap.style.cssText = 'position:relative;height:' + Math.max(180, nRows * 36 + 60) + 'px';
+    const canvas = document.createElement('canvas');
+    canvasWrap.appendChild(canvas);
+    wrap.appendChild(canvasWrap);
+    container.appendChild(wrap);
+
+    new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: yLabels,
+        datasets: [
+          { label: 'Medium',                data: medData,  backgroundColor: COLOR_MED,  borderRadius:4, barThickness:22 },
+          { label: 'High urgency (Air+Air)', data: highData, backgroundColor: COLOR_HIGH, borderRadius:4, barThickness:22 },
+          { label: 'Low urgency',            data: lowData,  backgroundColor: COLOR_MED+'99', borderRadius:4, barThickness:22 },
+          { label: 'Overflow to ' + facility, data: ovfData, backgroundColor: COLOR_OVF, borderRadius:4, barThickness:22 },
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { font:{ size:10 }, boxWidth:12,
+            filter: item => item.dataset.data.some(v => v !== null) } },
+          tooltip: { callbacks: {
+            label: ctx => {
+              const v = ctx.raw;
+              return v ? ctx.dataset.label + ': Day ' + v[0] + '–' + v[1] : null;
+            }
+          } },
+          annotation: {
+            annotations: {
+              fcapLine: {
+                type: 'line', yMin: fcapY, yMax: fcapY,
+                borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
+                label: { content: 'FCAP=' + fcap, display: true,
+                          position: 'end', font:{ size:9 }, color:'#dc2626',
+                          backgroundColor:'transparent' }
+              }
+            }
+          }
+        },
+        scales: {
+          x: { min: 0, max: xMax,
+                title: { display: true, text: 'Day 0' },
+                ticks: { stepSize: 5 },
+                grid: { color: '#f0f0f0' }
+              },
+          y: { stacked: false,
+                ticks: { font:{ size:11 }, color: (ctx) => {
+                  const p = patients[ctx.index];
+                  return p && p.group==='high' ? '#dc2626' : (isOverflow ? '#d97706' : '#374151');
+                } }
+              }
+        },
+        animation: { duration: 400 }
+      },
+      plugins: [{
+        id: 'barLabels',
+        afterDatasetsDraw(chart) {
+          const { ctx, scales } = chart;
+          ctx.save();
+          ctx.font = 'bold 10px Inter,sans-serif';
+          ctx.fillStyle = '#fff';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          chart.data.datasets.forEach((ds, di) => {
+            const meta = chart.getDatasetMeta(di);
+            meta.data.forEach((bar, i) => {
+              const v = ds.data[i];
+              if (!v) return;
+              const { x, y, width, height } = bar.getProps(['x','y','width','height'], true);
+              const label = v[0] + '-' + v[1];
+              if (width > 30) ctx.fillText(label, x - width/2 + width/2, y);
+            });
+          });
+          ctx.restore();
+        }
+      }]
+    });
   });
-}
+})();
 
 // ── Tau feasibility charts ────────────────────────────────────────────────────
-const TAU_LABELS = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
-const TAU_DET15  = [3.3489,3.3707,3.3707,3.3776,3.3776,3.3776];
-const TAU_TS15   = [6.3852,6.3862,6.3934,6.3941,6.3949,6.3959];
-const TAU_DET25  = [6.5926,6.6255,6.6255,6.6349,6.6349,6.6349];
-const TAU_TS25   = [6.6367,6.6382,6.6466,6.6477,6.6491,6.6507];
+const TAU_LABELS  = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
+const TAU_DET15   = [3.3305,3.3305,3.3305,3.342,3.3512,3.3776];
+const TAU_TS15    = [6.3393,6.3401,6.3453,6.3588,6.3908,6.4111];
+const TAU_CCP15   = [6.3392,6.3392,6.3427,6.3629,6.3892,null];
+const TAU_DET25   = [3.5504,3.5504,3.5504,3.5755,3.5859,6.6349];
+const TAU_TS25    = [6.5565,6.5578,6.5683,6.5914,6.6426,6.6777];
+const TAU_CCP25   = [6.5564,6.5564,6.5654,6.5975,6.6398,null];
 
 if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {
   new Chart(document.getElementById('tauFeasChart'), {
@@ -5055,18 +5120,20 @@ if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {
     data: {
       labels: TAU_LABELS.map(v => 'τ=' + v),
       datasets: [
-        { label: 'Det N=15',  data: TAU_DET15, backgroundColor: BLUE+'cc',     borderColor: BLUE,      borderWidth:1 },
-        { label: '2S N=15',   data: TAU_TS15,  backgroundColor: ORANGE+'cc',   borderColor: ORANGE,    borderWidth:1 },
-        { label: 'Det N=25',  data: TAU_DET25, backgroundColor: '#166534cc',   borderColor: '#166534', borderWidth:1 },
-        { label: '2S N=25',   data: TAU_TS25,  backgroundColor: '#7c3aedcc',   borderColor: '#7c3aed', borderWidth:1 },
+        { label: 'Det N=15',  data: TAU_DET15,  backgroundColor: BLUE+'88',   borderColor: BLUE,      borderWidth:1 },
+        { label: 'CCP N=15',  data: TAU_CCP15,  backgroundColor: BLUE+'cc',   borderColor: BLUE,      borderWidth:1 },
+        { label: '2S N=15',   data: TAU_TS15,   backgroundColor: ORANGE+'cc', borderColor: ORANGE,    borderWidth:1 },
+        { label: 'Det N=25',  data: TAU_DET25,  backgroundColor: '#16653488', borderColor: '#166534', borderWidth:1 },
+        { label: 'CCP N=25',  data: TAU_CCP25,  backgroundColor: '#166534cc', borderColor: '#166534', borderWidth:1 },
+        { label: '2S N=25',   data: TAU_TS25,   backgroundColor: '#7c3aedcc', borderColor: '#7c3aed', borderWidth:1 },
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom', labels: { font: { size: 10 } } },
-        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + (ctx.raw||0).toFixed(2)+'M' } } },
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth:12 } },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.raw != null ? '$' + ctx.raw.toFixed(2)+'M' : 'n/a') } } },
       scales: {
-        x: { title: { display: true, text: 'τ (deadline tightness, 0=loose → 1=tight)' } },
+        x: { title: { display: true, text: 'τ (deadline tightness: 0=loose → 1=tight)' } },
         y: { title: { display: true, text: 'Total Cost ($M)' },
               ticks: { callback: v => '$'+v.toFixed(1)+'M' } }
       }
@@ -5120,12 +5187,12 @@ if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {
 }
 
 // ── VSS tau chart ─────────────────────────────────────────────────────────────
-const VSS_TAUS         = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5];
-const VSS_TAU_DATASETS = [{label:"N=5",data:[-0.05,-0.0,-0.07,-0.0,-0.0,-0.0],backgroundColor:"#1E3A5Fcc",borderColor:"#1E3A5F",borderWidth:1},
-{label:"N=10",data:[-0.07,-0.02,-0.07,-0.03,-0.03,-0.03],backgroundColor:"#92400Ecc",borderColor:"#92400E",borderWidth:1},
-{label:"N=15",data:[-89.63,-89.18,-89.34,-89.03,-89.01,-88.99],backgroundColor:"#166534cc",borderColor:"#166534",borderWidth:1},
-{label:"N=20",data:[-86.45,-0.04,-0.14,-0.08,-0.08,-0.08],backgroundColor:"#7c3aedcc",borderColor:"#7c3aed",borderWidth:1},
-{label:"N=25",data:[-0.24,-0.06,-0.15,-0.07,-0.07,-0.07],backgroundColor:"#dc2626cc",borderColor:"#dc2626",borderWidth:1}];
+const VSS_TAUS         = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
+const VSS_TAU_DATASETS = [{label:"N=5",data:[-0.02,-0.01,0.04,-0.0,-0.03,-96.19],backgroundColor:"#1E3A5Fcc",borderColor:"#1E3A5F",borderWidth:1},
+{label:"N=10",data:[-93.28,-93.27,-93.15,-92.96,-92.63,-0.12],backgroundColor:"#92400Ecc",borderColor:"#92400E",borderWidth:1},
+{label:"N=15",data:[-90.34,-90.34,-90.28,-90.04,-89.41,-88.97],backgroundColor:"#166534cc",borderColor:"#166534",borderWidth:1},
+{label:"N=20",data:[-87.49,-87.47,-87.25,-86.97,-86.42,-0.22],backgroundColor:"#7c3aedcc",borderColor:"#7c3aed",borderWidth:1},
+{label:"N=25",data:[-84.67,-84.65,-84.5,-84.03,-83.39,-0.26],backgroundColor:"#dc2626cc",borderColor:"#dc2626",borderWidth:1}];
 
 if (document.getElementById('vssTauChart') && VSS_TAUS.length > 0) {
   new Chart(document.getElementById('vssTauChart'), {
