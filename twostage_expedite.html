@@ -5002,40 +5002,38 @@ _INIT['sensitivity'] = function() {
   }
 };
 
-// ── Cost Breakdown data constants (top-level so they can be used in lazy init)
+// ── Cost Breakdown data constants + chart (pane-summary is always active)
 const _cb_det_tr=[13.0,31.8,44.3,64.1,82.5,132.6,162.8];
 const _cb_det_fac=[3007.7,6015.4,3007.7,3007.7,6015.4,6015.4,6015.4];const _cb_det_mat=[98.9,197.9,296.8,395.8,494.7,791.5,989.4];const _cb_ts_tr=[19.6,48.2,73.0,97.1,126.6,203.2,320.1];const _cb_ts_fac=[3007.7,6015.4,6015.4,6015.4,6015.4,6015.4,7519.2];const _cb_ts_exp=[1.6,3.0,4.4,5.7,7.6,11.3,14.6];
 
-// MC tab — lazy init
-_INIT['mc'] = function() {
-  _mkChart('costBreakdownChart', {
-    type: 'bar',
-    data: {
-      labels: NS.map(n => 'N='+n),
-      datasets: [
-        { label: 'Det — Facility ($K)',     data: _cb_det_fac,  backgroundColor: '#1E3A5F',   stack: 'det' },
-        { label: 'Det — Transport ($K)',    data: _cb_det_tr,   backgroundColor: '#3b82f6',   stack: 'det' },
-        { label: 'Det — Material ($K)',     data: _cb_det_mat,  backgroundColor: '#93c5fd',   stack: 'det' },
-        { label: '2S — Facility ($K)',      data: _cb_ts_fac,   backgroundColor: '#92400E',   stack: 'ts'  },
-        { label: '2S — Transport ($K)',     data: _cb_ts_tr,    backgroundColor: '#f97316',   stack: 'ts'  },
-        { label: '2S — Material ($K)',      data: _cb_det_mat,  backgroundColor: '#fed7aa',   stack: 'ts'  },
-        { label: '2S — Exp. Expediting($K)',data: _cb_ts_exp,   backgroundColor: '#dc2626',   stack: 'ts'  },
-      ]
+// costBreakdownChart lives in pane-summary — create immediately at load
+_mkChart('costBreakdownChart', {
+  type: 'bar',
+  data: {
+    labels: NS.map(n => 'N='+n),
+    datasets: [
+      { label: 'Det — Facility ($K)',     data: _cb_det_fac,  backgroundColor: '#1E3A5F',   stack: 'det' },
+      { label: 'Det — Transport ($K)',    data: _cb_det_tr,   backgroundColor: '#3b82f6',   stack: 'det' },
+      { label: 'Det — Material ($K)',     data: _cb_det_mat,  backgroundColor: '#93c5fd',   stack: 'det' },
+      { label: '2S — Facility ($K)',      data: _cb_ts_fac,   backgroundColor: '#92400E',   stack: 'ts'  },
+      { label: '2S — Transport ($K)',     data: _cb_ts_tr,    backgroundColor: '#f97316',   stack: 'ts'  },
+      { label: '2S — Material ($K)',      data: _cb_det_mat,  backgroundColor: '#fed7aa',   stack: 'ts'  },
+      { label: '2S — Exp. Expediting($K)',data: _cb_ts_exp,   backgroundColor: '#dc2626',   stack: 'ts'  },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.raw.toFixed(0) + 'K' } }
     },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 12 } },
-        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.raw.toFixed(0) + 'K' } }
-      },
-      scales: {
-        x: { title: { display: true, text: 'N (patients) — left bars = Det, right bars = Two-Stage' } },
-        y: { title: { display: true, text: 'Cost ($K)' },
-              stacked: true, ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'M' } }
-      }
+    scales: {
+      x: { title: { display: true, text: 'N (patients) — left bars = Det, right bars = Two-Stage' } },
+      y: { title: { display: true, text: 'Cost ($K)' },
+            stacked: true, ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'M' } }
     }
-  });
-};
+  }
+});
 
 // ── Manufacturing Timeline Gantt — lazy init ──────────────────────────────────
 _INIT['gantt'] = function() {

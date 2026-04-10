@@ -2093,40 +2093,38 @@ _INIT['sensitivity'] = function() {{
   }}
 }};
 
-// ── Cost Breakdown data constants (top-level so they can be used in lazy init)
+// ── Cost Breakdown data constants + chart (pane-summary is always active)
 const _cb_det_tr={_cb_det_tr};
 {cost_breakdown_js}
 
-// MC tab — lazy init
-_INIT['mc'] = function() {{
-  _mkChart('costBreakdownChart', {{
-    type: 'bar',
-    data: {{
-      labels: NS.map(n => 'N='+n),
-      datasets: [
-        {{ label: 'Det — Facility ($K)',     data: _cb_det_fac,  backgroundColor: '#1E3A5F',   stack: 'det' }},
-        {{ label: 'Det — Transport ($K)',    data: _cb_det_tr,   backgroundColor: '#3b82f6',   stack: 'det' }},
-        {{ label: 'Det — Material ($K)',     data: _cb_det_mat,  backgroundColor: '#93c5fd',   stack: 'det' }},
-        {{ label: '2S — Facility ($K)',      data: _cb_ts_fac,   backgroundColor: '#92400E',   stack: 'ts'  }},
-        {{ label: '2S — Transport ($K)',     data: _cb_ts_tr,    backgroundColor: '#f97316',   stack: 'ts'  }},
-        {{ label: '2S — Material ($K)',      data: _cb_det_mat,  backgroundColor: '#fed7aa',   stack: 'ts'  }},
-        {{ label: '2S — Exp. Expediting($K)',data: _cb_ts_exp,   backgroundColor: '#dc2626',   stack: 'ts'  }},
-      ]
+// costBreakdownChart lives in pane-summary — create immediately at load
+_mkChart('costBreakdownChart', {{
+  type: 'bar',
+  data: {{
+    labels: NS.map(n => 'N='+n),
+    datasets: [
+      {{ label: 'Det — Facility ($K)',     data: _cb_det_fac,  backgroundColor: '#1E3A5F',   stack: 'det' }},
+      {{ label: 'Det — Transport ($K)',    data: _cb_det_tr,   backgroundColor: '#3b82f6',   stack: 'det' }},
+      {{ label: 'Det — Material ($K)',     data: _cb_det_mat,  backgroundColor: '#93c5fd',   stack: 'det' }},
+      {{ label: '2S — Facility ($K)',      data: _cb_ts_fac,   backgroundColor: '#92400E',   stack: 'ts'  }},
+      {{ label: '2S — Transport ($K)',     data: _cb_ts_tr,    backgroundColor: '#f97316',   stack: 'ts'  }},
+      {{ label: '2S — Material ($K)',      data: _cb_det_mat,  backgroundColor: '#fed7aa',   stack: 'ts'  }},
+      {{ label: '2S — Exp. Expediting($K)',data: _cb_ts_exp,   backgroundColor: '#dc2626',   stack: 'ts'  }},
+    ]
+  }},
+  options: {{
+    responsive: true, maintainAspectRatio: false,
+    plugins: {{
+      legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth: 12 }} }},
+      tooltip: {{ callbacks: {{ label: ctx => ctx.dataset.label + ': $' + ctx.raw.toFixed(0) + 'K' }} }}
     }},
-    options: {{
-      responsive: true, maintainAspectRatio: false,
-      plugins: {{
-        legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth: 12 }} }},
-        tooltip: {{ callbacks: {{ label: ctx => ctx.dataset.label + ': $' + ctx.raw.toFixed(0) + 'K' }} }}
-      }},
-      scales: {{
-        x: {{ title: {{ display: true, text: 'N (patients) — left bars = Det, right bars = Two-Stage' }} }},
-        y: {{ title: {{ display: true, text: 'Cost ($K)' }},
-              stacked: true, ticks: {{ callback: v => '$' + (v/1000).toFixed(0) + 'M' }} }}
-      }}
+    scales: {{
+      x: {{ title: {{ display: true, text: 'N (patients) — left bars = Det, right bars = Two-Stage' }} }},
+      y: {{ title: {{ display: true, text: 'Cost ($K)' }},
+            stacked: true, ticks: {{ callback: v => '$' + (v/1000).toFixed(0) + 'M' }} }}
     }}
-  }});
-}};
+  }}
+}});
 
 // ── Manufacturing Timeline Gantt — lazy init ──────────────────────────────────
 _INIT['gantt'] = function() {{
