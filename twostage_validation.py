@@ -2260,7 +2260,10 @@ _INIT['gantt'] = function() {{
     container.appendChild(wrap);
 
     canvas.id = 'gantt_fac_' + facIdx;
-    _mkChart('gantt_fac_' + facIdx, {{
+    // Force layout reflow on the newly-added wrapper so Chart.js sees
+    // the correct height when it calls getBoundingClientRect()
+    void canvasWrap.offsetHeight;
+    _mkChart(canvas, {{
       type: 'bar',
       data: {{
         labels: yLabels,
