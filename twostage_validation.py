@@ -830,6 +830,7 @@ def compute_vss_tau_sweep(tau_values, sigma_L, epsilon, time_limit,
                 ccp_str = f'CCP=${ccp_cost:,.0f}' if ccp_cost else 'CCP=infeas'
                 print(f'OK  det=${det_cost:,.0f}  RP=${rp_cost:,.0f}  '
                       f'EEV=${eev_mean:,.0f}  {ccp_str}  VSS={vss:+,.0f} ({vss_pct:+.1f}%)')
+                det_facs = len(set(p['facility'] for p in det_pats)) if det_pats else 0
                 all_rows.append({
                     'tau':      tau,
                     'N':        n_val,
@@ -840,6 +841,7 @@ def compute_vss_tau_sweep(tau_values, sigma_L, epsilon, time_limit,
                     'eev_std':  round(eev_std),
                     'vss':      round(vss),
                     'vss_pct':  round(vss_pct, 2),
+                    'det_facs': det_facs,
                 })
             except Exception as e:
                 import traceback; traceback.print_exc()
@@ -1243,6 +1245,7 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
     tau_cost_det_js = '[]'; tau_cost_ts_js = '[]'; tau_cost_ccp_js = '[]'
     tau_cost_det25_js = '[]'; tau_cost_ts25_js = '[]'; tau_cost_ccp25_js = '[]'
     tau_labels_js = '[]'
+    tau_fac_det15_js = '[]'; tau_fac_det25_js = '[]'
     if vss_tau_sweep:
         _tf_taus = sorted(set(r['tau'] for r in vss_tau_sweep))
         _tf_n15_det=[]; _tf_n15_ts=[]; _tf_n15_ccp=[]
@@ -1255,6 +1258,12 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
             _r25 = next((r for r in vss_tau_sweep if r['N']==25 and r.get('tau')==_t), None)
             _tf_n15_det.append(_cost_js(_r15,'det_cost')); _tf_n15_ts.append(_cost_js(_r15,'rp_cost')); _tf_n15_ccp.append(_cost_js(_r15,'ccp_cost'))
             _tf_n25_det.append(_cost_js(_r25,'det_cost')); _tf_n25_ts.append(_cost_js(_r25,'rp_cost')); _tf_n25_ccp.append(_cost_js(_r25,'ccp_cost'))
+        _tf_n15_fac=[]; _tf_n25_fac=[]
+        for _t in _tf_taus:
+            _r15 = next((r for r in vss_tau_sweep if r['N']==15 and r.get('tau')==_t), None)
+            _r25 = next((r for r in vss_tau_sweep if r['N']==25 and r.get('tau')==_t), None)
+            _tf_n15_fac.append(str(_r15.get('det_facs', 'null')) if _r15 else 'null')
+            _tf_n25_fac.append(str(_r25.get('det_facs', 'null')) if _r25 else 'null')
         tau_labels_js     = str(_tf_taus)
         tau_cost_det_js   = '[' + ','.join(_tf_n15_det) + ']'
         tau_cost_ts_js    = '[' + ','.join(_tf_n15_ts)  + ']'
@@ -1262,6 +1271,8 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
         tau_cost_det25_js = '[' + ','.join(_tf_n25_det) + ']'
         tau_cost_ts25_js  = '[' + ','.join(_tf_n25_ts)  + ']'
         tau_cost_ccp25_js = '[' + ','.join(_tf_n25_ccp) + ']'
+        tau_fac_det15_js  = '[' + ','.join(_tf_n15_fac) + ']'
+        tau_fac_det25_js  = '[' + ','.join(_tf_n25_fac) + ']'
 
     # ── VSS tab content ────────────────────────────────────────────────────────
     vss_table_rows = _vss_html(vss_rows) if vss_rows else '<p style="color:#9ca3af">No VSS data.</p>'
@@ -1868,6 +1879,18 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 </div>
 
 <script>
+// Chart registry + lazy init registry
+const _CR = {{}};
+const _INIT = {{}}, _DONE = {{}};
+
+function _mkChart(id, cfg) {{
+  const el = typeof id === 'string' ? document.getElementById(id) : id;
+  if (!el) return null;
+  const c = new Chart(el, cfg);
+  _CR[typeof id === 'string' ? id : el.id] = c;
+  return c;
+}}
+
 function show(n) {{
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('a'));
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('a'));
@@ -1875,19 +1898,12 @@ function show(n) {{
   document.querySelectorAll('.tab')[m[n]].classList.add('a');
   document.getElementById('pane-' + n).classList.add('a');
   requestAnimationFrame(() => {{
-    window.dispatchEvent(new Event('resize'));
+    if (_INIT[n] && !_DONE[n]) {{
+      try {{ _INIT[n](); }} catch(e) {{ console.error('chart init', n, e); }}
+      _DONE[n] = true;
+    }}
     Object.values(_CR).forEach(c => {{ try {{ c.resize(); }} catch(e) {{}} }});
   }});
-}}
-
-// Chart registry — keeps instances so we can resize on tab switch
-const _CR = {{}};
-function _mkChart(id, cfg) {{
-  const el = typeof id === 'string' ? document.getElementById(id) : id;
-  if (!el) return null;
-  const c = new Chart(el, cfg);
-  _CR[id] = c;
-  return c;
 }}
 
 const NS   = {n_labels_js};
@@ -1927,6 +1943,7 @@ const OOS_TS_V    = {oos_viol_ts_js};
 const OOS_CCP_S   = {oos_ccp_sample_js};
 const OOS_TS_S    = {oos_ts_sample_js};
 
+// Summary tab charts — loaded immediately (tab is visible on page load)
 lineChart('sumCostChart', NS,
   [ccpDS('CCP', OOS_CCP_C), tsDS('Two-Stage', OOS_TS_C)],
   'Mean Realized Cost ($M)', v => '$' + v.toFixed(2) + 'M');
@@ -1934,35 +1951,36 @@ lineChart('sumViolChart', NS,
   [ccpDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
   '% Scenarios with Violation', v => v.toFixed(1) + '%');
 
-lineChart('oosCostChart', NS,
-  [ccpDS('CCP', OOS_CCP_C), tsDS('Two-Stage', OOS_TS_C)],
-  'Mean Realized Cost ($M)', v => '$' + v.toFixed(2) + 'M');
-
-lineChart('oosViolChart', NS,
-  [ccpDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
-  '% Scenarios with Violation', v => v.toFixed(1) + '%');
-
-_mkChart('oosDistChart', {{
-  type: 'line',
-  data: {{
-    labels: Array.from({{length: OOS_CCP_S.length}}, (_,i) => i+1),
-    datasets: [
-      {{ label: 'CCP', data: OOS_CCP_S, borderColor: BLUE, backgroundColor: BLUE+'22',
-         borderWidth:1.5, pointRadius:0, tension:0 }},
-      {{ label: 'Two-Stage', data: OOS_TS_S, borderColor: ORANGE, backgroundColor: ORANGE+'22',
-         borderWidth:1.5, pointRadius:0, tension:0, borderDash:[4,2] }},
-    ]
-  }},
-  options: {{
-    responsive:true, maintainAspectRatio:false,
-    plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }} }} }} }},
-    scales:{{
-      x:{{ display:false }},
-      y:{{ title:{{ display:true, text:'Realized Cost ($M)' }},
-           ticks:{{ callback: v => '$'+v.toFixed(2)+'M' }} }}
+// OOS tab — lazy init (pane is hidden until tab clicked)
+_INIT['oos'] = function() {{
+  lineChart('oosCostChart', NS,
+    [ccpDS('CCP', OOS_CCP_C), tsDS('Two-Stage', OOS_TS_C)],
+    'Mean Realized Cost ($M)', v => '$' + v.toFixed(2) + 'M');
+  lineChart('oosViolChart', NS,
+    [ccpDS('CCP', OOS_CCP_V), tsDS('Two-Stage', OOS_TS_V)],
+    '% Scenarios with Violation', v => v.toFixed(1) + '%');
+  _mkChart('oosDistChart', {{
+    type: 'line',
+    data: {{
+      labels: Array.from({{length: OOS_CCP_S.length}}, (_,i) => i+1),
+      datasets: [
+        {{ label: 'CCP', data: OOS_CCP_S, borderColor: BLUE, backgroundColor: BLUE+'22',
+           borderWidth:1.5, pointRadius:0, tension:0 }},
+        {{ label: 'Two-Stage', data: OOS_TS_S, borderColor: ORANGE, backgroundColor: ORANGE+'22',
+           borderWidth:1.5, pointRadius:0, tension:0, borderDash:[4,2] }},
+      ]
+    }},
+    options: {{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }} }} }} }},
+      scales:{{
+        x:{{ display:false }},
+        y:{{ title:{{ display:true, text:'Realized Cost ($M)' }},
+             ticks:{{ callback: v => '$'+v.toFixed(2)+'M' }} }}
+      }}
     }}
-  }}
-}});
+  }});
+}};
 
 // ── Sensitivity charts ────────────────────────────────────────────────────────
 const SEN_SLS      = {sigma_ls_js};
@@ -1974,64 +1992,113 @@ const N15_TS_COST  = {n15_ts_cost_js};
 const N50_TS_COST  = {n50_ts_cost_js};
 const GREEN = '#166534';
 
-if (document.getElementById('senViolBarChart') && SEN_SLS.length > 0) {{
-  // Grouped bar: CCP vs 2S violation rate across sigma_L
-  _mkChart('senViolBarChart', {{
-    type: 'bar',
-    data: {{
-      labels: SEN_SLS.map(v => 'σ=' + v),
-      datasets: [
-        {{ label: 'CCP N=15', data: N15_CCP_VIOL,
-           backgroundColor: BLUE + 'bb', borderColor: BLUE, borderWidth:1 }},
-        {{ label: '2S N=15',  data: N15_TS_VIOL,
-           backgroundColor: BLUE + '44', borderColor: BLUE, borderWidth:1, borderDash:[4,2] }},
-        {{ label: 'CCP N=50', data: N50_CCP_VIOL,
-           backgroundColor: ORANGE + 'bb', borderColor: ORANGE, borderWidth:1 }},
-        {{ label: '2S N=50',  data: N50_TS_VIOL,
-           backgroundColor: ORANGE + '44', borderColor: ORANGE, borderWidth:1 }},
-      ]
-    }},
-    options: {{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }}, boxWidth:12 }} }} }},
-      scales:{{
-        x:{{ title:{{ display:true, text:'σ_L (manufacturing variability)' }} }},
-        y:{{ title:{{ display:true, text:'% Scenarios with Violation' }},
-             ticks:{{ callback: v => v+'%' }}, min:0 }}
+// Sensitivity tab — lazy init
+_INIT['sensitivity'] = function() {{
+  if (SEN_SLS.length > 0) {{
+    _mkChart('senViolBarChart', {{
+      type: 'bar',
+      data: {{
+        labels: SEN_SLS.map(v => 'σ=' + v),
+        datasets: [
+          {{ label: 'CCP N=15', data: N15_CCP_VIOL,
+             backgroundColor: BLUE + 'bb', borderColor: BLUE, borderWidth:1 }},
+          {{ label: '2S N=15',  data: N15_TS_VIOL,
+             backgroundColor: BLUE + '44', borderColor: BLUE, borderWidth:1 }},
+          {{ label: 'CCP N=50', data: N50_CCP_VIOL,
+             backgroundColor: ORANGE + 'bb', borderColor: ORANGE, borderWidth:1 }},
+          {{ label: '2S N=50',  data: N50_TS_VIOL,
+             backgroundColor: ORANGE + '44', borderColor: ORANGE, borderWidth:1 }},
+        ]
+      }},
+      options: {{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }}, boxWidth:12 }} }} }},
+        scales:{{
+          x:{{ title:{{ display:true, text:'σ_L (manufacturing variability)' }} }},
+          y:{{ title:{{ display:true, text:'% Scenarios with Violation' }},
+               ticks:{{ callback: v => v+'%' }}, min:0 }}
+        }}
       }}
-    }}
-  }});
-
-  // Line: Two-Stage cost vs sigma_L
-  _mkChart('senCostChart', {{
-    type: 'bar',
-    data: {{
-      labels: SEN_SLS.map(v => 'σ=' + v),
-      datasets: [
-        {{ label: 'N=15', data: N15_TS_COST,
-           backgroundColor: BLUE+'cc', borderColor: BLUE, borderWidth:1 }},
-        {{ label: 'N=50', data: N50_TS_COST,
-           backgroundColor: ORANGE+'cc', borderColor: ORANGE, borderWidth:1 }},
-      ]
-    }},
-    options: {{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }} }} }} }},
-      scales:{{
-        x:{{ title:{{ display:true, text:'σ_L (manufacturing variability)' }} }},
-        y:{{ title:{{ display:true, text:'Two-Stage Cost ($M)' }},
-             ticks:{{ callback: v => '$'+v.toFixed(2)+'M' }} }}
+    }});
+    _mkChart('senCostChart', {{
+      type: 'bar',
+      data: {{
+        labels: SEN_SLS.map(v => 'σ=' + v),
+        datasets: [
+          {{ label: 'N=15', data: N15_TS_COST,
+             backgroundColor: BLUE+'cc', borderColor: BLUE, borderWidth:1 }},
+          {{ label: 'N=50', data: N50_TS_COST,
+             backgroundColor: ORANGE+'cc', borderColor: ORANGE, borderWidth:1 }},
+        ]
+      }},
+      options: {{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{{ legend:{{ position:'bottom', labels:{{ font:{{ size:10 }} }} }} }},
+        scales:{{
+          x:{{ title:{{ display:true, text:'σ_L (manufacturing variability)' }} }},
+          y:{{ title:{{ display:true, text:'Two-Stage Cost ($M)' }},
+               ticks:{{ callback: v => '$'+v.toFixed(2)+'M' }} }}
+        }}
       }}
-    }}
-  }});
-}}
+    }});
+  }}
+  if (TAU_LABELS.length > 0) {{
+    _mkChart('tauFeasChart', {{
+      type: 'bar',
+      data: {{
+        labels: TAU_LABELS.map(v => '\u03c4=' + v),
+        datasets: [
+          {{ label: 'Det N=15',  data: TAU_DET15,  backgroundColor: BLUE+'88',   borderColor: BLUE,      borderWidth:1 }},
+          {{ label: 'CCP N=15',  data: TAU_CCP15,  backgroundColor: BLUE+'cc',   borderColor: BLUE,      borderWidth:1 }},
+          {{ label: '2S N=15',   data: TAU_TS15,   backgroundColor: ORANGE+'cc', borderColor: ORANGE,    borderWidth:1 }},
+          {{ label: 'Det N=25',  data: TAU_DET25,  backgroundColor: '#16653488', borderColor: '#166534', borderWidth:1 }},
+          {{ label: 'CCP N=25',  data: TAU_CCP25,  backgroundColor: '#166534cc', borderColor: '#166534', borderWidth:1 }},
+          {{ label: '2S N=25',   data: TAU_TS25,   backgroundColor: '#7c3aedcc', borderColor: '#7c3aed', borderWidth:1 }},
+        ]
+      }},
+      options: {{
+        responsive: true, maintainAspectRatio: false,
+        plugins: {{ legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth:12 }} }},
+          tooltip: {{ callbacks: {{ label: ctx => ctx.dataset.label + ': ' + (ctx.raw != null ? '$' + ctx.raw.toFixed(2)+'M' : 'Infeasible') }} }} }},
+        scales: {{
+          x: {{ title: {{ display: true, text: '\u03c4 (deadline tightness: 0=loose \u2192 1=tight)' }} }},
+          y: {{ title: {{ display: true, text: 'Total Cost ($M)' }},
+                ticks: {{ callback: v => '$'+v.toFixed(1)+'M' }} }}
+        }}
+      }}
+    }});
+    _mkChart('tauFacChart', {{
+      type: 'bar',
+      data: {{
+        labels: TAU_LABELS.map(v => '\u03c4=' + v),
+        datasets: [
+          {{ label: 'Det N=15 facilities', data: TAU_FAC15,
+             backgroundColor: BLUE+'cc', borderColor: BLUE, borderWidth:1 }},
+          {{ label: 'Det N=25 facilities', data: TAU_FAC25,
+             backgroundColor: ORANGE+'cc', borderColor: ORANGE, borderWidth:1 }},
+        ]
+      }},
+      options: {{
+        responsive: true, maintainAspectRatio: false,
+        plugins: {{ legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth:12 }} }},
+          tooltip: {{ callbacks: {{ label: ctx => ctx.dataset.label + ': ' + (ctx.raw != null ? ctx.raw + ' facilit' + (ctx.raw===1?'y':'ies') : 'n/a') }} }} }},
+        scales: {{
+          x: {{ title: {{ display: true, text: '\u03c4 (deadline tightness)' }} }},
+          y: {{ title: {{ display: true, text: 'Facilities Opened' }},
+                ticks: {{ stepSize: 1, callback: v => Number.isInteger(v) ? v : '' }},
+                min: 0 }}
+        }}
+      }}
+    }});
+  }}
+}};
 
-requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
-
-// ── Cost Breakdown stacked bar ────────────────────────────────────────────────
+// ── Cost Breakdown data constants (top-level so they can be used in lazy init)
 const _cb_det_tr={_cb_det_tr};
 {cost_breakdown_js}
-if (document.getElementById('costBreakdownChart')) {{
+
+// MC tab — lazy init
+_INIT['mc'] = function() {{
   _mkChart('costBreakdownChart', {{
     type: 'bar',
     data: {{
@@ -2059,10 +2126,10 @@ if (document.getElementById('costBreakdownChart')) {{
       }}
     }}
   }});
-}}
+}};
 
-// ── Manufacturing Timeline Gantt ──────────────────────────────────────────────
-(function() {{
+// ── Manufacturing Timeline Gantt — lazy init ──────────────────────────────────
+_INIT['gantt'] = function() {{
   const container = document.getElementById('gantt-container');
   if (!container) return;
   const GANTT_DATA = {gantt_js};
@@ -2197,9 +2264,9 @@ if (document.getElementById('costBreakdownChart')) {{
       }}]
     }});
   }});
-}})();
+}};
 
-// ── Tau feasibility charts ────────────────────────────────────────────────────
+// ── Tau + facility chart data constants (top-level) ───────────────────────────
 const TAU_LABELS  = {tau_labels_js};
 const TAU_DET15   = {tau_cost_det_js};
 const TAU_TS15    = {tau_cost_ts_js};
@@ -2207,115 +2274,67 @@ const TAU_CCP15   = {tau_cost_ccp_js};
 const TAU_DET25   = {tau_cost_det25_js};
 const TAU_TS25    = {tau_cost_ts25_js};
 const TAU_CCP25   = {tau_cost_ccp25_js};
+const TAU_FAC15   = {tau_fac_det15_js};
+const TAU_FAC25   = {tau_fac_det25_js};
 
-if (document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {{
-  _mkChart('tauFeasChart', {{
-    type: 'bar',
-    data: {{
-      labels: TAU_LABELS.map(v => '\u03c4=' + v),
-      datasets: [
-        {{ label: 'Det N=15',  data: TAU_DET15,  backgroundColor: BLUE+'88',   borderColor: BLUE,      borderWidth:1 }},
-        {{ label: 'CCP N=15',  data: TAU_CCP15,  backgroundColor: BLUE+'cc',   borderColor: BLUE,      borderWidth:1 }},
-        {{ label: '2S N=15',   data: TAU_TS15,   backgroundColor: ORANGE+'cc', borderColor: ORANGE,    borderWidth:1 }},
-        {{ label: 'Det N=25',  data: TAU_DET25,  backgroundColor: '#16653488', borderColor: '#166534', borderWidth:1 }},
-        {{ label: 'CCP N=25',  data: TAU_CCP25,  backgroundColor: '#166534cc', borderColor: '#166534', borderWidth:1 }},
-        {{ label: '2S N=25',   data: TAU_TS25,   backgroundColor: '#7c3aedcc', borderColor: '#7c3aed', borderWidth:1 }},
-      ]
-    }},
-    options: {{
-      responsive: true, maintainAspectRatio: false,
-      plugins: {{ legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth:12 }} }},
-        tooltip: {{ callbacks: {{ label: ctx => ctx.dataset.label + ': ' + (ctx.raw != null ? '$' + ctx.raw.toFixed(2)+'M' : 'n/a') }} }} }},
-      scales: {{
-        x: {{ title: {{ display: true, text: '\u03c4 (deadline tightness: 0=loose \u2192 1=tight)' }} }},
-        y: {{ title: {{ display: true, text: 'Total Cost ($M)' }},
-              ticks: {{ callback: v => '$'+v.toFixed(1)+'M' }} }}
-      }}
-    }}
-  }});
+// (tauFeasChart and tauFacChart are initialized in _INIT['sensitivity'] above)
+if (false && document.getElementById('tauFeasChart') && TAU_LABELS.length > 0) {{
+  _mkChart('tauFeasChart', {{ type:'bar', data:{{labels:[]}}, options:{{}} }});  // placeholder - never runs
 }}
 
-// ── VSS sweep chart ───────────────────────────────────────────────────────────
+// ── VSS sweep + tau chart data constants (top-level) ─────────────────────────
 const VSS_SLS      = {vss_sweep_sls_js};
 const VSS_DATASETS = {vss_sweep_datasets_js};
-
-if (document.getElementById('vssSweepChart') && VSS_SLS.length > 0) {{
-  _mkChart('vssSweepChart', {{
-    type: 'bar',
-    data: {{
-      labels: VSS_SLS.map(v => 'σ=' + v),
-      datasets: VSS_DATASETS
-    }},
-    options: {{
-      responsive: true, maintainAspectRatio: false,
-      plugins: {{
-        legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth: 12 }} }},
-        tooltip: {{
-          callbacks: {{
-            label: ctx => ctx.dataset.label + ': ' +
-              (ctx.raw !== null ? ctx.raw.toFixed(1) + '%' : 'n/a')
-          }}
-        }},
-        annotation: {{
-          annotations: {{
-            breakeven: {{ type: 'line', yMin: 0, yMax: 0,
-              borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
-              label: {{ content: 'Breakeven', display: true, position: 'end', font: {{ size:9 }} }} }}
-          }}
-        }}
-      }},
-      scales: {{
-        x: {{ title: {{ display: true, text: 'σ_L (manufacturing variability)' }} }},
-        y: {{
-          title: {{ display: true, text: 'VSS (%)' }},
-          ticks: {{ callback: v => v.toFixed(1) + '%' }},
-          grid: {{ color: ctx => ctx.tick.value === 0 ? '#dc262666' : '#e5e7eb' }}
-        }}
-      }}
-    }}
-  }});
-}}
-
-// ── VSS tau chart ─────────────────────────────────────────────────────────────
 const VSS_TAUS         = {vss_tau_taus_js};
 const VSS_TAU_DATASETS = {vss_tau_datasets_js};
 
-if (document.getElementById('vssTauChart') && VSS_TAUS.length > 0) {{
-  _mkChart('vssTauChart', {{
-    type: 'bar',
-    data: {{
-      labels: VSS_TAUS.map(v => '\u03c4=' + v),
-      datasets: VSS_TAU_DATASETS
-    }},
-    options: {{
-      responsive: true, maintainAspectRatio: false,
-      plugins: {{
-        legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth: 12 }} }},
-        tooltip: {{
-          callbacks: {{
-            label: ctx => ctx.dataset.label + ': ' +
-              (ctx.raw !== null ? ctx.raw.toFixed(1) + '%' : 'n/a')
-          }}
+// VSS tab — lazy init
+_INIT['vss'] = function() {{
+  if (VSS_SLS.length > 0) {{
+    _mkChart('vssSweepChart', {{
+      type: 'bar',
+      data: {{ labels: VSS_SLS.map(v => 'σ=' + v), datasets: VSS_DATASETS }},
+      options: {{
+        responsive: true, maintainAspectRatio: false,
+        plugins: {{
+          legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth: 12 }} }},
+          tooltip: {{ callbacks: {{ label: ctx => ctx.dataset.label + ': ' + (ctx.raw !== null ? ctx.raw.toFixed(1) + '%' : 'n/a') }} }},
+          annotation: {{ annotations: {{ breakeven: {{ type: 'line', yMin: 0, yMax: 0,
+            borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
+            label: {{ content: 'Breakeven', display: true, position: 'end', font: {{ size:9 }} }} }} }} }}
         }},
-        annotation: {{
-          annotations: {{
-            breakeven: {{ type: 'line', yMin: 0, yMax: 0,
-              borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
-              label: {{ content: 'Breakeven', display: true, position: 'end', font: {{ size:9 }} }} }}
-          }}
-        }}
-      }},
-      scales: {{
-        x: {{ title: {{ display: true, text: '\u03c4 (deadline tightness)' }} }},
-        y: {{
-          title: {{ display: true, text: 'VSS (%)' }},
-          ticks: {{ callback: v => v.toFixed(2) + '%' }},
-          grid: {{ color: ctx => ctx.tick.value === 0 ? '#dc262666' : '#e5e7eb' }}
+        scales: {{
+          x: {{ title: {{ display: true, text: 'σ_L (manufacturing variability)' }} }},
+          y: {{ title: {{ display: true, text: 'VSS (%)' }},
+                ticks: {{ callback: v => v.toFixed(1) + '%' }},
+                grid: {{ color: ctx => ctx.tick.value === 0 ? '#dc262666' : '#e5e7eb' }} }}
         }}
       }}
-    }}
-  }});
-}}
+    }});
+  }}
+  if (VSS_TAUS.length > 0) {{
+    _mkChart('vssTauChart', {{
+      type: 'bar',
+      data: {{ labels: VSS_TAUS.map(v => '\u03c4=' + v), datasets: VSS_TAU_DATASETS }},
+      options: {{
+        responsive: true, maintainAspectRatio: false,
+        plugins: {{
+          legend: {{ position: 'bottom', labels: {{ font: {{ size: 10 }}, boxWidth: 12 }} }},
+          tooltip: {{ callbacks: {{ label: ctx => ctx.dataset.label + ': ' + (ctx.raw !== null ? ctx.raw.toFixed(1) + '%' : 'n/a') }} }},
+          annotation: {{ annotations: {{ breakeven: {{ type: 'line', yMin: 0, yMax: 0,
+            borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
+            label: {{ content: 'Breakeven', display: true, position: 'end', font: {{ size:9 }} }} }} }} }}
+        }},
+        scales: {{
+          x: {{ title: {{ display: true, text: '\u03c4 (deadline tightness)' }} }},
+          y: {{ title: {{ display: true, text: 'VSS (%)' }},
+                ticks: {{ callback: v => v.toFixed(2) + '%' }},
+                grid: {{ color: ctx => ctx.tick.value === 0 ? '#dc262666' : '#e5e7eb' }} }}
+        }}
+      }}
+    }});
+  }}
+}};
 </script>
 </body></html>"""
     with open(output_path, 'w') as f:
