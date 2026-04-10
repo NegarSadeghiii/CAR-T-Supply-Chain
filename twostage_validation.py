@@ -1072,6 +1072,22 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
     mc_html       = build_mc_html(ts_rows)
     pat_html      = build_patient_html(ts_rows)
 
+    # Per-patient chart data for the Patients tab (use smallest solved N with patient data)
+    _pat_n = next((n for n in sorted(ts_by_n.keys()) if ts_by_n[n].get('patients')), None)
+    if _pat_n:
+        _pp = ts_by_n[_pat_n]['patients']
+        pat_ids_js   = '[' + ','.join(f'"{p["id"]}"' for p in _pp) + ']'
+        pat_pexp_js  = '[' + ','.join(str(round(p.get('prob_expedite',0)*100,1)) for p in _pp) + ']'
+        pat_ecost_js = '[' + ','.join(str(round(p.get('exp_expedite_cost',0))) for p in _pp) + ']'
+        pat_colors_js = '[' + ','.join(
+            '"#ef4444"' if p.get('group','low')=='high' else
+            '"#3b82f6"' if p.get('group','low')=='medium' else '"#22c55e"'
+            for p in _pp) + ']'
+        pat_n_label = str(_pat_n)
+    else:
+        pat_ids_js = pat_pexp_js = pat_ecost_js = pat_colors_js = '[]'
+        pat_n_label = '?'
+
     # Chart data
     chart_ns  = ns
     def maybe(d, n, key, scale=1):
@@ -1547,6 +1563,16 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 
 <!-- TAB 5: Patients -->
 <div id="pane-patients" class="pane">
+  <div class="chart-grid" style="margin-bottom:16px">
+    <div class="chart-box">
+      <h3>Expediting Probability per Patient (N={pat_n_label})</h3>
+      <div class="chart-wrap" style="height:280px"><canvas id="patExpChart"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>Expected Expediting Cost per Patient (N={pat_n_label})</h3>
+      <div class="chart-wrap" style="height:280px"><canvas id="patCostChart"></canvas></div>
+    </div>
+  </div>
   <div class="card">
     <h2>Per-Patient Detail — Two-Stage Expediting Solution</h2>
     {pat_html}
@@ -1982,6 +2008,47 @@ _INIT['oos'] = function() {{
   }});
 }};
 
+// Patients tab — lazy init
+const PAT_IDS    = {pat_ids_js};
+const PAT_PEXP   = {pat_pexp_js};
+const PAT_ECOST  = {pat_ecost_js};
+const PAT_COLORS = {pat_colors_js};
+_INIT['patients'] = function() {{
+  if (!PAT_IDS.length) return;
+  _mkChart('patExpChart', {{
+    type: 'bar',
+    data: {{
+      labels: PAT_IDS,
+      datasets: [{{ label: 'P(expedite) %', data: PAT_PEXP, backgroundColor: PAT_COLORS, borderColor: PAT_COLORS.map(c => c), borderWidth: 1 }}]
+    }},
+    options: {{
+      responsive: true, maintainAspectRatio: false,
+      plugins: {{ legend: {{ display: false }} }},
+      scales: {{
+        x: {{ title: {{ display: true, text: 'Patient ID' }}, ticks: {{ maxRotation: 90, font: {{ size: 9 }} }} }},
+        y: {{ title: {{ display: true, text: 'P(expedite) %' }}, min: 0,
+              ticks: {{ callback: v => v + '%' }} }}
+      }}
+    }}
+  }});
+  _mkChart('patCostChart', {{
+    type: 'bar',
+    data: {{
+      labels: PAT_IDS,
+      datasets: [{{ label: 'E[$exp] ($)', data: PAT_ECOST, backgroundColor: PAT_COLORS, borderWidth: 1 }}]
+    }},
+    options: {{
+      responsive: true, maintainAspectRatio: false,
+      plugins: {{ legend: {{ display: false }} }},
+      scales: {{
+        x: {{ title: {{ display: true, text: 'Patient ID' }}, ticks: {{ maxRotation: 90, font: {{ size: 9 }} }} }},
+        y: {{ title: {{ display: true, text: 'Expected Expediting Cost ($)' }},
+              ticks: {{ callback: v => '$' + v.toLocaleString() }} }}
+      }}
+    }}
+  }});
+}};
+
 // ── Sensitivity charts ────────────────────────────────────────────────────────
 const SEN_SLS      = {sigma_ls_js};
 const N15_CCP_VIOL = {n15_ccp_viol_js};
@@ -2210,22 +2277,11 @@ _INIT['gantt'] = function() {{
               const v = ctx.raw;
               return v ? ctx.dataset.label + ': Day ' + v[0] + '\u2013' + v[1] : null;
             }}
-          }} }},
-          annotation: {{
-            annotations: {{
-              fcapLine: {{
-                type: 'line', yMin: fcapY, yMax: fcapY,
-                borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
-                label: {{ content: 'FCAP=' + fcap, display: true,
-                          position: 'end', font:{{ size:9 }}, color:'#dc2626',
-                          backgroundColor:'transparent' }}
-              }}
-            }}
-          }}
+          }} }}
         }},
         scales: {{
           x: {{ min: 0, max: xMax,
-                title: {{ display: true, text: 'Day 0' }},
+                title: {{ display: true, text: 'Manufacturing day' }},
                 ticks: {{ stepSize: 5 }},
                 grid: {{ color: '#f0f0f0' }}
               }},
@@ -2239,6 +2295,29 @@ _INIT['gantt'] = function() {{
         animation: {{ duration: 400 }}
       }},
       plugins: [{{
+        id: 'fcapLine',
+        afterDraw(chart) {{
+          const {{ ctx, chartArea, scales }} = chart;
+          if (!scales.y || fcapY < 0) return;
+          const yPx = scales.y.getPixelForValue(fcapY);
+          if (isNaN(yPx)) return;
+          ctx.save();
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([6, 4]);
+          ctx.beginPath();
+          ctx.moveTo(chartArea.left, yPx);
+          ctx.lineTo(chartArea.right, yPx);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = 'bold 9px Inter,sans-serif';
+          ctx.fillStyle = '#dc2626';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('FCAP=' + fcap, chartArea.right - 4, yPx - 2);
+          ctx.restore();
+        }}
+      }}, {{
         id: 'barLabels',
         afterDatasetsDraw(chart) {{
           const {{ ctx, scales }} = chart;

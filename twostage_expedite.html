@@ -2137,6 +2137,16 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 
 <!-- TAB 5: Patients -->
 <div id="pane-patients" class="pane">
+  <div class="chart-grid" style="margin-bottom:16px">
+    <div class="chart-box">
+      <h3>Expediting Probability per Patient (N=5)</h3>
+      <div class="chart-wrap" style="height:280px"><canvas id="patExpChart"></canvas></div>
+    </div>
+    <div class="chart-box">
+      <h3>Expected Expediting Cost per Patient (N=5)</h3>
+      <div class="chart-wrap" style="height:280px"><canvas id="patCostChart"></canvas></div>
+    </div>
+  </div>
   <div class="card">
     <h2>Per-Patient Detail — Two-Stage Expediting Solution</h2>
     <h4 style="margin:14px 0 6px;color:#92400E">N=5 — Per-Patient Detail</h4>
@@ -4891,6 +4901,47 @@ _INIT['oos'] = function() {
   });
 };
 
+// Patients tab — lazy init
+const PAT_IDS    = ["p7","p2","p4","p8","p38"];
+const PAT_PEXP   = [8.8,22.1,3.0,22.1,3.0];
+const PAT_ECOST  = [700,332,119,332,119];
+const PAT_COLORS = ["#ef4444","#22c55e","#3b82f6","#22c55e","#3b82f6"];
+_INIT['patients'] = function() {
+  if (!PAT_IDS.length) return;
+  _mkChart('patExpChart', {
+    type: 'bar',
+    data: {
+      labels: PAT_IDS,
+      datasets: [{ label: 'P(expedite) %', data: PAT_PEXP, backgroundColor: PAT_COLORS, borderColor: PAT_COLORS.map(c => c), borderWidth: 1 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { title: { display: true, text: 'Patient ID' }, ticks: { maxRotation: 90, font: { size: 9 } } },
+        y: { title: { display: true, text: 'P(expedite) %' }, min: 0,
+              ticks: { callback: v => v + '%' } }
+      }
+    }
+  });
+  _mkChart('patCostChart', {
+    type: 'bar',
+    data: {
+      labels: PAT_IDS,
+      datasets: [{ label: 'E[$exp] ($)', data: PAT_ECOST, backgroundColor: PAT_COLORS, borderWidth: 1 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { title: { display: true, text: 'Patient ID' }, ticks: { maxRotation: 90, font: { size: 9 } } },
+        y: { title: { display: true, text: 'Expected Expediting Cost ($)' },
+              ticks: { callback: v => '$' + v.toLocaleString() } }
+      }
+    }
+  });
+};
+
 // ── Sensitivity charts ────────────────────────────────────────────────────────
 const SEN_SLS      = [0.10,0.20,0.30,0.40];
 const N15_CCP_VIOL = [31.0,41.8,0,0];
@@ -5119,22 +5170,11 @@ _INIT['gantt'] = function() {
               const v = ctx.raw;
               return v ? ctx.dataset.label + ': Day ' + v[0] + '–' + v[1] : null;
             }
-          } },
-          annotation: {
-            annotations: {
-              fcapLine: {
-                type: 'line', yMin: fcapY, yMax: fcapY,
-                borderColor: '#dc2626', borderWidth: 1.5, borderDash: [6,4],
-                label: { content: 'FCAP=' + fcap, display: true,
-                          position: 'end', font:{ size:9 }, color:'#dc2626',
-                          backgroundColor:'transparent' }
-              }
-            }
-          }
+          } }
         },
         scales: {
           x: { min: 0, max: xMax,
-                title: { display: true, text: 'Day 0' },
+                title: { display: true, text: 'Manufacturing day' },
                 ticks: { stepSize: 5 },
                 grid: { color: '#f0f0f0' }
               },
@@ -5148,6 +5188,29 @@ _INIT['gantt'] = function() {
         animation: { duration: 400 }
       },
       plugins: [{
+        id: 'fcapLine',
+        afterDraw(chart) {
+          const { ctx, chartArea, scales } = chart;
+          if (!scales.y || fcapY < 0) return;
+          const yPx = scales.y.getPixelForValue(fcapY);
+          if (isNaN(yPx)) return;
+          ctx.save();
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([6, 4]);
+          ctx.beginPath();
+          ctx.moveTo(chartArea.left, yPx);
+          ctx.lineTo(chartArea.right, yPx);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.font = 'bold 9px Inter,sans-serif';
+          ctx.fillStyle = '#dc2626';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('FCAP=' + fcap, chartArea.right - 4, yPx - 2);
+          ctx.restore();
+        }
+      }, {
         id: 'barLabels',
         afterDatasetsDraw(chart) {
           const { ctx, scales } = chart;
