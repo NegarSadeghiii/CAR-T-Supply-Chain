@@ -89,38 +89,32 @@ URG_COLORS = [C_HIGH, C_MED, C_LOW]
 PI_MAP = {'High': 8000, 'Medium': 4000, 'Low': 1500}
 URG_EXPCOST = [PI_MAP[g] * p / 100 for g, p in zip(URG_GROUPS, URG_PEXP)]
 
-# Gantt data — representative N=15 schedule.
-# Concurrent capacity verified per facility:
-#   F1 peak (day 11): p2,p4,p25,p19 → 4 = FCAP  ✓
-#   F2 peak (day 14): p8,p46,p43,p12 → 4 = FCAP  ✓
-#   F3 max concurrent: 2 << FCAP=10              ✓
+# Gantt data — actual model output: two-stage solver, N=15, seed=42, sigma_L=0.20.
+# Facilities named by solver: m1 (FCAP=4) used heavily, m4 (FCAP=4) lightly,
+# remaining facilities unselected (spare capacity).
+# Manufacturing slot = 9 days (90th-pct LogNormal cap used by scheduler).
+# Expedite flag = prob_expedite > 5% from selected plan.
 GANTT = [
-    {'facility': 'Facility 1', 'fcap': 4, 'patients': [
-        # ── first 4 rows fill concurrent slots ──────────────────────
-        {'id': 'p7',  'group': 'high',   'start': 3,  'end': 10, 'expedite': False},
-        {'id': 'p2',  'group': 'medium', 'start': 5,  'end': 12, 'expedite': False},
-        {'id': 'p4',  'group': 'medium', 'start': 7,  'end': 14, 'expedite': False},
-        {'id': 'p25', 'group': 'high',   'start': 10, 'end': 17, 'expedite': True},
-        # ── row 5: reuses slot freed when p7 finishes (day 10) ──────
-        {'id': 'p19', 'group': 'low',    'start': 11, 'end': 18, 'expedite': False},
+    {'facility': 'Facility 1 (m1)', 'fcap': 4, 'patients': [
+        {'id': 'p7',  'group': 'high',   'start':  3, 'end': 12, 'expedite': True },
+        {'id': 'p2',  'group': 'medium', 'start':  4, 'end': 13, 'expedite': False},
+        {'id': 'p4',  'group': 'high',   'start':  8, 'end': 17, 'expedite': True },
+        {'id': 'p8',  'group': 'medium', 'start': 10, 'end': 19, 'expedite': False},
+        {'id': 'p25', 'group': 'medium', 'start': 12, 'end': 21, 'expedite': False},
+        {'id': 'p46', 'group': 'low',    'start': 17, 'end': 26, 'expedite': True },
+        {'id': 'p12', 'group': 'low',    'start': 18, 'end': 27, 'expedite': True },
+        {'id': 'p19', 'group': 'medium', 'start': 19, 'end': 28, 'expedite': False},
+        {'id': 'p5',  'group': 'medium', 'start': 22, 'end': 31, 'expedite': False},
+        {'id': 'p22', 'group': 'medium', 'start': 27, 'end': 36, 'expedite': False},
+        {'id': 'p28', 'group': 'medium', 'start': 27, 'end': 36, 'expedite': False},
+        {'id': 'p41', 'group': 'medium', 'start': 32, 'end': 41, 'expedite': False},
     ]},
-    {'facility': 'Facility 2', 'fcap': 4, 'patients': [
-        # ── first 4 rows fill concurrent slots ──────────────────────
-        {'id': 'p38', 'group': 'low',    'start': 6,  'end': 13, 'expedite': False},
-        {'id': 'p8',  'group': 'medium', 'start': 8,  'end': 15, 'expedite': False},
-        {'id': 'p46', 'group': 'high',   'start': 9,  'end': 16, 'expedite': True},
-        {'id': 'p43', 'group': 'medium', 'start': 13, 'end': 20, 'expedite': True},
-        # ── rows 5-6: reuse slots freed when p38,p8 finish ──────────
-        {'id': 'p12', 'group': 'low',    'start': 14, 'end': 21, 'expedite': False},
-        {'id': 'p53', 'group': 'medium', 'start': 16, 'end': 23, 'expedite': False},
+    {'facility': 'Facility 2 (m4)', 'fcap': 4, 'patients': [
+        {'id': 'p38', 'group': 'high',   'start': 11, 'end': 20, 'expedite': True },
+        {'id': 'p43', 'group': 'low',    'start': 20, 'end': 29, 'expedite': True },
+        {'id': 'p14', 'group': 'low',    'start': 24, 'end': 33, 'expedite': True },
     ]},
-    {'facility': 'Facility 3', 'fcap': 10, 'patients': [
-        # 4 patients — well below FCAP=10 (spare capacity)
-        {'id': 'p1',  'group': 'high',   'start': 2,  'end': 9,  'expedite': False},
-        {'id': 'p3',  'group': 'medium', 'start': 5,  'end': 12, 'expedite': False},
-        {'id': 'p5',  'group': 'low',    'start': 10, 'end': 17, 'expedite': False},
-        {'id': 'p9',  'group': 'medium', 'start': 14, 'end': 21, 'expedite': False},
-    ]},
+    {'facility': 'Facility 3 (m3)', 'fcap': 10, 'patients': []},  # spare — not selected
 ]
 
 GROUP_COLOR = {'high': C_HIGH, 'medium': C_MED, 'low': C_LOW}
@@ -420,8 +414,8 @@ def fig_gantt():
                           fac_data['fcap']))
 
     n_rows = len(rows)
-    fig, ax = plt.subplots(figsize=(10, n_rows * 0.70 + 2.0))
-    BAR_H = 0.62
+    fig, ax = plt.subplots(figsize=(10, n_rows * 0.52 + 2.0))
+    BAR_H = 0.44
 
     for row in rows:
         if row.get('empty'):
