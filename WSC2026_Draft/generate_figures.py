@@ -213,8 +213,8 @@ def fig_process_flow():
 # FIGURE 2 — Violation Bar Chart (two panel groups: N=15 | N=50)
 # ─────────────────────────────────────────────────────────────────────────────
 def fig_violation_bar():
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4.4), sharey=True)
-    fig.subplots_adjust(wspace=0.08, top=0.88)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5.0), sharey=True)
+    fig.subplots_adjust(wspace=0.08, top=0.88, bottom=0.22)
 
     def _draw_panel(ax, viol_ccp, viol_ts, title):
         n_s   = len(SIGMA)
@@ -258,17 +258,20 @@ def fig_violation_bar():
         ax.set_xlabel('Manufacturing Variability $\\sigma_L$')
         ax.set_title(title, fontsize=12, pad=6)
         ax.set_ylim(0, 98)
-        # Per-panel legend in upper left
-        ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99),
-                  framealpha=0.9, fontsize=10)
         return b1, b2
 
-    _draw_panel(ax1, VIOL_CCP_N15, VIOL_TS_N15, '$N = 15$ patients')
+    b1, b2 = _draw_panel(ax1, VIOL_CCP_N15, VIOL_TS_N15, '$N = 15$ patients')
     _draw_panel(ax2, VIOL_CCP_N50, VIOL_TS_N50, '$N = 50$ patients')
 
     ax1.set_ylabel('Out-of-sample Deadline Violation Rate (\\%)')
 
-    fig.text(0.5, 0.01,
+    # Per-panel legends — added after both panels are drawn
+    for ax in (ax1, ax2):
+        ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99),
+                  framealpha=0.9, fontsize=10)
+
+    # Footnote sits inside the bottom margin (below xlabel, above figure edge)
+    fig.text(0.5, 0.06,
              '$n = 2{,}000$ held-out scenarios. "n/a" = model infeasible.',
              ha='center', fontsize=9, color='#666666', fontstyle='italic')
 
