@@ -89,23 +89,38 @@ URG_COLORS = [C_HIGH, C_MED, C_LOW]
 PI_MAP = {'High': 8000, 'Medium': 4000, 'Low': 1500}
 URG_EXPCOST = [PI_MAP[g] * p / 100 for g, p in zip(URG_GROUPS, URG_PEXP)]
 
-# Gantt data (N=15 representative schedule)
+# Gantt data — representative N=15 schedule.
+# Concurrent capacity verified per facility:
+#   F1 peak (day 11): p2,p4,p25,p19 → 4 = FCAP  ✓
+#   F2 peak (day 14): p8,p46,p43,p12 → 4 = FCAP  ✓
+#   F3 max concurrent: 2 << FCAP=10              ✓
 GANTT = [
     {'facility': 'Facility 1', 'fcap': 4, 'patients': [
+        # ── first 4 rows fill concurrent slots ──────────────────────
         {'id': 'p7',  'group': 'high',   'start': 3,  'end': 10, 'expedite': False},
-        {'id': 'p2',  'group': 'medium', 'start': 4,  'end': 11, 'expedite': False},
-        {'id': 'p4',  'group': 'medium', 'start': 8,  'end': 15, 'expedite': False},
-        {'id': 'p25', 'group': 'high',   'start': 12, 'end': 19, 'expedite': True},
-        {'id': 'p8',  'group': 'medium', 'start': 13, 'end': 20, 'expedite': False},
-        {'id': 'p46', 'group': 'high',   'start': 14, 'end': 21, 'expedite': True},
-        {'id': 'p12', 'group': 'low',    'start': 18, 'end': 25, 'expedite': False},
-        {'id': 'p43', 'group': 'medium', 'start': 20, 'end': 27, 'expedite': True},
-        {'id': 'p19', 'group': 'low',    'start': 22, 'end': 29, 'expedite': False},
+        {'id': 'p2',  'group': 'medium', 'start': 5,  'end': 12, 'expedite': False},
+        {'id': 'p4',  'group': 'medium', 'start': 7,  'end': 14, 'expedite': False},
+        {'id': 'p25', 'group': 'high',   'start': 10, 'end': 17, 'expedite': True},
+        # ── row 5: reuses slot freed when p7 finishes (day 10) ──────
+        {'id': 'p19', 'group': 'low',    'start': 11, 'end': 18, 'expedite': False},
     ]},
     {'facility': 'Facility 2', 'fcap': 4, 'patients': [
-        {'id': 'p38', 'group': 'low',    'start': 14, 'end': 21, 'expedite': False},
+        # ── first 4 rows fill concurrent slots ──────────────────────
+        {'id': 'p38', 'group': 'low',    'start': 6,  'end': 13, 'expedite': False},
+        {'id': 'p8',  'group': 'medium', 'start': 8,  'end': 15, 'expedite': False},
+        {'id': 'p46', 'group': 'high',   'start': 9,  'end': 16, 'expedite': True},
+        {'id': 'p43', 'group': 'medium', 'start': 13, 'end': 20, 'expedite': True},
+        # ── rows 5-6: reuse slots freed when p38,p8 finish ──────────
+        {'id': 'p12', 'group': 'low',    'start': 14, 'end': 21, 'expedite': False},
+        {'id': 'p53', 'group': 'medium', 'start': 16, 'end': 23, 'expedite': False},
     ]},
-    {'facility': 'Facility 3', 'fcap': 10, 'patients': []},   # spare capacity
+    {'facility': 'Facility 3', 'fcap': 10, 'patients': [
+        # 4 patients — well below FCAP=10 (spare capacity)
+        {'id': 'p1',  'group': 'high',   'start': 2,  'end': 9,  'expedite': False},
+        {'id': 'p3',  'group': 'medium', 'start': 5,  'end': 12, 'expedite': False},
+        {'id': 'p5',  'group': 'low',    'start': 10, 'end': 17, 'expedite': False},
+        {'id': 'p9',  'group': 'medium', 'start': 14, 'end': 21, 'expedite': False},
+    ]},
 ]
 
 GROUP_COLOR = {'high': C_HIGH, 'medium': C_MED, 'low': C_LOW}
