@@ -127,68 +127,85 @@ def _save(fig, name):
 # FIGURE 1 — Process Flow
 # ─────────────────────────────────────────────────────────────────────────────
 def fig_process_flow():
-    fig, ax = plt.subplots(figsize=(10, 3.4))
-    ax.set_xlim(0, 12); ax.set_ylim(0, 2.4)
+    from matplotlib.patches import Ellipse
+    fig, ax = plt.subplots(figsize=(11, 4.2))
     ax.axis('off')
 
-    BOX_W, BOX_H = 1.55, 0.58
-    Y = 1.55   # main process row
+    # Fixed, equal box dimensions and uniform spacing
+    BOX_W = 1.50
+    BOX_H = 0.62
+    GAP   = 0.42          # gap between boxes
+    STEP  = BOX_W + GAP   # 1.92 per slot
+    X0    = 0.85          # left edge of first box centre
+    Y     = 2.60          # main process row y
 
     steps = [
-        ('Leukapheresis',   r'$T_{LS} = 1$ day',      0.9,  NAVY+'22'),
-        ('Outbound\nTransport', r'$TT_1 \in \{1,4\}$ days', 2.6,  NAVY+'22'),
-        ('Manufacturing',   r'$T_{MF} \sim \mathrm{LogN}(\mu,\sigma_L^2)$', 4.7, AMBER+'33'),
-        ('Quality\nControl', r'$T_{QC} = 7$ days',    6.8,  NAVY+'22'),
-        ('Return\nTransport', r'$TT_3 \in \{1,4\}$ days', 8.8, TEAL+'33'),
-        ('Infusion',        r'(patient)',              10.5, '#2E7D3222'),
+        ('Leukapheresis',    r'$T_{LS} = 1$ day',                     NAVY+'22'),
+        ('Outbound\nTransport', r'$TT_1 \in \{1,4\}$ days',           NAVY+'22'),
+        ('Manufacturing',    r'$T_{MF} \sim \mathrm{LogN}(\mu,\sigma_L^2)$', AMBER+'44'),
+        ('Quality\nControl', r'$T_{QC} = 7$ days',                    NAVY+'22'),
+        ('Return\nTransport', r'$TT_3 \in \{1,4\}$ days',             TEAL+'44'),
+        ('Infusion',         r'(patient)',                             '#2E7D3222'),
     ]
 
-    for title, sub, xc, fc in steps:
+    xcs = [X0 + i * STEP for i in range(len(steps))]
+
+    for (title, sub, fc), xc in zip(steps, xcs):
         rect = FancyBboxPatch((xc - BOX_W/2, Y - BOX_H/2), BOX_W, BOX_H,
                               boxstyle='round,pad=0.06', lw=1.2,
                               edgecolor='#333333', facecolor=fc, zorder=3)
         ax.add_patch(rect)
-        ax.text(xc, Y + 0.07, title, ha='center', va='center',
-                fontsize=9.5, fontweight='bold', zorder=4)
-        ax.text(xc, Y - 0.18, sub, ha='center', va='center',
+        ax.text(xc, Y + 0.09, title, ha='center', va='center',
+                fontsize=9.0, fontweight='bold', zorder=4)
+        ax.text(xc, Y - 0.20, sub, ha='center', va='center',
                 fontsize=7.5, color='#555555', zorder=4)
 
-    # Arrows
+    # Arrows between boxes
     for i in range(len(steps) - 1):
-        x0 = steps[i][2]   + BOX_W/2 + 0.04
-        x1 = steps[i+1][2] - BOX_W/2 - 0.04
-        ax.annotate('', xy=(x1, Y), xytext=(x0, Y),
+        x_start = xcs[i]   + BOX_W/2 + 0.04
+        x_end   = xcs[i+1] - BOX_W/2 - 0.04
+        ax.annotate('', xy=(x_end, Y), xytext=(x_start, Y),
                     arrowprops=dict(arrowstyle='->', color='#333333',
                                    lw=1.5, mutation_scale=14), zorder=5)
 
-    # Stage 1 bracket (below boxes, steps 0-4)
-    s1_x0 = steps[0][2] - BOX_W/2
-    s1_x1 = steps[4][2] + BOX_W/2
-    s1_y  = Y - BOX_H/2 - 0.18
+    # Stage 1 bracket — spans leukapheresis through return transport (steps 0–4)
+    s1_x0 = xcs[0] - BOX_W/2
+    s1_x1 = xcs[4] + BOX_W/2
+    s1_y  = Y - BOX_H/2 - 0.20
     ax.annotate('', xy=(s1_x1, s1_y), xytext=(s1_x0, s1_y),
                 arrowprops=dict(arrowstyle='<->', color=NAVY, lw=1.4))
-    ax.text((s1_x0 + s1_x1)/2, s1_y - 0.14,
+    ax.text((s1_x0 + s1_x1) / 2, s1_y - 0.16,
             'Stage 1: facility and route selection (column generation)',
             ha='center', fontsize=9, color=NAVY, fontstyle='italic')
 
-    # Stage 2 expediting oval on Return Transport
-    rt_xc = steps[4][2]
-    from matplotlib.patches import Ellipse
-    ell = Ellipse((rt_xc, Y), BOX_W + 0.38, BOX_H + 0.30,
-                  linewidth=2, edgecolor=AMBER, facecolor='none',
+    # Stage 2 dashed oval — encloses ONLY the Return Transport box (step 4)
+    rt_xc = xcs[4]
+    ell = Ellipse((rt_xc, Y), BOX_W + 0.42, BOX_H + 0.34,
+                  linewidth=2.0, edgecolor=AMBER, facecolor='none',
                   linestyle='--', zorder=6)
     ax.add_patch(ell)
-    ax.text(rt_xc, Y + BOX_H/2 + 0.28,
-            r'Stage 2: if $T_{MF} > K_i$, switch ground$\to$air ($\delta$ days saved, cost $\pi_p$)',
-            ha='center', fontsize=8.5, color=AMBER, fontweight='bold',
-            bbox=dict(boxstyle='round,pad=0.2', facecolor='white',
-                      edgecolor=AMBER, alpha=0.9))
-    ax.annotate('', xy=(rt_xc, Y + BOX_H/2 + 0.06),
-                xytext=(rt_xc, Y + BOX_H/2 + 0.18),
-                arrowprops=dict(arrowstyle='->', color=AMBER, lw=1.3))
+
+    # Label below the diagram with an arrow pointing up to the oval
+    label_y = s1_y - 0.48
+    ax.annotate(
+        r'Stage 2: if $T_{MF} > K_i$, switch ground$\to$air ($\delta$ days saved, cost $\pi_p$)',
+        xy=(rt_xc, Y - BOX_H/2 - 0.17),        # tip of arrow at oval bottom
+        xytext=(rt_xc, label_y),                # label sits below Stage 1 bracket
+        ha='center', va='top',
+        fontsize=8.5, color=AMBER, fontweight='bold',
+        arrowprops=dict(arrowstyle='->', color=AMBER, lw=1.4, shrinkA=2),
+        bbox=dict(boxstyle='round,pad=0.25', facecolor='white',
+                  edgecolor=AMBER, alpha=0.95, linewidth=1.2),
+        zorder=7,
+    )
+
+    # Auto-scale axes to content
+    x_total = xcs[-1] + BOX_W/2 + 0.3
+    ax.set_xlim(0, x_total)
+    ax.set_ylim(label_y - 0.3, Y + BOX_H/2 + 0.5)
 
     ax.set_title('CAR-T Cell Therapy Supply Chain — Process Flow',
-                 fontsize=13, pad=6, fontweight='bold')
+                 fontsize=13, pad=8, fontweight='bold')
     _save(fig, 'fig_process_flow.pdf')
 
 
@@ -197,7 +214,7 @@ def fig_process_flow():
 # ─────────────────────────────────────────────────────────────────────────────
 def fig_violation_bar():
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4.4), sharey=True)
-    fig.subplots_adjust(wspace=0.08)
+    fig.subplots_adjust(wspace=0.08, top=0.88)
 
     def _draw_panel(ax, viol_ccp, viol_ts, title):
         n_s   = len(SIGMA)
@@ -224,7 +241,7 @@ def fig_violation_bar():
                         color=GREY, fontstyle='italic')
             elif h > 0:
                 ax.text(bar.get_x() + bar.get_width()/2, h + 1.2,
-                        f'{h:.0f}', ha='center', va='bottom', fontsize=8.5)
+                        f'{h:.0f}', ha='center', va='bottom', fontsize=9)
 
         for bar, orig in zip(b2, viol_ts):
             h = bar.get_height()
@@ -234,32 +251,29 @@ def fig_violation_bar():
                         color=GREY, fontstyle='italic')
             elif h > 0:
                 ax.text(bar.get_x() + bar.get_width()/2, h + 1.2,
-                        f'{h:.0f}', ha='center', va='bottom', fontsize=8.5)
+                        f'{h:.0f}', ha='center', va='bottom', fontsize=9)
 
         ax.set_xticks(x)
         ax.set_xticklabels([f'$\\sigma_L={s:.2f}$' for s in SIGMA], fontsize=10)
         ax.set_xlabel('Manufacturing Variability $\\sigma_L$')
         ax.set_title(title, fontsize=12, pad=6)
         ax.set_ylim(0, 98)
+        # Per-panel legend in upper left
+        ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99),
+                  framealpha=0.9, fontsize=10)
         return b1, b2
 
-    b1, b2 = _draw_panel(ax1, VIOL_CCP_N15, VIOL_TS_N15, '$N = 15$ patients')
+    _draw_panel(ax1, VIOL_CCP_N15, VIOL_TS_N15, '$N = 15$ patients')
     _draw_panel(ax2, VIOL_CCP_N50, VIOL_TS_N50, '$N = 50$ patients')
 
     ax1.set_ylabel('Out-of-sample Deadline Violation Rate (\\%)')
 
-    # Shared legend
-    fig.legend([b1, b2],
-               ['CCP ($\\tau = 0.4$) — hatched', 'Two-stage stochastic — solid'],
-               loc='lower center', ncol=2, framealpha=0.9,
-               bbox_to_anchor=(0.5, -0.06), fontsize=10)
-
-    fig.text(0.5, -0.10,
+    fig.text(0.5, 0.01,
              '$n = 2{,}000$ held-out scenarios. "n/a" = model infeasible.',
              ha='center', fontsize=9, color='#666666', fontstyle='italic')
 
     fig.suptitle('Out-of-sample Deadline Violation Rate: CCP vs.\ Two-stage Stochastic',
-                 fontsize=13, fontweight='bold', y=1.02)
+                 fontsize=13, fontweight='bold')
     _save(fig, 'fig_violation_bar.pdf')
 
 
@@ -313,7 +327,7 @@ def fig_tau_sensitivity():
 # FIGURE 4 — Urgency Analysis (two panels)
 # ─────────────────────────────────────────────────────────────────────────────
 def fig_urgency_analysis():
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8.5, 4.0))
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.5, 4.0))
     fig.subplots_adjust(wspace=0.32)
 
     x = np.arange(len(URG_GROUPS))
@@ -324,7 +338,7 @@ def fig_urgency_analysis():
             h = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2, h + 0.3,
                     fmt.format(f'{h:.1f}'),
-                    ha='center', va='bottom', fontsize=9.5)
+                    ha='center', va='bottom', fontsize=9)
 
     # Panel A — P(expedite)
     b1 = ax1.bar(x, URG_PEXP, w, color=URG_COLORS, alpha=0.88,
@@ -342,7 +356,7 @@ def fig_urgency_analysis():
     for bar, val in zip(b2, URG_EXPCOST):
         ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
                  f'\\${val:.0f}',
-                 ha='center', va='bottom', fontsize=9.5)
+                 ha='center', va='bottom', fontsize=9)
     ax2.set_xticks(x); ax2.set_xticklabels(URG_GROUPS)
     ax2.set_xlabel('Urgency Class')
     ax2.set_ylabel('Expected Expediting Cost (\\$ per patient)')
@@ -353,11 +367,14 @@ def fig_urgency_analysis():
     patches = [mpatches.Patch(color=c, alpha=0.88, label=g)
                for c, g in zip(URG_COLORS, URG_GROUPS)]
     fig.legend(handles=patches, loc='lower center', ncol=3,
-               framealpha=0.9, bbox_to_anchor=(0.5, -0.06))
+               framealpha=0.9, bbox_to_anchor=(0.5, -0.04))
 
     fig.suptitle('Per-Patient Expediting Analysis by Urgency Class\n'
                  '(Two-stage model, $N=15$, $\\sigma_L = 0.20$)',
                  fontsize=12, fontweight='bold', y=1.02)
+
+    plt.tight_layout(pad=2.0)
+    plt.subplots_adjust(bottom=0.18)
     _save(fig, 'fig_urgency_analysis.pdf')
 
 
@@ -385,13 +402,13 @@ def fig_gantt():
                           fac_data['fcap']))
 
     n_rows = len(rows)
-    fig, ax = plt.subplots(figsize=(10, n_rows * 0.56 + 2.0))
+    fig, ax = plt.subplots(figsize=(10, n_rows * 0.70 + 2.0))
     BAR_H = 0.62
 
     for row in rows:
         if row.get('empty'):
-            ax.text(-0.3, row['y'], '(no patients assigned)',
-                    va='center', ha='right', fontsize=8.5,
+            ax.text(0.5, row['y'], '(no patients assigned)',
+                    va='center', ha='left', fontsize=8.5,
                     color=GREY, fontstyle='italic')
             continue
 
@@ -409,25 +426,31 @@ def fig_gantt():
                     color='none', edgecolor=GREY, hatch='///',
                     linewidth=0.4, alpha=0.9, zorder=4)
 
-        # Day label
+        # Day label: inside for wide bars, outside for narrow bars (8pt)
+        label_text = f"D{row['start']}–{row['end']}"
         if dur > 3:
-            ax.text(mid, row['y'], f"D{row['start']}–{row['end']}",
-                    ha='center', va='center', fontsize=7.5,
+            ax.text(mid, row['y'], label_text,
+                    ha='center', va='center', fontsize=8,
                     color='white', fontweight='bold')
+        else:
+            ax.text(row['end'] + 0.4, row['y'], label_text,
+                    ha='left', va='center', fontsize=8, color='#333333')
 
-    # Facility background bands + labels
+    # Facility background bands + divider lines with labels above each group
     band_colors = [NAVY + '0A', TEAL + '0A', AMBER + '0A']
     xmax = max((r['end'] for r in rows if not r.get('empty')), default=35) + 5
     for i, (fname, y0, y1, fcap) in enumerate(fac_bands):
-        ax.axhspan(y0 - 0.5, y1 + 0.5, color=band_colors[i % 3],
-                   zorder=0)
-        ax.text(-0.5, (y0 + y1) / 2, f'{fname}\n(FCAP={fcap})',
-                ha='right', va='center', fontsize=9,
-                color='#222222', fontweight='bold')
+        ax.axhspan(y0 - 0.5, y1 + 0.5, color=band_colors[i % 3], zorder=0)
+        # Divider line between facility groups
         if i > 0:
-            ax.axhline(y0 - 0.5, color='#cccccc', lw=1, zorder=1)
+            ax.axhline(y0 - 0.5, color='#888888', lw=0.9, zorder=1)
+        # Facility label just above the divider (or top of chart for first group)
+        # clip_on=False so label renders above the axes frame for Facility 1
+        ax.text(0, y0 - 0.55, f'{fname}  (capacity {fcap})',
+                ha='left', va='bottom', fontsize=9, clip_on=False,
+                color=NAVY, fontweight='bold')
 
-    # FCAP capacity line per facility
+    # FCAP capacity line per facility (dashed red, no redundant text label)
     for fac_data in GANTT:
         fcap = fac_data['fcap']
         pats = [r for r in rows if r['facility'] == fac_data['facility']
@@ -436,8 +459,6 @@ def fig_gantt():
             cap_y = pats[fcap - 1]['y'] + BAR_H / 2 + 0.10
             ax.plot([0, xmax - 2], [cap_y, cap_y],
                     color=RED_X, lw=1.6, linestyle='--', alpha=0.85, zorder=5)
-            ax.text(xmax - 1.8, cap_y, f'FCAP={fcap}',
-                    fontsize=8, color=RED_X, va='center')
 
     # Axes
     ax.set_yticks([r['y'] for r in rows])
