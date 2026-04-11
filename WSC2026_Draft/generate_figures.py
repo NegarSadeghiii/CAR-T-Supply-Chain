@@ -441,14 +441,22 @@ def fig_gantt():
     xmax = max((r['end'] for r in rows if not r.get('empty')), default=35) + 5
     for i, (fname, y0, y1, fcap) in enumerate(fac_bands):
         ax.axhspan(y0 - 0.5, y1 + 0.5, color=band_colors[i % 3], zorder=0)
-        # Divider line between facility groups
         if i > 0:
+            # Divider line between facility groups
             ax.axhline(y0 - 0.5, color='#888888', lw=0.9, zorder=1)
-        # Facility label just above the divider (or top of chart for first group)
-        # clip_on=False so label renders above the axes frame for Facility 1
-        ax.text(0, y0 - 0.55, f'{fname}  (capacity {fcap})',
-                ha='left', va='bottom', fontsize=9, clip_on=False,
-                color=NAVY, fontweight='bold')
+            # Label just above the divider (y0 - 0.55 is visually above divider
+            # on inverted axis; clip_on=False lets it render over the axes frame)
+            ax.text(0, y0 - 0.55, f'{fname}  (capacity {fcap})',
+                    ha='left', va='bottom', fontsize=9, clip_on=False,
+                    color=NAVY, fontweight='bold')
+        else:
+            # First facility: label inside the band, just above the first row
+            # (y0 + 0.45 on inverted axis = above y0=0, but inside axes limits)
+            ax.text(0, y0 - 0.02, f'{fname}  (capacity {fcap})',
+                    ha='left', va='bottom', fontsize=9, clip_on=False,
+                    color=NAVY, fontweight='bold',
+                    bbox=dict(boxstyle='round,pad=0.15', facecolor='white',
+                              edgecolor='none', alpha=0.75))
 
     # FCAP capacity line per facility (dashed red, no redundant text label)
     for fac_data in GANTT:
