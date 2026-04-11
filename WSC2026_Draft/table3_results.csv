@@ -1,0 +1,11 @@
+N,sigma_L,CCP_viol_%,2S_viol_%,CCP_norm_cost,2S_norm_cost
+15,0.1,31.0,2.7,1.000,0.999
+15,0.2,41.8,15.7,—,—
+15,0.3,n/a,34.0,—,—
+15,0.4,n/a,n/a,—,—
+50,0.1,73.5,10.0,1.385,1.382
+50,0.2,84.0,44.1,—,—
+50,0.3,n/a,74.6,—,—
+50,0.4,n/a,n/a,—,—
+# Costs normalised to CCP at N=15 sigma=0.10 ($6.3892M)
+# n/a = model infeasible at this configuration
