@@ -1,0 +1,12 @@
+N,sigma_L,ccp_viol,twostage_viol,ccp_cost_norm,twostage_cost_norm
+15,0.1,31.0,2.7,1.0,0.999
+15,0.2,41.8,15.7,1.002,1.001
+15,0.3,n/a,34.0,n/a,1.003
+15,0.4,n/a,n/a,n/a,n/a
+50,0.1,73.5,10.0,1.381,1.133
+50,0.2,84.0,44.1,1.387,1.384
+50,0.3,n/a,74.6,n/a,1.85
+50,0.4,n/a,n/a,n/a,n/a
+# tau=0.0, alpha=0.10 (CCP), delta=2.0 (2S), epsilon=0.05, n_sim=2000, seed=77
+# normalised to CCP N=15 sigma_L=0.10 (ref=$6,379,457.80)
+# n/a = model infeasible at this configuration

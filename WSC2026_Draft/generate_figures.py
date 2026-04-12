@@ -235,7 +235,7 @@ def fig_violation_bar():
         ts_vals  = [v if v is not None else 0 for v in viol_ts]
 
         b1 = ax.bar(x - w/2 - gap/2, ccp_vals, w,
-                    label='CCP ($\\tau=0.4$)', color=C_CCP, alpha=0.88,
+                    label='CCP ($\\alpha=0.10$)', color=C_CCP, alpha=0.88,
                     hatch='//', edgecolor=C_CCP, linewidth=0.6)
         b2 = ax.bar(x + w/2 + gap/2, ts_vals,  w,
                     label='Two-stage stochastic', color=C_TS, alpha=0.88,
@@ -505,11 +505,11 @@ def fig_gantt():
 # Table 3 CSV + LaTeX snippet
 # ─────────────────────────────────────────────────────────────────────────────
 def save_table3():
-    ref = 6.3892   # CCP cost at N=15, σ=0.10
+    ref = 6.3795   # CCP cost at N=15, σ=0.10 (tau=0.0, alpha=0.10, seed=42)
 
-    # OOS costs at N=15 and N=50
-    COST_CCP = {15: 6.3892, 50: 8.8480}
-    COST_TS  = {15: 6.3852, 50: 8.8287}
+    # OOS costs at N=15 and N=50 (tau=0.0, alpha=0.10, delta=2.0, seed=42)
+    COST_CCP = {15: 6.3795, 50: 8.8117}
+    COST_TS  = {15: 6.3743, 50: 7.2256}
 
     rows = [
         (15, 0.10, 31.0,  2.7,  f'{COST_CCP[15]/ref:.3f}', f'{COST_TS[15]/ref:.3f}'),
