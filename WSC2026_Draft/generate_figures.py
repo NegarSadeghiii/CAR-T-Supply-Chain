@@ -470,15 +470,8 @@ def fig_gantt():
                     bbox=dict(boxstyle='round,pad=0.15', facecolor='white',
                               edgecolor='none', alpha=0.75))
 
-    # FCAP capacity line per facility (dashed red, no redundant text label)
-    for fac_data in GANTT:
-        fcap = fac_data['fcap']
-        pats = [r for r in rows if r['facility'] == fac_data['facility']
-                and not r.get('empty')]
-        if len(pats) >= fcap:
-            cap_y = pats[fcap - 1]['y'] + BAR_H / 2 + 0.10
-            ax.plot([0, xmax - 2], [cap_y, cap_y],
-                    color=RED_X, lw=1.6, linestyle='--', alpha=0.85, zorder=5)
+    # FCAP capacity line removed — overlapping bars already show concurrency;
+    # the dashed line was misleading (looked like a violation marker).
 
     # Axes
     ax.set_yticks([r['y'] for r in rows])
@@ -487,7 +480,7 @@ def fig_gantt():
     ax.set_xlim(-1, xmax)
     ax.set_xlabel('Manufacturing Day')
     ax.set_title('Manufacturing Schedule — Gantt Chart\n'
-                 '($N=15$, representative scenario; dashed red = facility capacity limit)',
+                 '($N=15$, two-stage stochastic, seed=42; overlapping bars = concurrent slots)',
                  pad=8, fontsize=12, fontweight='bold')
     ax.grid(axis='x', alpha=0.25, linestyle='--', zorder=0)
     ax.set_axisbelow(True)
