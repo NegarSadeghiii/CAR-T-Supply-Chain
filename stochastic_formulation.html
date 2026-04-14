@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAR-T Supply Chain — Stochastic Extension</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(','\\)']], displayMath: [['$$','$$']], tags: 'none' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Georgia',serif;background:#fafaf8;color:#1a1a1a;font-size:15px;line-height:1.6}
+  .page{max-width:1200px;margin:0 auto;padding:40px 32px}
+
+  /* Header */
+  .main-title{text-align:center;font-size:2.2em;font-weight:700;letter-spacing:-.5px;margin-bottom:6px}
+  .main-subtitle{text-align:center;color:#555;font-size:1em;margin-bottom:30px;font-style:italic}
+
+  /* Problem box */
+  .problem-box{border:1.5px solid #ccc;border-radius:6px;padding:16px 22px;background:#fefefe;margin-bottom:28px;font-size:.95em;line-height:1.7}
+
+  /* Tabs */
+  .tabs{display:flex;gap:0;border-bottom:2px solid #d0d0d0;margin-bottom:36px}
+  .tab{padding:9px 22px;cursor:default;font-weight:600;font-size:.93em;color:#666;border:1.5px solid transparent;border-bottom:none;border-radius:4px 4px 0 0;margin-bottom:-2px;background:#fafaf8}
+  .tab.active{color:#1a1a1a;border-color:#d0d0d0;background:#fff;border-bottom-color:#fff}
+
+  /* Section titles */
+  .section-title{font-size:1.35em;font-weight:700;margin-bottom:4px;margin-top:10px}
+  .section-rule{border:none;border-top:2px solid #333;margin-bottom:24px;margin-top:6px}
+  .subsection-title{font-size:1.05em;font-weight:700;color:#222;margin-bottom:14px;margin-top:24px}
+
+  /* Notation table */
+  .notation-table{width:100%;border-collapse:collapse;margin-bottom:30px;font-size:.93em}
+  .notation-table tr{border-bottom:1px solid #e0e0e0}
+  .notation-table td{padding:9px 12px;vertical-align:top}
+  .notation-table td:nth-child(1){width:16%;font-style:italic;font-weight:500;white-space:nowrap}
+  .notation-table td:nth-child(2){width:34%;font-family:monospace;font-size:.92em}
+  .notation-table td:nth-child(3){width:16%;font-style:italic;font-weight:500;white-space:nowrap;padding-left:28px}
+  .notation-table td:nth-child(4){font-family:monospace;font-size:.92em}
+  .notation-new td{background:#f0faf0}
+
+  /* Side-by-side */
+  .comparison{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px}
+  .box{border:2px solid;border-radius:7px;padding:22px 24px}
+  .box-det{border-color:#2c5b8a;background:#f5f8fd}
+  .box-sto{border-color:#2a6b3a;background:#f3faf4}
+  .box-title{font-size:.88em;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+  .box-title-det{color:#1e4070}
+  .box-title-sto{color:#1b4d2a}
+  .box h4{font-size:.97em;font-weight:700;margin:14px 0 6px 0}
+  .box h4:first-of-type{margin-top:0}
+  .box ul{list-style:disc;padding-left:20px;font-size:.89em;line-height:1.75}
+  .box ul li{margin-bottom:3px}
+  .box .formula{text-align:center;margin:10px 0 14px 0;font-size:.97em}
+  .box .size-note{font-style:italic;font-size:.82em;color:#555;margin-top:14px;border-top:1px solid #ddd;padding-top:8px}
+
+  /* Stage badges */
+  .stage1{display:inline-block;background:#2c5b8a;color:#fff;font-size:.72em;font-weight:700;padding:1px 7px;border-radius:3px;vertical-align:middle;margin-right:5px;letter-spacing:.04em}
+  .stage2{display:inline-block;background:#2a6b3a;color:#fff;font-size:.72em;font-weight:700;padding:1px 7px;border-radius:3px;vertical-align:middle;margin-right:5px;letter-spacing:.04em}
+  .new-badge{display:inline-block;background:#c0392b;color:#fff;font-size:.7em;font-weight:700;padding:1px 6px;border-radius:3px;vertical-align:middle;margin-left:5px}
+
+  /* Algorithm box */
+  .algo-box{border:1.5px solid #888;border-radius:6px;padding:18px 24px;background:#fefefe;margin-bottom:22px}
+  .algo-step{display:flex;gap:14px;margin-bottom:10px;font-size:.91em;align-items:flex-start}
+  .algo-num{min-width:26px;height:26px;border-radius:50%;background:#444;color:#fff;font-weight:700;font-size:.85em;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+  .algo-num-green{background:#2a6b3a}
+
+  /* Scenario box */
+  .scenario-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:22px}
+  .scenario-card{border:1px solid #ccc;border-radius:6px;padding:14px 16px;background:#fff;font-size:.88em}
+  .scenario-card h5{font-weight:700;margin-bottom:8px;color:#333;font-size:.95em}
+  .scenario-card p{color:#555;line-height:1.5;font-size:.92em}
+  .scenario-card .prob{font-weight:700;color:#2a6b3a}
+
+  /* Note box */
+  .note-box{border-left:5px solid #b85c00;background:#fffbf2;padding:14px 20px;border-radius:0 6px 6px 0;font-size:.9em;line-height:1.65;margin-bottom:22px}
+  .note-box strong{color:#7a3c00}
+
+  /* Diff table */
+  .diff-table{width:100%;border-collapse:collapse;font-size:.88em;margin-bottom:22px}
+  .diff-table th{background:#2c3e50;color:#fff;padding:9px 14px;text-align:left;font-weight:600}
+  .diff-table td{padding:9px 14px;border-bottom:1px solid #ddd;vertical-align:top}
+  .diff-table tr:nth-child(even) td{background:#f7f7f7}
+  .changed{color:#c0392b;font-weight:600}
+  .same{color:#27ae60;font-weight:600}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ===== HEADER ===== -->
+  <h1 class="main-title">CAR-T Cell Therapy Supply Chain Optimization</h1>
+  <p class="main-subtitle">Deterministic Column Generation vs. Two-Stage Stochastic SAA &mdash; Manufacturing Time Uncertainty</p>
+
+  <div class="problem-box">
+    <strong>Problem:</strong> Minimize expected total cost (facility + transport + material) subject to patient deadlines under uncertain manufacturing time T<sub>MF</sub>.<br>
+    <strong>Uncertainty:</strong> T<sup>&omega;</sup><sub>MF</sub> ~ discrete mixture: nominal 7d (prob 0.6) | extended 10d (prob 0.3) | delayed 14d (prob 0.1) &nbsp;|&nbsp;
+    <strong>Recourse:</strong> Wait time W<sup>&omega;</sup><sub>p</sub> &ge; 0 absorbs schedule slack per scenario &nbsp;|&nbsp; <strong>Penalty:</strong> B &middot; L<sup>&omega;</sup><sub>p</sub> for lateness
+  </div>
+
+  <!-- ===== TABS ===== -->
+  <div class="tabs">
+    <div class="tab">Benchmark</div>
+    <div class="tab active">Formulation</div>
+    <div class="tab">KPI Analysis</div>
+    <div class="tab">Sensitivity</div>
+    <div class="tab">Key Findings</div>
+  </div>
+
+  <!-- ===== NOTATION ===== -->
+  <div class="section-title">Problem Formulation</div>
+  <hr class="section-rule">
+
+  <div class="subsection-title">Common Notation</div>
+  <table class="notation-table">
+    <tr><td>\(P\)</td><td>patients</td><td>\(M\)</td><td>manufacturing facilities</td></tr>
+    <tr><td>\(C\)</td><td>collection centers</td><td>\(H\)</td><td>hospitals</td></tr>
+    <tr><td>\(J\)</td><td>transport modes (air, ground)</td><td>\(T\)</td><td>time periods \(\{1,\ldots,130\}\)</td></tr>
+    <tr><td>\(\mathrm{CIM}_m, \mathrm{CVM}_m\)</td><td>facility costs</td><td>\(U^o_{cmj},\,U^r_{mhj}\)</td><td>transport costs</td></tr>
+    <tr><td>\(\mathrm{TT}^o_j, \mathrm{TT}^r_j\)</td><td>transport times</td><td>\(T_{\mathrm{LS}},T_{\mathrm{MF}},T_{\mathrm{QC}}\)</td><td>stage durations (1, 7, 7 days)</td></tr>
+    <tr><td>\(D_p\)</td><td>patient deadline</td><td>\(\mathrm{FCAP}_m\)</td><td>facility capacity</td></tr>
+    <tr class="notation-new"><td>\(\Omega\)</td><td>scenario set \(\{\omega_1,\ldots,\omega_S\}\)</td><td>\(\pi_\omega = 1/S\)</td><td>scenario probability (equal weight)</td></tr>
+    <tr class="notation-new"><td>\(T^{\omega}_{\mathrm{MF}}\)</td><td>manufacturing time in scenario \(\omega\)</td><td>\(W^{\omega}_p \ge 0\)</td><td>wait-time recourse variable</td></tr>
+    <tr class="notation-new"><td>\(L^{\omega}_p \ge 0\)</td><td>lateness in scenario \(\omega\)</td><td>\(B\)</td><td>lateness penalty (= 1,000,000)</td></tr>
+  </table>
+  <p style="font-size:.82em;color:#555;margin-bottom:28px;font-style:italic;">Rows highlighted in green are new to the stochastic formulation.</p>
+
+  <!-- ===== SIDE-BY-SIDE ===== -->
+  <div class="subsection-title">Side-by-Side Comparison</div>
+  <div class="comparison">
+
+    <!-- LEFT: Deterministic -->
+    <div class="box box-det">
+      <div class="box-title box-title-det">Column Generation &mdash; Deterministic (current)</div>
+
+      <h4>Objective:</h4>
+      <div class="formula">
+        $$\min \sum_{i} c_i\, x_i \;+\; \sum_{m} f_m\, z_m \;+\; (C_{\mathrm{mat}}+C_{\mathrm{qc}})|P|$$
+      </div>
+
+      <h4>Variables:</h4>
+      <ul>
+        <li>\(z_m \in \{0,1\}\) &mdash; open facility</li>
+        <li>\(x_i \in \{0,1\}\) &mdash; select plan \(i\) for patient \(p(i)\)</li>
+        <li>Plan \(i\) = \((m,\, j_{\mathrm{out}},\, j_{\mathrm{ret}},\, w{=}0)\)</li>
+        <li>\(\mathrm{TRT}_i = T_{\mathrm{LS}} + \mathrm{TT}^o_{j_{\mathrm{out}}} + T_{\mathrm{MF}} + T_{\mathrm{QC}} + \mathrm{TT}^r_{j_{\mathrm{ret}}}\) &nbsp;<em>(fixed)</em></li>
+      </ul>
+
+      <h4>Key Constraints:</h4>
+      <ul>
+        <li>\(\displaystyle\sum_{i\,\in\,\mathrm{Plans}_p} x_i = 1\) &nbsp;&mdash; one plan per patient</li>
+        <li>\(x_i \le z_{m(i)}\) &nbsp;&mdash; plan uses open facility</li>
+        <li>\(\displaystyle\sum_m z_m \le 2\) &nbsp;&mdash; at most 2 facilities</li>
+        <li>Capacity: \(\mathrm{entering}(m,t) - \mathrm{leaving}(m,t) \le \mathrm{FCAP}_m - \mathrm{recent}(m,t)\)</li>
+        <li><strong>Hard deadline at plan generation:</strong> if \(\mathrm{TRT}_i > D_p\), plan \(i\) is never created</li>
+        <li>Wait \(w = 0\) always (MSB1 constraint in MIP)</li>
+      </ul>
+
+      <div class="size-note">
+        Size: \(O(|P|\cdot|M|\cdot|J|^2)\approx 258\) plans for \(N{=}15\)<br>
+        Deadline enforced by filtering &mdash; infeasible plans excluded at generation
+      </div>
+    </div>
+
+    <!-- RIGHT: Stochastic SAA -->
+    <div class="box box-sto">
+      <div class="box-title box-title-sto">Column Generation &mdash; Stochastic SAA (proposed)</div>
+
+      <h4>Objective:</h4>
+      <div class="formula">
+        $$\min \underbrace{\sum_{r} c_r\, x_r + \sum_{m} f_m\, z_m + (C_{\mathrm{mat}}+C_{\mathrm{qc}})|P|}_{\text{Stage 1: route cost}} + \underbrace{\frac{1}{S}\sum_{\omega}\sum_{p} B\cdot L^{\omega}_p}_{\text{Stage 2: expected lateness}}$$
+      </div>
+
+      <h4>Variables:</h4>
+      <ul>
+        <li><span class="stage1">S1</span> \(z_m \in \{0,1\}\) &mdash; open facility</li>
+        <li><span class="stage1">S1</span> \(x_r \in \{0,1\}\) &mdash; select route \(r\) for patient \(p(r)\)</li>
+        <li><span class="stage1">S1</span> Route \(r\) = \((m,\, j_{\mathrm{out}},\, j_{\mathrm{ret}})\) &mdash; <strong>no wait, no TRT</strong></li>
+        <li><span class="stage2">S2</span> \(W^{\omega}_p \ge 0\) &mdash; wait recourse per scenario <span class="new-badge">NEW</span></li>
+        <li><span class="stage2">S2</span> \(L^{\omega}_p \ge 0\) &mdash; lateness per scenario <span class="new-badge">NEW</span></li>
+      </ul>
+
+      <h4>Stage 1 Constraints (scenario-independent):</h4>
+      <ul>
+        <li>\(\displaystyle\sum_{r\,\in\,\mathrm{Routes}_p} x_r = 1\;\;\forall p\) &nbsp;&mdash; one route per patient</li>
+        <li>\(x_r \le z_{m(r)}\;\;\forall r\) &nbsp;&mdash; route uses open facility</li>
+        <li>\(\displaystyle\sum_m z_m \le 2\)</li>
+      </ul>
+
+      <h4>Stage 2 Constraints \(\forall\,\omega \in \Omega,\; \forall\, p \in P\):</h4>
+      <ul>
+        <li>Deadline: \(\;\displaystyle\sum_r \!\bigl(T_{\mathrm{LS}} + \mathrm{TT}^o_{j_{\mathrm{out}}(r)} + T^{\omega}_{\mathrm{MF}} + T_{\mathrm{QC}} + \mathrm{TT}^r_{j_{\mathrm{ret}}(r)}\bigr)x_r + W^{\omega}_p \le D_p + L^{\omega}_p\)</li>
+        <li>Capacity \(\forall m,t\): concurrent patients at \(m\) in \([t, t{+}T^{\omega}_{\mathrm{MF}})\) \(\le \mathrm{FCAP}_m\) <span class="new-badge">SCENARIO-DEPENDENT</span></li>
+        <li>\(W^{\omega}_p \ge 0,\;\; L^{\omega}_p \ge 0\)</li>
+      </ul>
+
+      <div class="size-note">
+        Stage 1: \(O(|P|\cdot|M|\cdot|J|^2)\approx 258\) routes for \(N{=}15\) (same as before)<br>
+        Stage 2: \(S \times |P|\) new recourse variables &mdash; subproblems solved by CP-SAT per scenario<br>
+        <strong>All routes kept</strong> &mdash; no deadline filtering at generation; infeasibility absorbed by \(L^{\omega}_p\)
+      </div>
+    </div>
+  </div><!-- end comparison -->
+
+  <!-- ===== KEY INSIGHT NOTE ===== -->
+  <div class="note-box">
+    <strong>Why routes replace plans:</strong> In the deterministic colgen, a &ldquo;plan&rdquo; embeds a fixed TRT because wait \(w=0\) and \(T_{\mathrm{MF}}\) is constant &mdash; so deadline feasibility is checked at generation and infeasible plans are discarded. Under SAA, \(T^{\omega}_{\mathrm{MF}}\) differs per scenario, so no single TRT exists at generation time. The column becomes a <em>route</em> \((m, j_{\mathrm{out}}, j_{\mathrm{ret}})\) with no timing commitment. The wait \(W^{\omega}_p\) is now a recourse variable decided <em>after</em> \(T^{\omega}_{\mathrm{MF}}\) is realised, solving the staggering problem per scenario via CP-SAT.
+  </div>
+
+  <!-- ===== WHAT CHANGES ===== -->
+  <div class="subsection-title">Component-by-Component Changes in <code>cart_colgen.py</code></div>
+  <table class="diff-table">
+    <tr>
+      <th>Component</th>
+      <th>Deterministic (current)</th>
+      <th>Stochastic SAA (proposed)</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td><strong>generate_plans()</strong></td>
+      <td>Plan = (m, j_out, j_ret, w=0); filter TRT &gt; D_p</td>
+      <td>Route = (m, j_out, j_ret); no TRT, no filtering; all routes kept</td>
+      <td><span class="changed">CHANGED</span></td>
+    </tr>
+    <tr>
+      <td><strong>Scenario sampling</strong></td>
+      <td>Not present; T_MF = 7 (constant)</td>
+      <td>New: sample_scenarios(S, dist) returns {&omega;: T_MF^&omega;} with &pi;_&omega; = 1/S</td>
+      <td><span class="changed">NEW</span></td>
+    </tr>
+    <tr>
+      <td><strong>solve_master()</strong></td>
+      <td>One IP over x_i, z_m; capacity from plan mfg_start/end</td>
+      <td>Stage 1 IP over x_r, z_m only; adds &theta; variable (recourse cost bound)</td>
+      <td><span class="changed">CHANGED</span></td>
+    </tr>
+    <tr>
+      <td><strong>Capacity constraints</strong></td>
+      <td>In master: entering(t) &minus; leaving(t) &le; FCAP &minus; recent(t)</td>
+      <td>In subproblem per &omega;: CP-SAT cumulative with T_MF^&omega; duration</td>
+      <td><span class="changed">MOVED</span></td>
+    </tr>
+    <tr>
+      <td><strong>solve_subproblem(&omega;)</strong></td>
+      <td>Not present</td>
+      <td>New: CP-SAT scheduling with T_MF^&omega;; returns Q^&omega;(x*) and optimality cut</td>
+      <td><span class="changed">NEW</span></td>
+    </tr>
+    <tr>
+      <td><strong>L-shaped iteration</strong></td>
+      <td>Not present (single solve)</td>
+      <td>New: iterate master &harr; S subproblems until &theta; &ge; (1/S)&Sigma;_&omega; Q^&omega;</td>
+      <td><span class="changed">NEW</span></td>
+    </tr>
+    <tr>
+      <td><strong>Deadline enforcement</strong></td>
+      <td>Hard: TRT_i &le; D_p enforced at plan generation</td>
+      <td>Soft: B &middot; L^&omega;_p penalty; L^&omega;_p = 0 in good scenarios</td>
+      <td><span class="changed">CHANGED</span></td>
+    </tr>
+    <tr>
+      <td><strong>Objective</strong></td>
+      <td>&Sigma; c_i x_i + &Sigma; f_m z_m + fixed material cost</td>
+      <td>Same Stage 1 cost + (1/S) &Sigma;_&omega; B &middot; &Sigma;_p L^&omega;_p</td>
+      <td><span class="changed">EXTENDED</span></td>
+    </tr>
+    <tr>
+      <td><strong>Output / results</strong></td>
+      <td>Deterministic TRT, on_time flag per patient</td>
+      <td>Expected TRT, P(on-time) per patient, service level per urgency group</td>
+      <td><span class="changed">EXTENDED</span></td>
+    </tr>
+  </table>
+
+  <!-- ===== SCENARIO DESIGN ===== -->
+  <div class="subsection-title">Scenario Design &mdash; T<sub>MF</sub> Distribution</div>
+  <div class="scenario-row">
+    <div class="scenario-card">
+      <h5>Scenario A &mdash; Nominal</h5>
+      <p>Manufacturing completes in <strong>7 days</strong> (standard process, no QC hold).</p>
+      <p class="prob">Probability: 0.60</p>
+    </div>
+    <div class="scenario-card">
+      <h5>Scenario B &mdash; Extended</h5>
+      <p>Minor QC hold or low cell yield requires <strong>10 days</strong> of manufacturing.</p>
+      <p class="prob">Probability: 0.30</p>
+    </div>
+    <div class="scenario-card">
+      <h5>Scenario C &mdash; Delayed</h5>
+      <p>Batch failure / restart: manufacturing requires <strong>14 days</strong> total.</p>
+      <p class="prob">Probability: 0.10</p>
+    </div>
+  </div>
+  <p style="font-size:.85em;color:#555;margin-bottom:24px;font-style:italic;">
+    In SAA, each of the S sampled scenarios draws T<sup>&omega;</sup><sub>MF</sub> independently from this mixture.
+    For tractability, S = 10&ndash;30 scenarios is typically sufficient.
+    The subproblems for each &omega; are independent and run in parallel.
+  </p>
+
+  <!-- ===== ALGORITHM ===== -->
+  <div class="subsection-title">Solution Algorithm &mdash; L-Shaped Method (Stochastic Benders)</div>
+  <div class="algo-box">
+    <div class="algo-step">
+      <div class="algo-num">0</div>
+      <div><strong>Initialise:</strong> Generate all routes \(\{r\} = \{(m, j_{\mathrm{out}}, j_{\mathrm{ret}})\}\). Sample \(S\) scenarios \(\{T^{\omega}_{\mathrm{MF}}\}\). Set \(\theta = 0\), iteration \(k = 0\).</div>
+    </div>
+    <div class="algo-step">
+      <div class="algo-num">1</div>
+      <div><strong>Solve Master IP:</strong> Select routes \(x^*_r \in \{0,1\}\) and facilities \(z^*_m\) minimising Stage 1 cost \(+ \theta\). (HiGHS MIP, same structure as current <code>solve_master()</code> minus capacity constraints.)</div>
+    </div>
+    <div class="algo-step">
+      <div class="algo-num algo-num-green">2</div>
+      <div><strong>Solve S Subproblems in parallel:</strong> For each \(\omega \in \Omega\), run CP-SAT with routes fixed to \(x^*\) and duration \(T^{\omega}_{\mathrm{MF}}\). CP-SAT finds optimal wait times \(W^{\omega}_p\) and lateness \(L^{\omega}_p\). Returns \(Q^{\omega}(x^*) = B\sum_p L^{\omega}_p\).</div>
+    </div>
+    <div class="algo-step">
+      <div class="algo-num algo-num-green">3</div>
+      <div><strong>Check convergence:</strong> Compute \(\hat{Q} = \frac{1}{S}\sum_{\omega}Q^{\omega}(x^*)\). If \(\hat{Q} \le \theta + \varepsilon\), <strong>STOP</strong> &mdash; optimal solution found.</div>
+    </div>
+    <div class="algo-step">
+      <div class="algo-num algo-num-green">4</div>
+      <div><strong>Add optimality cut to master:</strong> For each \(\omega\) where \(Q^{\omega}(x^*) > 0\), identify conflicting patient-facility assignments and add Benders cut constraining route selection. Set \(\theta \leftarrow \hat{Q}\), \(k \leftarrow k{+}1\), go to Step 1.</div>
+    </div>
+  </div>
+
+  <!-- ===== EQUIVALENCE NOTE ===== -->
+  <div class="note-box">
+    <strong>Why the plan-generation concern disappears:</strong>
+    In the deterministic colgen, deadlines are enforced by <em>excluding</em> plans with TRT &gt; D_p at generation &mdash; so if TMFE shifts, some plans would have been wrongly included or excluded.
+    In the SAA formulation, routes carry <em>no TRT</em>. The deadline is evaluated inside each scenario&rsquo;s CP-SAT subproblem with the realised \(T^{\omega}_{\mathrm{MF}}\).
+    A route that is risky under long-\(T_{\mathrm{MF}}\) scenarios will accumulate expected lateness penalty and be naturally de-selected by the master &mdash; not artificially removed. This is stochasticity working correctly.
+  </div>
+
+</div><!-- /page -->
+</body>
+</html>
