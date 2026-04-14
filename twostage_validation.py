@@ -163,6 +163,7 @@ def run_all(tau, sigma_L, delta, epsilon, time_limit, n_sim):
                 'delta':                delta,
                 'epsilon':              epsilon,
                 'filter_threshold':     r2.get('filter_threshold', 0),
+                'tmfe_quantile':        r2.get('tmfe_quantile', ts_cfg.get('tmfe', 7)),
                 'avg_prob_expedite':    r2.get('avg_prob_expedite', 0),
                 'total_exp_expedite_cost': r2.get('total_exp_expedite_cost', 0),
                 'mc_validation':        mc,
@@ -1199,7 +1200,9 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
     _gantt_n = next((n for n in [15, 10, 20, 5] if n in ts_by_n and ts_by_n[n].get('patients')), None)
     if _gantt_n:
         _pats = ts_by_n[_gantt_n].get('patients', [])
-        _tmfe = int(TS_PROCESS.get('tmfe', 7))
+        # Use tmfe_quantile (the slot reservation horizon the model actually uses)
+        # so bar widths match the paper figure. Falls back to base tmfe if unavailable.
+        _tmfe = int(ts_by_n[_gantt_n].get('tmfe_quantile', TS_PROCESS.get('tmfe', 7)))
         # Read FCAP from .dat file
         _fcap_by_fac = {}
         _dat_file = os.path.join(BASE_DIR, f'Data_N{_gantt_n}.dat')
