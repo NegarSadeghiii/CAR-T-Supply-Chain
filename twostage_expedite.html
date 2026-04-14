@@ -4405,15 +4405,15 @@ body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--t
 <!-- TAB: Patient Journey (Gantt) -->
 <div id="pane-gantt" class="pane">
   <div class="card">
-    <h2>Manufacturing Timeline — Facility Schedule (N=10 example)</h2>
+    <h2>Manufacturing Timeline — Two-Stage Stochastic Schedule (N=15)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.7">
-      Each bar = one patient's 7-day manufacturing window [mfg_start, mfg_start+7].
+      Each bar = one patient's manufacturing window [mfg_start, mfg_end].
       Patients are sorted by manufacturing start day within each facility.
-      The dashed red line marks the facility capacity limit (FCAP) — at most FCAP patients
-      may be in manufacturing simultaneously.
-      <strong style="color:#1d4ed8">Blue = Medium urgency</strong> &nbsp;|&nbsp;
-      <strong style="color:#dc2626">Red = High urgency (Air routes)</strong> &nbsp;|&nbsp;
-      <strong style="color:#d97706">Orange = Low urgency / overflow to secondary facility</strong>
+      At most FCAP patients may be in manufacturing simultaneously (half-open interval: a patient
+      departing on day&nbsp;<em>t</em> frees the slot on that same day).
+      <strong style="color:#2C3E6B">&#9632; High urgency</strong> &nbsp;|&nbsp;
+      <strong style="color:#3A7D8C">&#9632; Medium urgency</strong> &nbsp;|&nbsp;
+      <strong style="color:#D4882A">&#9632; Low urgency</strong>
     </p>
     <div id="gantt-container" style="overflow-x:auto"></div>
   </div>
@@ -5098,7 +5098,7 @@ _mkChart('costBreakdownChart', {
 _INIT['gantt'] = function() {
   const container = document.getElementById('gantt-container');
   if (!container) return;
-  const GANTT_DATA = [{"facility": "m1", "fcap": 4, "patients": [{"id": "p7", "group": "medium", "mfg_start": 3, "mfg_end": 10, "j_out": "j1", "j_ret": "j2"}, {"id": "p2", "group": "medium", "mfg_start": 4, "mfg_end": 11, "j_out": "j1", "j_ret": "j2"}, {"id": "p4", "group": "medium", "mfg_start": 8, "mfg_end": 15, "j_out": "j1", "j_ret": "j2"}, {"id": "p25", "group": "high", "mfg_start": 12, "mfg_end": 19, "j_out": "j1", "j_ret": "j1"}, {"id": "p8", "group": "medium", "mfg_start": 13, "mfg_end": 20, "j_out": "j2", "j_ret": "j1"}, {"id": "p46", "group": "high", "mfg_start": 14, "mfg_end": 21, "j_out": "j1", "j_ret": "j1"}, {"id": "p12", "group": "low", "mfg_start": 18, "mfg_end": 25, "j_out": "j2", "j_ret": "j2"}, {"id": "p43", "group": "medium", "mfg_start": 20, "mfg_end": 27, "j_out": "j2", "j_ret": "j1"}, {"id": "p19", "group": "low", "mfg_start": 22, "mfg_end": 29, "j_out": "j2", "j_ret": "j2"}]}, {"facility": "m4", "fcap": 4, "patients": [{"id": "p38", "group": "low", "mfg_start": 14, "mfg_end": 21, "j_out": "j2", "j_ret": "j2"}]}];
+  const GANTT_DATA = [{"facility": "m1", "fcap": 4, "patients": [{"id": "p7", "group": "high", "mfg_start": 3, "mfg_end": 10, "j_out": "j1", "j_ret": "j1"}, {"id": "p2", "group": "medium", "mfg_start": 4, "mfg_end": 11, "j_out": "j1", "j_ret": "j1"}, {"id": "p4", "group": "high", "mfg_start": 8, "mfg_end": 15, "j_out": "j1", "j_ret": "j1"}, {"id": "p8", "group": "medium", "mfg_start": 10, "mfg_end": 17, "j_out": "j1", "j_ret": "j1"}, {"id": "p25", "group": "medium", "mfg_start": 12, "mfg_end": 19, "j_out": "j1", "j_ret": "j1"}, {"id": "p46", "group": "low", "mfg_start": 17, "mfg_end": 24, "j_out": "j2", "j_ret": "j2"}, {"id": "p12", "group": "low", "mfg_start": 18, "mfg_end": 25, "j_out": "j2", "j_ret": "j2"}, {"id": "p19", "group": "medium", "mfg_start": 19, "mfg_end": 26, "j_out": "j1", "j_ret": "j1"}, {"id": "p5", "group": "medium", "mfg_start": 22, "mfg_end": 29, "j_out": "j1", "j_ret": "j1"}, {"id": "p22", "group": "medium", "mfg_start": 27, "mfg_end": 34, "j_out": "j1", "j_ret": "j1"}, {"id": "p28", "group": "medium", "mfg_start": 27, "mfg_end": 34, "j_out": "j1", "j_ret": "j1"}, {"id": "p41", "group": "medium", "mfg_start": 32, "mfg_end": 39, "j_out": "j1", "j_ret": "j1"}]}, {"facility": "m4", "fcap": 4, "patients": [{"id": "p38", "group": "high", "mfg_start": 11, "mfg_end": 18, "j_out": "j1", "j_ret": "j1"}, {"id": "p43", "group": "low", "mfg_start": 20, "mfg_end": 27, "j_out": "j2", "j_ret": "j2"}, {"id": "p14", "group": "low", "mfg_start": 24, "mfg_end": 31, "j_out": "j2", "j_ret": "j2"}]}];
   if (!GANTT_DATA) { container.innerHTML='<p style="color:#9ca3af;padding:20px">No schedule data.</p>'; return; }
 
   const COLOR_HIGH = '#2C3E6B';  // navy  — high urgency

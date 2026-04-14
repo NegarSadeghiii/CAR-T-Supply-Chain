@@ -1193,12 +1193,12 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
         for i, f in enumerate(findings)
     )
 
-    # ── Manufacturing timeline Gantt data (use det result for N=10) ────────────
+    # ── Manufacturing timeline Gantt data (use two-stage result for N=15) ───────
     import re as _re
     gantt_js = 'null'
-    _gantt_n = next((n for n in [10, 15, 5, 20] if n in det_by_n and det_by_n[n].get('patients')), None)
+    _gantt_n = next((n for n in [15, 10, 20, 5] if n in ts_by_n and ts_by_n[n].get('patients')), None)
     if _gantt_n:
-        _pats = det_by_n[_gantt_n].get('patients', [])
+        _pats = ts_by_n[_gantt_n].get('patients', [])
         _tmfe = int(TS_PROCESS.get('tmfe', 7))
         # Read FCAP from .dat file
         _fcap_by_fac = {}
@@ -1219,7 +1219,7 @@ def generate_html(results, output_path, tau, sigma_L, delta, epsilon,
                 'patients': [{'id': p['id'],
                               'group': p.get('group','low'),
                               'mfg_start': p['mfg_start'],
-                              'mfg_end':   p['mfg_start'] + _tmfe,
+                              'mfg_end':   p.get('mfg_end', p['mfg_start'] + _tmfe),
                               'j_out': p.get('j_out','j1'),
                               'j_ret': p.get('j_ret','j1')}
                              for p in _fpats]
@@ -1582,15 +1582,15 @@ body{{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--
 <!-- TAB: Patient Journey (Gantt) -->
 <div id="pane-gantt" class="pane">
   <div class="card">
-    <h2>Manufacturing Timeline — Facility Schedule (N=10 example)</h2>
+    <h2>Manufacturing Timeline — Two-Stage Stochastic Schedule (N=15)</h2>
     <p style="font-size:12px;color:var(--dim);margin-bottom:14px;line-height:1.7">
-      Each bar = one patient's 7-day manufacturing window [mfg_start, mfg_start+7].
+      Each bar = one patient's manufacturing window [mfg_start, mfg_end].
       Patients are sorted by manufacturing start day within each facility.
-      The dashed red line marks the facility capacity limit (FCAP) — at most FCAP patients
-      may be in manufacturing simultaneously.
-      <strong style="color:#1d4ed8">Blue = Medium urgency</strong> &nbsp;|&nbsp;
-      <strong style="color:#dc2626">Red = High urgency (Air routes)</strong> &nbsp;|&nbsp;
-      <strong style="color:#d97706">Orange = Low urgency / overflow to secondary facility</strong>
+      At most FCAP patients may be in manufacturing simultaneously (half-open interval: a patient
+      departing on day&nbsp;<em>t</em> frees the slot on that same day).
+      <strong style="color:#2C3E6B">&#9632; High urgency</strong> &nbsp;|&nbsp;
+      <strong style="color:#3A7D8C">&#9632; Medium urgency</strong> &nbsp;|&nbsp;
+      <strong style="color:#D4882A">&#9632; Low urgency</strong>
     </p>
     <div id="gantt-container" style="overflow-x:auto"></div>
   </div>
