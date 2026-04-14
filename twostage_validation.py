@@ -2199,91 +2199,80 @@ _mkChart('costBreakdownChart', {{
 }});
 
 // ── Manufacturing Timeline Gantt — lazy init ──────────────────────────────────
+// Single-dataset approach: one dataset with per-bar backgroundColor array.
+// This avoids Chart.js allocating vertical space for null-value datasets,
+// which caused zero-height bars (blank chart) in the multi-dataset approach.
 _INIT['gantt'] = function() {{
   const container = document.getElementById('gantt-container');
   if (!container) return;
   const GANTT_DATA = {gantt_js};
   if (!GANTT_DATA) {{ container.innerHTML='<p style="color:#9ca3af;padding:20px">No schedule data.</p>'; return; }}
 
-  const COLOR_MED  = '#3b82f6';  // blue — medium urgency
-  const COLOR_HIGH = '#ef4444';  // red  — high urgency
-  const COLOR_OVF  = '#f59e0b';  // amber — low / overflow
-
-  // Determine primary facility (first one with most patients)
-  const primaryFac = GANTT_DATA[0].facility;
+  const COLOR_HIGH = '#2C3E6B';  // navy  — high urgency
+  const COLOR_MED  = '#3A7D8C';  // teal  — medium urgency
+  const COLOR_LOW  = '#D4882A';  // amber — low urgency
 
   GANTT_DATA.forEach((facData, facIdx) => {{
     const {{ facility, fcap, patients }} = facData;
-    const isOverflow = facIdx > 0;
+    const nRows = patients.length;
+    if (nRows === 0) return;   // skip empty facilities
 
-    // Build y-labels and per-category data arrays
     const yLabels = patients.map(p => p.id);
-    const nRows   = yLabels.length;
+    const xMax    = Math.max(...patients.map(p => p.mfg_end)) + 3;
 
-    // Color each patient
-    const medData  = patients.map(p => (p.group==='medium' && !isOverflow) ? [p.mfg_start, p.mfg_end] : null);
-    const highData = patients.map(p => (p.group==='high'   && !isOverflow) ? [p.mfg_start, p.mfg_end] : null);
-    const ovfData  = patients.map(p => isOverflow ? [p.mfg_start, p.mfg_end] : null);
+    // Single dataset — one color per bar
+    const barColors = patients.map(p =>
+      p.group === 'high' ? COLOR_HIGH :
+      p.group === 'low'  ? COLOR_LOW  : COLOR_MED
+    );
+    const barData = patients.map(p => [p.mfg_start, p.mfg_end]);
 
-    // Also handle low-urgency on primary facility as medium colour
-    const lowData  = patients.map(p => (p.group==='low' && !isOverflow) ? [p.mfg_start, p.mfg_end] : null);
-
-    const xMax = Math.max(...patients.map(p => p.mfg_end)) + 3;
-
-    // Compute FCAP annotation y-position:
-    // find the row index where concurrent count first hits fcap
-    let fcapY = fcap - 0.5;  // default: after fcap-th patient
-    const starts = patients.map(p => p.mfg_start);
-    const ends   = patients.map(p => p.mfg_end);
-    for (let i = 0; i < nRows; i++) {{
-      let concurrent = 0;
-      const t = starts[i];
-      for (let j = 0; j < nRows; j++) {{
-        if (starts[j] <= t && ends[j] > t) concurrent++;
-      }}
-      if (concurrent >= fcap) {{ fcapY = i + 0.5; break; }}
-    }}
-
-    // Wrap in a div with title
+    // Title div
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'margin-bottom:24px';
+    wrap.style.cssText = 'margin-bottom:28px';
     const title = document.createElement('div');
-    title.style.cssText = 'font-size:13px;font-weight:700;color:' + (isOverflow ? '#d97706' : '#1E3A5F') + ';margin-bottom:6px;padding:0 4px';
-    title.textContent = 'Facility ' + facility.toUpperCase() + ' (FCAP=' + fcap + ')  \u2014  Each bar = ' + (ends[0]-starts[0]) + '-day mfg window';
+    title.style.cssText = 'font-size:13px;font-weight:700;color:#1E3A5F;margin-bottom:6px;padding:0 4px';
+    title.textContent = 'Facility ' + facility + ' (capacity ' + fcap + ')';
     wrap.appendChild(title);
 
+    // Canvas — set explicit pixel dimensions before Chart.js init
+    const _gw = Math.min(container.clientWidth || 800, 860);
+    const _gh = Math.max(160, nRows * 32 + 56);
     const canvasWrap = document.createElement('div');
-    canvasWrap.style.cssText = 'position:relative;height:' + Math.max(180, nRows * 36 + 60) + 'px';
+    canvasWrap.style.cssText = 'position:relative;width:' + _gw + 'px;height:' + _gh + 'px';
     const canvas = document.createElement('canvas');
+    canvas.id     = 'gantt_fac_' + facIdx;
+    canvas.width  = _gw;
+    canvas.height = _gh;
+    canvas.style.cssText = 'display:block;width:' + _gw + 'px;height:' + _gh + 'px';
     canvasWrap.appendChild(canvas);
     wrap.appendChild(canvasWrap);
     container.appendChild(wrap);
 
-    canvas.id = 'gantt_fac_' + facIdx;
-    // Force layout reflow on the newly-added wrapper so Chart.js sees
-    // the correct height when it calls getBoundingClientRect()
-    void canvasWrap.offsetHeight;
     _mkChart(canvas, {{
       type: 'bar',
       data: {{
         labels: yLabels,
-        datasets: [
-          {{ label: 'Medium',                data: medData,  backgroundColor: COLOR_MED,  borderRadius:4, barThickness:22 }},
-          {{ label: 'High urgency (Air+Air)', data: highData, backgroundColor: COLOR_HIGH, borderRadius:4, barThickness:22 }},
-          {{ label: 'Low urgency',            data: lowData,  backgroundColor: COLOR_MED+'99', borderRadius:4, barThickness:22 }},
-          {{ label: 'Overflow to ' + facility, data: ovfData, backgroundColor: COLOR_OVF, borderRadius:4, barThickness:22 }},
-        ]
+        datasets: [{{
+          label: 'Patient manufacturing window',
+          data: barData,
+          backgroundColor: barColors,
+          borderRadius: 3,
+          barThickness: 26,
+        }}]
       }},
       options: {{
         indexAxis: 'y',
-        responsive: true, maintainAspectRatio: false,
+        responsive: false,
+        maintainAspectRatio: false,
         plugins: {{
-          legend: {{ position: 'bottom', labels: {{ font:{{ size:10 }}, boxWidth:12,
-            filter: item => item.dataset.data.some(v => v !== null) }} }},
+          legend: {{ display: false }},
           tooltip: {{ callbacks: {{
             label: ctx => {{
               const v = ctx.raw;
-              return v ? ctx.dataset.label + ': Day ' + v[0] + '\u2013' + v[1] : null;
+              const p = patients[ctx.dataIndex];
+              const grp = p ? p.group : '';
+              return 'Day ' + v[0] + '\u2013' + v[1] + '  (' + grp + ')';
             }}
           }} }}
         }},
@@ -2293,55 +2282,40 @@ _INIT['gantt'] = function() {{
                 ticks: {{ stepSize: 5 }},
                 grid: {{ color: '#f0f0f0' }}
               }},
-          y: {{ stacked: false,
-                ticks: {{ font:{{ size:11 }}, color: (ctx) => {{
-                  const p = patients[ctx.index];
-                  return p && p.group==='high' ? '#dc2626' : (isOverflow ? '#d97706' : '#374151');
-                }} }}
+          y: {{ ticks: {{ font: {{ size: 11 }},
+                          color: ctx => {{
+                            const p = patients[ctx.index];
+                            return p && p.group==='high' ? COLOR_HIGH : '#374151';
+                          }}
+                        }}
               }}
         }},
-        animation: {{ duration: 400 }}
+        animation: {{ duration: 300 }}
       }},
       plugins: [{{
-        id: 'fcapLine',
-        afterDraw(chart) {{
-          const {{ ctx, chartArea, scales }} = chart;
-          if (!scales.y || fcapY < 0) return;
-          const yPx = scales.y.getPixelForValue(fcapY);
-          if (isNaN(yPx)) return;
-          ctx.save();
-          ctx.strokeStyle = '#dc2626';
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([6, 4]);
-          ctx.beginPath();
-          ctx.moveTo(chartArea.left, yPx);
-          ctx.lineTo(chartArea.right, yPx);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.font = 'bold 9px Inter,sans-serif';
-          ctx.fillStyle = '#dc2626';
-          ctx.textAlign = 'right';
-          ctx.textBaseline = 'bottom';
-          ctx.fillText('FCAP=' + fcap, chartArea.right - 4, yPx - 2);
-          ctx.restore();
-        }}
-      }}, {{
-        id: 'barLabels',
+        id: 'ganttLabels_' + facIdx,
         afterDatasetsDraw(chart) {{
           const {{ ctx, scales }} = chart;
           ctx.save();
-          ctx.font = 'bold 10px Inter,sans-serif';
-          ctx.fillStyle = '#fff';
-          ctx.textAlign = 'center';
+          ctx.font = 'bold 9px Inter,sans-serif';
           ctx.textBaseline = 'middle';
           chart.data.datasets.forEach((ds, di) => {{
-            const meta = chart.getDatasetMeta(di);
-            meta.data.forEach((bar, i) => {{
+            chart.getDatasetMeta(di).data.forEach((bar, i) => {{
               const v = ds.data[i];
               if (!v) return;
-              const {{ x, y, width, height }} = bar.getProps(['x','y','width','height'], true);
+              const props = bar.getProps(['x','y','base','height'], true);
+              const barW  = Math.abs(props.x - props.base);
+              const cx    = (props.x + props.base) / 2;
               const label = v[0] + '-' + v[1];
-              if (width > 30) ctx.fillText(label, x - width/2 + width/2, y);
+              if (barW > 32) {{
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'center';
+                ctx.fillText(label, cx, props.y);
+              }} else {{
+                ctx.fillStyle = '#333';
+                ctx.textAlign = 'left';
+                ctx.fillText(label, props.x + 3, props.y);
+              }}
             }});
           }});
           ctx.restore();
@@ -2349,6 +2323,20 @@ _INIT['gantt'] = function() {{
       }}]
     }});
   }});
+
+  // Urgency legend
+  const leg = document.createElement('div');
+  leg.style.cssText = 'display:flex;gap:16px;margin-top:8px;font-size:12px;align-items:center';
+  [['High urgency', COLOR_HIGH], ['Medium urgency', COLOR_MED], ['Low urgency', COLOR_LOW]].forEach(([lbl, col]) => {{
+    const item = document.createElement('div');
+    item.style.cssText = 'display:flex;align-items:center;gap:5px';
+    const swatch = document.createElement('span');
+    swatch.style.cssText = 'display:inline-block;width:14px;height:14px;border-radius:2px;background:' + col;
+    item.appendChild(swatch);
+    item.appendChild(document.createTextNode(lbl));
+    leg.appendChild(item);
+  }});
+  container.appendChild(leg);
 }};
 
 // ── Tau + facility chart data constants (top-level) ───────────────────────────
