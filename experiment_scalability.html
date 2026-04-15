@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Experiment 3: Computational Scalability</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  body  { font-family:system-ui,sans-serif; margin:0; padding:24px 32px;
+           background:#f8fafc; color:#1e293b; }
+  h1    { color:#1E3A5F; margin-bottom:4px; }
+  h2    { color:#1E3A5F; margin:0 0 12px; }
+  .card { background:#fff; border-radius:10px; padding:24px; margin-bottom:28px;
+           box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .subtitle { color:#64748b; font-size:14px; margin-bottom:20px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  details summary { cursor:pointer;font-weight:600;color:#1E3A5F;font-size:13px }
+  pre { background:#f1f5f9;padding:12px;border-radius:6px;font-size:11px;
+         overflow-x:auto;max-height:300px }
+</style>
+</head>
+<body>
+<h1>Experiment 3 — Computational Scalability</h1>
+<p class="subtitle">
+  Solve time vs. N for all three models at fixed σ_L = 0.2.
+  Each point = median of 3 runs. Time limit: 300s.
+  <br>Cell shading:
+  <span style="background:#f0fdf4;padding:1px 6px;border-radius:3px">fast (&lt;10s)</span>
+  <span style="background:#fef9c3;padding:1px 6px;border-radius:3px">moderate (10–60s)</span>
+  <span style="background:#fee2e2;padding:1px 6px;border-radius:3px">slow (&gt;60s)</span>
+</p>
+
+<div class="card">
+  <h2>Solve Time vs N</h2>
+  <div style="position:relative;height:380px">
+    <canvas id="scaleChart"></canvas>
+  </div>
+</div>
+
+<div class="card grid2">
+  <div>
+    <h2>Timing Summary (median seconds)</h2>
+    <table style="border-collapse:collapse;width:100%;font-size:12px"><tr style="background:#1E3A5F;color:#fff"><th style="padding:8px 12px">N</th><th style="padding:8px 12px">Plans (Det)</th><th style="padding:8px 12px">Deterministic ColGen<br><small>median (s)</small></th><th style="padding:8px 12px">CCP (α=0.10)<br><small>median (s)</small></th><th style="padding:8px 12px">Two-Stage (δ=2.0)<br><small>median (s)</small></th></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=5</td><td style="text-align:center;padding:6px 12px">90</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.038s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.029s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.030s</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=10</td><td style="text-align:center;padding:6px 12px">174</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.086s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.075s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.047s</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=15</td><td style="text-align:center;padding:6px 12px">258</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.069s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.057s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.063s</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=20</td><td style="text-align:center;padding:6px 12px">348</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.088s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.073s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.102s</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=25</td><td style="text-align:center;padding:6px 12px">438</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.195s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.091s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.101s</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=30</td><td style="text-align:center;padding:6px 12px">720</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.763s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.191s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.287s</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=40</td><td style="text-align:center;padding:6px 12px">696</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.210s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.142s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.175s</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=50</td><td style="text-align:center;padding:6px 12px">870</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.417s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.263s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.243s</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=75</td><td style="text-align:center;padding:6px 12px">1200</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.761s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.406s</td><td style="text-align:center;background:#f0fdf4;font-weight:600;padding:6px 12px">0.647s</td></tr></table>
+  </div>
+  <div>
+    <h2>Plan Count vs N</h2>
+    <table style="border-collapse:collapse;width:100%;font-size:12px"><tr style="background:#1E3A5F;color:#fff"><th style="padding:8px 12px">N</th><th style="padding:8px 12px">Deterministic ColGen<br><small># plans</small></th><th style="padding:8px 12px">CCP (α=0.10)<br><small># plans</small></th><th style="padding:8px 12px">Two-Stage (δ=2.0)<br><small># plans</small></th></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=5</td><td style="text-align:center;padding:6px 12px">90</td><td style="text-align:center;padding:6px 12px">54</td><td style="text-align:center;padding:6px 12px">66</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=10</td><td style="text-align:center;padding:6px 12px">174</td><td style="text-align:center;padding:6px 12px">96</td><td style="text-align:center;padding:6px 12px">114</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=15</td><td style="text-align:center;padding:6px 12px">258</td><td style="text-align:center;padding:6px 12px">138</td><td style="text-align:center;padding:6px 12px">162</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=20</td><td style="text-align:center;padding:6px 12px">348</td><td style="text-align:center;padding:6px 12px">192</td><td style="text-align:center;padding:6px 12px">228</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=25</td><td style="text-align:center;padding:6px 12px">438</td><td style="text-align:center;padding:6px 12px">246</td><td style="text-align:center;padding:6px 12px">294</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=30</td><td style="text-align:center;padding:6px 12px">720</td><td style="text-align:center;padding:6px 12px">522</td><td style="text-align:center;padding:6px 12px">684</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=40</td><td style="text-align:center;padding:6px 12px">696</td><td style="text-align:center;padding:6px 12px">384</td><td style="text-align:center;padding:6px 12px">456</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=50</td><td style="text-align:center;padding:6px 12px">870</td><td style="text-align:center;padding:6px 12px">480</td><td style="text-align:center;padding:6px 12px">570</td></tr><tr style="border-bottom:1px solid #e2e8f0"><td style="font-weight:700;padding:6px 12px;background:#f8fafc">N=75</td><td style="text-align:center;padding:6px 12px">1,200</td><td style="text-align:center;padding:6px 12px">870</td><td style="text-align:center;padding:6px 12px">1,140</td></tr></table>
+    <p style="font-size:11px;color:#64748b;margin-top:8px">
+      Plans scale ≈ linearly with N.
+      Two-Stage generates more plans than CCP due to looser deadline filter
+      (expediting recourse relaxes the feasibility threshold).
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <details>
+    <summary>Raw JSON results</summary>
+    <pre>{
+  "det": {
+    "5": {
+      "status": "solved",
+      "median": 0.038,
+      "min": 0.035,
+      "max": 5.912,
+      "num_plans": 90,
+      "times": [
+        5.912,
+        0.035,
+        0.038
+      ]
+    },
+    "10": {
+      "status": "solved",
+      "median": 0.086,
+      "min": 0.085,
+      "max": 0.096,
+      "num_plans": 174,
+      "times": [
+        0.096,
+        0.086,
+        0.085
+      ]
+    },
+    "15": {
+      "status": "solved",
+      "median": 0.069,
+      "min": 0.069,
+      "max": 0.07,
+      "num_plans": 258,
+      "times": [
+        0.069,
+        0.07,
+        0.069
+      ]
+    },
+    "20": {
+      "status": "solved",
+      "median": 0.088,
+      "min": 0.088,
+      "max": 0.097,
+      "num_plans": 348,
+      "times": [
+        0.097,
+        0.088,
+        0.088
+      ]
+    },
+    "25": {
+      "status": "solved",
+      "median": 0.195,
+      "min": 0.185,
+      "max": 0.253,
+      "num_plans": 438,
+      "times": [
+        0.253,
+        0.195,
+        0.185
+      ]
+    },
+    "30": {
+      "status": "solved",
+      "median": 0.763,
+      "min": 0.727,
+      "max": 0.824,
+      "num_plans": 720,
+      "times": [
+        0.763,
+        0.727,
+        0.824
+      ]
+    },
+    "40": {
+      "status": "solved",
+      "median": 0.21,
+      "min": 0.182,
+      "max": 0.24,
+      "num_plans": 696,
+      "times": [
+        0.24,
+        0.21,
+        0.182
+      ]
+    },
+    "50": {
+      "status": "solved",
+      "median": 0.417,
+      "min": 0.414,
+      "max": 0.463,
+      "num_plans": 870,
+      "times": [
+        0.414,
+        0.463,
+        0.417
+      ]
+    },
+    "75": {
+      "status": "solved",
+      "median": 0.761,
+      "min": 0.754,
+      "max": 0.848,
+      "num_plans": 1200,
+      "times": [
+        0.761,
+        0.754,
+        0.848
+      ]
+    }
+  },
+  "ccp": {
+    "5": {
+      "status": "solved",
+      "median": 0.029,
+      "min": 0.027,
+      "max": 0.029,
+      "num_plans": 54,
+      "times": [
+        0.029,
+        0.029,
+        0.027
+      ]
+    },
+    "10": {
+      "status": "solved",
+      "median": 0.075,
+      "min": 0.075,
+      "max": 0.077,
+      "num_plans": 96,
+      "times": [
+        0.075,
+        0.077,
+        0.075
+      ]
+    },
+    "15": {
+      "status": "solved",
+      "median": 0.057,
+      "min": 0.055,
+      "max": 0.058,
+      "num_plans": 138,
+      "times": [
+        0.058,
+        0.055,
+        0.057
+      ]
+    },
+    "20": {
+      "status": "solved",
+      "median": 0.073,
+      "min": 0.072,
+      "max": 0.074,
+      "num_plans": 192,
+      "times": [
+        0.074,
+        0.072,
+        0.073
+      ]
+    },
+    "25": {
+      "status": "solved",
+      "median": 0.091,
+      "min": 0.09,
+      "max": 0.134,
+      "num_plans": 246,
+      "times": [
+        0.134,
+        0.09,
+        0.091
+      ]
+    },
+    "30": {
+      "status": "solved",
+      "median": 0.191,
+      "min": 0.188,
+      "max": 0.194,
+      "num_plans": 522,
+      "times": [
+        0.191,
+        0.194,
+        0.188
+      ]
+    },
+    "40": {
+      "status": "solved",
+      "median": 0.142,
+      "min": 0.142,
+      "max": 0.194,
+      "num_plans": 384,
+      "times": [
+        0.142,
+        0.194,
+        0.142
+      ]
+    },
+    "50": {
+      "status": "solved",
+      "median": 0.263,
+      "min": 0.262,
+      "max": 0.272,
+      "num_plans": 480,
+      "times": [
+        0.262,
+        0.272,
+        0.263
+      ]
+    },
+    "75": {
+      "status": "solved",
+      "median": 0.406,
+      "min": 0.388,
+      "max": 0.45,
+      "num_plans": 870,
+      "times": [
+        0.388,
+        0.45,
+        0.406
+      ]
+    }
+  },
+  "ts": {
+    "5": {
+      "status": "solved",
+      "median": 0.03,
+      "min": 0.029,
+      "max": 0.03,
+      "num_plans": 66,
+      "times": [
+        0.03,
+        0.03,
+        0.029
+      ]
+    },
+    "10": {
+      "status": "solved",
+      "median": 0.047,
+      "min": 0.045,
+      "max": 0.048,
+      "num_plans": 114,
+      "times": [
+        0.048,
+        0.047,
+        0.045
+      ]
+    },
+    "15": {
+      "status": "solved",
+      "median": 0.063,
+      "min": 0.06,
+      "max": 0.063,
+      "num_plans": 162,
+      "times": [
+        0.063,
+        0.063,
+        0.06
+      ]
+    },
+    "20": {
+      "status": "solved",
+      "median": 0.102,
+      "min": 0.098,
+      "max": 0.145,
+      "num_plans": 228,
+      "times": [
+        0.098,
+        0.145,
+        0.102
+      ]
+    },
+    "25": {
+      "status": "solved",
+      "median": 0.101,
+      "min": 0.098,
+      "max": 0.108,
+      "num_plans": 294,
+      "times": [
+        0.101,
+        0.098,
+        0.108
+      ]
+    },
+    "30": {
+      "status": "solved",
+      "median": 0.287,
+      "min": 0.28,
+      "max": 0.324,
+      "num_plans": 684,
+      "times": [
+        0.28,
+        0.287,
+        0.324
+      ]
+    },
+    "40": {
+      "status": "solved",
+      "median": 0.175,
+      "min": 0.171,
+      "max": 0.175,
+      "num_plans": 456,
+      "times": [
+        0.175,
+        0.175,
+        0.171
+      ]
+    },
+    "50": {
+      "status": "solved",
+      "median": 0.243,
+      "min": 0.24,
+      "max": 0.282,
+      "num_plans": 570,
+      "times": [
+        0.24,
+        0.243,
+        0.282
+      ]
+    },
+    "75": {
+      "status": "solved",
+      "median": 0.647,
+      "min": 0.633,
+      "max": 0.671,
+      "num_plans": 1140,
+      "times": [
+        0.647,
+        0.633,
+        0.671
+      ]
+    }
+  }
+}</pre>
+  </details>
+</div>
+
+<script>
+new Chart(document.getElementById('scaleChart').getContext('2d'), {
+  type: 'line',
+  data: {
+    labels: [5, 10, 15, 20, 25, 30, 40, 50, 75],
+    datasets: [{"label": "Deterministic ColGen", "data": [0.038, 0.086, 0.069, 0.088, 0.195, 0.763, 0.21, 0.417, 0.761], "borderColor": "#475569", "backgroundColor": "rgba(71,85,105,0.1)", "pointBackgroundColor": "#475569", "pointRadius": 5, "tension": 0.3, "spanGaps": false}, {"label": "CCP (\u03b1=0.10)", "data": [0.029, 0.075, 0.057, 0.073, 0.091, 0.191, 0.142, 0.263, 0.406], "borderColor": "#3A7D8C", "backgroundColor": "rgba(58,125,140,0.1)", "pointBackgroundColor": "#3A7D8C", "pointRadius": 5, "tension": 0.3, "spanGaps": false}, {"label": "Two-Stage (\u03b4=2.0)", "data": [0.03, 0.047, 0.063, 0.102, 0.101, 0.287, 0.175, 0.243, 0.647], "borderColor": "#2C3E6B", "backgroundColor": "rgba(44,62,107,0.1)", "pointBackgroundColor": "#2C3E6B", "pointRadius": 5, "tension": 0.3, "spanGaps": false}]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: { callbacks: {
+        label: ctx => ctx.dataset.label + ': ' +
+          (ctx.raw !== null ? ctx.raw.toFixed(3) + 's' : 'n/a')
+      } }
+    },
+    scales: {
+      x: { title: { display:true, text:'Number of patients (N)' } },
+      y: {
+        type: 'logarithmic',
+        title: { display:true, text:'Solve time (seconds, log scale)' },
+        ticks: {
+          callback: v => v >= 1 ? v + 's' : v.toFixed(2) + 's'
+        }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
