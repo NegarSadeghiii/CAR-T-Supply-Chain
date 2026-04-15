@@ -1,3 +1,5 @@
 __pycache__/
 *.pyc
 *.pyo
+experiment_feasibility_checkpoint.json
+Data_N60.dat
