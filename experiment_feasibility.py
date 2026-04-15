@@ -13,10 +13,17 @@ from cart_colgen_ccp      import run_experiment_ccp      as ccp_run, DEFAULT_PRO
 from cart_colgen_twostage import run_experiment_twostage as ts_run,  DEFAULT_PROCESS_2S
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-TIME_LIMIT = 120   # seconds per solve
 
-N_VALUES     = [5, 10, 15, 20, 25, 30, 50, 75]
+# Time limit scales with N: small N fast, large N capped
+def time_limit_for(n):
+    if n <= 75:  return 120
+    if n <= 200: return 60
+    return 45   # large N either fails fast (capacity) or isn't worth waiting
+
+N_VALUES     = [5, 10, 15, 20, 25, 30, 50, 75, 100, 200, 500, 1000, 2000]
 SIGMA_VALUES = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40]
+CHECKPOINT   = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             'experiment_feasibility_checkpoint.json')
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -25,25 +32,26 @@ def dat_file(n):
 
 def run_one(solver, n, sigma):
     """Run a single solver/N/sigma combination. Returns status dict."""
-    df = dat_file(n)
+    df  = dat_file(n)
+    tlim = time_limit_for(n)
     if not os.path.exists(df):
         return {'status': 'missing', 'cost': None, 'time': None, 'plans': None}
 
     t0 = time.time()
     try:
         if solver == 'det':
-            r = det_run(data_file=df, time_limit=TIME_LIMIT)
+            r = det_run(data_file=df, time_limit=tlim)
         elif solver == 'ccp':
             cfg = dict(DEFAULT_PROCESS_CCP); cfg['sigma_L'] = sigma
-            r = ccp_run(data_file=df, process_config=cfg, time_limit=TIME_LIMIT)
+            r = ccp_run(data_file=df, process_config=cfg, time_limit=tlim)
         else:  # ts
             cfg = dict(DEFAULT_PROCESS_2S); cfg['sigma_L'] = sigma
-            r = ts_run(data_file=df, process_config=cfg, time_limit=TIME_LIMIT)
+            r = ts_run(data_file=df, process_config=cfg, time_limit=tlim)
         elapsed = time.time() - t0
 
         if not r.get('solved'):
             # Check if it timed out or was infeasible
-            status = 'timeout' if elapsed >= TIME_LIMIT - 2 else 'infeasible'
+            status = 'timeout' if elapsed >= tlim - 2 else 'infeasible'
             return {'status': status, 'cost': None, 'time': round(elapsed, 1), 'plans': r.get('num_plans')}
         return {
             'status':  'solved',
@@ -55,30 +63,55 @@ def run_one(solver, n, sigma):
         }
     except Exception as e:
         elapsed = time.time() - t0
-        status = 'timeout' if elapsed >= TIME_LIMIT - 2 else 'error'
+        status = 'timeout' if elapsed >= tlim - 2 else 'error'
         return {'status': status, 'cost': None, 'time': round(elapsed, 1), 'plans': None, 'err': str(e)[:80]}
 
 # ── main sweep ────────────────────────────────────────────────────────────────
 
 def run_sweep():
-    results = {}  # key: (solver, n, sigma) → status dict
-    total   = len(N_VALUES) * len(SIGMA_VALUES) * 3
-    done    = 0
+    # Load checkpoint if it exists (resume interrupted run)
+    if os.path.exists(CHECKPOINT):
+        with open(CHECKPOINT) as f:
+            raw = json.load(f)
+        results = {s: {int(n): {float(sg): v for sg, v in sv.items()}
+                       for n, sv in nv.items()}
+                   for s, nv in raw.items()}
+        print(f'Resuming from checkpoint ({CHECKPOINT})')
+    else:
+        results = {}
+
+    total = len(N_VALUES) * len(SIGMA_VALUES) * 3
+    done  = 0
 
     for solver in ['det', 'ccp', 'ts']:
-        results[solver] = {}
+        if solver not in results:
+            results[solver] = {}
         for n in N_VALUES:
-            results[solver][n] = {}
+            if n not in results[solver]:
+                results[solver][n] = {}
             for sigma in SIGMA_VALUES:
                 done += 1
-                tag = f'[{done:3d}/{total}] {solver.upper():4s} N={n:3d} σ={sigma:.2f}'
+                if sigma in results[solver][n]:
+                    # Already computed — skip
+                    r = results[solver][n][sigma]
+                    print(f'[{done:3d}/{total}] {solver.upper():4s} N={n:4d} σ={sigma:.2f} '
+                          f'... (cached) {r["status"].upper()}')
+                    continue
+
+                tag = f'[{done:3d}/{total}] {solver.upper():4s} N={n:4d} σ={sigma:.2f}'
                 print(tag, '...', end=' ', flush=True)
                 r = run_one(solver, n, sigma)
                 results[solver][n][sigma] = r
                 status_str = r['status'].upper()
                 cost_str   = f"${r['cost']:.3f}M" if r['cost'] else '—'
-                time_str   = f"{r['time']}s" if r['time'] else '?'
-                print(f"{status_str:12s} {cost_str:12s} {time_str}")
+                time_str   = f"{r['time']}s"       if r['time'] else '?'
+                print(f"{status_str:12s} {cost_str:12s} {time_str}", flush=True)
+
+                # Save checkpoint after every completed run
+                with open(CHECKPOINT, 'w') as f:
+                    json.dump({s: {str(n2): {str(sg): v for sg, v in sv.items()}
+                                   for n2, sv in nv.items()}
+                               for s, nv in results.items()}, f)
 
     return results
 
@@ -195,7 +228,7 @@ def build_html(results):
 <h1>Experiment 1 — Feasibility Phase Diagram</h1>
 <p class="subtitle">
   N × σ grid showing solver feasibility for each model.
-  Time limit: {TIME_LIMIT}s per run. &nbsp;|&nbsp;
+  Time limit: ≤75→120s / ≤200→60s / &gt;200→45s per run. &nbsp;|&nbsp;
   N ∈ {{{', '.join(str(n) for n in N_VALUES)}}} &nbsp;|&nbsp;
   σ_L ∈ {{{', '.join(f'{s:.2f}' for s in SIGMA_VALUES)}}}
 </p>
@@ -246,7 +279,7 @@ if __name__ == '__main__':
     print(f'Feasibility Phase Diagram Sweep')
     print(f'N values   : {N_VALUES}')
     print(f'σ values   : {SIGMA_VALUES}')
-    print(f'Time limit : {TIME_LIMIT}s per run')
+    print(f'Time limits: ≤75→120s  ≤200→60s  >200→45s')
     print(f'Total runs : {len(N_VALUES) * len(SIGMA_VALUES) * 3}')
     print()
 
