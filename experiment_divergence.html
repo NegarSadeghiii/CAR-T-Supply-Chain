@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Experiment 2: Decision Divergence</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  body  { font-family:system-ui,sans-serif; margin:0; padding:24px 32px;
+           background:#f8fafc; color:#1e293b; }
+  h1    { color:#1E3A5F; margin-bottom:4px; }
+  .card { background:#fff; border-radius:10px; padding:24px; margin-bottom:28px;
+           box-shadow:0 1px 4px rgba(0,0,0,.08); }
+  .subtitle { color:#64748b; font-size:14px; margin-bottom:20px; }
+  .legend-dot { display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px }
+  details summary { cursor:pointer;font-weight:600;color:#1E3A5F;font-size:13px;margin-top:16px }
+  pre { background:#f1f5f9;padding:12px;border-radius:6px;font-size:11px;
+         overflow-x:auto;max-height:300px }
+  .legend-box { font-size:12px; margin:12px 0 }
+</style>
+</head>
+<body>
+<h1>Experiment 2 — Decision Divergence Analysis</h1>
+<p class="subtitle">
+  How much do CCP and Two-Stage first-stage decisions differ from the deterministic baseline as σ_L increases?<br>
+  <strong>Facility switch</strong>: patient assigned to a different facility than deterministic.
+  <strong>Route switch</strong>: different (j_out, j_ret) pair.
+  <strong>Any switch</strong>: either facility or route changed.
+</p>
+
+<div class="card">
+  <h2 style="margin-top:0;color:#1E3A5F">Facility Assignment Switch vs σ_L</h2>
+  <p style="font-size:12px;color:#64748b">% of patients assigned to a different facility than the deterministic solution</p>
+  <div style="position:relative;height:320px">
+    <canvas id="divChart"></canvas>
+  </div>
+  <div class="legend-box">
+    <span style="border-bottom:2px dashed #3A7D8C;padding-bottom:1px;margin-right:4px">&nbsp;&nbsp;&nbsp;</span> CCP &nbsp;&nbsp;
+    <span style="border-bottom:2px solid #2C3E6B;padding-bottom:1px;margin-right:4px">&nbsp;&nbsp;&nbsp;</span> Two-Stage &nbsp;&nbsp;
+    Shading: N=15 (light) → N=50 (dark)
+  </div>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0;color:#1E3A5F">Detailed Decision Tables</h2>
+  <p style="font-size:12px;color:#64748b;margin-bottom:16px">
+    Facility badges: <span style="background:#2C3E6B;color:#fff;border-radius:3px;padding:1px 5px;font-size:10px">m1</span> = open in both &nbsp;
+    <span style="background:#ef4444;color:#fff;border-radius:3px;padding:1px 5px;font-size:10px">+m4</span> = added vs det &nbsp;
+    <span style="background:#f59e0b;color:#fff;border-radius:3px;padding:1px 5px;font-size:10px">−m1</span> = removed vs det &nbsp;&nbsp;
+    Cell shading: <span style="background:#f0fdf4;padding:1px 5px;border-radius:3px">low</span>
+    <span style="background:#fef9c3;padding:1px 5px;border-radius:3px">≥20%</span>
+    <span style="background:#fee2e2;padding:1px 5px;border-radius:3px">≥40%</span>
+  </p>
+  
+<h3 style="color:#1E3A5F;margin:28px 0 8px">N = 15 patients
+  <span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px">
+    Det. baseline: facilities = ['m1']
+    &nbsp;|&nbsp; cost = $3.349M
+  </span>
+</h3>
+<table style="border-collapse:collapse;width:100%;font-size:12px;font-family:sans-serif">
+  <tr style="background:#1E3A5F;color:#fff">
+      <th style="padding:8px 12px">σ_L</th>
+      <th style="padding:8px 12px">Model</th>
+      <th style="padding:8px 12px">Facilities open</th>
+      <th style="padding:8px 12px">Facility<br>divergence</th>
+      <th style="padding:8px 12px">Fac. assignment<br>switch</th>
+      <th style="padding:8px 12px">Route<br>switch</th>
+      <th style="padding:8px 12px">Any decision<br>switch</th>
+      <th style="padding:8px 12px">Cost ($M)</th>
+    </tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.05</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">13.3%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">53.3%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">66.7%</td><td style="text-align:center;padding:6px 10px">$6.380M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">6.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">26.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">33.3%</td><td style="text-align:center;padding:6px 10px">$6.374M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.10</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">13.3%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">53.3%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">66.7%</td><td style="text-align:center;padding:6px 10px">$6.380M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">6.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">26.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">33.3%</td><td style="text-align:center;padding:6px 10px">$6.374M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.15</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">20.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">80.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">86.7%</td><td style="text-align:center;padding:6px 10px">$6.389M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">20.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">26.7%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">46.7%</td><td style="text-align:center;padding:6px 10px">$6.378M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.20</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">20.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">80.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">86.7%</td><td style="text-align:center;padding:6px 10px">$6.389M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">20.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">53.3%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">73.3%</td><td style="text-align:center;padding:6px 10px">$6.385M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.25</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td colspan="5" style="color:#9ca3af;text-align:center;font-style:italic">Infeasible</td><td style="text-align:center;color:#9ca3af">—</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">26.7%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">80.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">86.7%</td><td style="text-align:center;padding:6px 10px">$6.395M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.30</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td colspan="5" style="color:#9ca3af;text-align:center;font-style:italic">Infeasible</td><td style="text-align:center;color:#9ca3af">—</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">26.7%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">80.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">86.7%</td><td style="text-align:center;padding:6px 10px">$6.397M</td></tr>
+</table>
+
+<h3 style="color:#1E3A5F;margin:28px 0 8px">N = 30 patients
+  <span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px">
+    Det. baseline: facilities = ['m1', 'm4']
+    &nbsp;|&nbsp; cost = $6.656M
+  </span>
+</h3>
+<table style="border-collapse:collapse;width:100%;font-size:12px;font-family:sans-serif">
+  <tr style="background:#1E3A5F;color:#fff">
+      <th style="padding:8px 12px">σ_L</th>
+      <th style="padding:8px 12px">Model</th>
+      <th style="padding:8px 12px">Facilities open</th>
+      <th style="padding:8px 12px">Facility<br>divergence</th>
+      <th style="padding:8px 12px">Fac. assignment<br>switch</th>
+      <th style="padding:8px 12px">Route<br>switch</th>
+      <th style="padding:8px 12px">Any decision<br>switch</th>
+      <th style="padding:8px 12px">Cost ($M)</th>
+    </tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.05</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">6.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">20.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">26.7%</td><td style="text-align:center;padding:6px 10px">$6.665M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">6.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">20.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">26.7%</td><td style="text-align:center;padding:6px 10px">$6.666M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.10</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">6.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">20.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">26.7%</td><td style="text-align:center;padding:6px 10px">$6.665M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">23.3%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">40.0%</td><td style="text-align:center;padding:6px 10px">$6.674M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.15</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">70.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">73.3%</td><td style="text-align:center;padding:6px 10px">$6.694M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">20.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">20.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">36.7%</td><td style="text-align:center;padding:6px 10px">$6.686M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.20</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">16.7%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">70.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">73.3%</td><td style="text-align:center;padding:6px 10px">$6.694M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">13.3%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">26.7%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">36.7%</td><td style="text-align:center;padding:6px 10px">$6.692M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.25</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td colspan="5" style="color:#9ca3af;text-align:center;font-style:italic">Infeasible</td><td style="text-align:center;color:#9ca3af">—</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">23.3%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">70.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">76.7%</td><td style="text-align:center;padding:6px 10px">$6.712M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.30</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td colspan="5" style="color:#9ca3af;text-align:center;font-style:italic">Infeasible</td><td style="text-align:center;color:#9ca3af">—</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">23.3%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">70.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">76.7%</td><td style="text-align:center;padding:6px 10px">$6.716M</td></tr>
+</table>
+
+<h3 style="color:#1E3A5F;margin:28px 0 8px">N = 50 patients
+  <span style="font-size:12px;font-weight:400;color:#64748b;margin-left:8px">
+    Det. baseline: facilities = ['m1', 'm4']
+    &nbsp;|&nbsp; cost = $7.168M
+  </span>
+</h3>
+<table style="border-collapse:collapse;width:100%;font-size:12px;font-family:sans-serif">
+  <tr style="background:#1E3A5F;color:#fff">
+      <th style="padding:8px 12px">σ_L</th>
+      <th style="padding:8px 12px">Model</th>
+      <th style="padding:8px 12px">Facilities open</th>
+      <th style="padding:8px 12px">Facility<br>divergence</th>
+      <th style="padding:8px 12px">Fac. assignment<br>switch</th>
+      <th style="padding:8px 12px">Route<br>switch</th>
+      <th style="padding:8px 12px">Any decision<br>switch</th>
+      <th style="padding:8px 12px">Cost ($M)</th>
+    </tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.05</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m3</span> <span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m4</span></td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">50.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">100.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">50.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">100.0%</td><td style="text-align:center;padding:6px 10px">$8.812M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">24.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">26.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">44.0%</td><td style="text-align:center;padding:6px 10px">$7.224M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.10</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m3</span> <span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m4</span></td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">50.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">100.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">50.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">100.0%</td><td style="text-align:center;padding:6px 10px">$8.812M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">24.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">26.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">44.0%</td><td style="text-align:center;padding:6px 10px">$7.226M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.15</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m3</span> <span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m4</span></td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">50.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">100.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">80.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">100.0%</td><td style="text-align:center;padding:6px 10px">$8.848M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m4</span></td><td style="text-align:center;background:#f0fdf4;color:#166534;font-weight:600;padding:6px 10px">0.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">30.0%</td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">28.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">48.0%</td><td style="text-align:center;padding:6px 10px">$7.237M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.20</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td style="padding:4px 8px"><span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m3</span> <span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m4</span></td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">50.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">100.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">80.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">100.0%</td><td style="text-align:center;padding:6px 10px">$8.848M</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m3</span> <span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m4</span></td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">50.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">100.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">52.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">100.0%</td><td style="text-align:center;padding:6px 10px">$8.829M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.25</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td colspan="5" style="color:#9ca3af;text-align:center;font-style:italic">Infeasible</td><td style="text-align:center;color:#9ca3af">—</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m3</span> <span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m4</span></td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">33.3%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">44.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">80.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">84.0%</td><td style="text-align:center;padding:6px 10px">$11.795M</td></tr><tr style="border-top:2px solid #e2e8f0"><td rowspan="2" style="text-align:center;font-weight:700;font-size:13px;padding:8px;background:#f8fafc;border-top:2px solid #e2e8f0">0.30</td><td style="color:#3A7D8C;font-weight:600;padding:6px 10px">CCP (α=0.10)</td><td colspan="5" style="color:#9ca3af;text-align:center;font-style:italic">Infeasible</td><td style="text-align:center;color:#9ca3af">—</td></tr><tr style=""><td style="color:#2C3E6B;font-weight:600;padding:6px 10px">Two-Stage (δ=2)</td><td style="padding:4px 8px"><span style="background:#2C3E6B;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">m1</span> <span style="background:#ef4444;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">+m3</span> <span style="background:#f59e0b;color:#fff;border-radius:4px;padding:2px 5px;font-size:10px;margin:1px">−m4</span></td><td style="text-align:center;background:#fef9c3;color:#854d0e;font-weight:600;padding:6px 10px">33.3%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">44.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">80.0%</td><td style="text-align:center;background:#fee2e2;color:#b91c1c;font-weight:600;padding:6px 10px">84.0%</td><td style="text-align:center;padding:6px 10px">$11.801M</td></tr>
+</table>
+</div>
+
+<div class="card">
+  <details>
+    <summary>Raw JSON results</summary>
+    <pre>{
+  "15": {
+    "0.05": {
+      "det_fac": [
+        "m1"
+      ],
+      "det_cost": 3.3489,
+      "ccp": {
+        "fac_div_pct": 16.7,
+        "jaccard": 0.5,
+        "fac_switch_pct": 13.3,
+        "route_switch_pct": 53.3,
+        "full_switch_pct": 66.7,
+        "det_open": [
+          "m1"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 15
+      },
+      "ccp_cost": 6.3795,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m1",
+        "m4"
+      ],
+      "ts": {
+        "fac_div_pct": 16.7,
+        "jaccard": 0.5,
+        "fac_switch_pct": 6.7,
+        "route_switch_pct": 26.7,
+        "full_switch_pct": 33.3,
+        "det_open": [
+          "m1"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 15
+      },
+      "ts_cost": 6.3738,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.1": {
+      "det_fac": [
+        "m1"
+      ],
+      "det_cost": 3.3489,
+      "ccp": {
+        "fac_div_pct": 16.7,
+        "jaccard": 0.5,
+        "fac_switch_pct": 13.3,
+        "route_switch_pct": 53.3,
+        "full_switch_pct": 66.7,
+        "det_open": [
+          "m1"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 15
+      },
+      "ccp_cost": 6.3795,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m1",
+        "m4"
+      ],
+      "ts": {
+        "fac_div_pct": 16.7,
+        "jaccard": 0.5,
+        "fac_switch_pct": 6.7,
+        "route_switch_pct": 26.7,
+        "full_switch_pct": 33.3,
+        "det_open": [
+          "m1"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 15
+      },
+      "ts_cost": 6.3743,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.15": {
+      "det_fac": [
+        "m1"
+      ],
+      "det_cost": 3.3489,
+      "ccp": {
+        "fac_div_pct": 16.7,
+        "jaccard": 0.5,
+        "fac_switch_pct": 20.0,
+        "route_switch_pct": 80.0,
+        "full_switch_pct": 86.7,
+        "det_open": [
+          "m1"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 15
+      },
+      "ccp_cost": 6.3892,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m1",
+        "m4"
+      ],
+      "ts": {
+        "fac_div_pct": 16.7,
+        "jaccard": 0.5,
+        "fac_switch_pct": 20.0,
+        "route_switch_pct": 26.7,
+        "full_switch_pct": 46.7,
+        "det_open": [
+          "m1"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 15
+      },
+      "ts_cost": 6.3783,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.2": {
+      "det_fac": [
+        "m1"
+      ],
+      "det_cost": 3.3489,
+      "ccp": {
+        "fac_div_pct": 16.7,
+        "jaccard": 0.5,
+        "fac_switch_pct": 20.0,
+        "route_switch_pct": 80.0,
+        "full_switch_pct": 86.7,
+        "det_open": [
+          "m1"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 15
+      },
+      "ccp_cost": 6.3892,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m1",
+        "m4"
+      ],
+      "ts": {
+        "fac_div_pct": 16.7,
+        "jaccard": 0.5,
+        "fac_switch_pct": 20.0,
+        "route_switch_pct": 53.3,
+        "full_switch_pct": 73.3,
+        "det_open": [
+          "m1"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 15
+      },
+      "ts_cost": 6.3852,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.25": {
+      "det_fac": [
+        "m1"
+      ],
+      "det_cost": 3.3489,
+      "ccp": null,
+      "ccp_cost": null,
+      "ccp_solved": false,
+      "ccp_fac": null,
+      "ts": {
+        "fac_div_pct": 16.7,
+        "jaccard": 0.5,
+        "fac_switch_pct": 26.7,
+        "route_switch_pct": 80.0,
+        "full_switch_pct": 86.7,
+        "det_open": [
+          "m1"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 15
+      },
+      "ts_cost": 6.3952,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.3": {
+      "det_fac": [
+        "m1"
+      ],
+      "det_cost": 3.3489,
+      "ccp": null,
+      "ccp_cost": null,
+      "ccp_solved": false,
+      "ccp_fac": null,
+      "ts": {
+        "fac_div_pct": 16.7,
+        "jaccard": 0.5,
+        "fac_switch_pct": 26.7,
+        "route_switch_pct": 80.0,
+        "full_switch_pct": 86.7,
+        "det_open": [
+          "m1"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 15
+      },
+      "ts_cost": 6.3971,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    }
+  },
+  "30": {
+    "0.05": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 6.6557,
+      "ccp": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 6.7,
+        "route_switch_pct": 20.0,
+        "full_switch_pct": 26.7,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 30
+      },
+      "ccp_cost": 6.6654,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m1",
+        "m4"
+      ],
+      "ts": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 6.7,
+        "route_switch_pct": 20.0,
+        "full_switch_pct": 26.7,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 30
+      },
+      "ts_cost": 6.6657,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.1": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 6.6557,
+      "ccp": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 6.7,
+        "route_switch_pct": 20.0,
+        "full_switch_pct": 26.7,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 30
+      },
+      "ccp_cost": 6.6654,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m1",
+        "m4"
+      ],
+      "ts": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 16.7,
+        "route_switch_pct": 23.3,
+        "full_switch_pct": 40.0,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 30
+      },
+      "ts_cost": 6.6741,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.15": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 6.6557,
+      "ccp": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 16.7,
+        "route_switch_pct": 70.0,
+        "full_switch_pct": 73.3,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 30
+      },
+      "ccp_cost": 6.6945,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m1",
+        "m4"
+      ],
+      "ts": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 20.0,
+        "route_switch_pct": 20.0,
+        "full_switch_pct": 36.7,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 30
+      },
+      "ts_cost": 6.6858,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.2": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 6.6557,
+      "ccp": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 16.7,
+        "route_switch_pct": 70.0,
+        "full_switch_pct": 73.3,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 30
+      },
+      "ccp_cost": 6.6945,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m1",
+        "m4"
+      ],
+      "ts": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 13.3,
+        "route_switch_pct": 26.7,
+        "full_switch_pct": 36.7,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 30
+      },
+      "ts_cost": 6.6916,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.25": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 6.6557,
+      "ccp": null,
+      "ccp_cost": null,
+      "ccp_solved": false,
+      "ccp_fac": null,
+      "ts": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 23.3,
+        "route_switch_pct": 70.0,
+        "full_switch_pct": 76.7,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 30
+      },
+      "ts_cost": 6.7123,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.3": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 6.6557,
+      "ccp": null,
+      "ccp_cost": null,
+      "ccp_solved": false,
+      "ccp_fac": null,
+      "ts": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 23.3,
+        "route_switch_pct": 70.0,
+        "full_switch_pct": 76.7,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 30
+      },
+      "ts_cost": 6.716,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    }
+  },
+  "50": {
+    "0.05": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 7.1676,
+      "ccp": {
+        "fac_div_pct": 50.0,
+        "jaccard": 0.0,
+        "fac_switch_pct": 100.0,
+        "route_switch_pct": 50.0,
+        "full_switch_pct": 100.0,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m3"
+        ],
+        "n_patients": 50
+      },
+      "ccp_cost": 8.8117,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m3"
+      ],
+      "ts": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 24.0,
+        "route_switch_pct": 26.0,
+        "full_switch_pct": 44.0,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 50
+      },
+      "ts_cost": 7.2245,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.1": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 7.1676,
+      "ccp": {
+        "fac_div_pct": 50.0,
+        "jaccard": 0.0,
+        "fac_switch_pct": 100.0,
+        "route_switch_pct": 50.0,
+        "full_switch_pct": 100.0,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m3"
+        ],
+        "n_patients": 50
+      },
+      "ccp_cost": 8.8117,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m3"
+      ],
+      "ts": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 24.0,
+        "route_switch_pct": 26.0,
+        "full_switch_pct": 44.0,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 50
+      },
+      "ts_cost": 7.2256,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.15": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 7.1676,
+      "ccp": {
+        "fac_div_pct": 50.0,
+        "jaccard": 0.0,
+        "fac_switch_pct": 100.0,
+        "route_switch_pct": 80.0,
+        "full_switch_pct": 100.0,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m3"
+        ],
+        "n_patients": 50
+      },
+      "ccp_cost": 8.848,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m3"
+      ],
+      "ts": {
+        "fac_div_pct": 0.0,
+        "jaccard": 1.0,
+        "fac_switch_pct": 30.0,
+        "route_switch_pct": 28.0,
+        "full_switch_pct": 48.0,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m4"
+        ],
+        "n_patients": 50
+      },
+      "ts_cost": 7.2374,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m4"
+      ]
+    },
+    "0.2": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 7.1676,
+      "ccp": {
+        "fac_div_pct": 50.0,
+        "jaccard": 0.0,
+        "fac_switch_pct": 100.0,
+        "route_switch_pct": 80.0,
+        "full_switch_pct": 100.0,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m3"
+        ],
+        "n_patients": 50
+      },
+      "ccp_cost": 8.848,
+      "ccp_solved": true,
+      "ccp_fac": [
+        "m3"
+      ],
+      "ts": {
+        "fac_div_pct": 50.0,
+        "jaccard": 0.0,
+        "fac_switch_pct": 100.0,
+        "route_switch_pct": 52.0,
+        "full_switch_pct": 100.0,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m3"
+        ],
+        "n_patients": 50
+      },
+      "ts_cost": 8.8287,
+      "ts_solved": true,
+      "ts_fac": [
+        "m3"
+      ]
+    },
+    "0.25": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 7.1676,
+      "ccp": null,
+      "ccp_cost": null,
+      "ccp_solved": false,
+      "ccp_fac": null,
+      "ts": {
+        "fac_div_pct": 33.3,
+        "jaccard": 0.333,
+        "fac_switch_pct": 44.0,
+        "route_switch_pct": 80.0,
+        "full_switch_pct": 84.0,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m3"
+        ],
+        "n_patients": 50
+      },
+      "ts_cost": 11.7949,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m3"
+      ]
+    },
+    "0.3": {
+      "det_fac": [
+        "m1",
+        "m4"
+      ],
+      "det_cost": 7.1676,
+      "ccp": null,
+      "ccp_cost": null,
+      "ccp_solved": false,
+      "ccp_fac": null,
+      "ts": {
+        "fac_div_pct": 33.3,
+        "jaccard": 0.333,
+        "fac_switch_pct": 44.0,
+        "route_switch_pct": 80.0,
+        "full_switch_pct": 84.0,
+        "det_open": [
+          "m1",
+          "m4"
+        ],
+        "cmp_open": [
+          "m1",
+          "m3"
+        ],
+        "n_patients": 50
+      },
+      "ts_cost": 11.801,
+      "ts_solved": true,
+      "ts_fac": [
+        "m1",
+        "m3"
+      ]
+    }
+  }
+}</pre>
+  </details>
+</div>
+
+<script>
+const ctx = document.getElementById('divChart').getContext('2d');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: [0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+    datasets: [{"label": "CCP N=15", "data": [13.3, 13.3, 20.0, 20.0, null, null], "borderColor": "#3A7D8C", "backgroundColor": "#3A7D8C", "borderDash": [6, 3], "pointStyle": "circle"}, {"label": "2S N=15", "data": [6.7, 6.7, 20.0, 20.0, 26.7, 26.7], "borderColor": "#2C3E6B", "backgroundColor": "#2C3E6B", "pointStyle": "rectRot"}, {"label": "CCP N=30", "data": [6.7, 6.7, 16.7, 16.7, null, null], "borderColor": "#2E6470", "backgroundColor": "#2E6470", "borderDash": [6, 3], "pointStyle": "circle"}, {"label": "2S N=30", "data": [6.7, 16.7, 20.0, 13.3, 23.3, 23.3], "borderColor": "#1E2D50", "backgroundColor": "#1E2D50", "pointStyle": "rectRot"}, {"label": "CCP N=50", "data": [100.0, 100.0, 100.0, 100.0, null, null], "borderColor": "#22505A", "backgroundColor": "#22505A", "borderDash": [6, 3], "pointStyle": "circle"}, {"label": "2S N=50", "data": [24.0, 24.0, 30.0, 100.0, 44.0, 44.0], "borderColor": "#111C35", "backgroundColor": "#111C35", "pointStyle": "rectRot"}]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { font: { size: 11 } } },
+      tooltip: { callbacks: {
+        label: ctx => ctx.dataset.label + ': ' + (ctx.raw !== null ? ctx.raw.toFixed(1) + '%' : 'n/a')
+      } }
+    },
+    scales: {
+      x: { title: { display: true, text: 'σ_L (manufacturing uncertainty)' } },
+      y: { title: { display: true, text: '% patients with facility switch' },
+            min: 0, max: 100,
+            ticks: { callback: v => v + '%' } }
+    }
+  }
+});
+</script>
+</body>
+</html>
