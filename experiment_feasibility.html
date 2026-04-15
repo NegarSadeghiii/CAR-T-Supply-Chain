@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Experiment 1: Feasibility Phase Diagram</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; padding: 24px 32px; background: #f8fafc; color: #1e293b; }
+  h1   { color: #1E3A5F; margin-bottom: 4px; }
+  .card { background: #fff; border-radius: 10px; padding: 24px; margin-bottom: 28px;
+           box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 20px; }
+  details summary { cursor:pointer; font-weight:600; color:#1E3A5F; font-size:13px; margin-top:16px }
+  pre { background:#f1f5f9; padding:12px; border-radius:6px; font-size:11px;
+         overflow-x:auto; max-height:300px; }
+</style>
+</head>
+<body>
+<h1>Experiment 1 — Feasibility Phase Diagram</h1>
+<p class="subtitle">
+  N × σ grid showing solver feasibility for each model.
+  Time limit: 120s per run. &nbsp;|&nbsp;
+  N ∈ {5, 10, 15, 20, 25, 30, 50, 75} &nbsp;|&nbsp;
+  σ_L ∈ {0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40}
+</p>
+
+<div class="card">
+  <h2 style="margin-top:0;color:#1E3A5F">Summary</h2>
+  
+<table style="border-collapse:collapse;font-family:sans-serif;margin:16px 0;font-size:13px">
+  <tr style="background:#1E3A5F;color:#fff">
+    <th style="padding:8px 12px">Model</th>
+    <th style="padding:8px 12px">Solved</th>
+    <th style="padding:8px 12px">Infeasible</th>
+    <th style="padding:8px 12px">Timeout</th>
+    <th style="padding:8px 12px">Missing</th>
+    <th style="padding:8px 12px">Success rate</th>
+  </tr>
+  <tr><td style="padding:6px 12px;font-weight:600">Deterministic</td><td style="padding:6px 12px;text-align:center">64</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">100%</td></tr>
+  <tr><td style="padding:6px 12px;font-weight:600">CCP</td><td style="padding:6px 12px;text-align:center">32</td><td style="padding:6px 12px;text-align:center">32</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">50%</td></tr>
+  <tr><td style="padding:6px 12px;font-weight:600">Two-Stage</td><td style="padding:6px 12px;text-align:center">48</td><td style="padding:6px 12px;text-align:center">16</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">75%</td></tr>
+</table>
+  <div style="margin:12px 0;font-size:12px"><span style="display:inline-flex;align-items:center;margin-right:18px"><span style="width:14px;height:14px;background:#22c55e;border-radius:3px;margin-right:6px"></span>Solved</span><span style="display:inline-flex;align-items:center;margin-right:18px"><span style="width:14px;height:14px;background:#ef4444;border-radius:3px;margin-right:6px"></span>Infeasible</span><span style="display:inline-flex;align-items:center;margin-right:18px"><span style="width:14px;height:14px;background:#f59e0b;border-radius:3px;margin-right:6px"></span>Timeout</span><span style="display:inline-flex;align-items:center;margin-right:18px"><span style="width:14px;height:14px;background:#9ca3af;border-radius:3px;margin-right:6px"></span>No data</span></div>
+</div>
+
+<div class="card">
+  <h3 style="margin:24px 0 8px;color:#1E3A5F">Deterministic (ColGen)</h3>
+<table style="border-collapse:collapse;font-family:monospace;width:100%">
+<tr><th style="padding:6px 10px;background:#1E3A5F;color:#fff">N \ σ</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.05</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.10</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.15</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.20</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.25</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.30</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.35</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.40</th>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=5</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.120M</span><br><span style="font-size:9px;opacity:0.8">0.4s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.120M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.120M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.120M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.120M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.120M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.120M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.120M</span></td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=10</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.245M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.245M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.245M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.245M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.245M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.245M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.245M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.245M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=15</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.335M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.335M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.335M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.335M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.335M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.335M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.335M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.335M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=20</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.467M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.467M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.467M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.467M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.467M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.467M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.467M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.467M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=25</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.593M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.593M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.593M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.593M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.593M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.593M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.593M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.593M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=30</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.656M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.656M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.656M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.656M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.656M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.656M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.656M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.656M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=50</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.168M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.168M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.168M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.168M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.168M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.168M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.168M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.168M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=75</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.089M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.089M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.089M</span><br><span style="font-size:9px;opacity:0.8">0.6s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.089M</span><br><span style="font-size:9px;opacity:0.8">0.6s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.089M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.089M</span><br><span style="font-size:9px;opacity:0.8">0.6s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.089M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.089M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+</tr>
+</table>
+  <p style="font-size:12px;color:#64748b;margin-top:8px">
+    Deterministic model ignores σ — result is σ-invariant (same cell repeated across columns).
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin:24px 0 8px;color:#1E3A5F">CCP (α = 0.10)</h3>
+<table style="border-collapse:collapse;font-family:monospace;width:100%">
+<tr><th style="padding:6px 10px;background:#1E3A5F;color:#fff">N \ σ</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.05</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.10</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.15</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.20</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.25</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.30</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.35</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.40</th>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=5</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.125M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.125M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.128M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.128M</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=10</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.257M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.257M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.263M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.263M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=15</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.339M</span><br><span style="font-size:9px;opacity:0.8">0.4s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.339M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.353M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.353M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=20</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.501M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.501M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.512M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.512M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=25</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.627M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.627M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.640M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.640M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=30</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.665M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.665M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.694M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.694M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=50</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$8.812M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$8.812M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$8.848M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$8.848M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=75</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.107M</span><br><span style="font-size:9px;opacity:0.8">0.9s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.107M</span><br><span style="font-size:9px;opacity:0.8">0.9s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$8.695M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$8.695M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+</table>
+  <p style="font-size:12px;color:#64748b;margin-top:8px">
+    CCP tightens the manufacturing slot to the (1-α)-quantile of T_MF ~ LogNormal(μ, σ²).
+    Higher σ → longer effective TMFE → tighter feasibility window → infeasibility at large N.
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin:24px 0 8px;color:#1E3A5F">Two-Stage Stochastic (δ = 2.0)</h3>
+<table style="border-collapse:collapse;font-family:monospace;width:100%">
+<tr><th style="padding:6px 10px;background:#1E3A5F;color:#fff">N \ σ</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.05</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.10</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.15</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.20</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.25</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.30</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.35</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.40</th>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=5</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.123M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.124M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.124M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.126M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.130M</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.130M</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=10</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$3.253M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.255M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.257M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.261M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.268M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.269M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=15</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.339M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.343M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.349M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.352M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.361M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.362M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=20</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.496M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.497M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.500M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.508M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.521M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.523M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=25</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.616M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.617M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.622M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.637M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.651M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.654M</span><br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=30</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.666M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.674M</span><br><span style="font-size:9px;opacity:0.8">0.4s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.686M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.692M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.712M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$6.716M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=50</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.224M</span><br><span style="font-size:9px;opacity:0.8">1.0s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.226M</span><br><span style="font-size:9px;opacity:0.8">0.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.237M</span><br><span style="font-size:9px;opacity:0.8">0.4s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$8.829M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$11.795M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$11.801M</span><br><span style="font-size:9px;opacity:0.8">0.2s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=75</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.107M</span><br><span style="font-size:9px;opacity:0.8">1.0s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$7.121M</span><br><span style="font-size:9px;opacity:0.8">0.9s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$8.677M</span><br><span style="font-size:9px;opacity:0.8">0.4s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$8.686M</span><br><span style="font-size:9px;opacity:0.8">0.4s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$8.722M</span><br><span style="font-size:9px;opacity:0.8">0.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$8.728M</span><br><span style="font-size:9px;opacity:0.8">0.6s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
+</table>
+  <p style="font-size:12px;color:#64748b;margin-top:8px">
+    Two-Stage model uses expediting recourse. Higher σ increases expediting probability
+    but may still reach infeasibility when no plan meets the deadline even with recourse.
+  </p>
+</div>
+
+<div class="card">
+  <details>
+    <summary>Raw JSON results</summary>
+    <pre>{
+  "det": {
+    "5": {
+      "0.05": {
+        "status": "solved",
+        "cost": 3.1197,
+        "time": 0.4,
+        "plans": 90,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 3.1197,
+        "time": 0.0,
+        "plans": 90,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 3.1197,
+        "time": 0.0,
+        "plans": 90,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 3.1197,
+        "time": 0.0,
+        "plans": 90,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 3.1197,
+        "time": 0.0,
+        "plans": 90,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 3.1197,
+        "time": 0.0,
+        "plans": 90,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.35": {
+        "status": "solved",
+        "cost": 3.1197,
+        "time": 0.0,
+        "plans": 90,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.4": {
+        "status": "solved",
+        "cost": 3.1197,
+        "time": 0.0,
+        "plans": 90,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      }
+    },
+    "10": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.2451,
+        "time": 0.1,
+        "plans": 174,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.2451,
+        "time": 0.1,
+        "plans": 174,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.2451,
+        "time": 0.1,
+        "plans": 174,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.2451,
+        "time": 0.1,
+        "plans": 174,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 6.2451,
+        "time": 0.1,
+        "plans": 174,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 6.2451,
+        "time": 0.1,
+        "plans": 174,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.35": {
+        "status": "solved",
+        "cost": 6.2451,
+        "time": 0.1,
+        "plans": 174,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.4": {
+        "status": "solved",
+        "cost": 6.2451,
+        "time": 0.1,
+        "plans": 174,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      }
+    },
+    "15": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.3349,
+        "time": 0.1,
+        "plans": 360,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.3349,
+        "time": 0.1,
+        "plans": 360,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.3349,
+        "time": 0.1,
+        "plans": 360,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.3349,
+        "time": 0.1,
+        "plans": 360,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 6.3349,
+        "time": 0.1,
+        "plans": 360,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 6.3349,
+        "time": 0.1,
+        "plans": 360,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.35": {
+        "status": "solved",
+        "cost": 6.3349,
+        "time": 0.1,
+        "plans": 360,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.4": {
+        "status": "solved",
+        "cost": 6.3349,
+        "time": 0.1,
+        "plans": 360,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      }
+    },
+    "20": {
+      "0.05": {
+        "status": "solved",
+        "cost": 3.4675,
+        "time": 0.1,
+        "plans": 348,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 3.4675,
+        "time": 0.1,
+        "plans": 348,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 3.4675,
+        "time": 0.1,
+        "plans": 348,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 3.4675,
+        "time": 0.1,
+        "plans": 348,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 3.4675,
+        "time": 0.1,
+        "plans": 348,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 3.4675,
+        "time": 0.1,
+        "plans": 348,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.35": {
+        "status": "solved",
+        "cost": 3.4675,
+        "time": 0.1,
+        "plans": 348,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.4": {
+        "status": "solved",
+        "cost": 3.4675,
+        "time": 0.1,
+        "plans": 348,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      }
+    },
+    "25": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.5926,
+        "time": 0.2,
+        "plans": 438,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.5926,
+        "time": 0.1,
+        "plans": 438,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.5926,
+        "time": 0.1,
+        "plans": 438,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.5926,
+        "time": 0.2,
+        "plans": 438,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 6.5926,
+        "time": 0.1,
+        "plans": 438,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 6.5926,
+        "time": 0.1,
+        "plans": 438,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.35": {
+        "status": "solved",
+        "cost": 6.5926,
+        "time": 0.1,
+        "plans": 438,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.4": {
+        "status": "solved",
+        "cost": 6.5926,
+        "time": 0.1,
+        "plans": 438,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      }
+    },
+    "30": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.6557,
+        "time": 0.5,
+        "plans": 720,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.6557,
+        "time": 0.5,
+        "plans": 720,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.6557,
+        "time": 0.5,
+        "plans": 720,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.6557,
+        "time": 0.5,
+        "plans": 720,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 6.6557,
+        "time": 0.5,
+        "plans": 720,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 6.6557,
+        "time": 0.5,
+        "plans": 720,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.35": {
+        "status": "solved",
+        "cost": 6.6557,
+        "time": 0.5,
+        "plans": 720,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.4": {
+        "status": "solved",
+        "cost": 6.6557,
+        "time": 0.5,
+        "plans": 720,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      }
+    },
+    "50": {
+      "0.05": {
+        "status": "solved",
+        "cost": 7.1676,
+        "time": 0.3,
+        "plans": 870,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 7.1676,
+        "time": 0.3,
+        "plans": 870,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 7.1676,
+        "time": 0.3,
+        "plans": 870,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 7.1676,
+        "time": 0.3,
+        "plans": 870,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 7.1676,
+        "time": 0.3,
+        "plans": 870,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 7.1676,
+        "time": 0.3,
+        "plans": 870,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.35": {
+        "status": "solved",
+        "cost": 7.1676,
+        "time": 0.3,
+        "plans": 870,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.4": {
+        "status": "solved",
+        "cost": 7.1676,
+        "time": 0.3,
+        "plans": 870,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      }
+    },
+    "75": {
+      "0.05": {
+        "status": "solved",
+        "cost": 7.0888,
+        "time": 0.5,
+        "plans": 1200,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 7.0888,
+        "time": 0.5,
+        "plans": 1200,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 7.0888,
+        "time": 0.6,
+        "plans": 1200,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 7.0888,
+        "time": 0.6,
+        "plans": 1200,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 7.0888,
+        "time": 0.5,
+        "plans": 1200,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 7.0888,
+        "time": 0.6,
+        "plans": 1200,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.35": {
+        "status": "solved",
+        "cost": 7.0888,
+        "time": 0.5,
+        "plans": 1200,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.4": {
+        "status": "solved",
+        "cost": 7.0888,
+        "time": 0.5,
+        "plans": 1200,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      }
+    }
+  },
+  "ccp": {
+    "5": {
+      "0.05": {
+        "status": "solved",
+        "cost": 3.1247,
+        "time": 0.0,
+        "plans": 66,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 3.1247,
+        "time": 0.0,
+        "plans": 66,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 3.1281,
+        "time": 0.0,
+        "plans": 54,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 3.1281,
+        "time": 0.0,
+        "plans": 54,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.25": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.3": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "10": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.2571,
+        "time": 0.1,
+        "plans": 114,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.2571,
+        "time": 0.1,
+        "plans": 114,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.2631,
+        "time": 0.1,
+        "plans": 96,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.2631,
+        "time": 0.1,
+        "plans": 96,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.3": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "15": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.3389,
+        "time": 0.4,
+        "plans": 342,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.3389,
+        "time": 0.3,
+        "plans": 342,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.3527,
+        "time": 0.1,
+        "plans": 258,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.3527,
+        "time": 0.1,
+        "plans": 258,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.3": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "20": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.5007,
+        "time": 0.1,
+        "plans": 228,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.5007,
+        "time": 0.1,
+        "plans": 228,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.5116,
+        "time": 0.1,
+        "plans": 192,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.5116,
+        "time": 0.1,
+        "plans": 192,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.3": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "25": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.6273,
+        "time": 0.1,
+        "plans": 294,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.6273,
+        "time": 0.1,
+        "plans": 294,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.6398,
+        "time": 0.1,
+        "plans": 246,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.6398,
+        "time": 0.1,
+        "plans": 246,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.3": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "30": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.6654,
+        "time": 0.2,
+        "plans": 684,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.6654,
+        "time": 0.2,
+        "plans": 684,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.6945,
+        "time": 0.1,
+        "plans": 522,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.6945,
+        "time": 0.1,
+        "plans": 522,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.3": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "50": {
+      "0.05": {
+        "status": "solved",
+        "cost": 8.8117,
+        "time": 0.2,
+        "plans": 570,
+        "n_open": 1,
+        "facilities": [
+          "m3"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 8.8117,
+        "time": 0.2,
+        "plans": 570,
+        "n_open": 1,
+        "facilities": [
+          "m3"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 8.848,
+        "time": 0.2,
+        "plans": 480,
+        "n_open": 1,
+        "facilities": [
+          "m3"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 8.848,
+        "time": 0.2,
+        "plans": 480,
+        "n_open": 1,
+        "facilities": [
+          "m3"
+        ]
+      },
+      "0.25": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.3": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "75": {
+      "0.05": {
+        "status": "solved",
+        "cost": 7.1066,
+        "time": 0.9,
+        "plans": 1140,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 7.1066,
+        "time": 0.9,
+        "plans": 1140,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 8.6952,
+        "time": 0.3,
+        "plans": 870,
+        "n_open": 1,
+        "facilities": [
+          "m3"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 8.6952,
+        "time": 0.3,
+        "plans": 870,
+        "n_open": 1,
+        "facilities": [
+          "m3"
+        ]
+      },
+      "0.25": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.3": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    }
+  },
+  "ts": {
+    "5": {
+      "0.05": {
+        "status": "solved",
+        "cost": 3.1235,
+        "time": 0.0,
+        "plans": 102,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 3.1237,
+        "time": 0.0,
+        "plans": 90,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 3.1242,
+        "time": 0.0,
+        "plans": 90,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 3.1263,
+        "time": 0.0,
+        "plans": 66,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 3.1297,
+        "time": 0.0,
+        "plans": 54,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 3.1303,
+        "time": 0.0,
+        "plans": 54,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "10": {
+      "0.05": {
+        "status": "solved",
+        "cost": 3.2527,
+        "time": 0.1,
+        "plans": 198,
+        "n_open": 1,
+        "facilities": [
+          "m1"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.255,
+        "time": 0.1,
+        "plans": 174,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.2566,
+        "time": 0.1,
+        "plans": 174,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.2615,
+        "time": 0.1,
+        "plans": 114,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 6.2682,
+        "time": 0.1,
+        "plans": 96,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 6.2694,
+        "time": 0.1,
+        "plans": 96,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "15": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.3391,
+        "time": 0.2,
+        "plans": 360,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.3435,
+        "time": 0.2,
+        "plans": 360,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.3495,
+        "time": 0.3,
+        "plans": 360,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.3524,
+        "time": 0.2,
+        "plans": 342,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 6.3606,
+        "time": 0.2,
+        "plans": 258,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 6.3625,
+        "time": 0.2,
+        "plans": 258,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "20": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.4959,
+        "time": 0.2,
+        "plans": 396,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.4965,
+        "time": 0.1,
+        "plans": 348,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.5003,
+        "time": 0.1,
+        "plans": 348,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.5083,
+        "time": 0.1,
+        "plans": 228,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 6.5209,
+        "time": 0.1,
+        "plans": 192,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 6.5234,
+        "time": 0.1,
+        "plans": 192,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "25": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.6163,
+        "time": 0.5,
+        "plans": 498,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.617,
+        "time": 0.2,
+        "plans": 438,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.6217,
+        "time": 0.2,
+        "plans": 438,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.6367,
+        "time": 0.1,
+        "plans": 294,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 6.651,
+        "time": 0.1,
+        "plans": 246,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 6.654,
+        "time": 0.1,
+        "plans": 246,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "30": {
+      "0.05": {
+        "status": "solved",
+        "cost": 6.6657,
+        "time": 0.3,
+        "plans": 720,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 6.6741,
+        "time": 0.4,
+        "plans": 720,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 6.6858,
+        "time": 0.2,
+        "plans": 720,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 6.6916,
+        "time": 0.2,
+        "plans": 684,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 6.7123,
+        "time": 0.2,
+        "plans": 522,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 6.716,
+        "time": 0.2,
+        "plans": 522,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "50": {
+      "0.05": {
+        "status": "solved",
+        "cost": 7.2245,
+        "time": 1.0,
+        "plans": 990,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 7.2256,
+        "time": 0.3,
+        "plans": 870,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 7.2374,
+        "time": 0.4,
+        "plans": 870,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 8.8287,
+        "time": 0.2,
+        "plans": 570,
+        "n_open": 1,
+        "facilities": [
+          "m3"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 11.7949,
+        "time": 0.2,
+        "plans": 480,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m3"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 11.801,
+        "time": 0.2,
+        "plans": 480,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m3"
+        ]
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
+    "75": {
+      "0.05": {
+        "status": "solved",
+        "cost": 7.1072,
+        "time": 1.0,
+        "plans": 1200,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 7.1207,
+        "time": 0.9,
+        "plans": 1200,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m4"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 8.6765,
+        "time": 0.4,
+        "plans": 1200,
+        "n_open": 1,
+        "facilities": [
+          "m3"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 8.6863,
+        "time": 0.4,
+        "plans": 1140,
+        "n_open": 1,
+        "facilities": [
+          "m3"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 8.7216,
+        "time": 0.5,
+        "plans": 870,
+        "n_open": 1,
+        "facilities": [
+          "m3"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 8.7277,
+        "time": 0.6,
+        "plans": 870,
+        "n_open": 1,
+        "facilities": [
+          "m3"
+        ]
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    }
+  }
+}</pre>
+  </details>
+</div>
+
+</body>
+</html>
