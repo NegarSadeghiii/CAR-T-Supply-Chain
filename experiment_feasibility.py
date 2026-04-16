@@ -4,6 +4,29 @@ Experiment 1: Feasibility Phase Diagram
 Runs CCP and Two-Stage solvers across a grid of N x sigma_L values.
 Each cell records: Solved / Infeasible / Timeout
 Results saved to experiment_feasibility.html
+
+NOTE ON LARGE-N CRASHES
+-----------------------
+For N >= 500 the solver (HiGHS/CBC) can exhaust available memory mid-run,
+causing the Python process to be killed by the OS before it exits cleanly.
+This is expected behaviour and is NOT a data-loss risk: every completed run
+is written to experiment_feasibility_checkpoint.json immediately after it
+finishes, so restarting the script resumes from exactly where it stopped.
+
+If the sweep dies before finishing, simply re-run:
+    python experiment_feasibility.py
+and it will skip all cached entries and only run the missing ones.
+
+To regenerate the HTML from a complete (or partial) checkpoint without
+re-running any solvers:
+    python - <<'EOF'
+    import json, experiment_feasibility as ef
+    with open('experiment_feasibility_checkpoint.json') as f:
+        raw = json.load(f)
+    results = {s: {int(n): {float(sg): v for sg, v in sv.items()}
+                   for n, sv in nv.items()} for s, nv in raw.items()}
+    open('experiment_feasibility.html', 'w').write(ef.build_html(results))
+    EOF
 """
 import os, sys, time, json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
