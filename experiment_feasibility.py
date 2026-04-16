@@ -98,6 +98,19 @@ def run_sweep():
                           f'... (cached) {r["status"].upper()}')
                     continue
 
+                # DET is sigma-invariant: reuse first sigma result for all others
+                if solver == 'det' and results[solver][n]:
+                    first_sigma = next(iter(results[solver][n]))
+                    r = results[solver][n][first_sigma]
+                    results[solver][n][sigma] = r
+                    print(f'[{done:3d}/{total}] {solver.upper():4s} N={n:4d} σ={sigma:.2f} '
+                          f'... (reused) {r["status"].upper()}')
+                    with open(CHECKPOINT, 'w') as f:
+                        json.dump({s: {str(n2): {str(sg): v for sg, v in sv.items()}
+                                       for n2, sv in nv.items()}
+                                   for s, nv in results.items()}, f)
+                    continue
+
                 tag = f'[{done:3d}/{total}] {solver.upper():4s} N={n:4d} σ={sigma:.2f}'
                 print(tag, '...', end=' ', flush=True)
                 r = run_one(solver, n, sigma)
