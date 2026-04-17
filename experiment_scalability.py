@@ -53,6 +53,7 @@ def timed_run(solver, n):
 
 def run_sweep():
     results = {}   # results[solver][n] = aggregated dict
+    out = os.path.join(BASE_DIR, 'experiment_scalability.html')
 
     for solver, label in [('det', 'Deterministic'), ('ccp', 'CCP'), ('ts', 'Two-Stage')]:
         results[solver] = {}
@@ -65,13 +66,17 @@ def run_sweep():
 
             times, plans = [], None
             status = 'ok'
-            for rep in range(N_REPS):
-                r = timed_run(solver, n)
-                if not r['solved']:
-                    status = 'infeasible' if r['wall_time'] < TIME_LIMIT - 5 else 'timeout'
-                    break
-                times.append(r['wall_time'])
-                plans = r['num_plans']
+            try:
+                for rep in range(N_REPS):
+                    r = timed_run(solver, n)
+                    if not r['solved']:
+                        status = 'infeasible' if r['wall_time'] < TIME_LIMIT - 5 else 'timeout'
+                        break
+                    times.append(r['wall_time'])
+                    plans = r['num_plans']
+            except Exception as e:
+                status = 'error'
+                print(f'  N={n:3d}  ERROR: {e}')
 
             if times:
                 med = round(statistics.median(times), 3)
@@ -87,6 +92,11 @@ def run_sweep():
                 results[solver][n] = {'status': status, 'median': None,
                                       'min': None, 'max': None, 'num_plans': None}
                 print(f'  N={n:3d}  {status.upper()}')
+
+        # Save HTML after each solver completes so partial results are visible
+        with open(out, 'w') as f:
+            f.write(build_html(results))
+        print(f'  (HTML updated after {label})')
 
     return results
 
@@ -283,8 +293,4 @@ if __name__ == '__main__':
     print(f'Total solver calls: {total}')
 
     results = run_sweep()
-
-    out = os.path.join(BASE_DIR, 'experiment_scalability.html')
-    with open(out, 'w') as f:
-        f.write(build_html(results))
-    print(f'\nSaved → {out}')
+    print(f'\nSaved → {os.path.join(BASE_DIR, "experiment_scalability.html")}')
