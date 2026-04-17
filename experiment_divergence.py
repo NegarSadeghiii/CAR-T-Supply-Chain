@@ -212,8 +212,8 @@ def build_table(n, n_data):
 def build_chart_data(data):
     """Build Chart.js datasets for facility-switch % vs sigma, per N."""
     datasets = []
-    colors_ccp = ['#3A7D8C', '#2E6470', '#22505A']
-    colors_ts  = ['#2C3E6B', '#1E2D50', '#111C35']
+    colors_ccp = ['#3A7D8C', '#2E6470', '#22505A', '#1A3E47', '#0F2A31']
+    colors_ts  = ['#2C3E6B', '#1E2D50', '#111C35', '#0A1325', '#050C18']
     for i, n in enumerate(N_VALUES):
         ccp_pts = [data[n][s]['ccp']['fac_switch_pct']
                    if data[n][s].get('ccp_solved') and data[n][s].get('ccp') else None
