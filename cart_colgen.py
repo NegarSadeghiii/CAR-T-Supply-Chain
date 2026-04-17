@@ -305,7 +305,20 @@ def solve_master(plan_data, time_limit=300, solver_name='appsi_highs'):
             elif sname == 'cbc':
                 try: s.options['sec'] = time_limit
                 except Exception: pass
-            r = s.solve(model, tee=False)
+            # Use load_solutions=False to avoid RuntimeError when solver
+            # times out before finding a feasible solution (common at large N).
+            try:
+                r = s.solve(model, tee=False, load_solutions=False)
+            except TypeError:
+                r = s.solve(model, tee=False)
+                return s, r
+            # Load solution if one was found (optimal or feasible within time limit)
+            tc = getattr(r.solver, 'termination_condition', None)
+            if tc in (TerminationCondition.optimal, TerminationCondition.feasible):
+                try:
+                    model.solutions.load_from(r)
+                except Exception:
+                    pass
             return s, r
         except Exception:
             return None, None
