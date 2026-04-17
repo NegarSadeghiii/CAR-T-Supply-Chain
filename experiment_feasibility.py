@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cart_colgen          import run_experiment          as det_run
 from cart_colgen_ccp      import run_experiment_ccp      as ccp_run, DEFAULT_PROCESS_CCP
 from cart_colgen_twostage import run_experiment_twostage as ts_run,  DEFAULT_PROCESS_2S
+from cart_colgen_flexwait import run_experiment_flexwait as fw_run
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 
@@ -67,9 +68,11 @@ def run_one(solver, n, sigma):
         elif solver == 'ccp':
             cfg = dict(DEFAULT_PROCESS_CCP); cfg['sigma_L'] = sigma
             r = ccp_run(data_file=df, process_config=cfg, time_limit=tlim)
-        else:  # ts
+        elif solver == 'ts':
             cfg = dict(DEFAULT_PROCESS_2S); cfg['sigma_L'] = sigma
             r = ts_run(data_file=df, process_config=cfg, time_limit=tlim)
+        else:  # fw — sigma-invariant like det
+            r = fw_run(data_file=df, time_limit=tlim)
         elapsed = time.time() - t0
 
         if not r.get('solved'):
@@ -103,10 +106,10 @@ def run_sweep():
     else:
         results = {}
 
-    total = len(N_VALUES) * len(SIGMA_VALUES) * 3
+    total = len(N_VALUES) * len(SIGMA_VALUES) * 4
     done  = 0
 
-    for solver in ['det', 'ccp', 'ts']:
+    for solver in ['det', 'ccp', 'ts', 'fw']:
         if solver not in results:
             results[solver] = {}
         for n in N_VALUES:
@@ -121,8 +124,8 @@ def run_sweep():
                           f'... (cached) {r["status"].upper()}')
                     continue
 
-                # DET is sigma-invariant: reuse first sigma result for all others
-                if solver == 'det' and results[solver][n]:
+                # DET and FW are sigma-invariant: reuse first sigma result for all others
+                if solver in ('det', 'fw') and results[solver][n]:
                     first_sigma = next(iter(results[solver][n]))
                     r = results[solver][n][first_sigma]
                     results[solver][n][sigma] = r
@@ -206,9 +209,10 @@ def legend_html():
     return f'<div style="margin:12px 0;font-size:12px">{items}</div>'
 
 def build_html(results):
-    det_grid = grid_table_html(results['det'], 'Deterministic (ColGen)', show_cost=True)
-    ccp_grid = grid_table_html(results['ccp'], 'CCP (α = 0.10)',         show_cost=True)
-    ts_grid  = grid_table_html(results['ts'],  'Two-Stage Stochastic (δ = 2.0)', show_cost=True)
+    det_grid = grid_table_html(results.get('det', {}), 'Deterministic ColGen (wait=0)',    show_cost=True)
+    fw_grid  = grid_table_html(results.get('fw',  {}), 'Deterministic ColGen (flex wait)', show_cost=True)
+    ccp_grid = grid_table_html(results.get('ccp', {}), 'CCP (α = 0.10)',                   show_cost=True)
+    ts_grid  = grid_table_html(results.get('ts',  {}), 'Two-Stage Stochastic (δ = 2.0)',   show_cost=True)
 
     # Summary counts
     def counts(solver_res):
@@ -234,9 +238,10 @@ def build_html(results):
     <th style="padding:8px 12px">Missing</th>
     <th style="padding:8px 12px">Success rate</th>
   </tr>
-  {count_row('Deterministic', results['det'])}
-  {count_row('CCP', results['ccp'])}
-  {count_row('Two-Stage', results['ts'])}
+  {count_row('Deterministic (wait=0)', results.get('det', {}))}
+  {count_row('Deterministic (flex wait)', results.get('fw', {}))}
+  {count_row('CCP', results.get('ccp', {}))}
+  {count_row('Two-Stage', results.get('ts', {}))}
 </table>'''
 
     results_json = json.dumps({
@@ -279,6 +284,16 @@ def build_html(results):
   {det_grid}
   <p style="font-size:12px;color:#64748b;margin-top:8px">
     Deterministic model ignores σ — result is σ-invariant (same cell repeated across columns).
+    wait=0 means each patient's manufacturing slot is rigidly fixed by arrival time.
+  </p>
+</div>
+
+<div class="card">
+  {fw_grid}
+  <p style="font-size:12px;color:#64748b;margin-top:8px">
+    Same deterministic model but patients may wait up to their full deadline slack before
+    manufacturing begins. This gives the solver flexibility to spread load across time,
+    resolving infeasibility caused by clustered arrivals.
   </p>
 </div>
 
@@ -316,7 +331,7 @@ if __name__ == '__main__':
     print(f'N values   : {N_VALUES}')
     print(f'σ values   : {SIGMA_VALUES}')
     print(f'Time limits: ≤75→120s  ≤200→60s  >200→45s')
-    print(f'Total runs : {len(N_VALUES) * len(SIGMA_VALUES) * 3}')
+    print(f'Total runs : {len(N_VALUES) * len(SIGMA_VALUES) * 4}')
     print()
 
     results = run_sweep()

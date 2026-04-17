@@ -35,7 +35,8 @@
     <th style="padding:8px 12px">Missing</th>
     <th style="padding:8px 12px">Success rate</th>
   </tr>
-  <tr><td style="padding:6px 12px;font-weight:600">Deterministic</td><td style="padding:6px 12px;text-align:center">80</td><td style="padding:6px 12px;text-align:center">8</td><td style="padding:6px 12px;text-align:center">16</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">77%</td></tr>
+  <tr><td style="padding:6px 12px;font-weight:600">Deterministic (wait=0)</td><td style="padding:6px 12px;text-align:center">80</td><td style="padding:6px 12px;text-align:center">8</td><td style="padding:6px 12px;text-align:center">16</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">77%</td></tr>
+  <tr><td style="padding:6px 12px;font-weight:600">Deterministic (flex wait)</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">0%</td></tr>
   <tr><td style="padding:6px 12px;font-weight:600">CCP</td><td style="padding:6px 12px;text-align:center">40</td><td style="padding:6px 12px;text-align:center">60</td><td style="padding:6px 12px;text-align:center">4</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">38%</td></tr>
   <tr><td style="padding:6px 12px;font-weight:600">Two-Stage</td><td style="padding:6px 12px;text-align:center">60</td><td style="padding:6px 12px;text-align:center">38</td><td style="padding:6px 12px;text-align:center">6</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">58%</td></tr>
 </table>
@@ -43,7 +44,7 @@
 </div>
 
 <div class="card">
-  <h3 style="margin:24px 0 8px;color:#1E3A5F">Deterministic (ColGen)</h3>
+  <h3 style="margin:24px 0 8px;color:#1E3A5F">Deterministic ColGen (wait=0)</h3>
 <table style="border-collapse:collapse;font-family:monospace;width:100%">
 <tr><th style="padding:6px 10px;background:#1E3A5F;color:#fff">N \ σ</th>
 <th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.05</th>
@@ -188,6 +189,158 @@
 </table>
   <p style="font-size:12px;color:#64748b;margin-top:8px">
     Deterministic model ignores σ — result is σ-invariant (same cell repeated across columns).
+    wait=0 means each patient's manufacturing slot is rigidly fixed by arrival time.
+  </p>
+</div>
+
+<div class="card">
+  <h3 style="margin:24px 0 8px;color:#1E3A5F">Deterministic ColGen (flex wait)</h3>
+<table style="border-collapse:collapse;font-family:monospace;width:100%">
+<tr><th style="padding:6px 10px;background:#1E3A5F;color:#fff">N \ σ</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.05</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.10</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.15</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.20</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.25</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.30</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.35</th>
+<th style="padding:6px 8px;background:#1E3A5F;color:#fff;min-width:80px">0.40</th>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=5</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=10</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=15</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=20</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=25</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=30</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=50</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=75</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=100</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=200</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=500</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=1000</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=2000</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+<td style="background:#8b5cf6;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Error</td>
+</tr>
+</table>
+  <p style="font-size:12px;color:#64748b;margin-top:8px">
+    Same deterministic model but patients may wait up to their full deadline slack before
+    manufacturing begins. This gives the solver flexibility to spread load across time,
+    resolving infeasibility caused by clustered arrivals.
   </p>
 </div>
 
@@ -3318,6 +3471,762 @@
         "cost": null,
         "time": 0.0,
         "plans": 0
+      }
+    }
+  },
+  "fw": {
+    "5": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "10": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "15": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "20": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "25": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "30": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "50": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "75": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "100": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "200": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "500": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "1000": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      }
+    },
+    "2000": {
+      "0.05": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.1": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.15": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.2": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.25": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.3": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.35": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
+      },
+      "0.4": {
+        "status": "error",
+        "cost": null,
+        "time": 0.0,
+        "plans": null,
+        "err": "'float' object cannot be interpreted as an integer"
       }
     }
   }
