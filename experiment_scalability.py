@@ -114,7 +114,7 @@ def build_chart_js(results, y_field='median'):
     for solver in ['det', 'ccp', 'ts']:
         pts = []
         for n in N_VALUES:
-            r = results[solver].get(n, {})
+            r = results.get(solver, {}).get(n, {})
             pts.append(r.get(y_field))   # None if infeasible/missing
         datasets.append({
             'label':           LABELS[solver],
@@ -137,11 +137,11 @@ def summary_table(results):
               + '</tr>')
     rows = [header]
     for n in N_VALUES:
-        det_r = results['det'].get(n, {})
+        det_r = results.get('det', {}).get(n, {})
         plans = det_r.get('num_plans', '—')
 
         def cell(s):
-            r = results[s].get(n, {})
+            r = results.get(s, {}).get(n, {})
             if r.get('status') == 'solved':
                 t = r['median']
                 bg = ('#fee2e2' if t > 60 else '#fef9c3' if t > 10 else '#f0fdf4')
@@ -170,7 +170,7 @@ def plans_table(results):
     rows = [header]
     for n in N_VALUES:
         def pcell(s):
-            r = results[s].get(n, {})
+            r = results.get(s, {}).get(n, {})
             p = r.get('num_plans')
             if p is None:
                 return '<td style="text-align:center;color:#9ca3af;padding:6px 12px">—</td>'
