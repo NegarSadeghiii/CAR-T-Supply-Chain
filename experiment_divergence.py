@@ -17,7 +17,7 @@ from cart_colgen_ccp      import run_experiment_ccp      as ccp_run, DEFAULT_PRO
 from cart_colgen_twostage import run_experiment_twostage as ts_run,  DEFAULT_PROCESS_2S
 
 BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
-N_VALUES     = [15, 30, 50]
+N_VALUES     = [15, 30, 50, 75, 100]
 SIGMA_VALUES = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30]
 ALL_FACILITIES = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6']
 

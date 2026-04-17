@@ -19,7 +19,7 @@ SIGMA      = 0.20
 N_REPS     = 3      # repetitions per (model, N) for stable timing
 TIME_LIMIT = 300
 
-N_VALUES = [5, 10, 15, 20, 25, 30, 40, 50, 75]
+N_VALUES = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 200]
 
 def dat_file(n):
     return os.path.join(BASE_DIR, f'Data_N{n}.dat')
