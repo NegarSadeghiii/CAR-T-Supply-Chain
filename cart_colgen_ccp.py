@@ -52,13 +52,13 @@ from cart_colgen import parse_dat, solve_master, DEFAULT_URGENCY
 # Default configurations
 # ---------------------------------------------------------------------------
 
-DEFAULT_PROCESS_DET = {'tls': 1, 'tmfe': 7, 'tqc': 7, 'max_facilities': 2}
+DEFAULT_PROCESS_DET = {'tls': 1, 'tmfe': 7, 'tqc': 7, 'max_facilities': 6}
 
 DEFAULT_PROCESS_CCP = {
     'tls': 1,
     'tmfe': 7,          # nominal  E[T_MF]  — calibrates the distribution mean
     'tqc': 7,
-    'max_facilities': 2,
+    'max_facilities': 6,
     'alpha':   0.10,    # deadline-miss probability budget per patient
     'sigma_L': 0.20,    # LogNormal log-scale std-dev; 0 => deterministic
     'dist':    'lognormal',
@@ -135,7 +135,7 @@ def generate_plans_ccp(data, tau=0.0, urgency_config=None,
     TLS     = int(process_config.get('tls', 1))
     TMFE    = int(process_config.get('tmfe', 7))   # nominal (kept for reference)
     TQC     = int(process_config.get('tqc', 7))
-    MAX_FAC = int(process_config.get('max_facilities', 2))
+    MAX_FAC = int(process_config.get('max_facilities', 6))
     alpha   = float(process_config.get('alpha', 0.10))
     sigma_L = float(process_config.get('sigma_L', 0.20))
 

@@ -64,7 +64,7 @@ DEFAULT_PROCESS_2S = {
     'tls':      1,
     'tmfe':     7,       # nominal mean E[T_MF]
     'tqc':      7,
-    'max_facilities': 2,
+    'max_facilities': 6,
     'sigma_L':  0.20,    # LogNormal log-scale std-dev
     'delta':    2.0,     # days saved by expedited return
     'epsilon':  0.05,    # filter: allowed infeasibility probability
@@ -134,7 +134,7 @@ def generate_plans_twostage(data, tau=0.0, urgency_config=None,
     TLS     = int(process_config.get('tls',   1))
     TMFE    = int(process_config.get('tmfe',  7))
     TQC     = int(process_config.get('tqc',   7))
-    MAX_FAC = int(process_config.get('max_facilities', 2))
+    MAX_FAC = int(process_config.get('max_facilities', 6))
     sigma_L = float(process_config.get('sigma_L',  0.20))
     delta   = float(process_config.get('delta',    2.0))
     epsilon = float(process_config.get('epsilon',  0.05))

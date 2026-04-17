@@ -61,7 +61,7 @@ DEFAULT_URGENCY = {
     'medium': {'fraction': 0.50, 'base_due': 18, 'tolerance': 2},
     'low':    {'fraction': 0.30, 'base_due': 20, 'tolerance': 4},
 }
-DEFAULT_PROCESS = {'tls': 1, 'tmfe': 7, 'tqc': 7, 'max_facilities': 2}
+DEFAULT_PROCESS = {'tls': 1, 'tmfe': 7, 'tqc': 7, 'max_facilities': 6}
 
 
 def generate_plans(data, tau=0.0, urgency_config=None, process_config=None, random_seed=42):
@@ -80,7 +80,7 @@ def generate_plans(data, tau=0.0, urgency_config=None, process_config=None, rand
     TLS  = int(process_config.get('tls', 1))
     TMFE = int(process_config.get('tmfe', 7))
     TQC  = int(process_config.get('tqc', 7))
-    MAX_FAC = int(process_config.get('max_facilities', 2))
+    MAX_FAC = int(process_config.get('max_facilities', 6))
     TT1  = {j: int(data['TT1'][j]) for j in J}
     TT3  = {j: int(data['TT3'][j]) for j in J}
     FCAP = {m: int(data['FCAP'][m]) for m in M}
