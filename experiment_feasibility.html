@@ -19,7 +19,7 @@
 <p class="subtitle">
   N × σ grid showing solver feasibility for each model.
   Time limit: ≤75→120s / ≤200→60s / &gt;200→45s per run. &nbsp;|&nbsp;
-  N ∈ {5, 10, 15, 20, 25, 30, 50, 75, 100, 200, 500, 1000, 2000} &nbsp;|&nbsp;
+  N ∈ {5, 10, 15, 20, 25, 30, 50, 75, 100, 200, 250, 500} &nbsp;|&nbsp;
   σ_L ∈ {0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40}
 </p>
 
@@ -35,10 +35,10 @@
     <th style="padding:8px 12px">Missing</th>
     <th style="padding:8px 12px">Success rate</th>
   </tr>
-  <tr><td style="padding:6px 12px;font-weight:600">Deterministic (wait=0)</td><td style="padding:6px 12px;text-align:center">80</td><td style="padding:6px 12px;text-align:center">8</td><td style="padding:6px 12px;text-align:center">16</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">77%</td></tr>
-  <tr><td style="padding:6px 12px;font-weight:600">Deterministic (flex wait)</td><td style="padding:6px 12px;text-align:center">72</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center">32</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">69%</td></tr>
-  <tr><td style="padding:6px 12px;font-weight:600">CCP</td><td style="padding:6px 12px;text-align:center">40</td><td style="padding:6px 12px;text-align:center">60</td><td style="padding:6px 12px;text-align:center">4</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">38%</td></tr>
-  <tr><td style="padding:6px 12px;font-weight:600">Two-Stage</td><td style="padding:6px 12px;text-align:center">60</td><td style="padding:6px 12px;text-align:center">38</td><td style="padding:6px 12px;text-align:center">6</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">58%</td></tr>
+  <tr><td style="padding:6px 12px;font-weight:600">Deterministic (wait=0)</td><td style="padding:6px 12px;text-align:center">88</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center">8</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">92%</td></tr>
+  <tr><td style="padding:6px 12px;font-weight:600">Deterministic (flex wait)</td><td style="padding:6px 12px;text-align:center">72</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center">24</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">75%</td></tr>
+  <tr><td style="padding:6px 12px;font-weight:600">CCP</td><td style="padding:6px 12px;text-align:center">44</td><td style="padding:6px 12px;text-align:center">48</td><td style="padding:6px 12px;text-align:center">4</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">46%</td></tr>
+  <tr><td style="padding:6px 12px;font-weight:600">Two-Stage</td><td style="padding:6px 12px;text-align:center">70</td><td style="padding:6px 12px;text-align:center">24</td><td style="padding:6px 12px;text-align:center">2</td><td style="padding:6px 12px;text-align:center">0</td><td style="padding:6px 12px;text-align:center;font-weight:600">73%</td></tr>
 </table>
   <div style="margin:12px 0;font-size:12px"><span style="display:inline-flex;align-items:center;margin-right:18px"><span style="width:14px;height:14px;background:#22c55e;border-radius:3px;margin-right:6px"></span>Solved</span><span style="display:inline-flex;align-items:center;margin-right:18px"><span style="width:14px;height:14px;background:#ef4444;border-radius:3px;margin-right:6px"></span>Infeasible</span><span style="display:inline-flex;align-items:center;margin-right:18px"><span style="width:14px;height:14px;background:#f59e0b;border-radius:3px;margin-right:6px"></span>Timeout</span><span style="display:inline-flex;align-items:center;margin-right:18px"><span style="width:14px;height:14px;background:#9ca3af;border-radius:3px;margin-right:6px"></span>No data</span></div>
 </div>
@@ -156,6 +156,16 @@
 <td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$19.538M</span><br><span style="font-size:9px;opacity:0.8">29.0s</span></td>
 <td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$19.538M</span><br><span style="font-size:9px;opacity:0.8">29.0s</span></td>
 </tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=250</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$26.588M</span><br><span style="font-size:9px;opacity:0.8">60.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$26.588M</span><br><span style="font-size:9px;opacity:0.8">60.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$26.588M</span><br><span style="font-size:9px;opacity:0.8">60.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$26.588M</span><br><span style="font-size:9px;opacity:0.8">60.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$26.588M</span><br><span style="font-size:9px;opacity:0.8">60.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$26.588M</span><br><span style="font-size:9px;opacity:0.8">60.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$26.588M</span><br><span style="font-size:9px;opacity:0.8">60.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$26.588M</span><br><span style="font-size:9px;opacity:0.8">60.2s</span></td>
+</tr>
 <tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=500</td>
 <td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.0s</span></td>
 <td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.0s</span></td>
@@ -165,26 +175,6 @@
 <td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.0s</span></td>
 <td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.0s</span></td>
 <td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.0s</span></td>
-</tr>
-<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=1000</td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">93.1s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">93.1s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">93.1s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">93.1s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">93.1s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">93.1s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">93.1s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">93.1s</span></td>
-</tr>
-<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=2000</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">16.7s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">16.7s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">16.7s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">16.7s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">16.7s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">16.7s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">16.7s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">16.7s</span></td>
 </tr>
 </table>
   <p style="font-size:12px;color:#64748b;margin-top:8px">
@@ -297,44 +287,34 @@
 <td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$9.750M</span><br><span style="font-size:9px;opacity:0.8">37.2s</span></td>
 </tr>
 <tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=200</td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">61.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">61.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">61.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">61.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">61.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">61.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">61.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">61.3s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">121.5s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">121.5s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">121.5s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">121.5s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">121.5s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">121.5s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">121.5s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">121.5s</span></td>
+</tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=250</td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">301.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">301.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">301.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">301.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">301.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">301.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">301.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">301.8s</span></td>
 </tr>
 <tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=500</td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">48.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">48.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">48.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">48.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">48.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">48.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">48.3s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">48.3s</span></td>
-</tr>
-<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=1000</td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">52.0s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">52.0s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">52.0s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">52.0s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">52.0s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">52.0s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">52.0s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">52.0s</span></td>
-</tr>
-<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=2000</td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.6s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.6s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.6s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.6s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.6s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.6s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.6s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.6s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">306.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">306.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">306.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">306.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">306.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">306.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">306.8s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">306.8s</span></td>
 </tr>
 </table>
   <p style="font-size:12px;color:#64748b;margin-top:8px">
@@ -457,32 +437,22 @@
 <td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
 <td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
 </tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=250</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$30.835M</span><br><span style="font-size:9px;opacity:0.8">19.4s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$30.835M</span><br><span style="font-size:9px;opacity:0.8">19.5s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$33.993M</span><br><span style="font-size:9px;opacity:0.8">12.6s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$33.993M</span><br><span style="font-size:9px;opacity:0.8">12.8s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
 <tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=500</td>
 <td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.3s</span></td>
 <td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.4s</span></td>
 <td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">47.1s</span></td>
 <td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">47.3s</span></td>
 <td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-</tr>
-<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=1000</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">14.2s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">8.4s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">6.2s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">6.1s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-</tr>
-<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=2000</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">18.2s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">17.4s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">13.8s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">14.7s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
 <td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
 <td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
 <td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
@@ -607,34 +577,24 @@
 <td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
 <td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
 </tr>
+<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=250</td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$30.838M</span><br><span style="font-size:9px;opacity:0.8">14.8s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$30.896M</span><br><span style="font-size:9px;opacity:0.8">48.4s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$33.971M</span><br><span style="font-size:9px;opacity:0.8">50.2s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$34.014M</span><br><span style="font-size:9px;opacity:0.8">30.6s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$35.676M</span><br><span style="font-size:9px;opacity:0.8">6.3s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$35.706M</span><br><span style="font-size:9px;opacity:0.8">23.0s</span></td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
+</tr>
 <tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=500</td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">45.9s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">47.8s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.0s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.9s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">45.8s</span></td>
-<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">46.4s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">302.3s</span></td>
+<td style="background:#f59e0b;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Timeout<br><span style="font-size:9px;opacity:0.8">301.1s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$59.150M</span><br><span style="font-size:9px;opacity:0.8">83.0s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$59.239M</span><br><span style="font-size:9px;opacity:0.8">55.4s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$66.956M</span><br><span style="font-size:9px;opacity:0.8">61.7s</span></td>
+<td style="background:#22c55e;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Solved<br><span style="font-size:10px">$67.019M</span><br><span style="font-size:9px;opacity:0.8">158.4s</span></td>
 <td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-</tr>
-<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=1000</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">7.9s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">8.2s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">8.3s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">8.1s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">6.2s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">5.8s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
-</tr>
-<tr><td style="padding:6px 10px;background:#f1f5f9;font-weight:700;border:1px solid #e2e8f0">N=2000</td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">18.1s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">16.8s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">19.5s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">17.6s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">13.7s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">13.2s</span></td>
-<td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible<br><span style="font-size:9px;opacity:0.8">0.1s</span></td>
 <td style="background:#ef4444;color:#fff;text-align:center;padding:8px 4px;font-size:11px;font-weight:600;border:1px solid #fff">Infeasible</td>
 </tr>
 </table>
@@ -1575,104 +1535,110 @@
         "plans": 12000
       }
     },
-    "1000": {
+    "250": {
       "0.05": {
-        "status": "timeout",
-        "cost": null,
-        "time": 93.1,
-        "plans": 24000
+        "status": "solved",
+        "cost": 26.5881,
+        "time": 60.2,
+        "plans": 6000,
+        "n_open": 4,
+        "facilities": [
+          "m1",
+          "m3",
+          "m4",
+          "m6"
+        ]
       },
       "0.1": {
-        "status": "timeout",
-        "cost": null,
-        "time": 93.1,
-        "plans": 24000
+        "status": "solved",
+        "cost": 26.5881,
+        "time": 60.2,
+        "plans": 6000,
+        "n_open": 4,
+        "facilities": [
+          "m1",
+          "m3",
+          "m4",
+          "m6"
+        ]
       },
       "0.15": {
-        "status": "timeout",
-        "cost": null,
-        "time": 93.1,
-        "plans": 24000
+        "status": "solved",
+        "cost": 26.5881,
+        "time": 60.2,
+        "plans": 6000,
+        "n_open": 4,
+        "facilities": [
+          "m1",
+          "m3",
+          "m4",
+          "m6"
+        ]
       },
       "0.2": {
-        "status": "timeout",
-        "cost": null,
-        "time": 93.1,
-        "plans": 24000
+        "status": "solved",
+        "cost": 26.5881,
+        "time": 60.2,
+        "plans": 6000,
+        "n_open": 4,
+        "facilities": [
+          "m1",
+          "m3",
+          "m4",
+          "m6"
+        ]
       },
       "0.25": {
-        "status": "timeout",
-        "cost": null,
-        "time": 93.1,
-        "plans": 24000
+        "status": "solved",
+        "cost": 26.5881,
+        "time": 60.2,
+        "plans": 6000,
+        "n_open": 4,
+        "facilities": [
+          "m1",
+          "m3",
+          "m4",
+          "m6"
+        ]
       },
       "0.3": {
-        "status": "timeout",
-        "cost": null,
-        "time": 93.1,
-        "plans": 24000
+        "status": "solved",
+        "cost": 26.5881,
+        "time": 60.2,
+        "plans": 6000,
+        "n_open": 4,
+        "facilities": [
+          "m1",
+          "m3",
+          "m4",
+          "m6"
+        ]
       },
       "0.35": {
-        "status": "timeout",
-        "cost": null,
-        "time": 93.1,
-        "plans": 24000
+        "status": "solved",
+        "cost": 26.5881,
+        "time": 60.2,
+        "plans": 6000,
+        "n_open": 4,
+        "facilities": [
+          "m1",
+          "m3",
+          "m4",
+          "m6"
+        ]
       },
       "0.4": {
-        "status": "timeout",
-        "cost": null,
-        "time": 93.1,
-        "plans": 24000
-      }
-    },
-    "2000": {
-      "0.05": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 16.7,
-        "plans": 48000
-      },
-      "0.1": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 16.7,
-        "plans": 48000
-      },
-      "0.15": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 16.7,
-        "plans": 48000
-      },
-      "0.2": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 16.7,
-        "plans": 48000
-      },
-      "0.25": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 16.7,
-        "plans": 48000
-      },
-      "0.3": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 16.7,
-        "plans": 48000
-      },
-      "0.35": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 16.7,
-        "plans": 48000
-      },
-      "0.4": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 16.7,
-        "plans": 48000
+        "status": "solved",
+        "cost": 26.5881,
+        "time": 60.2,
+        "plans": 6000,
+        "n_open": 4,
+        "facilities": [
+          "m1",
+          "m3",
+          "m4",
+          "m6"
+        ]
       }
     }
   },
@@ -2425,85 +2391,57 @@
         "plans": 0
       }
     },
-    "1000": {
+    "250": {
       "0.05": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 14.2,
-        "plans": 22800
+        "status": "solved",
+        "cost": 30.8353,
+        "time": 19.4,
+        "plans": 5700,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m2"
+        ]
       },
       "0.1": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 8.4,
-        "plans": 22800
+        "status": "solved",
+        "cost": 30.8353,
+        "time": 19.5,
+        "plans": 5700,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m2"
+        ]
       },
       "0.15": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 6.2,
-        "plans": 17400
+        "status": "solved",
+        "cost": 33.9934,
+        "time": 12.6,
+        "plans": 4350,
+        "n_open": 3,
+        "facilities": [
+          "m1",
+          "m2",
+          "m4"
+        ]
       },
       "0.2": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 6.1,
-        "plans": 17400
+        "status": "solved",
+        "cost": 33.9934,
+        "time": 12.8,
+        "plans": 4350,
+        "n_open": 3,
+        "facilities": [
+          "m1",
+          "m2",
+          "m4"
+        ]
       },
       "0.25": {
         "status": "infeasible",
         "cost": null,
         "time": 0.0,
-        "plans": 0
-      },
-      "0.3": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 0.0,
-        "plans": 0
-      },
-      "0.35": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 0.0,
-        "plans": 0
-      },
-      "0.4": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 0.0,
-        "plans": 0
-      }
-    },
-    "2000": {
-      "0.05": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 18.2,
-        "plans": 45600
-      },
-      "0.1": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 17.4,
-        "plans": 45600
-      },
-      "0.15": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 13.8,
-        "plans": 34800
-      },
-      "0.2": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 14.7,
-        "plans": 34800
-      },
-      "0.25": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 0.1,
         "plans": 0
       },
       "0.3": {
@@ -3323,147 +3261,155 @@
         "plans": 0
       }
     },
+    "250": {
+      "0.05": {
+        "status": "solved",
+        "cost": 30.8385,
+        "time": 14.8,
+        "plans": 6000,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m2"
+        ]
+      },
+      "0.1": {
+        "status": "solved",
+        "cost": 30.8964,
+        "time": 48.4,
+        "plans": 6000,
+        "n_open": 2,
+        "facilities": [
+          "m1",
+          "m2"
+        ]
+      },
+      "0.15": {
+        "status": "solved",
+        "cost": 33.9708,
+        "time": 50.2,
+        "plans": 6000,
+        "n_open": 3,
+        "facilities": [
+          "m1",
+          "m2",
+          "m4"
+        ]
+      },
+      "0.2": {
+        "status": "solved",
+        "cost": 34.0145,
+        "time": 30.6,
+        "plans": 5700,
+        "n_open": 3,
+        "facilities": [
+          "m1",
+          "m2",
+          "m4"
+        ]
+      },
+      "0.25": {
+        "status": "solved",
+        "cost": 35.6759,
+        "time": 6.3,
+        "plans": 4350,
+        "n_open": 2,
+        "facilities": [
+          "m2",
+          "m3"
+        ]
+      },
+      "0.3": {
+        "status": "solved",
+        "cost": 35.7065,
+        "time": 23.0,
+        "plans": 4350,
+        "n_open": 2,
+        "facilities": [
+          "m2",
+          "m3"
+        ]
+      },
+      "0.35": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      },
+      "0.4": {
+        "status": "infeasible",
+        "cost": null,
+        "time": 0.0,
+        "plans": 0
+      }
+    },
     "500": {
       "0.05": {
         "status": "timeout",
         "cost": null,
-        "time": 45.9,
+        "time": 302.3,
         "plans": 12000
       },
       "0.1": {
         "status": "timeout",
         "cost": null,
-        "time": 47.8,
+        "time": 301.1,
         "plans": 12000
       },
       "0.15": {
-        "status": "timeout",
-        "cost": null,
-        "time": 46.0,
-        "plans": 12000
+        "status": "solved",
+        "cost": 59.1495,
+        "time": 83.0,
+        "plans": 12000,
+        "n_open": 3,
+        "facilities": [
+          "m1",
+          "m2",
+          "m5"
+        ]
       },
       "0.2": {
-        "status": "timeout",
-        "cost": null,
-        "time": 46.9,
-        "plans": 11400
+        "status": "solved",
+        "cost": 59.2385,
+        "time": 55.4,
+        "plans": 11400,
+        "n_open": 3,
+        "facilities": [
+          "m1",
+          "m2",
+          "m5"
+        ]
       },
       "0.25": {
-        "status": "timeout",
-        "cost": null,
-        "time": 45.8,
-        "plans": 8700
+        "status": "solved",
+        "cost": 66.9563,
+        "time": 61.7,
+        "plans": 8700,
+        "n_open": 4,
+        "facilities": [
+          "m1",
+          "m2",
+          "m3",
+          "m5"
+        ]
       },
       "0.3": {
-        "status": "timeout",
-        "cost": null,
-        "time": 46.4,
-        "plans": 8700
+        "status": "solved",
+        "cost": 67.0188,
+        "time": 158.4,
+        "plans": 8700,
+        "n_open": 4,
+        "facilities": [
+          "m1",
+          "m2",
+          "m3",
+          "m5"
+        ]
       },
       "0.35": {
         "status": "infeasible",
         "cost": null,
         "time": 0.0,
-        "plans": 0
-      },
-      "0.4": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 0.0,
-        "plans": 0
-      }
-    },
-    "1000": {
-      "0.05": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 7.9,
-        "plans": 24000
-      },
-      "0.1": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 8.2,
-        "plans": 24000
-      },
-      "0.15": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 8.3,
-        "plans": 24000
-      },
-      "0.2": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 8.1,
-        "plans": 22800
-      },
-      "0.25": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 6.2,
-        "plans": 17400
-      },
-      "0.3": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 5.8,
-        "plans": 17400
-      },
-      "0.35": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 0.0,
-        "plans": 0
-      },
-      "0.4": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 0.0,
-        "plans": 0
-      }
-    },
-    "2000": {
-      "0.05": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 18.1,
-        "plans": 48000
-      },
-      "0.1": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 16.8,
-        "plans": 48000
-      },
-      "0.15": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 19.5,
-        "plans": 48000
-      },
-      "0.2": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 17.6,
-        "plans": 45600
-      },
-      "0.25": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 13.7,
-        "plans": 34800
-      },
-      "0.3": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 13.2,
-        "plans": 34800
-      },
-      "0.35": {
-        "status": "infeasible",
-        "cost": null,
-        "time": 0.1,
         "plans": 0
       },
       "0.4": {
@@ -4241,200 +4187,150 @@
       "0.05": {
         "status": "timeout",
         "cost": null,
-        "time": 61.3,
+        "time": 121.5,
         "plans": 19200
       },
       "0.1": {
         "status": "timeout",
         "cost": null,
-        "time": 61.3,
+        "time": 121.5,
         "plans": 19200
       },
       "0.15": {
         "status": "timeout",
         "cost": null,
-        "time": 61.3,
+        "time": 121.5,
         "plans": 19200
       },
       "0.2": {
         "status": "timeout",
         "cost": null,
-        "time": 61.3,
+        "time": 121.5,
         "plans": 19200
       },
       "0.25": {
         "status": "timeout",
         "cost": null,
-        "time": 61.3,
+        "time": 121.5,
         "plans": 19200
       },
       "0.3": {
         "status": "timeout",
         "cost": null,
-        "time": 61.3,
+        "time": 121.5,
         "plans": 19200
       },
       "0.35": {
         "status": "timeout",
         "cost": null,
-        "time": 61.3,
+        "time": 121.5,
         "plans": 19200
       },
       "0.4": {
         "status": "timeout",
         "cost": null,
-        "time": 61.3,
+        "time": 121.5,
         "plans": 19200
+      }
+    },
+    "250": {
+      "0.05": {
+        "status": "timeout",
+        "cost": null,
+        "time": 301.8,
+        "plans": 24000
+      },
+      "0.1": {
+        "status": "timeout",
+        "cost": null,
+        "time": 301.8,
+        "plans": 24000
+      },
+      "0.15": {
+        "status": "timeout",
+        "cost": null,
+        "time": 301.8,
+        "plans": 24000
+      },
+      "0.2": {
+        "status": "timeout",
+        "cost": null,
+        "time": 301.8,
+        "plans": 24000
+      },
+      "0.25": {
+        "status": "timeout",
+        "cost": null,
+        "time": 301.8,
+        "plans": 24000
+      },
+      "0.3": {
+        "status": "timeout",
+        "cost": null,
+        "time": 301.8,
+        "plans": 24000
+      },
+      "0.35": {
+        "status": "timeout",
+        "cost": null,
+        "time": 301.8,
+        "plans": 24000
+      },
+      "0.4": {
+        "status": "timeout",
+        "cost": null,
+        "time": 301.8,
+        "plans": 24000
       }
     },
     "500": {
       "0.05": {
         "status": "timeout",
         "cost": null,
-        "time": 48.3,
+        "time": 306.8,
         "plans": 48000
       },
       "0.1": {
         "status": "timeout",
         "cost": null,
-        "time": 48.3,
+        "time": 306.8,
         "plans": 48000
       },
       "0.15": {
         "status": "timeout",
         "cost": null,
-        "time": 48.3,
+        "time": 306.8,
         "plans": 48000
       },
       "0.2": {
         "status": "timeout",
         "cost": null,
-        "time": 48.3,
+        "time": 306.8,
         "plans": 48000
       },
       "0.25": {
         "status": "timeout",
         "cost": null,
-        "time": 48.3,
+        "time": 306.8,
         "plans": 48000
       },
       "0.3": {
         "status": "timeout",
         "cost": null,
-        "time": 48.3,
+        "time": 306.8,
         "plans": 48000
       },
       "0.35": {
         "status": "timeout",
         "cost": null,
-        "time": 48.3,
+        "time": 306.8,
         "plans": 48000
       },
       "0.4": {
         "status": "timeout",
         "cost": null,
-        "time": 48.3,
+        "time": 306.8,
         "plans": 48000
-      }
-    },
-    "1000": {
-      "0.05": {
-        "status": "timeout",
-        "cost": null,
-        "time": 52.0,
-        "plans": 96000
-      },
-      "0.1": {
-        "status": "timeout",
-        "cost": null,
-        "time": 52.0,
-        "plans": 96000
-      },
-      "0.15": {
-        "status": "timeout",
-        "cost": null,
-        "time": 52.0,
-        "plans": 96000
-      },
-      "0.2": {
-        "status": "timeout",
-        "cost": null,
-        "time": 52.0,
-        "plans": 96000
-      },
-      "0.25": {
-        "status": "timeout",
-        "cost": null,
-        "time": 52.0,
-        "plans": 96000
-      },
-      "0.3": {
-        "status": "timeout",
-        "cost": null,
-        "time": 52.0,
-        "plans": 96000
-      },
-      "0.35": {
-        "status": "timeout",
-        "cost": null,
-        "time": 52.0,
-        "plans": 96000
-      },
-      "0.4": {
-        "status": "timeout",
-        "cost": null,
-        "time": 52.0,
-        "plans": 96000
-      }
-    },
-    "2000": {
-      "0.05": {
-        "status": "timeout",
-        "cost": null,
-        "time": 46.6,
-        "plans": 192000
-      },
-      "0.1": {
-        "status": "timeout",
-        "cost": null,
-        "time": 46.6,
-        "plans": 192000
-      },
-      "0.15": {
-        "status": "timeout",
-        "cost": null,
-        "time": 46.6,
-        "plans": 192000
-      },
-      "0.2": {
-        "status": "timeout",
-        "cost": null,
-        "time": 46.6,
-        "plans": 192000
-      },
-      "0.25": {
-        "status": "timeout",
-        "cost": null,
-        "time": 46.6,
-        "plans": 192000
-      },
-      "0.3": {
-        "status": "timeout",
-        "cost": null,
-        "time": 46.6,
-        "plans": 192000
-      },
-      "0.35": {
-        "status": "timeout",
-        "cost": null,
-        "time": 46.6,
-        "plans": 192000
-      },
-      "0.4": {
-        "status": "timeout",
-        "cost": null,
-        "time": 46.6,
-        "plans": 192000
       }
     }
   }
