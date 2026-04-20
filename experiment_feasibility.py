@@ -45,7 +45,7 @@ def time_limit_for(n):
     if n <= 500: return 300   # 5 min — correctly scaled: N=250→1000/yr, N=500→2000/yr
     return 60   # large N (>500 per trimester) either infeasible fast or not worth longer
 
-N_VALUES     = [5, 10, 15, 20, 25, 30, 50, 75, 100, 200, 250, 500, 1000, 2000]
+N_VALUES     = [5, 10, 15, 20, 25, 30, 50, 75, 100, 200, 250, 500]
 SIGMA_VALUES = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40]
 CHECKPOINT   = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              'experiment_feasibility_checkpoint.json')
