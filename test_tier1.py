@@ -87,6 +87,9 @@ def _solve_detail(
             sub_i = gp.quicksum(r_sub[i, m, mp, o] for m, mp in sub_pairs)
             model.addConstr(remfg_i + sub_i + r_cancel[i, o] == F_i)   # (8)
             model.addConstr(remfg_i + sub_i <= B[o, i])                 # (10)
+            for m in M_set:                                              # (10b)
+                sub_from_m = gp.quicksum(r_sub[i, m, mp, o] for mp in M_set if mp != m)
+                model.addConstr(r_remfg[i, m, o] + sub_from_m <= x[i, m])
         for m in M_set:
             slack = C[m] - gp.quicksum(x[i, m] * Y[o, i, m] for i in I_set)
             incoming = gp.quicksum(
@@ -201,24 +204,22 @@ def test_eligibility_filter():
 
 def test_capacity_slack_binding():
     """
-    Three patients all fail at facility 0; C[0]=1 gives slack=1, so only 1
-    re-manufacture is permitted at m0 by constraint (9). The remaining 2 must
-    use a different action. We make re-mfg at m1 expensive (ρ_remfg[1]=0.30)
-    and subcontracting m0→m1 cheap (ρ_sub[0,1]=0.22), so the optimizer picks
-    1 re-mfg at m0 + 2 subcontracts to m1.
+    Three patients all fail at facility 0; C[0]=1 gives slack=1, so constraint (9)
+    permits exactly 1 re-manufacture at m0. Constraint (10b) prevents re-manufacturing
+    at m1 for patients assigned to m0, so the remaining 2 failures must subcontract
+    m0→m1 (cheaper than cancellation). Uses symmetric ρ_remfg=[0.20,0.20].
 
     Stage-1 is pinned with C[0]=1 but 3 assignments — intentionally violates
     constraint (3), which is why _solve_detail drops (3) when Stage-1 is fixed.
     """
     n_p, n_f = 3, 2
     rho_sub = np.zeros((2, 2))
-    rho_sub[0, 1] = 0.22   # cheap: sub m0→m1 preferred over re-mfg at m1
-    rho_sub[1, 0] = 0.99   # expensive: sub m1→m0 never chosen
+    rho_sub[0, 1] = rho_sub[1, 0] = 0.25
     inst = Instance(
         n_patients=n_p, n_facilities=n_f,
         f=np.array([1.0, 0.8]), pi=np.array([0.05, 0.06]), c=np.array([0.20, 0.20]),
         s_max=np.array([5, 5]), p=np.array([0.90, 0.85]), beta=np.full(n_p, 0.80),
-        rho_leuk=0.005, rho_remfg=np.array([0.20, 0.30]),  # m1 re-mfg pricier
+        rho_leuk=0.005, rho_remfg=np.array([0.20, 0.20]),
         rho_sub=rho_sub, rho_cancel=np.full(n_p, 1.00),
     )
     Y = np.zeros((1, n_p, n_f))   # all fail everywhere
@@ -236,22 +237,23 @@ def test_capacity_slack_binding():
     n_sub = sum(rv_sub.values())
     n_cancel = sum(rv_cancel.values())
 
-    # Cost ranking: remfg@m0=0.205 < sub@m0→m1=0.225 < remfg@m1=0.305 < cancel=1.00
-    # With slack=1 at m0: 1 remfg@m0 + 2 sub@m0→m1 = 0.205+2×0.225=0.655 is optimal.
+    # Cost ranking: remfg@m0=0.205 < sub@m0→m1=0.255 < cancel=1.00
+    # re-mfg@m1 forbidden by (10b); sub@m1→m0 forbidden by (10b).
+    # With slack=1 at m0: 1 remfg@m0 + 2 sub@m0→m1 = 0.205+2×0.255=0.715 is optimal.
     assert n_remfg == 1, (
-        f"Capacity=1 at m0 → exactly 1 re-mfg slot, got total remfg={n_remfg}\n"
-        f"  rv_remfg={rv_remfg}"
+        f"Capacity=1 at m0 + constraint (10b) → exactly 1 re-mfg at m0, "
+        f"got total remfg={n_remfg}\n  rv_remfg={rv_remfg}"
     )
     assert n_sub == 2, (
-        f"Remaining 2 failures must subcontract (sub < remfg@m1 < cancel), got {n_sub}\n"
+        f"Remaining 2 failures must subcontract m0→m1 (sub < cancel), got {n_sub}\n"
         f"  rv_sub={rv_sub}"
     )
     assert n_cancel == 0, (
         f"No cancellations expected, got {n_cancel}; rv_cancel={rv_cancel}"
     )
 
-    # Recourse: 1×(0.005+0.20) + 2×(0.005+0.22) = 0.205 + 0.450 = 0.655
-    expected_q = 1 * (0.005 + 0.20) + 2 * (0.005 + 0.22)
+    # Recourse: 1×(0.005+0.20) + 2×(0.005+0.25) = 0.205 + 0.510 = 0.715
+    expected_q = 1 * (0.005 + 0.20) + 2 * (0.005 + 0.25)
     assert abs(result["stage2"] - expected_q) < 1e-3, (
         f"Recourse cost {result['stage2']:.5f} != expected {expected_q:.5f}"
     )
@@ -268,17 +270,16 @@ def test_capacity_slack_binding():
 
 def test_subcontract_asymmetry():
     """
-    1 patient at m0, batch fails, B=1. C[0]=1 (slack=1), C[1]=5 (slack=5).
-    ρ_remfg=[0.20,0.20] → re-mfg costs 0.205. The test swaps ρ_sub[0,1] and
-    ρ_sub[1,0] between phases and verifies that the optimizer always picks the
-    cheaper subcontract direction, confirming that ρ_sub[m,m'] is read as
-    (source → destination).
+    1 patient at m0, batch fails, B=1. C[0]=1 (slack=1), C[1]=5.
+    ρ_remfg=[0.20,0.20] → re-mfg cost 0.205.
 
-    Note: the model indexes r_sub[i, m, m', ω] by any (m, m') pair, not only
-    the patient's assigned facility. When ρ_sub[1,0]=0.10 is the cheap cost,
-    r_sub[0,1,0,0] (sub "from m1 to m0") fires — a valid model path that
-    consumes incoming capacity at m0 (slack=1 ✓) at cost 0.005+0.10=0.115.
-    This is cheaper than re-mfg (0.205) and cheaper than sub 0→1 (0.905).
+    Phase A: ρ_sub[0,1]=0.10 (cheap), ρ_sub[1,0]=0.90 (expensive).
+      Cheapest allowed recourse: sub 0→1 at 0.115. Assert r_sub[0,0,1] fires.
+
+    Phase B: swap costs — ρ_sub[0,1]=0.90, ρ_sub[1,0]=0.10.
+      Constraint (10b) forbids r_sub[0,1,0] (x[0,1]=0 → source m1 not allowed).
+      Only options: sub 0→1 at 0.905, re-mfg at m0 at 0.205, cancel at 1.00.
+      Re-mfg wins. Assert r_remfg[0,0] fires and no subcontract fires.
     """
     n_p, n_f = 1, 2
     Y = np.array([[[0.0, 1.0]]])   # patient 0 fails at m0
@@ -302,16 +303,15 @@ def test_subcontract_asymmetry():
             rho_sub=rho_sub, rho_cancel=np.full(n_p, 1.00),
         )
 
-    # Phase A: ρ_sub[0,1]=0.10 cheap, ρ_sub[1,0]=0.90 expensive.
-    # Cheapest recourse: sub 0→1 at 0.005+0.10=0.115 < re-mfg 0.205 < sub 1→0 0.905.
+    # Phase A: cheap sub 0→1 wins (0.115 < re-mfg 0.205)
     inst_a = _make_inst(sub_0_to_1=0.10, sub_1_to_0=0.90)
     res_a, rc_a, rr_a, rs_a = _solve_detail(inst_a, Y, B, fix_first_stage=fix)
 
     assert rs_a[(0, 0, 1, 0)] == 1, (
-        f"Phase A: r_sub[0,0,1] (ρ_sub[0,1]=0.10 direction) must fire; got {rs_a}"
+        f"Phase A: r_sub[0,0,1] (ρ_sub[0,1]=0.10) must fire; got {rs_a}"
     )
     assert rs_a[(0, 1, 0, 0)] == 0, (
-        f"Phase A: r_sub[0,1,0] (ρ_sub[1,0]=0.90 direction) must NOT fire; got {rs_a}"
+        f"Phase A: r_sub[0,1,0] must NOT fire (ρ_sub[1,0]=0.90 expensive); got {rs_a}"
     )
     assert rr_a[(0, 0, 0)] == 0, f"Phase A: r_remfg[0,0] must not fire; got {rr_a}"
     expected_q_a = 0.005 + 0.10
@@ -319,25 +319,26 @@ def test_subcontract_asymmetry():
         f"Phase A recourse {res_a['stage2']:.5f} != {expected_q_a:.5f}"
     )
 
-    # Phase B: swap — ρ_sub[0,1]=0.90 expensive, ρ_sub[1,0]=0.10 cheap.
-    # Cheapest recourse: sub 1→0 at 0.005+0.10=0.115 (uses m0 incoming slack=1).
+    # Phase B: ρ_sub[0,1]=0.90 expensive; ρ_sub[1,0]=0.10 cheap but forbidden by (10b)
+    # since x[0,1]=0. Re-mfg at m0 (0.205) is the cheapest allowed action.
     inst_b = _make_inst(sub_0_to_1=0.90, sub_1_to_0=0.10)
     res_b, rc_b, rr_b, rs_b = _solve_detail(inst_b, Y, B, fix_first_stage=fix)
 
-    assert rs_b[(0, 1, 0, 0)] == 1, (
-        f"Phase B: r_sub[0,1,0] (ρ_sub[1,0]=0.10 direction) must fire after swap; got {rs_b}"
+    assert rr_b[(0, 0, 0)] == 1, (
+        f"Phase B: r_remfg[0,0] must fire (sub 0→1=0.905 > remfg=0.205; "
+        f"sub 1→0 forbidden by 10b); got {rr_b}"
     )
-    assert rs_b[(0, 0, 1, 0)] == 0, (
-        f"Phase B: r_sub[0,0,1] (ρ_sub[0,1]=0.90 direction) must NOT fire; got {rs_b}"
+    assert sum(rs_b.values()) == 0, (
+        f"Phase B: no subcontract should fire; got {rs_b}"
     )
-    expected_q_b = 0.005 + 0.10
+    expected_q_b = 0.005 + 0.20
     assert abs(res_b["stage2"] - expected_q_b) < 1e-3, (
         f"Phase B recourse {res_b['stage2']:.5f} != {expected_q_b:.5f}"
     )
 
     return True, (
         f"A: sub[0→1] fires at {res_a['stage2']:.4f} (t={res_a['solve_time']:.3f}s); "
-        f"B: sub[1→0] fires at {res_b['stage2']:.4f} (t={res_b['solve_time']:.3f}s)"
+        f"B: remfg[m0] fires at {res_b['stage2']:.4f} (t={res_b['solve_time']:.3f}s)"
     )
 
 

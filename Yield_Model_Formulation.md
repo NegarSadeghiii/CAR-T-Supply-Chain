@@ -132,6 +132,12 @@ $$\sum_m r^{\text{remfg}}_{im}(\omega) + \sum_{m,m'} r^{\text{sub}}_{imm'}(\omeg
 
 (if $B_i(\omega) = 0$, the patient is no longer eligible to be re-collected — the only recourse is cancellation; this couples patient urgency tier directly to the recourse menu through $\beta_u$),
 
+recourse source facility tied to primary assignment — re-manufacturing or subcontracting *from* facility $m$ is only permitted if patient $i$ was originally assigned to $m$:
+
+$$r^{\text{remfg}}_{im}(\omega) + \sum_{m' \neq m} r^{\text{sub}}_{imm'}(\omega) \leq x_{im} \quad \forall i, m, \omega \quad (10b)$$
+
+(if $x_{im} = 0$, no recourse action can have $m$ as its source, making the operational roles of $r^{\text{remfg}}$ and $r^{\text{sub}}$ unambiguous; without this constraint the optimizer may re-manufacture a patient at a facility they were never assigned to, or treat the first index of $r^{\text{sub}}_{imm'}$ as a free routing variable rather than the failed source),
+
 and deadline constraints — collapsed to a single tier-deadline `τ_u`, with cancellation forced when realized turnaround exceeds the deadline:
 
 $$\ell_i(\omega) = \big[\, t^{\text{actual}}_i(\omega) - \tau_{u(i)} \,\big]_+ \quad (11)$$

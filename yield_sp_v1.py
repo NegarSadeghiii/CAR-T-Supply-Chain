@@ -175,6 +175,16 @@ def build_and_solve_sp(
                 remfg_i + sub_i <= B[o, i],
                 name=f"elig_{i}_{o}",
             )
+            # (10b) Recourse source facility tied to primary assignment:
+            # re-mfg or subcontract from m can only fire if patient i was assigned to m.
+            for m in M_set:
+                sub_from_m = gp.quicksum(
+                    r_sub[i, m, mp, o] for mp in M_set if mp != m
+                )
+                model.addConstr(
+                    r_remfg[i, m, o] + sub_from_m <= x[i, m],
+                    name=f"src_{i}_{m}_{o}",
+                )
 
         for m in M_set:
             # Capacity slack = contracted − successful primary batches
