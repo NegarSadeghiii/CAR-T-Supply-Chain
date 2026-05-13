@@ -101,19 +101,41 @@ def sample_scenarios(instance: Instance, n: int, seed: int):
     return Y, B
 
 
-def build_and_solve_sp(
+# ---------------------------------------------------------------------------
+# Model construction
+# ---------------------------------------------------------------------------
+
+def build_sp_model(
     instance: Instance,
     Y: np.ndarray,
     B: np.ndarray,
+    *,
     fix_first_stage: Optional[dict] = None,
-) -> dict:
+    relax_first_stage_constraints: bool = False,
+) -> tuple[gp.Model, dict]:
     """
-    Build the deterministic equivalent of the two-stage SP and solve.
+    Construct the Gurobi model for the two-stage SP and return it with variable handles.
+    Does NOT call optimize().
 
-    Y: (N, I, M) yield indicators per scenario.
-    B: (N, I) eligibility indicators per scenario.
-    fix_first_stage: {'z': {m: val}, 'C': {m: val}, 'x': {(i,m): val}} pins Stage-1.
-    Returns dict with objective value, stage-1 cost, expected stage-2 cost, solve time.
+    Parameters
+    ----------
+    instance : Instance
+    Y : (N, I, M) yield indicators per scenario
+    B : (N, I) re-collection eligibility indicators per scenario
+    fix_first_stage : {'z': {m: val}, 'C': {m: val}, 'x': {(i,m): val}}
+        Pin z, C, x to specified values via variable bounds.
+    relax_first_stage_constraints : bool
+        When True, omit constraints (1)–(4). Used by tests that pin Stage-1 to
+        a configuration that would otherwise violate constraint (3), e.g. Test 2
+        of the Tier 1 suite (C[0]=1 with 3 patients assigned to m0).
+
+    Returns
+    -------
+    model : gp.Model  — all constraints and objective set, not yet solved
+    variables : dict with keys 'z', 'C', 'x', 'r_remfg', 'r_sub', 'r_cancel'
+                each a gurobipy tupledict keyed by the natural index tuples.
+                r_remfg keyed by (i, m, o); r_sub by (i, m, mp, o) with m≠mp;
+                r_cancel by (i, o).
     """
     N = Y.shape[0]
     I_set = list(instance.I)
@@ -123,8 +145,6 @@ def build_and_solve_sp(
 
     model = gp.Model("yield_sp")
     model.Params.OutputFlag = 0
-    model.Params.MIPGap = 1e-4
-    model.Params.TimeLimit = 600
 
     # --- First-stage variables ---
     z = model.addVars(M_set, vtype=GRB.BINARY, name="z")
@@ -148,14 +168,15 @@ def build_and_solve_sp(
     )
     r_cancel = model.addVars(I_set, O_set, vtype=GRB.BINARY, name="r_cancel")
 
-    # --- First-stage constraints ---
-    for i in I_set:
-        model.addConstr(x.sum(i, "*") == 1, name=f"assign_{i}")           # (1)
+    # --- First-stage constraints (omitted when relax_first_stage_constraints=True) ---
+    if not relax_first_stage_constraints:
+        for i in I_set:
+            model.addConstr(x.sum(i, "*") == 1, name=f"assign_{i}")           # (1)
+            for m in M_set:
+                model.addConstr(x[i, m] <= z[m], name=f"open_{i}_{m}")        # (2)
         for m in M_set:
-            model.addConstr(x[i, m] <= z[m], name=f"open_{i}_{m}")        # (2)
-    for m in M_set:
-        model.addConstr(x.sum("*", m) <= C[m], name=f"cap_{m}")           # (3)
-        model.addConstr(C[m] <= instance.s_max[m] * z[m], name=f"smax_{m}")  # (4)
+            model.addConstr(x.sum("*", m) <= C[m], name=f"cap_{m}")           # (3)
+            model.addConstr(C[m] <= instance.s_max[m] * z[m], name=f"smax_{m}")  # (4)
 
     # --- Second-stage constraints per scenario ---
     for o in O_set:
@@ -175,8 +196,7 @@ def build_and_solve_sp(
                 remfg_i + sub_i <= B[o, i],
                 name=f"elig_{i}_{o}",
             )
-            # (10b) Recourse source facility tied to primary assignment:
-            # re-mfg or subcontract from m can only fire if patient i was assigned to m.
+            # (10b) Recourse source facility tied to primary assignment
             for m in M_set:
                 sub_from_m = gp.quicksum(
                     r_sub[i, m, mp, o] for mp in M_set if mp != m
@@ -219,6 +239,40 @@ def build_and_solve_sp(
 
     model.setObjective(s1_expr + (1.0 / N) * s2_expr, GRB.MINIMIZE)
 
+    variables = {
+        "z": z, "C": C, "x": x,
+        "r_remfg": r_remfg, "r_sub": r_sub, "r_cancel": r_cancel,
+    }
+    return model, variables
+
+
+def solve_and_extract(
+    model: gp.Model,
+    variables: dict,
+    instance: Instance,
+    Y: np.ndarray,
+    B: np.ndarray,
+    *,
+    time_limit: float = 600.0,
+    mip_gap: float = 1e-4,
+    verbose: bool = False,
+) -> dict:
+    """
+    Set Gurobi parameters, solve the model, and extract results into a dict.
+
+    Recourse-variable arrays follow the (scenario, patient, ...) axis convention
+    matching the input Y[ω,i,m] and B[ω,i] shapes:
+      r_remfg  : (N, I, M)    — r_remfg[ω, i, m]
+      r_sub    : (N, I, M, M) — r_sub[ω, i, src_m, dst_m]; diagonal is always 0
+      r_cancel : (N, I)       — r_cancel[ω, i]
+
+    Returns dict with keys: total_cost, stage1_cost, expected_stage2_cost,
+    z, C, x, r_remfg, r_sub, r_cancel, solve_time, gap.
+    """
+    model.Params.MIPGap = mip_gap
+    model.Params.TimeLimit = time_limit
+    model.Params.OutputFlag = int(verbose)
+
     t0 = time.perf_counter()
     model.optimize()
     solve_time = time.perf_counter() - t0
@@ -226,19 +280,87 @@ def build_and_solve_sp(
     if model.Status not in (GRB.OPTIMAL, GRB.SUBOPTIMAL):
         raise RuntimeError(f"Solver status {model.Status} — no feasible solution found.")
 
-    obj = model.ObjVal
-    s1_val = (
-        sum(instance.f[m] * z[m].X for m in M_set)
-        + sum(instance.pi[m] * C[m].X for m in M_set)
-        + sum(instance.c[m] * x[i, m].X for i in I_set for m in M_set)
+    N = Y.shape[0]
+    I_list = list(instance.I)
+    M_list = list(instance.M)
+    sub_pairs = [(m, mp) for m in M_list for mp in M_list if m != mp]
+
+    z_v, C_v, x_v = variables["z"], variables["C"], variables["x"]
+    r_remfg_v, r_sub_v, r_cancel_v = (
+        variables["r_remfg"], variables["r_sub"], variables["r_cancel"]
     )
+
+    # Stage-1 cost from solved variable values
+    s1_val = (
+        sum(instance.f[m] * z_v[m].X for m in M_list)
+        + sum(instance.pi[m] * C_v[m].X for m in M_list)
+        + sum(instance.c[m] * x_v[i, m].X for i in I_list for m in M_list)
+    )
+
+    # Extract first-stage arrays
+    z_arr = np.array([z_v[m].X for m in M_list])
+    C_arr = np.array([round(C_v[m].X) for m in M_list])
+    x_arr = np.array([[round(x_v[i, m].X) for m in M_list] for i in I_list])
+
+    # Extract second-stage arrays — axes: (scenario, patient, ...)
+    I, M = instance.n_patients, instance.n_facilities
+    r_remfg_arr = np.zeros((N, I, M))
+    r_sub_arr = np.zeros((N, I, M, M))
+    r_cancel_arr = np.zeros((N, I))
+
+    for o in range(N):
+        for i in I_list:
+            r_cancel_arr[o, i] = round(r_cancel_v[i, o].X)
+            for m in M_list:
+                r_remfg_arr[o, i, m] = round(r_remfg_v[i, m, o].X)
+        for i in I_list:
+            for m, mp in sub_pairs:
+                r_sub_arr[o, i, m, mp] = round(r_sub_v[i, m, mp, o].X)
+
+    obj = model.ObjVal
+    achieved_gap = abs(obj - model.ObjBound) / max(1e-10, abs(obj))
+
     return {
-        "obj": obj,
-        "stage1": s1_val,
-        "stage2": obj - s1_val,
+        "total_cost": obj,
+        "stage1_cost": s1_val,
+        "expected_stage2_cost": obj - s1_val,
+        "z": z_arr,
+        "C": C_arr,
+        "x": x_arr,
+        "r_remfg": r_remfg_arr,
+        "r_sub": r_sub_arr,
+        "r_cancel": r_cancel_arr,
         "solve_time": solve_time,
+        "gap": achieved_gap,
     }
 
+
+def build_and_solve_sp(
+    instance: Instance,
+    Y: np.ndarray,
+    B: np.ndarray,
+    *,
+    fix_first_stage: Optional[dict] = None,
+    relax_first_stage_constraints: bool = False,
+    time_limit: float = 600.0,
+    mip_gap: float = 1e-4,
+    verbose: bool = False,
+) -> dict:
+    """Thin wrapper: build → solve → extract. Single entry point for callers."""
+    model, variables = build_sp_model(
+        instance, Y, B,
+        fix_first_stage=fix_first_stage,
+        relax_first_stage_constraints=relax_first_stage_constraints,
+    )
+    return solve_and_extract(
+        model, variables, instance, Y, B,
+        time_limit=time_limit, mip_gap=mip_gap, verbose=verbose,
+    )
+
+
+# ---------------------------------------------------------------------------
+# §15 verification
+# ---------------------------------------------------------------------------
 
 def verify_toy_example():
     """Reproduce §15 worked example and assert cost targets."""
@@ -262,27 +384,29 @@ def verify_toy_example():
     B_det = np.ones((1, inst.n_patients))
     det = build_and_solve_sp(inst, Y_det, B_det, fix_first_stage=fix)
 
-    gap = sp["obj"] - det["obj"]
+    vss_gap = sp["total_cost"] - det["total_cost"]
     print("=== Toy instance verification (§15 worked example) ===")
-    print(f"Stochastic SP cost:            {sp['obj']:.4f}")
-    print(f"  Stage-1 cost:                {sp['stage1']:.4f}")
-    print(f"  Expected Stage-2 cost:       {sp['stage2']:.4f}")
-    print(f"Deterministic baseline cost:   {det['obj']:.4f}")
-    print(f"Cost of ignoring uncertainty:  {gap:.4f}  ({gap / sp['obj'] * 100:.1f}% of total)")
+    print(f"Stochastic SP cost:            {sp['total_cost']:.4f}")
+    print(f"  Stage-1 cost:                {sp['stage1_cost']:.4f}")
+    print(f"  Expected Stage-2 cost:       {sp['expected_stage2_cost']:.4f}")
+    print(f"Deterministic baseline cost:   {det['total_cost']:.4f}")
+    print(f"Cost of ignoring uncertainty:  {vss_gap:.4f}  "
+          f"({vss_gap / sp['total_cost'] * 100:.1f}% of total)")
     print(f"Solve time (SP):               {sp['solve_time']:.2f} s")
     print(f"Solve time (baseline):         {det['solve_time']:.2f} s")
     print()
 
-    assert abs(sp["obj"] - 2.774) < 1e-3, (
-        f"FAIL: SP cost {sp['obj']:.6f} deviates from 2.774 by "
-        f"{abs(sp['obj'] - 2.774):.6f} > 1e-3"
+    assert abs(sp["total_cost"] - 2.774) < 1e-3, (
+        f"FAIL: SP cost {sp['total_cost']:.6f} deviates from 2.774 by "
+        f"{abs(sp['total_cost'] - 2.774):.6f} > 1e-3"
     )
-    assert abs(det["obj"] - 2.620) < 1e-3, (
-        f"FAIL: Baseline cost {det['obj']:.6f} deviates from 2.620 by "
-        f"{abs(det['obj'] - 2.620):.6f} > 1e-3"
+    assert abs(det["total_cost"] - 2.620) < 1e-3, (
+        f"FAIL: Baseline cost {det['total_cost']:.6f} deviates from 2.620 by "
+        f"{abs(det['total_cost'] - 2.620):.6f} > 1e-3"
     )
-    assert abs(gap - 0.154) < 1e-2, (
-        f"FAIL: Gap {gap:.6f} deviates from 0.154 by {abs(gap - 0.154):.6f} > 1e-2"
+    assert abs(vss_gap - 0.154) < 1e-2, (
+        f"FAIL: VSS gap {vss_gap:.6f} deviates from 0.154 by "
+        f"{abs(vss_gap - 0.154):.6f} > 1e-2"
     )
 
     print("PASS — reproduces §15.")
