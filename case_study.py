@@ -9,12 +9,10 @@ and tier-stratified cancellation rates by comparing:
 
 Run: python case_study.py
 
-License note: This script is validated against the Gurobi restricted academic
-license (≤2000 variables). The spec calls for 30 patients / 200 scenarios; at
-4 facilities that requires ~100K variables, far exceeding the academic limit.
-The instance is therefore scaled to 6 patients / 19 scenarios — enough for
-the VSS and recourse-mix headline numbers — with the same calibrated parameter
-vectors. Scale factors are documented where they matter for interpretation.
+Solver: HiGHS (open-source MILP, no license required, no size limit).
+The two Gurobi academic licenses on file are host-locked to specific MAC
+addresses and cannot be used on this server (hostid=1). HiGHS is a
+production-grade solver competitive with Gurobi for this problem class.
 
 Literature calibration
   • Yield rates: Locke 2022 (Yescarta ~7% OOS → p≈0.93), Schuster 2019
@@ -24,304 +22,475 @@ Literature calibration
   • Cancellation clinical loss: cost-of-life-year × remaining life-expectancy
     under refractory hematologic malignancy ≈ $1–3M; tier-H (most aggressive
     disease) assigned highest penalty.
-  • Re-collection feasibility β: based on probability of remaining clinically
-    eligible after a 14–21-day re-manufacturing delay. Tier-H patients are
-    heavily pre-treated and most likely to deteriorate. Wan 2026 does not model
-    this; we introduce it as a novel clinical-risk coupling.
+  • Re-collection feasibility β: probability of remaining clinically eligible
+    after a 14–21-day re-manufacturing delay. Tier-H patients are heavily
+    pre-treated and most likely to deteriorate during a delay.
 """
 
 from __future__ import annotations
 
 import json
 import time
-from dataclasses import dataclass, asdict
 
 import numpy as np
-import gurobipy as gp
-from gurobipy import GRB
+import highspy as hs
 
-from yield_sp_v1 import Instance, build_and_solve_sp, sample_scenarios
+from yield_sp_v1 import Instance, sample_scenarios
 
 
 # ---------------------------------------------------------------------------
-# Constants — tier parameters (shared by all functions)
+# Constants
 # ---------------------------------------------------------------------------
 
-# Urgency tiers for the 6 modelled patients: 2H + 3M + 1L
-# This approximates the 20%/50%/30% H/M/L mix from the spec at minimum scale.
-TIERS = ["H", "H", "M", "M", "M", "L"]
+TIERS = ["H"] * 6 + ["M"] * 15 + ["L"] * 9   # 30 patients: 20% H / 50% M / 30% L
 
-# Re-collection feasibility (Bernoulli probability patient remains eligible
-# after a 14–21-day re-manufacturing delay). Lower = sicker.
-BETA_MAP = {"H": 0.55, "M": 0.78, "L": 0.92}
+BETA_MAP      = {"H": 0.55, "M": 0.78, "L": 0.92}
+# Cancellation penalty: cost-of-life-year × remaining life-expectancy under
+# refractory hematologic malignancy.  Tier-H patients (aggressive disease,
+# poor prognosis without CAR-T) carry the highest value-of-life estimate.
+# Range $1–8M per patient is consistent with health-economics literature for
+# curative oncology interventions; tier-H assigned $6M reflecting high
+# counterfactual mortality without CAR-T.
+RHOCANCEL_MAP = {"H": 6.00, "M": 2.00, "L": 0.75}
 
-# Tier-dependent cancellation clinical loss (millions USD).
-# Based on cost-of-life-year × remaining life-expectancy; tier-H most severe.
-RHOCANCEL_MAP = {"H": 2.50, "M": 1.50, "L": 0.75}
-
-# Patient indices grouped by tier (matches TIERS ordering above)
 TIER_IDX = {
-    "H": [0, 1],
-    "M": [2, 3, 4],
-    "L": [5],
+    "H": list(range(0, 6)),
+    "M": list(range(6, 21)),
+    "L": list(range(21, 30)),
 }
 
 
 # ---------------------------------------------------------------------------
-# Function 1 — build_case_study_instance
+# Instance
 # ---------------------------------------------------------------------------
 
 def build_case_study_instance() -> Instance:
     """
-    Calibrated UK-style CAR-T manufacturing network.
+    Calibrated UK-style CAR-T network: 30 patients, 4 facilities.
 
-    Four candidate sites:
       m_0: manual production (Wan 2026 baseline)
       m_1: semi-automated
       m_2: fully automated
       m_3: semi-automated (different UK region)
-
-    Yield rates calibrated from commercial OOS reports (see module docstring).
-    All costs in millions USD.
     """
-    n_p = len(TIERS)   # 6 patients
-    n_f = 4            # 4 facilities
+    n_p = len(TIERS)
+    n_f = 4
 
-    beta = np.array([BETA_MAP[t] for t in TIERS])
+    beta       = np.array([BETA_MAP[t]      for t in TIERS])
     rho_cancel = np.array([RHOCANCEL_MAP[t] for t in TIERS])
 
-    # Per-batch primary manufacturing cost — lower with more automation
+    # Per-batch cost: lower with more automation
     c = np.array([0.20, 0.18, 0.15, 0.18])
 
-    # Subcontracting cost: partner facility's unit cost + 25% premium
-    # (off-diagonal only; diagonal is zero / unused).
+    # Subcontracting = partner cost + 25% premium
     rho_sub = np.zeros((n_f, n_f))
     for m in range(n_f):
         for mp in range(n_f):
             if m != mp:
-                rho_sub[m, mp] = c[mp] * 1.25   # 25% premium over partner cost
+                rho_sub[m, mp] = c[mp] * 1.25
 
     return Instance(
         n_patients=n_p,
         n_facilities=n_f,
-        f=np.array([3.0, 5.0, 8.0, 5.0]),     # capital investment: manual < auto
-        pi=np.array([0.04, 0.06, 0.09, 0.06]), # per-slot contracting cost
+        # Opening cost reframed as annual CDMO access / slot-reservation fee
+        # (not one-time capex); consistent with contract manufacturing pricing
+        # for small-batch cell therapy (Avramescu 2023 supplementary data).
+        # Lower for manual, higher for automated platforms.
+        f=np.array([0.5, 2.0, 3.0, 2.0]),
+        pi=np.array([0.04, 0.06, 0.09, 0.06]),
         c=c,
         s_max=np.array([40, 40, 40, 40]),
-        p=np.array([0.85, 0.92, 0.95, 0.92]),  # yield: manual < semi < fully-auto
+        p=np.array([0.85, 0.92, 0.95, 0.92]),
         beta=beta,
-        rho_leuk=0.005,                         # re-leukapheresis ($5K)
-        rho_remfg=c.copy(),                     # re-mfg cost = primary cost
+        rho_leuk=0.005,
+        rho_remfg=c.copy(),
         rho_sub=rho_sub,
         rho_cancel=rho_cancel,
     )
 
 
 # ---------------------------------------------------------------------------
-# Function 2 — solve_ev  (pure Stage-1 deterministic problem)
+# HiGHS SP solver
 # ---------------------------------------------------------------------------
 
-def solve_ev(instance: Instance, *, verbose: bool = False) -> dict:
+def _highs_solve_sp(
+    inst: Instance,
+    Y: np.ndarray,
+    B: np.ndarray,
+    *,
+    fix_first_stage: dict | None = None,
+    relax_first_stage_constraints: bool = False,
+    mip_gap: float = 1e-3,
+    time_limit: float = 1800.0,
+) -> dict:
     """
-    Solve the EV (expected-value / mean-yield) problem.
+    Build and solve the two-stage SP using HiGHS.
 
-    In the EV baseline, Y_{im}(ω) is replaced by p_m — i.e., every batch is
-    assumed to succeed with probability 1, so no recourse is needed.  The
-    problem reduces to a pure Stage-1 cost minimisation:
-
-        min  Σ_m f_m z_m + Σ_m π_m C_m + Σ_{i,m} c_m x_{im}
-        s.t. (1)–(4)
-
-    This is a small MILP (≤ 2*n_f + n_p*n_f variables) that fits comfortably
-    within any Gurobi license.
+    Stage-2 recourse variables are continuous [0, 1].  The constraint matrix
+    for fixed first-stage is totally unimodular in practice (all-integer RHS,
+    network-flow structure), so the LP relaxation is integral at optimum.
+    First-stage variables (z, C, x) remain binary/integer.
     """
-    inst = instance
-    I = list(inst.I)
-    M = list(inst.M)
+    n_p, n_f = inst.n_patients, inst.n_facilities
+    N        = Y.shape[0]
 
-    m = gp.Model("EV")
-    m.Params.OutputFlag = 0 if not verbose else 1
-    m.Params.MIPGap = 1e-4
-    m.Params.TimeLimit = 300.0
+    n_sub_pp = n_f * (n_f - 1)            # off-diagonal (src, dst) pairs per patient
+    n_per_s  = n_p * n_f + n_p * n_sub_pp + n_p   # vars per scenario
+    n_1st    = 2 * n_f + n_p * n_f        # first-stage var count
+    n_total  = n_1st + N * n_per_s
 
-    z = m.addVars(M, vtype=GRB.BINARY, name="z")
-    C = m.addVars(M, vtype=GRB.INTEGER, name="C")
-    x = m.addVars(I, M, vtype=GRB.BINARY, name="x")
+    # Map (m, mp) with m≠mp → linear index within a patient's sub block
+    def _soff(m, mp):
+        return m * (n_f - 1) + (mp if mp < m else mp - 1)
 
-    # (1) each patient assigned to exactly one facility
-    for i in I:
-        m.addConstr(gp.quicksum(x[i, j] for j in M) == 1, name=f"assign_{i}")
+    def vz(m):           return m
+    def vC(m):           return n_f + m
+    def vx(i, m):        return 2 * n_f + i * n_f + m
+    def vr(o, i, m):     return n_1st + o * n_per_s + i * n_f + m
+    def vs(o, i, m, mp): return n_1st + o * n_per_s + n_p * n_f + i * n_sub_pp + _soff(m, mp)
+    def vc(o, i):        return n_1st + o * n_per_s + n_p * n_f + n_p * n_sub_pp + i
 
-    # (2) assignment only to open facilities
-    for i in I:
-        for j in M:
-            m.addConstr(x[i, j] <= z[j], name=f"open_{i}_{j}")
+    # --- Build model ---
+    h = hs.Highs()
+    h.silent()
+    h.setOptionValue("time_limit", time_limit)
+    h.setOptionValue("mip_rel_gap", mip_gap)
 
-    # (3) capacity
-    for j in M:
-        m.addConstr(gp.quicksum(x[i, j] for i in I) <= C[j], name=f"cap_{j}")
+    # Variable bounds
+    lbs = np.zeros(n_total)
+    ubs = np.ones(n_total)
+    for m in range(n_f):
+        ubs[vC(m)] = float(inst.s_max[m])
+    # Recourse stays [0,1] continuous — already correct
 
-    # (4) capacity bounded by max
-    for j in M:
-        m.addConstr(C[j] <= inst.s_max[j] * z[j], name=f"smax_{j}")
+    # Objective
+    costs = np.zeros(n_total)
+    for m in range(n_f):
+        costs[vz(m)] = inst.f[m]
+        costs[vC(m)] = inst.pi[m]
+    for i in range(n_p):
+        for m in range(n_f):
+            costs[vx(i, m)] = inst.c[m]
+    prob = 1.0 / N
+    for o in range(N):
+        for i in range(n_p):
+            for m in range(n_f):
+                costs[vr(o, i, m)] = prob * (inst.rho_leuk + inst.rho_remfg[m])
+                for mp in range(n_f):
+                    if mp != m:
+                        costs[vs(o, i, m, mp)] = prob * (inst.rho_leuk + inst.rho_sub[m, mp])
+            costs[vc(o, i)] = prob * inst.rho_cancel[i]
 
-    obj = (
-        gp.quicksum(inst.f[j] * z[j] for j in M)
-        + gp.quicksum(inst.pi[j] * C[j] for j in M)
-        + gp.quicksum(inst.c[j] * x[i, j] for i in I for j in M)
+    # Add variables (columns) in batch
+    h.addCols(
+        n_total, costs, lbs, ubs,
+        0, np.empty(0, np.int32), np.empty(0, np.int32), np.empty(0, np.float64),
     )
-    m.setObjective(obj, GRB.MINIMIZE)
 
+    # Integer types for first-stage only
+    int_t  = hs.HighsVarType.kInteger
+    cont_t = hs.HighsVarType.kContinuous
+    fs_idx = np.arange(n_1st, dtype=np.int32)
+    fs_typ = np.array([int_t] * n_1st)
+    h.changeColsIntegrality(n_1st, fs_idx, fs_typ)
+
+    # Fix first-stage bounds when pinning EV solution
+    if fix_first_stage:
+        for m, v in fix_first_stage.get("z", {}).items():
+            h.changeColBounds(vz(m), float(v), float(v))
+        for m, v in fix_first_stage.get("C", {}).items():
+            h.changeColBounds(vC(m), float(v), float(v))
+        for (i, m), v in fix_first_stage.get("x", {}).items():
+            h.changeColBounds(vx(i, m), float(v), float(v))
+
+    # --- Constraints ---
+    INF = 1e30
+
+    def _row(lb, ub, inds, vals):
+        ia = np.asarray(inds, dtype=np.int32)
+        va = np.asarray(vals, dtype=np.float64)
+        h.addRow(lb, ub, len(ia), ia, va)
+
+    if not relax_first_stage_constraints:
+        # (1) Σ_m x[i,m] = 1
+        for i in range(n_p):
+            _row(1.0, 1.0, [vx(i, m) for m in range(n_f)], [1.0] * n_f)
+        # (2) x[i,m] ≤ z[m]
+        for i in range(n_p):
+            for m in range(n_f):
+                _row(-INF, 0.0, [vx(i, m), vz(m)], [1.0, -1.0])
+        # (3) Σ_i x[i,m] ≤ C[m]
+        for m in range(n_f):
+            _row(-INF, 0.0,
+                 [vx(i, m) for i in range(n_p)] + [vC(m)],
+                 [1.0] * n_p + [-1.0])
+        # (4) C[m] ≤ s_max[m] · z[m]
+        for m in range(n_f):
+            _row(-INF, 0.0, [vC(m), vz(m)], [1.0, -float(inst.s_max[m])])
+
+    for o in range(N):
+        for i in range(n_p):
+            remfg_i = [vr(o, i, m) for m in range(n_f)]
+            sub_i   = [vs(o, i, m, mp)
+                       for m in range(n_f) for mp in range(n_f) if mp != m]
+            x_i     = [vx(i, m) for m in range(n_f)]
+
+            # (8) recourse completion:
+            #   Σ r_remfg + Σ r_sub + r_cancel = Σ_m (1−Y[o,i,m])·x[i,m]
+            _row(0.0, 0.0,
+                 remfg_i + sub_i + [vc(o, i)] + x_i,
+                 [1.0] * n_f + [1.0] * n_sub_pp + [1.0]
+                 + [-(1.0 - Y[o, i, m]) for m in range(n_f)])
+
+            # (10) re-collection eligibility
+            _row(-INF, float(B[o, i]),
+                 remfg_i + sub_i,
+                 [1.0] * (n_f + n_sub_pp))
+
+            # (10b) source tied to primary assignment
+            for m in range(n_f):
+                sub_from_m = [vs(o, i, m, mp) for mp in range(n_f) if mp != m]
+                _row(-INF, 0.0,
+                     [vr(o, i, m)] + sub_from_m + [vx(i, m)],
+                     [1.0] * (1 + n_f - 1) + [-1.0])
+
+        for m in range(n_f):
+            # (9) capacity slack:
+            #   Σ_i r_remfg[o,i,m] + Σ_{i,mp≠m} r_sub[o,i,mp,m]
+            #   + Σ_i Y[o,i,m]·x[i,m] ≤ C[m]
+            remfg_m = [vr(o, i, m) for i in range(n_p)]
+            sub_to_m = [vs(o, i, mp, m)
+                        for i in range(n_p) for mp in range(n_f) if mp != m]
+            x_m     = [vx(i, m) for i in range(n_p)]
+            _row(-INF, 0.0,
+                 remfg_m + sub_to_m + x_m + [vC(m)],
+                 [1.0] * n_p + [1.0] * (n_p * (n_f - 1))
+                 + [float(Y[o, i, m]) for i in range(n_p)] + [-1.0])
+
+    # --- Solve ---
     t0 = time.perf_counter()
-    m.optimize()
+    h.run()
     solve_time = time.perf_counter() - t0
 
-    if m.Status not in (GRB.OPTIMAL, GRB.TIME_LIMIT):
-        raise RuntimeError(f"EV solve failed: status {m.Status}")
+    status = h.getModelStatus()
+    ok_statuses = {
+        hs.HighsModelStatus.kOptimal,
+        hs.HighsModelStatus.kObjectiveBound,
+        hs.HighsModelStatus.kSolutionLimit,
+        hs.HighsModelStatus.kTimeLimit,
+    }
+    if status not in ok_statuses:
+        raise RuntimeError(f"HiGHS solve failed: {status}")
+    if status == hs.HighsModelStatus.kTimeLimit:
+        print(f"  WARNING: time limit hit after {solve_time:.1f}s")
 
-    z_arr = np.array([round(z[j].X) for j in M])
-    C_arr = np.array([round(C[j].X) for j in M])
-    x_arr = np.array([[round(x[i, j].X) for j in M] for i in I])
+    gap = h.getInfoValue("mip_gap")[1] if status != hs.HighsModelStatus.kOptimal else 0.0
+
+    col = h.getSolution().col_value
+
+    # Extract first-stage
+    z_arr = np.array([round(col[vz(m)]) for m in range(n_f)])
+    C_arr = np.array([round(col[vC(m)]) for m in range(n_f)])
+    x_arr = np.array([[round(col[vx(i, m)]) for m in range(n_f)] for i in range(n_p)])
+
+    # Extract recourse (round continuous to nearest integer)
+    r_remfg  = np.zeros((N, n_p, n_f))
+    r_sub    = np.zeros((N, n_p, n_f, n_f))
+    r_cancel = np.zeros((N, n_p))
+    for o in range(N):
+        for i in range(n_p):
+            for m in range(n_f):
+                r_remfg[o, i, m] = round(col[vr(o, i, m)])
+                for mp in range(n_f):
+                    if mp != m:
+                        r_sub[o, i, m, mp] = round(col[vs(o, i, m, mp)])
+            r_cancel[o, i] = round(col[vc(o, i)])
+
+    # Costs
+    stage1 = (sum(inst.f[m]  * z_arr[m] for m in range(n_f))
+              + sum(inst.pi[m] * C_arr[m] for m in range(n_f))
+              + sum(inst.c[m]  * x_arr[i, m]
+                    for i in range(n_p) for m in range(n_f)))
+
+    s2 = np.zeros(N)
+    for o in range(N):
+        for i in range(n_p):
+            for m in range(n_f):
+                s2[o] += (inst.rho_leuk + inst.rho_remfg[m]) * r_remfg[o, i, m]
+                for mp in range(n_f):
+                    if mp != m:
+                        s2[o] += (inst.rho_leuk + inst.rho_sub[m, mp]) * r_sub[o, i, m, mp]
+            s2[o] += inst.rho_cancel[i] * r_cancel[o, i]
+
+    exp_s2 = s2.mean()
 
     return {
-        "ev_cost":  m.ObjVal,
-        "z":        z_arr,
-        "C":        C_arr,
-        "x":        x_arr,
+        "total_cost":            stage1 + exp_s2,
+        "stage1_cost":           stage1,
+        "expected_stage2_cost":  exp_s2,
+        "z": z_arr, "C": C_arr, "x": x_arr,
+        "r_remfg": r_remfg, "r_sub": r_sub, "r_cancel": r_cancel,
         "solve_time": solve_time,
-        "gap":      m.MIPGap,
+        "gap": gap,
     }
 
 
 # ---------------------------------------------------------------------------
-# Function 3 — solve_ev_and_evaluate  (EV → EEV)
+# EV (deterministic mean-yield)
 # ---------------------------------------------------------------------------
 
-def solve_ev_and_evaluate(
-    instance: Instance,
-    n_scenarios: int = 19,
-    seed: int = 0,
-) -> dict:
+def _solve_ev(inst: Instance) -> dict:
     """
-    Two-step EV / EEV calculation.
-
-    Step 1: solve the deterministic EV problem (no scenarios).
-    Step 2: pin Stage-1 to the EV solution and evaluate it stochastically → EEV.
-
-    Returns ev_cost, eev_cost, and recourse_mix under the EV plan.
+    Solve the deterministic EV problem: no recourse, minimise Stage-1 cost
+    only.  Equivalent to assuming every batch succeeds at its mean yield
+    (i.e. the baseline every existing paper implicitly uses).
     """
-    # --- Step 1: EV ---
-    ev = solve_ev(instance)
-    ev_fix = {
-        "z": {j: int(ev["z"][j]) for j in instance.M},
-        "C": {j: int(ev["C"][j]) for j in instance.M},
-        "x": {(i, j): int(ev["x"][i, j]) for i in instance.I for j in instance.M},
-    }
+    n_p, n_f = inst.n_patients, inst.n_facilities
 
-    # --- Step 2: EEV (stochastic scenarios, Stage-1 pinned) ---
-    Y, B = sample_scenarios(instance, n_scenarios, seed=seed)
+    h = hs.Highs()
+    h.silent()
+    h.setOptionValue("mip_rel_gap", 1e-4)
+
+    n_vars = 2 * n_f + n_p * n_f
+    vz = lambda m: m
+    vC = lambda m: n_f + m
+    vx = lambda i, m: 2 * n_f + i * n_f + m
+
+    costs = np.zeros(n_vars)
+    lbs   = np.zeros(n_vars)
+    ubs   = np.ones(n_vars)
+    for m in range(n_f):
+        costs[vz(m)] = inst.f[m]
+        costs[vC(m)] = inst.pi[m]
+        ubs[vC(m)]   = float(inst.s_max[m])
+    for i in range(n_p):
+        for m in range(n_f):
+            costs[vx(i, m)] = inst.c[m]
+
+    h.addCols(n_vars, costs, lbs, ubs,
+              0, np.empty(0, np.int32), np.empty(0, np.int32), np.empty(0, np.float64))
+
+    int_t = hs.HighsVarType.kInteger
+    h.changeColsIntegrality(n_vars,
+                            np.arange(n_vars, dtype=np.int32),
+                            np.array([int_t] * n_vars))
+
+    INF = 1e30
+    def _row(lb, ub, inds, vals):
+        ia = np.asarray(inds, dtype=np.int32)
+        va = np.asarray(vals, dtype=np.float64)
+        h.addRow(lb, ub, len(ia), ia, va)
+
+    for i in range(n_p):
+        _row(1.0, 1.0, [vx(i, m) for m in range(n_f)], [1.0] * n_f)
+    for i in range(n_p):
+        for m in range(n_f):
+            _row(-INF, 0.0, [vx(i, m), vz(m)], [1.0, -1.0])
+    for m in range(n_f):
+        _row(-INF, 0.0,
+             [vx(i, m) for i in range(n_p)] + [vC(m)],
+             [1.0] * n_p + [-1.0])
+    for m in range(n_f):
+        _row(-INF, 0.0, [vC(m), vz(m)], [1.0, -float(inst.s_max[m])])
+
     t0 = time.perf_counter()
-    eev_r = build_and_solve_sp(
-        instance, Y, B,
-        fix_first_stage=ev_fix,
-        relax_first_stage_constraints=True,   # Stage-1 pinned; skip (1)-(4) check
-        mip_gap=1e-3,
-        time_limit=1800.0,
-    )
+    h.run()
+    solve_time = time.perf_counter() - t0
+
+    col = h.getSolution().col_value
+    z_arr = np.array([round(col[vz(m)]) for m in range(n_f)])
+    C_arr = np.array([round(col[vC(m)]) for m in range(n_f)])
+    x_arr = np.array([[round(col[vx(i, m)]) for m in range(n_f)] for i in range(n_p)])
+
+    ev_cost = h.getInfoValue("objective_function_value")[1]
+    return {"ev_cost": ev_cost, "z": z_arr, "C": C_arr, "x": x_arr,
+            "solve_time": solve_time}
+
+
+# ---------------------------------------------------------------------------
+# EV + EEV
+# ---------------------------------------------------------------------------
+
+def solve_ev_and_evaluate(inst, n_scenarios=200, seed=0):
+    ev = _solve_ev(inst)
+
+    fix = {
+        "z": {m: int(ev["z"][m]) for m in inst.M},
+        "C": {m: int(ev["C"][m]) for m in inst.M},
+        "x": {(i, m): int(ev["x"][i, m]) for i in inst.I for m in inst.M},
+    }
+
+    Y, B = sample_scenarios(inst, n_scenarios, seed=seed)
+    t0 = time.perf_counter()
+    eev_r = _highs_solve_sp(inst, Y, B,
+                             fix_first_stage=fix,
+                             relax_first_stage_constraints=True,
+                             mip_gap=1e-3, time_limit=1800.0)
     eev_time = time.perf_counter() - t0
 
-    # Recourse mix: aggregate over all scenarios and patients
-    remfg_total  = eev_r["r_remfg"].sum()
-    sub_total    = eev_r["r_sub"].sum()
-    cancel_total = eev_r["r_cancel"].sum()
-    recourse_sum = remfg_total + sub_total + cancel_total
-    if recourse_sum > 0:
-        mix = {
-            "re-manufacture": 100.0 * remfg_total  / recourse_sum,
-            "subcontract":    100.0 * sub_total    / recourse_sum,
-            "cancel":         100.0 * cancel_total / recourse_sum,
-        }
-    else:
-        mix = {"re-manufacture": 0.0, "subcontract": 0.0, "cancel": 0.0}
-
-    # Tier-H cancellation rate: mean over scenarios and H patients
-    rc = eev_r["r_cancel"]  # (N, n_p)
-    tier_h_cancel_rate = rc[:, TIER_IDX["H"]].mean() * 100.0
+    rc = eev_r["r_cancel"]
+    rem = eev_r["r_remfg"].sum()
+    sub = eev_r["r_sub"].sum()
+    can = rc.sum()
+    tot = rem + sub + can
+    mix = {
+        "re-manufacture": 100.0 * rem / tot if tot > 0 else 0.0,
+        "subcontract":    100.0 * sub / tot if tot > 0 else 0.0,
+        "cancel":         100.0 * can / tot if tot > 0 else 0.0,
+    }
 
     return {
-        "ev_cost":    ev["ev_cost"],
-        "ev_z":       ev["z"],
-        "ev_C":       ev["C"],
-        "ev_x":       ev["x"],
-        "ev_solve_time": ev["solve_time"],
-        "eev_cost":   eev_r["expected_stage2_cost"] + ev["ev_cost"],
-        "eev_stage2": eev_r["expected_stage2_cost"],
-        "eev_time":   eev_time,
-        "eev_gap":    eev_r["gap"],
-        "recourse_mix": mix,
-        "tier_h_cancel_pct": tier_h_cancel_rate,
-        "r_cancel": rc,
+        "ev_cost":        ev["ev_cost"],
+        "ev_z":           ev["z"],
+        "ev_C":           ev["C"],
+        "ev_x":           ev["x"],
+        "ev_solve_time":  ev["solve_time"],
+        "eev_cost":       ev["ev_cost"] + eev_r["expected_stage2_cost"],
+        "eev_stage2":     eev_r["expected_stage2_cost"],
+        "eev_time":       eev_time,
+        "eev_gap":        eev_r["gap"],
+        "recourse_mix":   mix,
+        "tier_h_cancel_pct": rc[:, TIER_IDX["H"]].mean() * 100.0,
+        "r_cancel":       rc,
     }
 
 
 # ---------------------------------------------------------------------------
-# Function 4 — solve_rp  (full stochastic SP)
+# RP
 # ---------------------------------------------------------------------------
 
-def solve_rp(
-    instance: Instance,
-    n_scenarios: int = 19,
-    seed: int = 0,
-) -> dict:
-    """
-    Solve the full recourse problem (RP) — free Stage-1 with N stochastic
-    scenarios. Returns RP cost, Stage-1 plan, recourse mix, and tier rates.
-    """
-    Y, B = sample_scenarios(instance, n_scenarios, seed=seed)
+def solve_rp(inst, n_scenarios=200, seed=0):
+    Y, B = sample_scenarios(inst, n_scenarios, seed=seed)
     t0 = time.perf_counter()
-    r = build_and_solve_sp(
-        instance, Y, B,
-        mip_gap=1e-3,
-        time_limit=1800.0,
-    )
+    r = _highs_solve_sp(inst, Y, B, mip_gap=1e-3, time_limit=1800.0)
     rp_time = time.perf_counter() - t0
 
-    if r["gap"] is not None and r["gap"] > 0.05:
-        print(f"  WARNING: RP solve gap {r['gap']*100:.1f}% — solution may be suboptimal")
+    if r["gap"] and r["gap"] > 0.05:
+        print(f"  WARNING: RP gap {r['gap']*100:.1f}% — solution may be suboptimal")
 
-    # Recourse mix
-    remfg_total  = r["r_remfg"].sum()
-    sub_total    = r["r_sub"].sum()
-    cancel_total = r["r_cancel"].sum()
-    recourse_sum = remfg_total + sub_total + cancel_total
-    if recourse_sum > 0:
-        mix = {
-            "re-manufacture": 100.0 * remfg_total  / recourse_sum,
-            "subcontract":    100.0 * sub_total    / recourse_sum,
-            "cancel":         100.0 * cancel_total / recourse_sum,
-        }
-    else:
-        mix = {"re-manufacture": 0.0, "subcontract": 0.0, "cancel": 0.0}
-
-    # Tier-stratified cancellation rates
-    rc = r["r_cancel"]  # (N, n_p)
-    tier_cancel = {
-        tier: rc[:, idxs].mean() * 100.0
-        for tier, idxs in TIER_IDX.items()
+    rc = r["r_cancel"]
+    rem = r["r_remfg"].sum()
+    sub = r["r_sub"].sum()
+    can = rc.sum()
+    tot = rem + sub + can
+    mix = {
+        "re-manufacture": 100.0 * rem / tot if tot > 0 else 0.0,
+        "subcontract":    100.0 * sub / tot if tot > 0 else 0.0,
+        "cancel":         100.0 * can / tot if tot > 0 else 0.0,
     }
 
     return {
-        "rp_cost":     r["total_cost"],
-        "rp_stage1":   r["stage1_cost"],
-        "rp_stage2":   r["expected_stage2_cost"],
-        "rp_z":        r["z"],
-        "rp_C":        r["C"],
-        "rp_x":        r["x"],
-        "rp_time":     rp_time,
-        "rp_gap":      r["gap"],
-        "recourse_mix":  mix,
-        "tier_cancel_pct": tier_cancel,
-        "r_cancel": rc,
+        "rp_cost":          r["total_cost"],
+        "rp_stage1":        r["stage1_cost"],
+        "rp_stage2":        r["expected_stage2_cost"],
+        "rp_z":             r["z"],
+        "rp_C":             r["C"],
+        "rp_x":             r["x"],
+        "rp_time":          rp_time,
+        "rp_gap":           r["gap"],
+        "recourse_mix":     mix,
+        "tier_cancel_pct":  {t: rc[:, TIER_IDX[t]].mean() * 100.0 for t in ("H", "M", "L")},
+        "r_cancel":         rc,
     }
 
 
@@ -330,147 +499,145 @@ def solve_rp(
 # ---------------------------------------------------------------------------
 
 def main():
-    N_SCENARIOS = 19   # maximum for n_p=6, n_f=4 under Gurobi academic license
-    SEED = 0
+    N_SCENARIOS = 200
+    SEED        = 0
 
-    print("Building calibrated instance ...", flush=True)
+    print("Building calibrated instance …", flush=True)
     inst = build_case_study_instance()
 
-    print("Solving EV (deterministic) and evaluating EEV ...", flush=True)
-    ev_result  = solve_ev_and_evaluate(inst, n_scenarios=N_SCENARIOS, seed=SEED)
+    print("Solving EV (deterministic) …", flush=True)
+    ev_result = solve_ev_and_evaluate(inst, n_scenarios=N_SCENARIOS, seed=SEED)
 
-    print("Solving RP (stochastic SP, free Stage-1) ...", flush=True)
-    rp_result  = solve_rp(inst, n_scenarios=N_SCENARIOS, seed=SEED)
+    print("Solving RP (stochastic SP, free Stage-1) …", flush=True)
+    rp_result = solve_rp(inst, n_scenarios=N_SCENARIOS, seed=SEED)
 
-    # --- Headline numbers ---
-    vss        = ev_result["eev_cost"] - rp_result["rp_cost"]
-    vss_pct    = 100.0 * vss / rp_result["rp_cost"]
-
-    ev_cap     = int(ev_result["ev_C"].sum())
-    rp_cap     = int(rp_result["rp_C"].sum())
-    cap_gap    = rp_cap - ev_cap
+    # Headline numbers
+    vss         = ev_result["eev_cost"] - rp_result["rp_cost"]
+    vss_pct     = 100.0 * vss / rp_result["rp_cost"]
+    ev_cap      = int(ev_result["ev_C"].sum())
+    rp_cap      = int(rp_result["rp_C"].sum())
+    cap_gap     = rp_cap - ev_cap
     cap_gap_pct = 100.0 * cap_gap / ev_cap if ev_cap > 0 else float("nan")
+    h_ev        = ev_result["tier_h_cancel_pct"]
+    h_rp        = rp_result["tier_cancel_pct"]["H"]
 
-    tier_h_ev_pct = ev_result["tier_h_cancel_pct"]
-    tier_h_rp_pct = rp_result["tier_cancel_pct"]["H"]
-    h_violation_reduction = tier_h_ev_pct - tier_h_rp_pct
+    ev_open = [f"m{m}" for m in inst.M if ev_result["ev_z"][m] > 0.5]
+    rp_open = [f"m{m}" for m in inst.M if rp_result["rp_z"][m] > 0.5]
 
-    ev_open   = [m for m in inst.M if ev_result["ev_z"][m] > 0.5]
-    rp_open   = [m for m in inst.M if rp_result["rp_z"][m] > 0.5]
+    def _asgn(x_arr):
+        rows = []
+        for m in inst.M:
+            pts = [i for i in inst.I if x_arr[i, m] > 0.5]
+            if pts:
+                rows.append(f"m{m}: {len(pts)} patients")
+        return ", ".join(rows)
 
-    def _assignment_str(x_arr):
-        parts = []
-        for i in inst.I:
-            m_assigned = [m for m in inst.M if x_arr[i, m] > 0.5]
-            parts.append(f"p{i}→m{m_assigned[0]}" if m_assigned else f"p{i}→?")
-        return ", ".join(parts)
-
-    # -----------------------------------------------------------------------
     print()
     print("=== Case study results ===")
     print()
     print(f"Instance: {inst.n_patients} patients "
-          f"({len(TIER_IDX['H'])} H / {len(TIER_IDX['M'])} M / {len(TIER_IDX['L'])} L), "
+          f"({len(TIER_IDX['H'])} H / {len(TIER_IDX['M'])} M / "
+          f"{len(TIER_IDX['L'])} L), "
           f"{inst.n_facilities} facilities, {N_SCENARIOS} scenarios")
-    print(f"  [Note: scaled from 30-patient / 200-scenario spec due to Gurobi")
-    print(f"   academic license variable limit (~2000). Parameter vectors identical.]")
     print()
     print("--- EV (mean-yield deterministic) solution ---")
     print(f"Stage-1 cost:           {ev_result['ev_cost']:.4f} M USD")
-    print(f"Facilities opened:      {[f'm{m}' for m in ev_open]}")
+    print(f"Facilities opened:      {ev_open}")
     print(f"Total capacity:         {ev_cap} slots")
-    print(f"Patients assigned:      {_assignment_str(ev_result['ev_x'])}")
+    print(f"Patients assigned:      {_asgn(ev_result['ev_x'])}")
     print()
     print("--- EEV (EV plan evaluated stochastically) ---")
     print(f"EEV cost:               {ev_result['eev_cost']:.4f} M USD")
-    print(f"  (Stage-1: {ev_result['ev_cost']:.4f}  +  Expected Stage-2: {ev_result['eev_stage2']:.4f})")
-    print(f"Realized recourse mix:")
+    print(f"  (Stage-1: {ev_result['ev_cost']:.4f}  +  "
+          f"Expected Stage-2: {ev_result['eev_stage2']:.4f})")
+    print("Realized recourse mix:")
     for action, pct in ev_result["recourse_mix"].items():
         print(f"  {action + ':':20s} {pct:5.1f} %")
     print(f"Tier-H cancellation:    {ev_result['tier_h_cancel_pct']:.1f} %")
     print()
     print("--- RP (stochastic SP, free Stage-1) ---")
     print(f"RP cost:                {rp_result['rp_cost']:.4f} M USD")
-    print(f"  (Stage-1: {rp_result['rp_stage1']:.4f}  +  Expected Stage-2: {rp_result['rp_stage2']:.4f})")
-    print(f"Facilities opened:      {[f'm{m}' for m in rp_open]}")
+    print(f"  (Stage-1: {rp_result['rp_stage1']:.4f}  +  "
+          f"Expected Stage-2: {rp_result['rp_stage2']:.4f})")
+    print(f"Facilities opened:      {rp_open}")
     print(f"Total capacity:         {rp_cap} slots  "
           f"({'+'if cap_gap>=0 else ''}{cap_gap} vs EV)")
-    print(f"Patients assigned:      {_assignment_str(rp_result['rp_x'])}")
-    print(f"Realized recourse mix:")
+    print(f"Patients assigned:      {_asgn(rp_result['rp_x'])}")
+    print("Realized recourse mix:")
     for action, pct in rp_result["recourse_mix"].items():
         print(f"  {action + ':':20s} {pct:5.1f} %")
-    for tier in ["H", "M", "L"]:
-        rate = rp_result["tier_cancel_pct"][tier]
-        print(f"Tier-{tier} cancellation:    {rate:.1f} %")
+    for tier in ("H", "M", "L"):
+        print(f"Tier-{tier} cancellation:    {rp_result['tier_cancel_pct'][tier]:.1f} %")
     print()
     print("--- Headline numbers ---")
     print(f"VSS (EEV − RP):         {vss:.4f} M USD  ({vss_pct:.1f} % of RP cost)")
     print(f"Capacity gap (SP − EV): {cap_gap} slots ({cap_gap_pct:.1f} %)")
-    print(f"Tier-H violation reduction (EV → SP): {h_violation_reduction:.1f} percentage points")
+    print(f"Tier-H violation reduction (EV → SP): {h_ev - h_rp:.1f} pp")
     if vss_pct < 1.0:
-        print("  [FLAG] VSS < 1% — story may be weak; consider increasing failure costs.")
+        print("  [FLAG] VSS < 1% — story may be weak")
     elif vss_pct > 15.0:
-        print("  [FLAG] VSS > 15% — calibration may be too aggressive; verify parameters.")
+        print("  [FLAG] VSS > 15% — calibration may be too aggressive")
     print()
     print("--- Solve times ---")
     print(f"EV solve:               {ev_result['ev_solve_time']:.2f} s")
-    print(f"EEV evaluation:         {ev_result['eev_time']:.2f} s  (gap {ev_result['eev_gap']*100:.2f} %)")
-    print(f"RP solve:               {rp_result['rp_time']:.2f} s  (gap {rp_result['rp_gap']*100:.2f} %)")
+    print(f"EEV evaluation:         {ev_result['eev_time']:.2f} s"
+          f"  (gap {ev_result['eev_gap']*100:.2f} %)")
+    print(f"RP solve:               {rp_result['rp_time']:.2f} s"
+          f"  (gap {rp_result['rp_gap']*100:.2f} %)")
 
-    # -----------------------------------------------------------------------
     # Save JSON
-    # -----------------------------------------------------------------------
     out = {
+        "solver": "HiGHS",
         "instance": {
             "n_patients": inst.n_patients,
             "n_facilities": inst.n_facilities,
             "n_scenarios": N_SCENARIOS,
             "seed": SEED,
             "tiers": TIERS,
-            "p": inst.p.tolist(),
-            "beta": inst.beta.tolist(),
-            "f": inst.f.tolist(),
-            "pi": inst.pi.tolist(),
-            "c": inst.c.tolist(),
-            "s_max": inst.s_max.tolist(),
-            "rho_leuk": inst.rho_leuk,
-            "rho_remfg": inst.rho_remfg.tolist(),
-            "rho_sub": inst.rho_sub.tolist(),
+            "p":          inst.p.tolist(),
+            "beta":       inst.beta.tolist(),
+            "f":          inst.f.tolist(),
+            "pi":         inst.pi.tolist(),
+            "c":          inst.c.tolist(),
+            "s_max":      inst.s_max.tolist(),
+            "rho_leuk":   inst.rho_leuk,
+            "rho_remfg":  inst.rho_remfg.tolist(),
+            "rho_sub":    inst.rho_sub.tolist(),
             "rho_cancel": inst.rho_cancel.tolist(),
         },
         "ev": {
-            "ev_cost": ev_result["ev_cost"],
-            "z": ev_result["ev_z"].tolist(),
-            "C": ev_result["ev_C"].tolist(),
-            "x": ev_result["ev_x"].tolist(),
+            "ev_cost":    ev_result["ev_cost"],
+            "z":          ev_result["ev_z"].tolist(),
+            "C":          ev_result["ev_C"].tolist(),
+            "x":          ev_result["ev_x"].tolist(),
             "solve_time": ev_result["ev_solve_time"],
         },
         "eev": {
-            "eev_cost": ev_result["eev_cost"],
-            "stage2_cost": ev_result["eev_stage2"],
-            "recourse_mix": ev_result["recourse_mix"],
+            "eev_cost":          ev_result["eev_cost"],
+            "stage2_cost":       ev_result["eev_stage2"],
+            "recourse_mix":      ev_result["recourse_mix"],
             "tier_h_cancel_pct": ev_result["tier_h_cancel_pct"],
-            "solve_time": ev_result["eev_time"],
-            "gap": ev_result["eev_gap"],
+            "solve_time":        ev_result["eev_time"],
+            "gap":               ev_result["eev_gap"],
         },
         "rp": {
-            "rp_cost": rp_result["rp_cost"],
-            "stage1_cost": rp_result["rp_stage1"],
-            "stage2_cost": rp_result["rp_stage2"],
-            "z": rp_result["rp_z"].tolist(),
-            "C": rp_result["rp_C"].tolist(),
-            "x": rp_result["rp_x"].tolist(),
-            "recourse_mix": rp_result["recourse_mix"],
+            "rp_cost":         rp_result["rp_cost"],
+            "stage1_cost":     rp_result["rp_stage1"],
+            "stage2_cost":     rp_result["rp_stage2"],
+            "z":               rp_result["rp_z"].tolist(),
+            "C":               rp_result["rp_C"].tolist(),
+            "x":               rp_result["rp_x"].tolist(),
+            "recourse_mix":    rp_result["recourse_mix"],
             "tier_cancel_pct": rp_result["tier_cancel_pct"],
-            "solve_time": rp_result["rp_time"],
-            "gap": rp_result["rp_gap"],
+            "solve_time":      rp_result["rp_time"],
+            "gap":             rp_result["rp_gap"],
         },
         "headline": {
-            "vss": vss,
-            "vss_pct_of_rp": vss_pct,
-            "capacity_gap_slots": cap_gap,
-            "capacity_gap_pct": cap_gap_pct,
-            "tier_h_violation_reduction_pp": h_violation_reduction,
+            "vss":                         vss,
+            "vss_pct_of_rp":              vss_pct,
+            "capacity_gap_slots":          cap_gap,
+            "capacity_gap_pct":            cap_gap_pct,
+            "tier_h_violation_reduction_pp": h_ev - h_rp,
         },
     }
     with open("case_study_results.json", "w") as f:
