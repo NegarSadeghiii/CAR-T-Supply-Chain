@@ -42,7 +42,7 @@ from yield_sp_v1 import Instance, sample_scenarios
 # Constants
 # ---------------------------------------------------------------------------
 
-TIERS = ["H"] * 6 + ["M"] * 15 + ["L"] * 9   # 30 patients: 20% H / 50% M / 30% L
+TIERS = ["H"] * 10 + ["M"] * 25 + ["L"] * 15  # 50 patients: 20% H / 50% M / 30% L
 
 BETA_MAP      = {"H": 0.55, "M": 0.78, "L": 0.92}
 # Cancellation penalty: cost-of-life-year × remaining life-expectancy under
@@ -54,9 +54,9 @@ BETA_MAP      = {"H": 0.55, "M": 0.78, "L": 0.92}
 RHOCANCEL_MAP = {"H": 6.00, "M": 2.00, "L": 0.75}
 
 TIER_IDX = {
-    "H": list(range(0, 6)),
-    "M": list(range(6, 21)),
-    "L": list(range(21, 30)),
+    "H": list(range(0, 10)),
+    "M": list(range(10, 35)),
+    "L": list(range(35, 50)),
 }
 
 
@@ -66,7 +66,7 @@ TIER_IDX = {
 
 def build_case_study_instance() -> Instance:
     """
-    Calibrated UK-style CAR-T network: 30 patients, 4 facilities.
+    Calibrated UK-style CAR-T network: 50 patients, 4 facilities.
 
       m_0: manual production (Wan 2026 baseline)
       m_1: semi-automated
@@ -82,12 +82,12 @@ def build_case_study_instance() -> Instance:
     # Per-batch cost: lower with more automation
     c = np.array([0.20, 0.18, 0.15, 0.18])
 
-    # Subcontracting = partner cost + 25% premium
+    # Subcontracting = partner cost + 15% premium (reduced from 25%)
     rho_sub = np.zeros((n_f, n_f))
     for m in range(n_f):
         for mp in range(n_f):
             if m != mp:
-                rho_sub[m, mp] = c[mp] * 1.25
+                rho_sub[m, mp] = c[mp] * 1.15
 
     return Instance(
         n_patients=n_p,
