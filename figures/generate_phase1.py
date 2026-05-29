@@ -3,39 +3,39 @@ figures/generate_phase1.py — generate all six Phase 1 paper figures.
 
 Reads data from:
   ../case_study_results.json
-  ../sensitivity_cancel_h_results.json
-  ../sensitivity_yield_results.json
+  ../results/per_tier_cancel_rates.json   (all per-tier cancellation rates)
 
 Run from any directory:
     python figures/generate_phase1.py
 or from inside figures/:
     python generate_phase1.py
+
+Label conventions (Revision 1):
+  "Deterministic plan" — EV first-stage decisions deployed under stochastic yields
+  "Stochastic plan"    — full two-stage SP optimum (RP)
 """
 
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw
 
-# Resolve paths relative to this file so the script can be run from anywhere
-_HERE    = Path(__file__).parent
-_REPO    = _HERE.parent
+_HERE = Path(__file__).parent
+_REPO = _HERE.parent
 sys.path.insert(0, str(_HERE))
 
 from figure_style import (
-    COLORS, setup_style, single_column, double_column, save_figure
+    COLORS, setup_style, single_column, double_column, save_figure,
 )
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import matplotlib.patheffects as pe
 
 setup_style()
 
@@ -46,24 +46,20 @@ setup_style()
 with open(_REPO / "case_study_results.json") as f:
     CS = json.load(f)
 
+with open(_REPO / "results" / "per_tier_cancel_rates.json") as f:
+    TIER_CANCEL = json.load(f)
+
 # ---------------------------------------------------------------------------
-# Shared constants derived from the case study
+# Shared constants
 # ---------------------------------------------------------------------------
 
 # Patient tier indices: TIERS = ["H"]*10 + ["M"]*25 + ["L"]*15
-TIER_H_IDX = list(range(0, 10))
-TIER_M_IDX = list(range(10, 35))
-TIER_L_IDX = list(range(35, 50))
-TIER_IDX   = {"H": TIER_H_IDX, "M": TIER_M_IDX, "L": TIER_L_IDX}
-TIER_SIZES = {"H": 10, "M": 25, "L": 15}
+TIER_IDX = {"H": list(range(0, 10)),
+             "M": list(range(10, 35)),
+             "L": list(range(35, 50))}
 
-# Calibrated yield rates and re-collection eligibilities
-P_CALIBRATED = np.array([0.85, 0.92, 0.95, 0.92])  # p[m0..m3]
-BETA         = {"H": 0.55, "M": 0.78, "L": 0.92}
-
-# First-stage allocation matrices (50 patients × 4 facilities)
-EV_X = np.array(CS["ev"]["x"])   # EV plan
-RP_X = np.array(CS["rp"]["x"])   # RP (SP) plan
+EV_X = np.array(CS["ev"]["x"])   # (50, 4) first-stage assignment — deterministic plan
+RP_X = np.array(CS["rp"]["x"])   # (50, 4) first-stage assignment — stochastic plan
 
 
 # ---------------------------------------------------------------------------
@@ -71,15 +67,11 @@ RP_X = np.array(CS["rp"]["x"])   # RP (SP) plan
 # ---------------------------------------------------------------------------
 
 def fig01_placeholder() -> None:
-    """
-    Create a 100×100 white placeholder PNG for the hand-drawn methodology SVG.
-    The SVG will be inserted at this slot before final submission.
-    """
-    img = Image.new("RGB", (400, 200), color="white")
+    """White placeholder PNG for the hand-drawn methodology SVG."""
+    img  = Image.new("RGB", (400, 200), color="white")
     draw = ImageDraw.Draw(img)
     draw.rectangle([2, 2, 397, 197], outline="#AAAAAA", width=2)
     draw.text((20, 80), "Methodology diagram — hand-drawn SVG", fill="#888888")
-
     png_path = _HERE / "png" / "figure01_methodology.png"
     img.save(png_path)
     print(f"  Saved: {png_path}")
@@ -98,37 +90,30 @@ def fig02_oos_context() -> None:
     products = ["axicabtagene\nciloleucel\n(axi-cel)",
                 "tisagenlecleucel\n(tisa-cel)",
                 "lisocabtagene\nmaraleucel\n(liso-cel)"]
-    rates    = [4.0, 17.0, 28.0]
-    uk_rate  = 3.87
+    rates   = [4.0, 17.0, 28.0]
+    uk_rate = 3.87
 
     fig = single_column()
     ax  = fig.add_subplot(111)
 
     bars = ax.bar(products, rates,
-                  color=COLORS["expected_cost_det"],
-                  width=0.5, zorder=3)
-
-    # Bar value annotations
+                  color=COLORS["expected_cost_det"], width=0.5, zorder=3)
     for bar, val in zip(bars, rates):
         ax.text(bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 0.5,
-                f"{val:.0f}%",
+                bar.get_height() + 0.5, f"{val:.0f}%",
                 ha="center", va="bottom", fontsize=10, fontweight="bold")
 
-    # Reference line
     ax.axhline(uk_rate, color=COLORS["target_line"],
                linestyle="--", linewidth=1.0, zorder=4)
     ax.text(2.48, uk_rate + 0.8,
             f"UK National CAR T Panel\nreal-world rate {uk_rate}%\n(Dulobdas 2025)",
-            ha="right", va="bottom", fontsize=7.5,
-            color=COLORS["target_line"])
+            ha="right", va="bottom", fontsize=7.5, color=COLORS["target_line"])
 
     ax.set_ylabel("Manufacturing failure rate (%)")
     ax.set_ylim(0, 35)
     ax.set_title("Real-world CAR-T out-of-specification rates\n(Patel et al. 2024, JCO abstract 7044)",
                  fontsize=11)
     ax.tick_params(axis="x", length=0)
-
     fig.tight_layout()
     save_figure(fig, "figure02_oos_context")
 
@@ -150,127 +135,84 @@ def fig03_eligibility_profile() -> None:
     ax  = fig.add_subplot(111)
 
     bars = ax.bar(tiers, betas, color=colors, width=0.5, zorder=3)
-
     for bar, val in zip(bars, betas):
         ax.text(bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 0.01,
-                f"β = {val:.2f}",
+                bar.get_height() + 0.01, f"β = {val:.2f}",
                 ha="center", va="bottom", fontsize=10, fontweight="bold")
 
-    # Annotation arrow pointing left-to-right (H→L) showing increasing β
     ax.annotate("",
                 xy=(2.25, 0.65), xytext=(-0.25, 0.65),
                 arrowprops=dict(arrowstyle="->", color="#444444", lw=1.2))
     ax.text(1.0, 0.67,
-            "Higher clinical urgency → lower re-collection\neligibility after 14–21 day manufacturing delay",
-            ha="center", va="bottom", fontsize=7.5, color="#444444",
-            style="italic")
+            "Higher clinical urgency → lower re-collection\n"
+            "eligibility after 14–21 day manufacturing delay",
+            ha="center", va="bottom", fontsize=7.5, color="#444444", style="italic")
 
     ax.set_ylabel("Re-collection eligibility probability βᵤ")
     ax.set_ylim(0, 1.05)
     ax.set_title("Tier-dependent re-collection eligibility", fontsize=11)
     ax.tick_params(axis="x", length=0)
-
     fig.tight_layout()
     save_figure(fig, "figure03_eligibility_profile")
 
 
 # ---------------------------------------------------------------------------
-# Figure 04 — Tier-stratified cancellation rate
+# Figure 04 — Tier-stratified cancellation rate (simulated, all tiers)
 # ---------------------------------------------------------------------------
-
-def _ev_cancel_rate_by_tier() -> dict[str, float]:
-    """
-    Compute EV-plan (EEV) cancellation rate per tier analytically.
-
-    The JSON stores the exact simulated value for tier H (5.4%) and the full
-    RP tier breakdown, but does not store per-tier EEV values for M and L
-    (the r_cancel array was too large to serialise).
-
-    Analytical estimate (verified against tier H):
-        cancel_rate(u) ≈ Σ_m [ count_u_at_m × (1−p_m) × (1−β_u) ] / |tier_u|
-
-    This equals P(fail at assigned facility) × P(ineligible for re-collection),
-    i.e., the joint probability that a patient of tier u fails AND cannot be
-    re-collected.  Ignores capacity-binding effects, which are small here
-    (verified: tier-H analytical = 5.49 % vs. simulated 5.4 %).
-    """
-    result = {}
-    for tier, idx in TIER_IDX.items():
-        n  = TIER_SIZES[tier]
-        b  = BETA[tier]
-        ev_counts = EV_X[idx].sum(axis=0)  # patients from this tier at each facility
-        rate = sum(
-            float(ev_counts[m]) * (1.0 - P_CALIBRATED[m]) * (1.0 - b)
-            for m in range(4)
-        ) / n
-        result[tier] = round(rate * 100.0, 2)
-    return result
-
 
 def fig04_tier_cancellation() -> None:
     """
-    Grouped bar chart: per-tier cancellation rate under EV plan (operated
-    stochastically) vs. SP (RP) plan.
+    Grouped bar chart: per-tier cancellation rate under each plan.
 
-    Data sources:
-      - EV tier H: simulated value from case_study_results.json
-          → eev.tier_h_cancel_pct = 5.4 %
-      - EV tier M, L: analytical estimate (see _ev_cancel_rate_by_tier)
-      - SP all tiers: simulated values from case_study_results.json
-          → rp.tier_cancel_pct = {H: 2.15, M: 1.06, L: 0.567}
+    All six rates (3 tiers × 2 plans) come from full simulation stored in
+    results/per_tier_cancel_rates.json.  No analytical estimates used.
+
+    Deterministic plan: EV first-stage fixed, second stage optimised over
+    200 stochastic scenarios (seed=0).
+    Stochastic plan: full two-stage SP optimum evaluated on the same scenarios.
     """
-    ev_rates = _ev_cancel_rate_by_tier()
-    # Override tier H with exact simulated value
-    ev_rates["H"] = CS["eev"]["tier_h_cancel_pct"]
+    det_rates = TIER_CANCEL["deterministic_plan"]  # {"H": %, "M": %, "L": %}
+    sp_rates  = TIER_CANCEL["stochastic_plan"]
 
-    rp_rates = {
-        t: CS["rp"]["tier_cancel_pct"][t]
-        for t in ("H", "M", "L")
-    }
+    tier_keys  = ["H", "M", "L"]
+    tier_labels = ["Tier H", "Tier M", "Tier L"]
+    det_vals   = [det_rates[t] for t in tier_keys]
+    sp_vals    = [sp_rates[t]  for t in tier_keys]
+    reductions = [det_rates[t] - sp_rates[t] for t in tier_keys]
 
-    tiers      = ["Tier H", "Tier M", "Tier L"]
-    tier_keys  = ["H",      "M",      "L"]
-    ev_vals    = [ev_rates[t]           for t in tier_keys]
-    rp_vals    = [rp_rates[t]           for t in tier_keys]
-    reductions = [ev_rates[t] - rp_rates[t] for t in tier_keys]
-
-    x     = np.arange(len(tiers))
+    x     = np.arange(len(tier_labels))
     width = 0.35
 
     fig = single_column()
     ax  = fig.add_subplot(111)
 
-    bars_ev = ax.bar(x - width / 2, ev_vals,
-                     width, label="Deterministic plan (operated stochastically)",
-                     color=COLORS["naive_det"], zorder=3)
-    bars_rp = ax.bar(x + width / 2, rp_vals,
-                     width, label="Stochastic plan (RP)",
-                     color=COLORS["sp"], zorder=3)
+    ax.bar(x - width / 2, det_vals, width,
+           label="Deterministic plan",
+           color=COLORS["naive_det"], zorder=3)
+    ax.bar(x + width / 2, sp_vals, width,
+           label="Stochastic plan",
+           color=COLORS["sp"], zorder=3)
 
-    # Reduction annotation above each pair
-    for i, (ev, rp, red) in enumerate(zip(ev_vals, rp_vals, reductions)):
-        top = max(ev, rp) + 0.15
-        ax.text(x[i], top, f"−{red:.1f} pp",
+    for i, (det, sp, red) in enumerate(zip(det_vals, sp_vals, reductions)):
+        ax.text(x[i], max(det, sp) + 0.12, f"−{red:.1f} pp",
                 ha="center", va="bottom", fontsize=8,
                 color="#333333", fontweight="bold")
 
     ax.set_xticks(x)
-    ax.set_xticklabels(tiers)
+    ax.set_xticklabels(tier_labels)
     ax.set_ylabel("Realized cancellation rate (%)")
-    ax.set_ylim(0, max(ev_vals) * 1.35)
-    ax.set_title("Tier-stratified cancellation rate:\ndeterministic vs. stochastic plan", fontsize=11)
-    ax.legend(loc="upper right", fontsize=7.5)
+    ax.set_ylim(0, max(det_vals) * 1.35)
+    ax.set_title("Tier-stratified cancellation rate:\ndeterministic vs. stochastic plan",
+                 fontsize=11)
+    ax.legend(loc="upper right", fontsize=8)
     ax.tick_params(axis="x", length=0)
-
     fig.tight_layout()
     save_figure(fig, "figure04_tier_cancellation")
 
-    # Report values for paper results section
-    print("  Figure 04 values:")
-    for t in tier_keys:
-        print(f"    Tier {t}: EV={ev_rates[t]:.2f}%  SP={rp_rates[t]:.2f}%  "
-              f"reduction={ev_rates[t]-rp_rates[t]:.2f} pp")
+    print("  Figure 04 values (all simulated):")
+    for t, tl in zip(tier_keys, tier_labels):
+        print(f"    {tl}: Det={det_rates[t]:.4f}%  SP={sp_rates[t]:.4f}%  "
+              f"reduction={det_rates[t]-sp_rates[t]:.4f} pp")
 
 
 # ---------------------------------------------------------------------------
@@ -282,14 +224,13 @@ def fig05_recourse_mix() -> None:
     Horizontal stacked bar chart of recourse action mix.
 
     Data from case_study_results.json:
-      EEV (EV plan operated stochastically): eev.recourse_mix
-      RP  (stochastic plan):                 rp.recourse_mix
+      Deterministic plan: eev.recourse_mix
+      Stochastic plan:    rp.recourse_mix
     """
     plans = {
         "Deterministic plan": CS["eev"]["recourse_mix"],
         "Stochastic plan":    CS["rp"]["recourse_mix"],
     }
-
     labels      = list(plans.keys())
     remfg_vals  = [plans[l]["re-manufacture"] for l in labels]
     sub_vals    = [plans[l]["subcontract"]    for l in labels]
@@ -298,27 +239,26 @@ def fig05_recourse_mix() -> None:
     fig = single_column()
     ax  = fig.add_subplot(111)
 
-    y_pos  = [1, 0]    # two horizontal bars
+    y_pos  = [1, 0]
     height = 0.4
 
-    def _bar(lefts, vals, color, label):
+    def _hbar(lefts, vals, color, label):
         bars = ax.barh(y_pos, vals, height, left=lefts,
                        color=color, label=label, zorder=3)
-        # Annotate inside the segment
         for bar, val, left in zip(bars, vals, lefts):
             if val > 5.0:
                 cx = left + val / 2
                 cy = bar.get_y() + bar.get_height() / 2
-                text_color = "white" if color != COLORS["subcontract"] else "#333333"
+                tc = "white" if color != COLORS["subcontract"] else "#333333"
                 ax.text(cx, cy, f"{val:.1f}%",
-                        ha="center", va="center",
-                        fontsize=8, color=text_color, fontweight="bold")
+                        ha="center", va="center", fontsize=8,
+                        color=tc, fontweight="bold")
         return [l + v for l, v in zip(lefts, vals)]
 
     lefts = [0.0, 0.0]
-    lefts = _bar(lefts, remfg_vals,  COLORS["remfg"],       "Re-manufacture in-house")
-    lefts = _bar(lefts, sub_vals,    COLORS["subcontract"],  "Subcontract to partner facility")
-    lefts = _bar(lefts, cancel_vals, COLORS["cancel"],       "Cancel patient")
+    lefts = _hbar(lefts, remfg_vals,  COLORS["remfg"],      "Re-manufacture in-house")
+    lefts = _hbar(lefts, sub_vals,    COLORS["subcontract"], "Subcontract to partner facility")
+    lefts = _hbar(lefts, cancel_vals, COLORS["cancel"],      "Cancel patient")
 
     ax.set_yticks(y_pos)
     ax.set_yticklabels(labels, fontsize=9)
@@ -327,11 +267,9 @@ def fig05_recourse_mix() -> None:
     ax.set_title("Recourse action composition per plan", fontsize=11)
     ax.legend(loc="lower center", bbox_to_anchor=(0.5, -0.28),
               ncol=3, fontsize=7.5, frameon=True)
-
     fig.tight_layout()
     save_figure(fig, "figure05_recourse_mix")
 
-    # Report values
     print("  Figure 05 values:")
     for l in labels:
         m = plans[l]
@@ -340,18 +278,18 @@ def fig05_recourse_mix() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Figure 06 — Stage-1 facility allocation by tier
+# Figure 06 — Stage-1 facility allocation by tier (two panels)
 # ---------------------------------------------------------------------------
 
 def fig06_facility_allocation() -> None:
     """
-    Grouped stacked bar chart: patients per facility × tier, for EV and SP plans.
+    Two-panel stacked bar chart: patients per facility × tier.
+    Left panel: Deterministic plan.  Right panel: Stochastic plan.
+    Shared y-axis (sharey=True) so scales are comparable.
 
-    Data from case_study_results.json: ev.x and rp.x (50×4 assignment matrices).
-
-    Allocation (computed below and verified against case study output):
-      EV: m0 (H=6, M=23, L=11=40 total), m1 (H=4, M=2, L=4=10 total)
-      RP: m0 (H=0, M=3, L=7=10 total),  m2 (H=10, M=22, L=8=40 total)
+    Allocation verified against case study output:
+      Det plan: m0 (H=6, M=23, L=11), m1 (H=4, M=2, L=4)
+      SP plan:  m0 (H=0, M=3,  L=7),  m2 (H=10, M=22, L=8)
     """
     tiers       = ["H", "M", "L"]
     tier_colors = [COLORS["tier_H"], COLORS["tier_M"], COLORS["tier_L"]]
@@ -359,93 +297,72 @@ def fig06_facility_allocation() -> None:
     n_fac       = 4
     fac_labels  = [f"m$_{m}$" for m in range(n_fac)]
 
-    # Count patients per (facility, tier) for each plan
-    def _counts(x_mat):
+    def _counts(x_mat: np.ndarray) -> np.ndarray:
+        """Count patients per (facility, tier); returns (n_fac, 3) array."""
         counts = np.zeros((n_fac, len(tiers)), dtype=int)
         for ti, tier in enumerate(tiers):
-            idx = TIER_IDX[tier]
-            counts[:, ti] = x_mat[idx].sum(axis=0)
+            counts[:, ti] = x_mat[TIER_IDX[tier]].sum(axis=0)
         return counts
 
-    ev_counts = _counts(EV_X)  # shape (4, 3)
+    ev_counts = _counts(EV_X)
     rp_counts = _counts(RP_X)
 
     fig = double_column()
-    ax  = fig.add_subplot(111)
+    fig.subplots_adjust(bottom=0.22, wspace=0.08)
+    axes = fig.subplots(1, 2, sharey=True)
 
-    x      = np.arange(n_fac)
-    width  = 0.35
-    offset = {"EV": -width / 2, "SP": width / 2}
-    plans  = {"EV": (ev_counts, COLORS["naive_det"], "#888888"),
-              "SP": (rp_counts, COLORS["sp"],        "#1A5090")}
+    x     = np.arange(n_fac)
+    width = 0.55
 
-    for plan_name, (counts, base_color, edge_color) in plans.items():
+    for ax, counts, title in zip(axes,
+                                  [ev_counts, rp_counts],
+                                  ["Deterministic plan", "Stochastic plan"]):
         bottom = np.zeros(n_fac)
         for ti, (tier, color, t_label) in enumerate(
                 zip(tiers, tier_colors, tier_labels)):
             vals = counts[:, ti].astype(float)
-            label = f"{t_label} ({plan_name})" if plan_name == "EV" else None
-            ax.bar(x + offset[plan_name], vals,
-                   width, bottom=bottom,
-                   color=color, alpha=(0.55 if plan_name == "EV" else 1.0),
-                   edgecolor=edge_color, linewidth=0.8,
-                   label=label, zorder=3)
-            # Annotate non-zero segments
+            ax.bar(x, vals, width, bottom=bottom,
+                   color=color, zorder=3, label=t_label)
             for fi in range(n_fac):
                 if vals[fi] > 0:
-                    ax.text(x[fi] + offset[plan_name],
-                            bottom[fi] + vals[fi] / 2,
+                    tc = "white" if color != COLORS["tier_M"] else "#333333"
+                    ax.text(x[fi], bottom[fi] + vals[fi] / 2,
                             str(int(vals[fi])),
-                            ha="center", va="center",
-                            fontsize=7.5,
-                            color="white" if (color != COLORS["tier_M"]) else "#333333",
-                            fontweight="bold")
+                            ha="center", va="center", fontsize=8,
+                            color=tc, fontweight="bold")
             bottom += vals
 
-    # Annotation arrow: tier-H from m1 (EV) → m2 (SP)
-    # m1 EV bar centre: x=1 - width/2 = 0.825; top of H segment = ev_counts[1, 0] = 4
-    # m2 SP bar centre: x=2 + width/2 = 2.175; top of H segment = rp_counts[2, 0] = 10
-    ax.annotate(
-        "Tier-H patients reassigned\nto higher-yield m$_2$ under SP\n(Equation 10b)",
-        xy=(2 + width / 2, rp_counts[2, 0] + 0.5),
-        xytext=(1.5, 26),
-        fontsize=7.5,
-        ha="center",
-        arrowprops=dict(arrowstyle="->", color="#333333",
-                        connectionstyle="arc3,rad=0.3", lw=1.0),
-        color="#333333",
-    )
+        ax.set_xticks(x)
+        ax.set_xticklabels(fac_labels, fontsize=10)
+        ax.set_title(title, fontsize=11, pad=6)
+        ax.set_xlabel("Manufacturing facility", fontsize=10)
+        ax.tick_params(axis="x", length=0)
 
-    # Legend: tiers via color patches + plan via opacity
-    tier_patches = [
-        mpatches.Patch(color=COLORS[f"tier_{t}"], label=f"Tier {t}")
-        for t in tiers
-    ]
-    plan_patches = [
-        mpatches.Patch(facecolor="#CCCCCC", edgecolor="#888888",
-                       label="Deterministic plan (EV)", alpha=0.55),
-        mpatches.Patch(facecolor="#2A6FB8", edgecolor="#1A5090",
-                       label="Stochastic plan (SP)"),
-    ]
-    ax.legend(handles=tier_patches + plan_patches,
-              loc="upper right", fontsize=7.5, ncol=2)
+    axes[0].set_ylabel("Number of patients assigned")
+    axes[0].set_ylim(0, 52)
+    # Remove left spine on right panel to avoid double-line between panels
+    axes[1].spines["left"].set_visible(False)
+    axes[1].tick_params(axis="y", left=False)
 
-    ax.set_xticks(x)
-    ax.set_xticklabels(fac_labels, fontsize=10)
-    ax.set_ylabel("Number of patients assigned")
-    ax.set_xlabel("Manufacturing facility")
-    ax.set_title(
-        "Stage-1 patient allocation by tier and facility:\ndeterministic vs. stochastic plan",
-        fontsize=11)
-    ax.set_ylim(0, 55)
+    # Single shared legend below both panels
+    handles = [mpatches.Patch(color=c, label=l)
+               for c, l in zip(tier_colors, tier_labels)]
+    fig.legend(handles=handles, loc="lower center",
+               ncol=3, fontsize=9, frameon=True,
+               bbox_to_anchor=(0.5, 0.01))
 
-    fig.tight_layout()
+    # Annotation between panels
+    fig.text(0.5, 0.13,
+             "Under the stochastic plan, high-urgency-tier patients are reassigned to a\n"
+             "higher-yield facility — enabled by constraint (10b) tying recourse to the\n"
+             "primary assignment.",
+             ha="center", va="bottom", fontsize=8, color="#333333", style="italic")
+
     save_figure(fig, "figure06_facility_allocation")
 
-    # Report allocation
     print("  Figure 06 allocation:")
     for fi in range(n_fac):
-        print(f"    m{fi}:  EV={ev_counts[fi].tolist()}  RP={rp_counts[fi].tolist()}")
+        print(f"    m{fi}:  Det={ev_counts[fi].tolist()}  SP={rp_counts[fi].tolist()}")
 
 
 # ---------------------------------------------------------------------------
@@ -457,17 +374,29 @@ def write_readme() -> None:
     lines = [
         "# Phase 1 Figures — CAR-T Supply Chain Paper",
         "",
-        "All figures generated by `generate_phase1.py` from `case_study_results.json`.",
+        "All figures generated by `generate_phase1.py` from `case_study_results.json`",
+        "and `results/per_tier_cancel_rates.json`.",
         "PNG (300 DPI) and PDF (vector) outputs are in `png/` and `pdf/` respectively.",
+        "",
+        "## Label convention",
+        "",
+        "**Deterministic plan** — the optimization is solved assuming no batches fail",
+        "(expected-value problem). The cost shown in figures reflects realized outcomes",
+        "when this plan is deployed under realistic stochastic yields.",
+        "",
+        "**Stochastic plan** — optimizes with manufacturing yield modeled explicitly as",
+        "a Bernoulli random variable per batch (full two-stage stochastic program).",
+        "",
+        "## Figure index",
         "",
         "| File | Caption | Source |",
         "|------|---------|--------|",
-        "| `figure01_methodology.png` | Methodology diagram — hand-drawn SVG placeholder | (hand-drawn) |",
-        "| `figure02_oos_context.png` | Real-world out-of-specification rates for commercially approved CAR-T products span 4% to 28%, with the UK National CAR T Panel reporting an aggregate failure rate of 3.87%. The variance across products and the binary clinical consequence per patient motivates a stochastic-yield modeling framework. | Patel et al. 2024, Dulobdas 2025 |",
+        "| `figure01_methodology.png` | Methodology diagram — hand-drawn SVG placeholder. | (hand-drawn) |",
+        "| `figure02_oos_context.png` | Real-world out-of-specification rates for commercially approved CAR-T products span 4% to 28%, with the UK National CAR T Panel reporting an aggregate failure rate of 3.87%. The variance across products and the binary clinical consequence per patient motivates a stochastic-yield modeling framework. | Patel et al. 2024; Dulobdas 2025 |",
         "| `figure03_eligibility_profile.png` | Tier-dependent re-collection eligibility probabilities used in the model, calibrated from clinical literature on patient deterioration during CAR-T manufacturing delays (Locke 2022, Bachy 2022, Lulla 2024). Tier-H patients face the lowest probability of remaining eligible for a re-collection attempt. | case_study.py calibration |",
-        "| `figure04_tier_cancellation.png` | Realized cancellation rate by patient urgency tier, comparing the deterministic plan operated stochastically against the stochastic optimum. High-urgency-tier cancellation falls by more than half, with the largest absolute reduction concentrated in the most clinically vulnerable patients. | `case_study_results.json` |",
+        "| `figure04_tier_cancellation.png` | Realized cancellation rate by patient urgency tier. The deterministic plan is obtained by solving the optimization assuming no batches fail; the cost shown reflects realized outcomes when the plan is deployed under realistic stochastic yields. The stochastic plan optimizes with manufacturing yield modeled as a Bernoulli random variable per batch. High-urgency-tier cancellation falls by more than half, with the largest absolute reduction concentrated in the most clinically vulnerable patients. | `results/per_tier_cancel_rates.json` (all rates simulated) |",
         "| `figure05_recourse_mix.png` | Composition of recourse actions selected by each plan, expressed as a percentage of all failed batches. The stochastic optimum shifts cases away from cancellation toward in-house re-manufacture, with the residual subcontracting share reflecting cross-facility hedging. | `case_study_results.json` |",
-        "| `figure06_facility_allocation.png` | Stage-1 patient-to-facility allocation by urgency tier, comparing the deterministic plan and the stochastic optimum. The stochastic plan reassigns high-urgency-tier patients to a higher-yield facility, reflecting the constraint that recourse feasibility depends on the patient's primary assignment (Equation 10b). | `case_study_results.json` |",
+        "| `figure06_facility_allocation.png` | Stage-1 patient-to-facility allocation by urgency tier. The deterministic plan (left) concentrates patients at the two opened facilities (m0, m1). The stochastic plan (right) opens a different facility set (m0, m2) and reassigns high-urgency patients to the higher-yield site, reflecting the constraint that recourse feasibility depends on the patient's primary assignment (Equation 10b). | `case_study_results.json` |",
         "",
     ]
     readme.write_text("\n".join(lines))
@@ -478,7 +407,7 @@ def write_readme() -> None:
 # Main
 # ---------------------------------------------------------------------------
 
-def main():
+def main() -> None:
     print("=== Phase 1 figure generation ===")
     print()
 
@@ -491,19 +420,18 @@ def main():
     print("[3/6] Figure 03 — Eligibility profile")
     fig03_eligibility_profile()
 
-    print("[4/6] Figure 04 — Tier-stratified cancellation")
+    print("[4/6] Figure 04 — Tier-stratified cancellation (simulated)")
     fig04_tier_cancellation()
 
     print("[5/6] Figure 05 — Recourse mix")
     fig05_recourse_mix()
 
-    print("[6/6] Figure 06 — Facility allocation")
+    print("[6/6] Figure 06 — Facility allocation (split panels)")
     fig06_facility_allocation()
 
     print()
     write_readme()
 
-    # Verify all outputs exist
     print()
     print("Output verification:")
     names = [
@@ -516,15 +444,15 @@ def main():
     ]
     all_ok = True
     for name in names:
-        png = _HERE / "png" / f"{name}.png"
-        pdf = _HERE / "pdf" / f"{name}.pdf"
+        png    = _HERE / "png" / f"{name}.png"
+        pdf    = _HERE / "pdf" / f"{name}.pdf"
         png_ok = png.exists()
-        # fig01 has no PDF (PIL-generated)
         pdf_ok = pdf.exists() if name != "figure01_methodology" else True
         status = "OK" if (png_ok and pdf_ok) else "MISSING"
         if not (png_ok and pdf_ok):
             all_ok = False
         print(f"  [{status}] {name}")
+
     print()
     if all_ok:
         print("All figures generated successfully.")

@@ -1,0 +1,14 @@
+{
+  "deterministic_plan": {
+    "H": 5.4,
+    "M": 3.0,
+    "L": 1.2333
+  },
+  "stochastic_plan": {
+    "H": 2.15,
+    "M": 1.06,
+    "L": 0.5667
+  },
+  "methodology": "Simulated from r_cancel arrays across 200 scenarios with seed 0. Deterministic plan: EV first-stage fixed, second-stage optimised. Stochastic plan: full two-stage SP.",
+  "elapsed_s": 13.6
+}
