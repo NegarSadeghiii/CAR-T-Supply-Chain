@@ -194,9 +194,15 @@ def fig04_tier_cancellation() -> None:
            color=COLORS["sp"], zorder=3)
 
     for i, (det, sp, red) in enumerate(zip(det_vals, sp_vals, reductions)):
-        ax.text(x[i], max(det, sp) + 0.12, f"−{red:.1f} pp",
-                ha="center", va="bottom", fontsize=8,
-                color="#333333", fontweight="bold")
+        rel_pct = round((det - sp) / det * 100) if det > 0 else 0
+        top = max(det, sp) + 0.12
+        # Line 1: absolute rates (smaller, gray)
+        ax.text(x[i], top, f"{det:.1f}% → {sp:.1f}%",
+                ha="center", va="bottom", fontsize=7.5, color="#666666")
+        # Line 2: relative reduction (larger, bold, black)
+        ax.text(x[i], top + 0.30, f"−{rel_pct}%",
+                ha="center", va="bottom", fontsize=9,
+                color="#111111", fontweight="bold")
 
     ax.set_xticks(x)
     ax.set_xticklabels(tier_labels)
@@ -308,7 +314,7 @@ def fig06_facility_allocation() -> None:
     rp_counts = _counts(RP_X)
 
     fig = double_column()
-    fig.subplots_adjust(bottom=0.22, wspace=0.08)
+    fig.subplots_adjust(bottom=0.16, wspace=0.08)
     axes = fig.subplots(1, 2, sharey=True)
 
     x     = np.arange(n_fac)
@@ -350,13 +356,6 @@ def fig06_facility_allocation() -> None:
     fig.legend(handles=handles, loc="lower center",
                ncol=3, fontsize=9, frameon=True,
                bbox_to_anchor=(0.5, 0.01))
-
-    # Annotation between panels
-    fig.text(0.5, 0.13,
-             "Under the stochastic plan, high-urgency-tier patients are reassigned to a\n"
-             "higher-yield facility — enabled by constraint (10b) tying recourse to the\n"
-             "primary assignment.",
-             ha="center", va="bottom", fontsize=8, color="#333333", style="italic")
 
     save_figure(fig, "figure06_facility_allocation")
 
