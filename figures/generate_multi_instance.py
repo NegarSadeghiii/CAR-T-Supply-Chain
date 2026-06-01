@@ -266,9 +266,9 @@ def fig08_summary() -> None:
     th_naive  = [r["tier_h_naive"]  for r in SUMMARY]
     th_smart  = [r["tier_h_smart"]  for r in SUMMARY]
     th_sp     = [r["tier_h_sp"]     for r in SUMMARY]
-    sp_remfg  = [r["sp_remfg_pct"]  for r in SUMMARY]
-    sp_sub    = [r["sp_sub_pct"]    for r in SUMMARY]
-    sp_cancel = [r["sp_cancel_pct"] for r in SUMMARY]
+    naive_opens = [r["naive_opens"] for r in SUMMARY]
+    smart_opens = [r["smart_opens"] for r in SUMMARY]
+    sp_opens    = [r["sp_opens"]    for r in SUMMARY]
     sp_times  = [r["sp_solve_time"] for r in SUMMARY]
     naive_t   = [r["naive_time"]    for r in SUMMARY]
     smart_t   = [r["smart_time"]    for r in SUMMARY]
@@ -282,9 +282,10 @@ def fig08_summary() -> None:
 
     # --- (a) VSS % ---
     ax = axes[0, 0]
-    ax.plot(x_log, vss_naive, color=COLORS["naive_det"], label="vs Naive det.",  **m_kw)
+    ax.plot(x_log, vss_naive, color=COLORS["naive_det"],
+            label="vs Naive det.", **m_kw)
     ax.plot(x_log, vss_smart, color=COLORS["expected_cost_det"],
-            label="vs Exp-cost det.", **m_kw)
+            label="vs Expected-cost det.", **m_kw)
     ax.axhline(4, color="#AAAAAA", linestyle=":", linewidth=0.8)
     ax.set_title("(a) VSS (%)", fontsize=10)
     ax.set_xlabel("|I| (patients)", fontsize=9)
@@ -294,11 +295,28 @@ def fig08_summary() -> None:
     ax.legend(fontsize=7, loc="upper left")
     ax.set_ylim(bottom=0)
 
+    # Annotate N=100 VSS dip: expected-cost det. independently selects same
+    # facilities as SP (m1+m2), leaving only scenario-specific routing value.
+    n100_xi = sizes.index(100)
+    ax.annotate(
+        "Expected-cost det. selects\nm1+m2 = same as SP.\nResidual gap = routing\nvalue only (3.69%).",
+        xy=(x_log[n100_xi], vss_smart[n100_xi]),
+        xytext=(x_log[n100_xi] + 0.22, vss_smart[n100_xi] + 5.5),
+        fontsize=6.5,
+        arrowprops=dict(arrowstyle="->", color="#555555", lw=0.8),
+        ha="left", va="bottom",
+        color="#333333",
+        bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="#CCCCCC", alpha=0.92),
+    )
+
     # --- (b) Tier-H cancellation ---
     ax = axes[0, 1]
-    ax.plot(x_log, th_naive, color=COLORS["naive_det"],         label="Naive",  **m_kw)
-    ax.plot(x_log, th_smart, color=COLORS["expected_cost_det"], label="Smart",  **m_kw)
-    ax.plot(x_log, th_sp,    color=COLORS["sp"],                label="SP",     **m_kw)
+    ax.plot(x_log, th_naive, color=COLORS["naive_det"],
+            label="Naive det.", **m_kw)
+    ax.plot(x_log, th_smart, color=COLORS["expected_cost_det"],
+            label="Expected-cost det.", **m_kw)
+    ax.plot(x_log, th_sp,    color=COLORS["sp"],
+            label="Stochastic plan", **m_kw)
     ax.set_title("(b) Tier-H cancellation rate (%)", fontsize=10)
     ax.set_xlabel("|I| (patients)", fontsize=9)
     ax.set_ylabel("Cancellation rate (%)", fontsize=9)
@@ -307,35 +325,41 @@ def fig08_summary() -> None:
     ax.legend(fontsize=7)
     ax.set_ylim(bottom=0)
 
-    # --- (c) SP recourse mix ---
+    # --- (c) Facility selection indicator dot plot ---
     ax = axes[1, 0]
-    bottom = np.zeros(len(sizes))
-    for vals, color, lbl in [
-        (sp_remfg,  COLORS["remfg"],      "Re-mfg"),
-        (sp_sub,    COLORS["subcontract"], "Subcontract"),
-        (sp_cancel, COLORS["cancel"],      "Cancel"),
-    ]:
-        ax.bar(x_log, vals, 0.18, bottom=bottom, color=color, label=lbl)
-        bottom = bottom + np.array(vals)
-    ax.set_title("(c) SP recourse mix (%)", fontsize=10)
+    plan_styles = [
+        (naive_opens, COLORS["naive_det"],         "o", 45, "Naive det."),
+        (smart_opens, COLORS["expected_cost_det"], "s", 45, "Expected-cost det."),
+        (sp_opens,    COLORS["sp"],                "^", 55, "Stochastic plan"),
+    ]
+    jitter = [-0.05, 0.0, 0.05]
+    for (opens_list, color, mkr, sz, lbl), jx in zip(plan_styles, jitter):
+        xs, ys = [], []
+        for xi, opens in enumerate(opens_list):
+            for fac in opens:
+                xs.append(x_log[xi] + jx)
+                ys.append(fac)
+        ax.scatter(xs, ys, color=color, marker=mkr, s=sz, zorder=4,
+                   label=lbl, edgecolors="#333333", linewidths=0.4)
+    ax.set_yticks([0, 1, 2, 3])
+    ax.set_yticklabels(["$m_0$", "$m_1$", "$m_2$", "$m_3$"], fontsize=8)
+    ax.set_title("(c) Facility selection by plan", fontsize=10)
     ax.set_xlabel("|I| (patients)", fontsize=9)
-    ax.set_ylabel("Share of failed batches (%)", fontsize=9)
+    ax.set_ylabel("Facility", fontsize=9)
     ax.set_xticks(x_log)
     ax.set_xticklabels([str(s) for s in sizes], fontsize=8)
-    ax.set_ylim(0, 108)
-    ax.legend(fontsize=7, loc="upper right")
+    ax.set_ylim(-0.6, 3.6)
+    ax.legend(fontsize=7, loc="upper left")
 
     # --- (d) Solve time log-log ---
     ax = axes[1, 1]
     ax.scatter(x_log, naive_t, color=COLORS["naive_det"],
-               marker="o", s=40, label="Naive EEV", zorder=4)
+               marker="o", s=40, label="Naive det.", zorder=4)
     ax.scatter(x_log, smart_t, color=COLORS["expected_cost_det"],
-               marker="s", s=40, label="Smart EEV", zorder=4)
+               marker="s", s=40, label="Expected-cost det.", zorder=4)
     ax.scatter(x_log, sp_times, color=COLORS["sp"],
-               marker="^", s=50, label="SP (RP)", zorder=4)
+               marker="^", s=50, label="Stochastic plan (RP)", zorder=4)
     ax.set_yscale("log")
-    ax.axhline(1800, color="#B83A3A", linestyle="--", linewidth=0.8,
-               label="30-min limit")
     ax.set_title("(d) Solve time (s)", fontsize=10)
     ax.set_xlabel("|I| (patients)", fontsize=9)
     ax.set_ylabel("Solve time (s, log scale)", fontsize=9)
@@ -380,10 +404,10 @@ def update_readme() -> None:
     section = "\n## Multi-instance comparison\n\n"
     section += (
         "Results across patient cohort sizes. Costs in M USD. "
-        "Tier-H rates shown as Naive / Smart / SP.\n\n"
+        "Tier-H rates shown as Naive det. / Expected-cost det. / SP.\n\n"
     )
-    section += ("| `|I|` | Naive EEV | Smart EEV | RP | "
-                "VSS naive | VSS smart | Tier-H (N/S/SP) | SP time | SP gap |\n")
+    section += ("| `|I|` | Naive det. | Expected-cost det. | RP | "
+                "VSS (naive) | VSS (exp-cost det.) | Tier-H (N/E/SP) | SP time | SP gap |\n")
     section += "|---|---|---|---|---|---|---|---|---|\n"
     section += "\n".join(table_rows) + "\n\n"
 
