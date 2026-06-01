@@ -24,3 +24,33 @@ a Bernoulli random variable per batch (full two-stage stochastic program).
 | `figure05_recourse_mix.png` | Composition of recourse actions selected by each plan, expressed as a percentage of all failed batches. The stochastic optimum shifts cases away from cancellation toward in-house re-manufacture, with the residual subcontracting share reflecting cross-facility hedging. | `case_study_results.json` |
 | `figure06_facility_allocation.png` | Stage-1 patient-to-facility allocation by urgency tier. The deterministic plan (left) concentrates patients at the two opened facilities (m0, m1). The stochastic plan (right) opens a different facility set (m0, m2) and reassigns high-urgency patients to the higher-yield site, reflecting the constraint that recourse feasibility depends on the patient's primary assignment (Equation 10b). | `case_study_results.json` |
 | `figure07_cost_composition.png` | Total expected cost decomposed into Stage-1 (committed) and Stage-2 (recourse) components across three planning strategies. The deterministic plan pays a low committed cost but absorbs substantial recourse cost when its decisions are deployed under realistic yield uncertainty. The expected-cost-deterministic baseline anticipates expected failures by adjusting per-batch costs, shifting more cost into Stage-1 and reducing expected recourse. The stochastic plan minimizes the total by trading a moderate increase in Stage-1 commitment for a substantially lower expected recourse cost, capturing structural value (scenario-specific recourse decisions, capacity hedging, and eligibility-tier coupling) that no deterministic formulation can represent. | `case_study_results.json`, `results/expected_cost_baseline_results.json` |
+
+## Multi-instance comparison
+
+Results across patient cohort sizes. Costs in M USD. Tier-H rates shown as Naive / Smart / SP.
+
+| `|I|` | Naive EEV | Smart EEV | RP | VSS naive | VSS smart | Tier-H (N/S/SP) | SP time | SP gap |
+|---|---|---|---|---|---|---|---|---|
+| 50 | 20.48 | 19.74 | 17.87 | 14.6% | 10.5% | 5.40 / 6.05 / 2.15 | 15.3s | 0.000% |
+| 100 | 37.40 | 34.61 | 33.38 | 12.0% | 3.7% | 5.45 / 2.75 / 2.02 | 19.2s | 0.000% |
+| 200 | 70.88 | 65.08 | 60.83 | 16.5% | 7.0% | 4.85 / 2.95 / 1.82 | 25.8s | 0.000% |
+| 500 | 175.91 | 158.51 | 138.51 | 27.0% | 14.4% | 5.02 / 3.66 / 1.14 | 34.7s | 0.000% |
+
+- `figure04_*_N50.png/.pdf` — Tier-stratified cancellation (N=50 patients).
+- `figure05_*_N50.png/.pdf` — Recourse mix across three plans (N=50 patients).
+- `figure06_*_N50.png/.pdf` — Stage-1 facility allocation (N=50 patients).
+- `figure07_*_N50.png/.pdf` — Cost composition per patient (N=50 patients).
+- `figure04_*_N100.png/.pdf` — Tier-stratified cancellation (N=100 patients).
+- `figure05_*_N100.png/.pdf` — Recourse mix across three plans (N=100 patients).
+- `figure06_*_N100.png/.pdf` — Stage-1 facility allocation (N=100 patients).
+- `figure07_*_N100.png/.pdf` — Cost composition per patient (N=100 patients).
+- `figure04_*_N200.png/.pdf` — Tier-stratified cancellation (N=200 patients).
+- `figure05_*_N200.png/.pdf` — Recourse mix across three plans (N=200 patients).
+- `figure06_*_N200.png/.pdf` — Stage-1 facility allocation (N=200 patients).
+- `figure07_*_N200.png/.pdf` — Cost composition per patient (N=200 patients).
+- `figure04_*_N500.png/.pdf` — Tier-stratified cancellation (N=500 patients).
+- `figure05_*_N500.png/.pdf` — Recourse mix across three plans (N=500 patients).
+- `figure06_*_N500.png/.pdf` — Stage-1 facility allocation (N=500 patients).
+- `figure07_*_N500.png/.pdf` — Cost composition per patient (N=500 patients).
+
+- `figure08_multi_instance_summary.png/.pdf` — 2×2 panel summary across all sizes.

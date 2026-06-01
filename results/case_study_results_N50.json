@@ -1,0 +1,152 @@
+{
+  "instance_size": 50,
+  "n_facilities": 4,
+  "n_scenarios": 200,
+  "seed": 0,
+  "tier_mix": {
+    "H": 10,
+    "M": 25,
+    "L": 15
+  },
+  "s_max": 40,
+  "calibration": {
+    "expected_recourse_per_batch": 0.68482
+  },
+  "naive_eev": {
+    "stage1": 14.5,
+    "stage2": 5.977425,
+    "total": 20.477425,
+    "solve_time": 3.94,
+    "opens": [
+      0,
+      1
+    ]
+  },
+  "smart_eev": {
+    "stage1": 14.5,
+    "stage2": 5.24025,
+    "total": 19.74025,
+    "solve_time": 3.08,
+    "facility_allocation_differs_from_naive": true,
+    "opens": [
+      0,
+      1
+    ]
+  },
+  "rp": {
+    "stage1": 15.5,
+    "stage2": 2.36765,
+    "total": 17.86765,
+    "solve_time": 15.32,
+    "gap": 0.0,
+    "opens": [
+      0,
+      2
+    ]
+  },
+  "vss_vs_naive_pct": 14.6061,
+  "vss_smart_vs_rp_pct": 10.4804,
+  "tier_cancel_rates": {
+    "naive": {
+      "H": 5.4,
+      "M": 3.0,
+      "L": 1.2333
+    },
+    "smart": {
+      "H": 6.05,
+      "M": 1.66,
+      "L": 0.9333
+    },
+    "sp": {
+      "H": 2.15,
+      "M": 1.06,
+      "L": 0.5667
+    }
+  },
+  "recourse_mix": {
+    "naive": {
+      "remfg": 78.5922,
+      "sub": 0.0,
+      "cancel": 21.4078
+    },
+    "smart": {
+      "remfg": 75.2665,
+      "sub": 0.0,
+      "cancel": 24.7335
+    },
+    "sp": {
+      "remfg": 73.8806,
+      "sub": 9.2537,
+      "cancel": 16.8657
+    }
+  },
+  "facility_allocation": {
+    "naive": {
+      "m_0": {
+        "H": 6,
+        "M": 23,
+        "L": 11
+      },
+      "m_1": {
+        "H": 4,
+        "M": 2,
+        "L": 4
+      },
+      "m_2": {
+        "H": 0,
+        "M": 0,
+        "L": 0
+      },
+      "m_3": {
+        "H": 0,
+        "M": 0,
+        "L": 0
+      }
+    },
+    "smart": {
+      "m_0": {
+        "H": 5,
+        "M": 1,
+        "L": 4
+      },
+      "m_1": {
+        "H": 5,
+        "M": 24,
+        "L": 11
+      },
+      "m_2": {
+        "H": 0,
+        "M": 0,
+        "L": 0
+      },
+      "m_3": {
+        "H": 0,
+        "M": 0,
+        "L": 0
+      }
+    },
+    "sp": {
+      "m_0": {
+        "H": 0,
+        "M": 3,
+        "L": 7
+      },
+      "m_1": {
+        "H": 0,
+        "M": 0,
+        "L": 0
+      },
+      "m_2": {
+        "H": 10,
+        "M": 22,
+        "L": 8
+      },
+      "m_3": {
+        "H": 0,
+        "M": 0,
+        "L": 0
+      }
+    }
+  },
+  "elapsed_s": 22.4
+}

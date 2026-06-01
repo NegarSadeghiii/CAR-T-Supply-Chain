@@ -1,0 +1,153 @@
+{
+  "instance_size": 500,
+  "n_facilities": 4,
+  "n_scenarios": 50,
+  "seed": 0,
+  "tier_mix": {
+    "H": 100,
+    "M": 250,
+    "L": 150
+  },
+  "s_max": 250,
+  "calibration": {
+    "expected_recourse_per_batch": 0.68482
+  },
+  "naive_eev": {
+    "stage1": 122.5,
+    "stage2": 53.4101,
+    "total": 175.9101,
+    "solve_time": 14.53,
+    "opens": [
+      0,
+      3
+    ]
+  },
+  "smart_eev": {
+    "stage1": 125.0,
+    "stage2": 33.5121,
+    "total": 158.5121,
+    "solve_time": 13.81,
+    "facility_allocation_differs_from_naive": true,
+    "opens": [
+      2,
+      3
+    ]
+  },
+  "rp": {
+    "stage1": 127.0,
+    "stage2": 11.50565,
+    "total": 138.50565,
+    "solve_time": 34.74,
+    "gap": 0.0,
+    "opens": [
+      1,
+      2,
+      3
+    ]
+  },
+  "vss_vs_naive_pct": 27.0057,
+  "vss_smart_vs_rp_pct": 14.4445,
+  "tier_cancel_rates": {
+    "naive": {
+      "H": 5.02,
+      "M": 2.704,
+      "L": 0.92
+    },
+    "smart": {
+      "H": 3.66,
+      "M": 1.32,
+      "L": 0.5067
+    },
+    "sp": {
+      "H": 1.14,
+      "M": 0.272,
+      "L": 0.0933
+    }
+  },
+  "recourse_mix": {
+    "naive": {
+      "remfg": 77.001,
+      "sub": 0.0,
+      "cancel": 22.999
+    },
+    "smart": {
+      "remfg": 71.1538,
+      "sub": 5.649,
+      "cancel": 23.1971
+    },
+    "sp": {
+      "remfg": 86.531,
+      "sub": 3.9729,
+      "cancel": 9.4961
+    }
+  },
+  "facility_allocation": {
+    "naive": {
+      "m_0": {
+        "H": 41,
+        "M": 131,
+        "L": 78
+      },
+      "m_1": {
+        "H": 0,
+        "M": 0,
+        "L": 0
+      },
+      "m_2": {
+        "H": 0,
+        "M": 0,
+        "L": 0
+      },
+      "m_3": {
+        "H": 59,
+        "M": 119,
+        "L": 72
+      }
+    },
+    "smart": {
+      "m_0": {
+        "H": 0,
+        "M": 0,
+        "L": 0
+      },
+      "m_1": {
+        "H": 0,
+        "M": 0,
+        "L": 0
+      },
+      "m_2": {
+        "H": 9,
+        "M": 150,
+        "L": 91
+      },
+      "m_3": {
+        "H": 91,
+        "M": 100,
+        "L": 59
+      }
+    },
+    "sp": {
+      "m_0": {
+        "H": 0,
+        "M": 0,
+        "L": 0
+      },
+      "m_1": {
+        "H": 30,
+        "M": 57,
+        "L": 41
+      },
+      "m_2": {
+        "H": 48,
+        "M": 135,
+        "L": 67
+      },
+      "m_3": {
+        "H": 22,
+        "M": 58,
+        "L": 42
+      }
+    }
+  },
+  "elapsed_s": 63.1
+}
