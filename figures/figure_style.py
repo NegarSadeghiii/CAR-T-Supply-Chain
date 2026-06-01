@@ -110,6 +110,12 @@ def double_column() -> Figure:
     return plt.figure(figsize=(9, 5))
 
 
+def triple_column() -> Figure:
+    """Return a 13×4.5 inch Figure for 1×3 panel layouts."""
+    setup_style()
+    return plt.figure(figsize=(13, 4.5))
+
+
 def save_figure(fig: Figure, name: str) -> None:
     """
     Save fig to figures/png/{name}.png (300 DPI) and figures/pdf/{name}.pdf.
