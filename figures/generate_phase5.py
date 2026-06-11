@@ -68,8 +68,8 @@ with open(_REPO / "results" / "out_of_sample_results.json") as _f:
     OOS = json.load(_f)
 
 _PLAN_KEYS   = ["naive_deterministic", "expected_cost_deterministic", "stochastic_plan"]
-_PLAN_LABELS = ["Best-case\ndeterministic", "Expected-cost\ndeterministic", "Stochastic\nplan"]
-_PLAN_LABELS_SHORT = ["Best-case det.", "Expected-cost det.", "Stochastic plan"]
+_PLAN_LABELS = ["Deterministic", "Expected-parameter\ndeterministic", "Stochastic\nplan"]
+_PLAN_LABELS_SHORT = ["Deterministic", "Expected-parameter det.", "Stochastic plan"]
 _PLAN_COLORS = [COLORS["naive_det"], COLORS["expected_cost_det"], COLORS["sp"]]
 
 # Dark versions for visibility on white backgrounds
@@ -644,9 +644,9 @@ def _draw_alluvial_panel(ax, data, title, oos_stats) -> None:
 
 def fig12_alluvial(inst, plans, Y_oos, B_oos) -> None:
     """
-    Two-panel alluvial: Best-case deterministic (left) vs. Stochastic plan (right).
+    Two-panel alluvial: Deterministic plan (left) vs. Stochastic plan (right).
     """
-    print("  Computing routing data for Best-case det. plan …")
+    print("  Computing routing data for Deterministic plan …")
     naive_data = _compute_alluvial_data(
         inst, plans["naive_deterministic"], Y_oos, B_oos)
 
@@ -666,7 +666,7 @@ def fig12_alluvial(inst, plans, Y_oos, B_oos) -> None:
 
     # Report tier-H routing table
     print("\n  Tier-H routing flows:")
-    for name, data in [("Best-case det.", naive_data), ("SP", sp_data)]:
+    for name, data in [("Deterministic", naive_data), ("SP", sp_data)]:
         tf = data["tier_fac"]["H"]
         mf = int(tf.argmax())
         print(f"    {name}: H → {tf.tolist()}")
@@ -681,7 +681,7 @@ def fig12_alluvial(inst, plans, Y_oos, B_oos) -> None:
                         top=0.90, bottom=0.08)
 
     _draw_alluvial_panel(axes[0], naive_data,
-                         "(a) Best-case deterministic plan", naive_stats)
+                         "(a) Deterministic plan", naive_stats)
     _draw_alluvial_panel(axes[1], sp_data,
                          "(b) Stochastic plan", sp_stats)
 
@@ -718,11 +718,8 @@ def update_readme() -> None:
 
     need_fig11  = "figure11_cost_violin"       not in existing
     need_figA1  = "figureA1_worst5pct"          not in existing
-    need_fig12  = "figure12_alluvial"           not in existing
-
-    if not (need_fig11 or need_figA1 or need_fig12):
-        print("  README already up to date — skipping.")
-        return
+    # Always refresh figure12 entry to pick up updated plan labels
+    need_fig12  = True
 
     budget = OOS["budget_threshold_M_USD"]
     new_entries = ""
@@ -757,16 +754,23 @@ def update_readme() -> None:
         new_entries += (
             "| `figure12_alluvial_patient_routing.png` | "
             "Alluvial flow of patients from urgency tier (left) through primary facility "
-            "assignment (middle) to realized outcome (right), comparing the best-case "
-            "deterministic plan (a) and the stochastic plan (b). Flow widths are "
-            "proportional to patient counts: layer 1→2 from frozen Stage-1 assignments; "
-            "layer 2→3 averaged across 2,000 held-out scenarios. Under the stochastic "
-            "plan, tier-H patients are re-routed to a higher-yield facility (m_2), "
-            "producing a visibly thinner cancellation slice in the outcome layer. "
+            "assignment (middle) to realized outcome (right), comparing the deterministic "
+            "plan (a) and the stochastic plan (b). Flow widths are proportional to patient "
+            "counts: layer 1→2 from frozen Stage-1 assignments; layer 2→3 averaged across "
+            "2,000 held-out scenarios. Under the stochastic plan, tier-H patients are "
+            "re-routed to a higher-yield facility (m_2), producing a visibly thinner "
+            "cancellation slice in the outcome layer. This visualizes the SP's structural "
+            "protection of high-urgency patients without any cost or rate numbers — the "
+            "routing structure itself carries the message. "
             "| `results/out_of_sample_results.json` |\n"
         )
 
-    readme.write_text(existing.rstrip("\n") + "\n" + new_entries)
+    # Strip any existing figure12 entry before appending fresh one
+    import re as _re
+    cleaned = _re.sub(
+        r"\| `figure12_alluvial[^|]+\| `results[^|]+\|\n?", "", existing
+    )
+    readme.write_text(cleaned.rstrip("\n") + "\n" + new_entries)
     print(f"  Updated: {readme}")
 
 
