@@ -111,13 +111,13 @@ def _eval_box(ax, cx: float, fc: str, title: str,
     cy = _ECY
     w, h, th = _EW, _EH, _ETH
 
-    _rounded_box(ax, cx, cy, w, h, fc, fc, lw=1.2, zorder=2)
+    _rounded_box(ax, cx, cy, w, h, fc, fc, lw=1.2, zorder=8)
     _rounded_box(ax, cx, cy - th / 2, w - 0.08, h - th,
-                 "#F8F8F8", "none", lw=0, zorder=3)
+                 "#F8F8F8", "none", lw=0, zorder=9)
 
     ax.text(cx, cy + h / 2 - th / 2, title,
             ha="center", va="center",
-            fontsize=8.0, fontweight="bold", color="white", zorder=4)
+            fontsize=8.0, fontweight="bold", color="white", zorder=10)
 
     top = cy + h / 2 - th - 0.08
     bot = cy - h / 2 + 0.08
@@ -125,7 +125,7 @@ def _eval_box(ax, cx: float, fc: str, title: str,
     for i, (line, fs) in enumerate(body):
         ax.text(cx, top - (i + 0.65) * spc, line,
                 ha="center", va="center",
-                fontsize=fs, color="#1A1A1A", zorder=4)
+                fontsize=fs, color="#1A1A1A", zorder=10)
 
 
 def _sampler_box(ax) -> None:
