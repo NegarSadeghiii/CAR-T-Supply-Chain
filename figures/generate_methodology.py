@@ -229,8 +229,8 @@ def generate_figure13() -> None:
 
     # ── Planner boxes ──────────────────────────────────────────────
     titles = [
-        "Best-case deterministic\nplanner",
-        "Expected-cost deterministic\nplanner",
+        "Deterministic\nplanner",
+        "Expected-parameter\ndeterministic planner",
         "Stochastic\nplanner",
     ]
     bodies = [
@@ -280,8 +280,8 @@ def generate_figure13() -> None:
 
     # ── Eval boxes ─────────────────────────────────────────────────
     eval_titles = [
-        "Best-case plan evaluated",
-        "Expected-cost plan evaluated",
+        "Deterministic plan evaluated",
+        "Expected-parameter plan evaluated",
         "Stochastic plan evaluated",
     ]
     eval_bodies = [
@@ -306,25 +306,26 @@ def update_readme() -> None:
     readme   = _HERE / "README.md"
     existing = readme.read_text()
 
-    if "figure13" in existing:
-        print("  README already contains figure13 entry — skipping.")
-        return
-
     entry = (
         "| `figure13_methodology_schematic.png` | "
         "Methodological structure of the comparison framework. Phase A (top): "
         "each of the three planners optimizes under a different view of uncertainty "
-        "— the best-case and expected-cost deterministic planners assume no failures "
-        "(Y=1, B=1) in a single scenario, while the stochastic planner sees 200 "
-        "sampled (Y, B) realizations. Phase B (bottom): all three planners' frozen "
+        "— the deterministic and expected-parameter deterministic planners assume no "
+        "failures (Y=1, B=1) in a single scenario, while the stochastic planner sees "
+        "200 sampled (Y, B) realizations. Phase B (bottom): all three planners' frozen "
         "first-stage decisions are deployed under the same stochastic sampler, with "
-        "2,000 held-out scenarios drawn from the same Bernoulli distributions but "
-        "with an independent seed (4242). The comparison is policy-vs-policy on a "
+        "2,000 held-out scenarios drawn from the same Bernoulli distributions used in "
+        "Phase A but with an independent seed. The comparison is policy-vs-policy on a "
         "shared environment; the differences reported in Figures 7–10 reflect the "
         "structural value of optimizing under uncertainty rather than ignoring it. "
         "| none (schematic) |\n"
     )
-    readme.write_text(existing.rstrip("\n") + "\n" + entry)
+    # Strip any existing figure13 entry before writing fresh
+    import re as _re
+    cleaned = _re.sub(
+        r"\| `figure13_methodology[^|]+\| none[^|]+\|\n?", "", existing
+    )
+    readme.write_text(cleaned.rstrip("\n") + "\n" + entry)
     print(f"  Updated: {readme}")
 
 
