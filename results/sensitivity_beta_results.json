@@ -1,0 +1,237 @@
+{
+  "calibration": {
+    "N_patients": 50,
+    "n_scenarios": 200,
+    "seed": 0,
+    "solver": "HiGHS",
+    "mip_rel_gap": 0.001,
+    "beta_M_fixed": 0.78,
+    "beta_L_fixed": 0.92,
+    "beta_H_central": 0.55,
+    "beta_H_sweep": [
+      0.4,
+      0.55,
+      0.7,
+      0.85
+    ],
+    "total_wall_time_s": 59.8
+  },
+  "sweep": [
+    {
+      "beta_H": 0.4,
+      "naive": {
+        "ev_cost": 14.5,
+        "eev_cost": 21.869125,
+        "tier_h_pct": 7.8,
+        "facilities": [
+          "m0",
+          "m1"
+        ],
+        "capacities": {
+          "m0": 40,
+          "m1": 10
+        }
+      },
+      "expected_cost_det": {
+        "expected_recourse_per_batch": 0.752095,
+        "c_m_eff": [
+          0.312814,
+          0.240168,
+          0.187605,
+          0.240168
+        ],
+        "ev_cost": 18.034846,
+        "eev_cost": 19.7303,
+        "tier_h_pct": 5.9,
+        "facilities": [
+          "m0",
+          "m3"
+        ],
+        "capacities": {
+          "m0": 10,
+          "m3": 40
+        }
+      },
+      "stochastic": {
+        "rp_cost": 18.481238,
+        "stage1_cost": 15.5,
+        "stage2_cost": 2.981238,
+        "tier_h_pct": 3.2,
+        "gap_pct": 0.0,
+        "solve_time": 11.33,
+        "facilities": [
+          "m0",
+          "m2"
+        ],
+        "capacities": {
+          "m0": 10,
+          "m2": 40
+        }
+      },
+      "vss_vs_naive_pct": 18.3315,
+      "vss_vs_ecd_pct": 6.7585
+    },
+    {
+      "beta_H": 0.55,
+      "naive": {
+        "ev_cost": 14.5,
+        "eev_cost": 20.477425,
+        "tier_h_pct": 5.4,
+        "facilities": [
+          "m0",
+          "m1"
+        ],
+        "capacities": {
+          "m0": 40,
+          "m1": 10
+        }
+      },
+      "expected_cost_det": {
+        "expected_recourse_per_batch": 0.68482,
+        "c_m_eff": [
+          0.302723,
+          0.234786,
+          0.184241,
+          0.234786
+        ],
+        "ev_cost": 17.718654,
+        "eev_cost": 19.74025,
+        "tier_h_pct": 6.05,
+        "facilities": [
+          "m0",
+          "m1"
+        ],
+        "capacities": {
+          "m0": 10,
+          "m1": 40
+        }
+      },
+      "stochastic": {
+        "rp_cost": 17.86765,
+        "stage1_cost": 15.5,
+        "stage2_cost": 2.36765,
+        "tier_h_pct": 2.15,
+        "gap_pct": 0.0,
+        "solve_time": 11.85,
+        "facilities": [
+          "m0",
+          "m2"
+        ],
+        "capacities": {
+          "m0": 10,
+          "m2": 40
+        }
+      },
+      "vss_vs_naive_pct": 14.6061,
+      "vss_vs_ecd_pct": 10.4804
+    },
+    {
+      "beta_H": 0.7,
+      "naive": {
+        "ev_cost": 14.5,
+        "eev_cost": 19.433225,
+        "tier_h_pct": 3.6,
+        "facilities": [
+          "m0",
+          "m1"
+        ],
+        "capacities": {
+          "m0": 40,
+          "m1": 10
+        }
+      },
+      "expected_cost_det": {
+        "expected_recourse_per_batch": 0.617545,
+        "c_m_eff": [
+          0.292632,
+          0.229404,
+          0.180877,
+          0.229404
+        ],
+        "ev_cost": 17.402461,
+        "eev_cost": 18.027775,
+        "tier_h_pct": 3.05,
+        "facilities": [
+          "m0",
+          "m1"
+        ],
+        "capacities": {
+          "m0": 10,
+          "m1": 40
+        }
+      },
+      "stochastic": {
+        "rp_cost": 17.430925,
+        "stage1_cost": 15.5,
+        "stage2_cost": 1.930925,
+        "tier_h_pct": 1.4,
+        "gap_pct": 0.0,
+        "solve_time": 8.74,
+        "facilities": [
+          "m0",
+          "m2"
+        ],
+        "capacities": {
+          "m0": 10,
+          "m2": 40
+        }
+      },
+      "vss_vs_naive_pct": 11.4871,
+      "vss_vs_ecd_pct": 3.4241
+    },
+    {
+      "beta_H": 0.85,
+      "naive": {
+        "ev_cost": 14.5,
+        "eev_cost": 18.4184,
+        "tier_h_pct": 1.85,
+        "facilities": [
+          "m0",
+          "m1"
+        ],
+        "capacities": {
+          "m0": 40,
+          "m1": 10
+        }
+      },
+      "expected_cost_det": {
+        "expected_recourse_per_batch": 0.55027,
+        "c_m_eff": [
+          0.28254,
+          0.224022,
+          0.177513,
+          0.224022
+        ],
+        "ev_cost": 17.086269,
+        "eev_cost": 17.23755,
+        "tier_h_pct": 1.65,
+        "facilities": [
+          "m0",
+          "m1"
+        ],
+        "capacities": {
+          "m0": 10,
+          "m1": 40
+        }
+      },
+      "stochastic": {
+        "rp_cost": 16.6995,
+        "stage1_cost": 14.5,
+        "stage2_cost": 2.1995,
+        "tier_h_pct": 1.05,
+        "gap_pct": 0.0,
+        "solve_time": 11.1,
+        "facilities": [
+          "m0",
+          "m3"
+        ],
+        "capacities": {
+          "m0": 10,
+          "m3": 40
+        }
+      },
+      "vss_vs_naive_pct": 10.2931,
+      "vss_vs_ecd_pct": 3.222
+    }
+  ]
+}
