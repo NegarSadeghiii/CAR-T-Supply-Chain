@@ -81,7 +81,7 @@ def generate_figure15() -> None:
     ax.plot(betas, d["vss_naive"], "o-",
             color=C_NAIVE, lw=2, ms=7, label="vs Deterministic")
     ax.plot(betas, d["vss_ecd"], "o-",
-            color=C_ECD,   lw=2, ms=7, label="vs Expected-cost det.")
+            color=C_ECD,   lw=2, ms=7, label="vs Expected-parameter det.")
 
     ax.axhline(0, color="#CCCCCC", lw=0.8, linestyle=":")
 
@@ -109,7 +109,7 @@ def generate_figure15() -> None:
     ax.plot(betas, d["h_naive"], "o-",
             color=C_NAIVE, lw=2, ms=7, label="Deterministic")
     ax.plot(betas, d["h_ecd"],   "o-",
-            color=C_ECD,   lw=2, ms=7, label="Expected-cost det.")
+            color=C_ECD,   lw=2, ms=7, label="Expected-parameter det.")
     ax.plot(betas, d["h_sp"],    "o-",
             color=C_SP,    lw=2, ms=7, label="Stochastic plan")
 
@@ -160,7 +160,7 @@ def generate_figure15() -> None:
     leg_sp  = mlines.Line2D([], [], marker="^", color=C_SP,
                              ms=9, linestyle="none", label="Stochastic plan")
     leg_ecd = mlines.Line2D([], [], marker="s", color=C_ECD,
-                             ms=8, linestyle="none", label="Expected-cost det.")
+                             ms=8, linestyle="none", label="Expected-parameter det.")
     ax.legend(handles=[leg_sp, leg_ecd], fontsize=8.5, loc="upper right")
 
     # Shared x-axis label on bottom panel

@@ -1,10 +1,12 @@
 """
-figures/generate_cost_decomposition.py — cost decomposition stacked bar chart.
+figures/generate_cost_decomposition.py — Figure 14: cost composition donuts.
 
-Reads per-scenario recourse arrays from results/out_of_sample_results.json
-(populated by the augmented out_of_sample_evaluation.py) and decomposes mean
-total cost for each of the three plans into six components:
+Three donut charts (one per plan) showing the percentage breakdown of the
+six cost components.  Each donut's hollow center displays the plan's total
+mean cost (M USD).  Segment labels appear outside the ring for all
+components whose share is >= 3%.
 
+Six cost components:
   Stage 1 (committed):
     1. Facility opening  — f[m] * z[m]
     2. Capacity          — pi[m] * C[m]
@@ -16,7 +18,7 @@ total cost for each of the three plans into six components:
     6. Cancellation      — rho_cancel[i] * r_cancel[i]
 
 Run: python figures/generate_cost_decomposition.py
-Source: results/out_of_sample_results.json
+Source: results/out_of_sample_results.json + results/out_of_sample_recourse.npz
 """
 
 from __future__ import annotations
@@ -49,121 +51,193 @@ _F   = np.array([0.5, 2.0, 3.0, 2.0])
 _PI  = np.array([0.04, 0.06, 0.09, 0.06])
 _C   = np.array([0.20, 0.18, 0.15, 0.18])
 _RHO_LEUK   = 0.005
-_RHO_REMFG  = _C.copy()       # rho_remfg[m] = c[m]
+_RHO_REMFG  = _C.copy()
 _RHO_SUB    = np.zeros((4, 4))
 for _m in range(4):
     for _mp in range(4):
         if _m != _mp:
             _RHO_SUB[_m, _mp] = _C[_mp] * 1.15
 
-# Tier-H patients: indices 0-9 (from case_study.py TIER_IDX)
-_N_P = 50
-_RHO_CANCEL = np.array(
-    [6.00] * 10 + [2.00] * 25 + [0.75] * 15
-)   # H: indices 0-9, M: 10-34, L: 35-49
+_RHO_CANCEL = np.array([6.00] * 10 + [2.00] * 25 + [0.75] * 15)
 
 PLAN_KEYS   = ["naive_deterministic", "expected_cost_deterministic", "stochastic_plan"]
-PLAN_LABELS = ["Deterministic", "Expected-cost det.", "Stochastic plan"]
+PLAN_LABELS = ["Deterministic plan", "Expected-parameter det.", "Stochastic plan"]
+PLAN_LABELS_CENTER = [
+    "Deterministic\nplan",
+    "Expected-parameter\ndet. plan",
+    "Stochastic\nplan",
+]
 PLAN_COLORS = [COLORS["naive_det"], COLORS["expected_cost_det"], COLORS["sp"]]
 
-COMP_LABELS = ["Facility opening", "Capacity", "Primary mfg",
-               "Re-manufacture", "Subcontract", "Cancellation"]
+COMP_LABELS = [
+    "Facility opening",
+    "Capacity",
+    "Primary mfg",
+    "Re-manufacture",
+    "Subcontract",
+    "Cancellation",
+]
 COMP_COLORS = [
-    "#5B9BD5",   # blue  — facility opening
-    "#9EC5E8",   # light blue — capacity
-    "#BDD7EE",   # pale blue — primary mfg
-    COLORS["remfg"],        # green — re-mfg
-    COLORS["subcontract"],  # amber — subcontract
-    COLORS["cancel"],       # red   — cancellation
+    "#404040",               # Facility opening — dark gray
+    COLORS["stage1"],        # Capacity — light blue
+    "#808080",               # Primary mfg — medium gray
+    COLORS["remfg"],         # Re-manufacture — green
+    COLORS["subcontract"],   # Subcontract — amber
+    COLORS["cancel"],        # Cancellation — red
 ]
 
+_LABEL_THRESHOLD = 3.0   # % — segments below this get no outside label
 
-def _load():
+
+def _load() -> dict[str, list[float]]:
     with open(_RESULT) as f:
         d = json.load(f)
 
-    # Load per-scenario recourse arrays from compressed numpy file
     npz = np.load(str(_NPZ))
-
     results = {}
+
     for key in PLAN_KEYS:
         pr = d["plans"][key]
 
-        # ── stage-1 decomposition ──────────────────────────────────────
-        fs = pr["first_stage"]
-        z  = np.array(fs["z"])
-        C  = np.array(fs["C"])
-        x  = np.array(fs["x"])            # (n_p, n_f)
+        # Stage-1 decomposition
+        fs  = pr["first_stage"]
+        z   = np.array(fs["z"])
+        C   = np.array(fs["C"])
+        x   = np.array(fs["x"])
 
         open_cost = float((_F  * z).sum())
         cap_cost  = float((_PI * C).sum())
         mfg_cost  = float((_C  * x.sum(axis=0)).sum())
 
-        # ── stage-2 decomposition (mean over scenarios) ────────────────
-        pfx      = pr["_recourse_npz_key"]       # e.g. "naive_deterministic"
-        r_remfg  = npz[f"{pfx}__r_remfg"]        # (N, n_p, n_f)
-        r_sub    = npz[f"{pfx}__r_sub"]           # (N, n_p, n_f, n_f)
-        r_cancel = npz[f"{pfx}__r_cancel"]        # (N, n_p)
+        # Stage-2 decomposition (mean over scenarios)
+        pfx      = pr["_recourse_npz_key"]
+        r_remfg  = npz[f"{pfx}__r_remfg"]
+        r_sub    = npz[f"{pfx}__r_sub"]
+        r_cancel = npz[f"{pfx}__r_cancel"]
 
-        rho_r = _RHO_LEUK + _RHO_REMFG           # (n_f,)
-        rho_s = _RHO_LEUK + _RHO_SUB             # (n_f, n_f)
+        rho_r = _RHO_LEUK + _RHO_REMFG
+        rho_s = _RHO_LEUK + _RHO_SUB
 
         s2_remfg  = (r_remfg  * rho_r[np.newaxis, np.newaxis, :]).sum(axis=(1, 2))
         s2_sub    = (r_sub    * rho_s[np.newaxis, np.newaxis, :, :]).sum(axis=(1, 2, 3))
         s2_cancel = (r_cancel * _RHO_CANCEL[np.newaxis, :]).sum(axis=1)
 
-        mean_remfg  = float(s2_remfg.mean())
-        mean_sub    = float(s2_sub.mean())
-        mean_cancel = float(s2_cancel.mean())
-
-        results[key] = [open_cost, cap_cost, mfg_cost,
-                        mean_remfg, mean_sub, mean_cancel]
+        results[key] = [
+            open_cost,
+            cap_cost,
+            mfg_cost,
+            float(s2_remfg.mean()),
+            float(s2_sub.mean()),
+            float(s2_cancel.mean()),
+        ]
 
     return results
 
 
-def generate_figure() -> None:
+def generate_figure14() -> None:
     data = _load()
 
-    fig, ax = plt.subplots(figsize=(7, 5))
+    fig, axes = plt.subplots(1, 3, figsize=(14, 5))
+    fig.subplots_adjust(top=0.82, bottom=0.20, left=0.02, right=0.98,
+                        wspace=0.10)
 
-    x_pos  = np.arange(len(PLAN_KEYS))
-    bar_w  = 0.55
+    for ax, key, plan_center_lbl, plan_color in zip(
+        axes, PLAN_KEYS, PLAN_LABELS_CENTER, PLAN_COLORS
+    ):
+        costs = data[key]
+        total = sum(costs)
+        pcts  = [c / total * 100.0 for c in costs]
 
-    bottoms = np.zeros(len(PLAN_KEYS))
-    bars = []
-    for k, (lbl, col) in enumerate(zip(COMP_LABELS, COMP_COLORS)):
-        vals = np.array([data[key][k] for key in PLAN_KEYS])
-        b = ax.bar(x_pos, vals, bar_w, bottom=bottoms,
-                   color=col, label=lbl, zorder=3)
-        bars.append(b)
-        bottoms += vals
+        # Build per-segment labels: non-empty only for segments >= threshold
+        pie_labels = [
+            f"{comp}:\n{pct:.1f}%" if pct >= _LABEL_THRESHOLD else ""
+            for comp, pct in zip(COMP_LABELS, pcts)
+        ]
 
-    # Total-cost annotation on top of each bar
-    for j, key in enumerate(PLAN_KEYS):
-        total = sum(data[key])
-        ax.text(x_pos[j], total + 0.005, f"{total:.3f}",
-                ha="center", va="bottom", fontsize=8.5, fontweight="bold")
+        wedges, texts = ax.pie(
+            costs,
+            labels=pie_labels,
+            labeldistance=1.32,
+            colors=COMP_COLORS,
+            startangle=90,
+            counterclock=False,
+            wedgeprops={"width": 0.40, "edgecolor": "white", "linewidth": 0.8},
+        )
 
-    ax.set_xticks(x_pos)
-    ax.set_xticklabels(PLAN_LABELS, fontsize=10)
-    ax.set_ylabel("Mean total cost (M USD)", fontsize=11)
-    ax.set_title("Cost decomposition across planning strategies\n"
-                 "(Stage-1 committed + expected Stage-2 recourse, 2,000 OOS scenarios)",
-                 fontsize=11)
+        # Style the leader-line texts
+        for text, pct in zip(texts, pcts):
+            text.set_fontsize(8)
+            # Align text based on x-position
+            xp = text.get_position()[0]
+            text.set_ha("right" if xp < -0.02 else ("left" if xp > 0.02 else "center"))
 
-    # Horizontal dashed divider between Stage-1 and Stage-2 (at end of mfg bar)
-    # (visual guide only — position differs per plan, so we skip it)
+        # Center: total cost (large bold) + plan name (smaller, colored)
+        ax.text(0,  0.14, f"{total:.2f} M USD",
+                ha="center", va="center",
+                fontsize=13, fontweight="bold", color="#111111")
+        ax.text(0, -0.16, plan_center_lbl,
+                ha="center", va="center",
+                fontsize=9, fontweight="bold", color=plan_color)
 
-    ax.legend(handles=[mpatches.Patch(color=c, label=l)
-                       for l, c in zip(COMP_LABELS, COMP_COLORS)],
-              fontsize=8, loc="upper right", ncol=1,
-              title="Cost component", title_fontsize=8.5)
+        ax.set_aspect("equal")
 
-    ax.set_xlim(-0.5, len(PLAN_KEYS) - 0.5)
-    ax.set_ylim(0, max(sum(v) for v in data.values()) * 1.12)
+    # Shared horizontal legend below all donuts
+    legend_handles = [
+        mpatches.Patch(facecolor=c, label=l)
+        for l, c in zip(COMP_LABELS, COMP_COLORS)
+    ]
+    fig.legend(
+        handles=legend_handles,
+        loc="lower center",
+        ncol=6,
+        fontsize=9,
+        frameon=True,
+        bbox_to_anchor=(0.5, 0.01),
+        title="Cost component",
+        title_fontsize=9,
+    )
 
-    save_figure(fig, "figure_cost_decomposition")
+    # Title + subtitle
+    fig.suptitle(
+        "Cost composition by plan (2,000 OOS scenarios)",
+        fontsize=13, fontweight="bold", y=0.97,
+    )
+    fig.text(
+        0.5, 0.905,
+        "Total cost (center) and per-component percentages (outer ring).",
+        ha="center", fontsize=10, fontstyle="italic", color="#555555",
+    )
+
+    save_figure(fig, "figure14_cost_decomposition")
+
+
+def _print_table(data: dict) -> dict[str, str]:
+    """Print per-plan component tables and return the headline observation."""
+    print()
+    print("=== Component breakdown ===")
+    for key, label in zip(PLAN_KEYS, PLAN_LABELS):
+        costs = data[key]
+        total = sum(costs)
+        print(f"\n  {label} — total = {total:.4f} M USD")
+        print(f"  {'Component':<22} {'M USD':>8}  {'% of total':>10}")
+        print(f"  {'─'*22}  {'─'*8}  {'─'*10}")
+        for comp, cost in zip(COMP_LABELS, costs):
+            print(f"  {comp:<22} {cost:>8.4f}  {cost/total*100:>9.1f}%")
+
+    # Headline observation about cancellation
+    cancel_naive = data["naive_deterministic"][5]
+    cancel_sp    = data["stochastic_plan"][5]
+    tot_naive    = sum(data["naive_deterministic"])
+    tot_sp       = sum(data["stochastic_plan"])
+    pct_naive    = cancel_naive / tot_naive * 100
+    pct_sp       = cancel_sp   / tot_sp    * 100
+    print()
+    print(f"  Headline: Deterministic cancellation = {pct_naive:.1f}% of total cost; "
+          f"SP = {pct_sp:.1f}% — savings concentrated in cancellation reduction.")
+    return {
+        "cancel_naive_pct": round(pct_naive, 1),
+        "cancel_sp_pct":    round(pct_sp, 1),
+    }
 
 
 def update_readme() -> None:
@@ -172,23 +246,31 @@ def update_readme() -> None:
     existing = readme.read_text()
 
     entry = (
-        "| `figure_cost_decomposition.png` | "
-        "Stacked-bar cost decomposition across the three planning strategies, "
-        "breaking total mean cost (2,000 OOS scenarios) into six components: "
-        "facility opening, capacity, primary manufacturing (Stage 1), and "
-        "re-manufacture, subcontract, cancellation (expected Stage 2). "
-        "| `results/out_of_sample_results.json` |\n"
+        "| `figure14_cost_decomposition.png` | "
+        "Three donut charts decomposing mean total cost (2,000 OOS scenarios) "
+        "into six components per plan: facility opening, capacity, primary manufacturing "
+        "(Stage 1 committed), and re-manufacture, subcontract, cancellation "
+        "(expected Stage 2 recourse). "
+        "Each donut's center shows the plan total in M USD. "
+        "Segment labels appear outside the ring for components >= 3%. "
+        "| `results/out_of_sample_results.json` + `results/out_of_sample_recourse.npz` |\n"
     )
 
-    cleaned = _re.sub(r"\| `figure_cost_decomposition[^|]+\|[^|]+\|\n?", "", existing)
+    # Remove any existing entry for figure14_cost_decomposition or old figure_cost_decomposition
+    cleaned = _re.sub(r"\| `figure(?:14_cost_decomposition|_cost_decomposition)[^|]+\|[^|]+\|\n?",
+                      "", existing)
     readme.write_text(cleaned.rstrip("\n") + "\n" + entry)
     print(f"  Updated: {readme}")
 
 
 def main() -> None:
-    print("=== Cost decomposition figure ===\n")
-    print("[1/2] Generating figure_cost_decomposition …")
-    generate_figure()
+    print("=== Figure 14 — cost decomposition donuts ===\n")
+
+    data = _load()
+    _print_table(data)
+
+    print("\n[1/2] Generating figure14_cost_decomposition …")
+    generate_figure14()
 
     print()
     update_readme()
@@ -196,7 +278,7 @@ def main() -> None:
     print("\nOutput verification:")
     ok = True
     for ext in ("png", "pdf"):
-        p = _HERE / ext / f"figure_cost_decomposition.{ext}"
+        p = _HERE / ext / f"figure14_cost_decomposition.{ext}"
         if p.exists():
             print(f"  [OK]      {p.name}  ({p.stat().st_size // 1024} KB)")
         else:
@@ -205,7 +287,7 @@ def main() -> None:
 
     if not ok:
         sys.exit(1)
-    print("\nCost decomposition figure generated successfully.")
+    print("\nFigure 14 generated successfully.")
 
 
 if __name__ == "__main__":

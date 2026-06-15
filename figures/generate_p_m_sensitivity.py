@@ -75,8 +75,8 @@ def generate_figure16() -> None:
     for ax_idx, (ax, data, title, add_star) in enumerate(zip(
         axes,
         [vss_ecd, vss_naive],
-        ["(a) VSS vs Expected-cost det. (%)",
-         "(b) VSS vs Naive det. (%)"],
+        ["(a) VSS vs Expected-parameter deterministic plan (%)",
+         "(b) VSS vs Deterministic plan (%)"],
         [True, False],
     )):
         vmin = max(0.0, float(np.nanmin(data)) - 1.0)
@@ -106,7 +106,7 @@ def generate_figure16() -> None:
             except Exception:
                 pass
             # Annotation for threshold line
-            ax.text(n_spread - 0.45, 0.35, f"4% threshold",
+            ax.text(n_spread - 0.45, 0.35, "4% contribution-viability threshold",
                     fontsize=7, color="#333333", fontstyle="italic", ha="right")
 
         # Cell text: VSS value + facility label
@@ -129,8 +129,8 @@ def generate_figure16() -> None:
         ax.set_xticklabels([f"{v:.1f}" for v in P_SPREAD_VALS], fontsize=9)
         ax.set_yticks(range(n_shift))
         ax.set_yticklabels([f"{v:+.2f}" for v in P_SHIFT_VALS], fontsize=9)
-        ax.set_xlabel("p_spread (deviation multiplier)", fontsize=10)
-        ax.set_ylabel("p_shift (additive shift)", fontsize=10)
+        ax.set_xlabel("Manufacturing success rates: deviation multiplier", fontsize=10)
+        ax.set_ylabel("Manufacturing success rates: additive shift", fontsize=10)
         ax.set_title(title, fontsize=11, pad=8)
 
         # Calibrated-point label
@@ -138,7 +138,7 @@ def generate_figure16() -> None:
                     fontsize=7.5, fontstyle="italic", color="#444444",
                     arrowprops=dict(arrowstyle="->", color="#444444", lw=0.8))
 
-    fig.suptitle("Sensitivity of VSS to manufacturing success probability p_m",
+    fig.suptitle("Sensitivity of VSS to manufacturing success rates",
                  fontsize=12, y=1.02)
 
     save_figure(fig, "figure16_p_m_sensitivity")
@@ -151,12 +151,20 @@ def update_readme() -> None:
 
     entry = (
         "| `figure16_p_m_sensitivity.png` | "
-        "Sensitivity of the contribution claim to manufacturing success probability p_m. "
-        "Two-panel heatmap (5 shift values × 3 spread values): "
-        "(a) VSS vs Expected-cost det. — the contribution claim holds (VSS > 4%) across "
-        "the majority of the grid; the 4% threshold contour marks the boundary. "
-        "(b) VSS vs Naive det. — uniformly higher, confirming robustness. "
-        "Star marks the calibrated central value (shift=0, spread=1.0). "
+        "Sensitivity of the Value of Stochastic Solution to perturbations of the "
+        "manufacturing success-rate calibration. "
+        "The horizontal axis applies a deviation multiplier that widens or narrows "
+        "the gap between each facility's success rate and the across-facility mean. "
+        "The vertical axis applies an additive shift to all four facility success rates "
+        "simultaneously (e.g., +0.05 means every facility's success rate is 5 percentage "
+        "points higher than its calibrated value). "
+        "The calibrated point ★ corresponds to the central case-study value. "
+        "(a) VSS against the Expected-parameter deterministic plan; "
+        "(b) VSS against the Deterministic plan. "
+        "The 4% contribution-viability threshold in (a) marks the boundary below which "
+        "the structural-recourse advantage over cost-anticipation becomes marginal — "
+        "visible at low deviation multipliers, where facilities have similar yields and "
+        "tier-aware facility selection has less to differentiate. "
         "| `results/sensitivity_p_m_results.json` |\n"
     )
 

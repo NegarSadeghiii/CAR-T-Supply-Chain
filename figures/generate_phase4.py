@@ -41,7 +41,7 @@ with open(_REPO / "results" / "out_of_sample_results.json") as f:
     OOS = json.load(f)
 
 PLAN_KEYS   = ["naive_deterministic", "expected_cost_deterministic", "stochastic_plan"]
-PLAN_LABELS = ["Deterministic plan", "Expected-cost det.", "Stochastic plan"]
+PLAN_LABELS = ["Deterministic plan", "Expected-parameter det.", "Stochastic plan"]
 PLAN_COLORS = [COLORS["naive_det"], COLORS["expected_cost_det"], COLORS["sp"]]
 PLAN_STYLES = ["-", "--", "-"]        # solid for outer plans, dashed for middle
 

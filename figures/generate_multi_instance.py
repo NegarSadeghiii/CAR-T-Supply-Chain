@@ -66,7 +66,7 @@ def fig04(n: int) -> None:
 
     ax.bar(x - w, naive_vals, w, label="Deterministic plan",
            color=COLORS["naive_det"], zorder=3)
-    ax.bar(x,     smart_vals, w, label="Expected-cost deterministic",
+    ax.bar(x,     smart_vals, w, label="Expected-parameter deterministic plan",
            color=COLORS["expected_cost_det"], zorder=3)
     ax.bar(x + w, sp_vals,    w, label="Stochastic plan",
            color=COLORS["sp"], zorder=3)
@@ -100,7 +100,7 @@ def fig04(n: int) -> None:
 def fig05(n: int) -> None:
     d    = DATA[n]
     rm   = d["recourse_mix"]
-    lbls = ["Deterministic plan", "Exp-cost deterministic", "Stochastic plan"]
+    lbls = ["Deterministic plan", "Expected-parameter det.", "Stochastic plan"]
     keys = ["naive", "smart", "sp"]
 
     remfg  = [rm[k]["remfg"]  for k in keys]
@@ -283,9 +283,9 @@ def fig08_summary() -> None:
     # --- (a) VSS % ---
     ax = axes[0, 0]
     ax.plot(x_log, vss_naive, color=COLORS["naive_det"],
-            label="vs Naive det.", **m_kw)
+            label="vs Deterministic plan", **m_kw)
     ax.plot(x_log, vss_smart, color=COLORS["expected_cost_det"],
-            label="vs Expected-cost det.", **m_kw)
+            label="vs Expected-parameter det.", **m_kw)
     ax.axhline(4, color="#AAAAAA", linestyle=":", linewidth=0.8)
     ax.set_title("(a) VSS (%)", fontsize=10)
     ax.set_xlabel("|I| (patients)", fontsize=9)
@@ -299,7 +299,7 @@ def fig08_summary() -> None:
     # facilities as SP (m1+m2), leaving only scenario-specific routing value.
     n100_xi = sizes.index(100)
     ax.annotate(
-        "Expected-cost det. selects\nm1+m2 = same as SP.\nResidual gap = routing\nvalue only (3.69%).",
+        "Expected-parameter det. selects\nm1+m2 = same as SP.\nResidual gap = routing\nvalue only (3.69%).",
         xy=(x_log[n100_xi], vss_smart[n100_xi]),
         xytext=(x_log[n100_xi] + 0.22, vss_smart[n100_xi] + 5.5),
         fontsize=6.5,
@@ -312,9 +312,9 @@ def fig08_summary() -> None:
     # --- (b) Tier-H cancellation ---
     ax = axes[0, 1]
     ax.plot(x_log, th_naive, color=COLORS["naive_det"],
-            label="Naive det.", **m_kw)
+            label="Deterministic plan", **m_kw)
     ax.plot(x_log, th_smart, color=COLORS["expected_cost_det"],
-            label="Expected-cost det.", **m_kw)
+            label="Expected-parameter det.", **m_kw)
     ax.plot(x_log, th_sp,    color=COLORS["sp"],
             label="Stochastic plan", **m_kw)
     ax.set_title("(b) Tier-H cancellation rate (%)", fontsize=10)
@@ -328,8 +328,8 @@ def fig08_summary() -> None:
     # --- (c) Facility selection indicator dot plot ---
     ax = axes[1, 0]
     plan_styles = [
-        (naive_opens, COLORS["naive_det"],         "o", 45, "Naive det."),
-        (smart_opens, COLORS["expected_cost_det"], "s", 45, "Expected-cost det."),
+        (naive_opens, COLORS["naive_det"],         "o", 45, "Deterministic plan"),
+        (smart_opens, COLORS["expected_cost_det"], "s", 45, "Expected-parameter det."),
         (sp_opens,    COLORS["sp"],                "^", 55, "Stochastic plan"),
     ]
     jitter = [-0.05, 0.0, 0.05]
@@ -354,9 +354,9 @@ def fig08_summary() -> None:
     # --- (d) Solve time log-log ---
     ax = axes[1, 1]
     ax.scatter(x_log, naive_t, color=COLORS["naive_det"],
-               marker="o", s=40, label="Naive det.", zorder=4)
+               marker="o", s=40, label="Deterministic plan", zorder=4)
     ax.scatter(x_log, smart_t, color=COLORS["expected_cost_det"],
-               marker="s", s=40, label="Expected-cost det.", zorder=4)
+               marker="s", s=40, label="Expected-parameter det.", zorder=4)
     ax.scatter(x_log, sp_times, color=COLORS["sp"],
                marker="^", s=50, label="Stochastic plan (RP)", zorder=4)
     ax.set_yscale("log")

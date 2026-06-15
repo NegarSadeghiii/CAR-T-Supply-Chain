@@ -68,7 +68,7 @@ def fig07_cost_composition() -> None:
             "s2":    CS["eev"]["stage2_cost"],
             "total": CS["eev"]["eev_cost"],
         },
-        "Expected-cost\ndeterministic": {
+        "Expected-parameter\ndeterministic": {
             "s1":    ECD["stage1_cost"],
             "s2":    ECD["expected_stage2_cost"],
             "total": ECD["total_eev_smart"],
