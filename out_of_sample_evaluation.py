@@ -237,8 +237,9 @@ def _build_stage2_matrices(inst: Instance, x_mat: np.ndarray) -> dict:
         "b_ub_fixed": b_ub_fixed,
         "n_p": n_p, "n_f": n_f,
         "n_vars": n_vars, "n_vars_pp": n_vars_pp,
+        "n_sub_pp": n_sub_pp,
         "n_ub": n_ub, "row_cap_start": row_cap_start,
-        "vc": vc,
+        "vr": vr, "vs": vs, "vc": vc,
     }
 
 
@@ -246,28 +247,28 @@ def _solve_one_scenario(
     mats: dict,
     x_mat: np.ndarray,
     C_arr: np.ndarray,
-    Y_ω: np.ndarray,   # (n_p, n_f)
-    B_ω: np.ndarray,   # (n_p,)
-) -> tuple[float, np.ndarray]:
+    Y_w: np.ndarray,   # (n_p, n_f)
+    B_w: np.ndarray,   # (n_p,)
+) -> tuple[float, np.ndarray, np.ndarray, np.ndarray]:
     """
     Solve Stage-2 LP for one OOS scenario with fixed Stage-1 plan.
-    Returns (stage2_cost, r_cancel_vec[n_p]).
+    Returns (stage2_cost, r_remfg[n_p,n_f], r_sub[n_p,n_f,n_f], r_cancel[n_p]).
     """
     n_p, n_f = mats["n_p"], mats["n_f"]
     m_assign  = x_mat.argmax(axis=1)   # assigned facility per patient (n_p,)
 
     # b_eq[i] = 1 − Y[i, m_i]  (failure indicator at primary assignment)
-    b_eq = 1.0 - Y_ω[np.arange(n_p), m_assign]
+    b_eq = 1.0 - Y_w[np.arange(n_p), m_assign]
 
     # Build per-scenario b_ub
     b_ub = mats["b_ub_fixed"].copy()
     # Eligibility rows 0..n_p−1
-    b_ub[:n_p] = B_ω.astype(float)
+    b_ub[:n_p] = B_w.astype(float)
     # Capacity rows: C[m] − (primary successes at m)
     rs = mats["row_cap_start"]
     for m in range(n_f):
         mask = (m_assign == m)
-        b_ub[rs + m] = float(C_arr[m]) - float(Y_ω[mask, m].sum())
+        b_ub[rs + m] = float(C_arr[m]) - float(Y_w[mask, m].sum())
 
     bounds = [(0.0, 1.0)] * mats["n_vars"]
     res = linprog(
@@ -283,9 +284,18 @@ def _solve_one_scenario(
             f"Stage-2 LP failed (status {res.status}): {res.message}"
         )
 
-    vc       = mats["vc"]
-    r_cancel = np.array([round(res.x[vc(i)]) for i in range(n_p)], dtype=float)
-    return float(res.fun), r_cancel
+    vr, vs, vc = mats["vr"], mats["vs"], mats["vc"]
+    x = res.x
+    r_cancel = np.array([round(x[vc(i)]) for i in range(n_p)], dtype=float)
+    r_remfg  = np.array([[round(x[vr(i, m)]) for m in range(n_f)]
+                          for i in range(n_p)], dtype=float)
+    r_sub    = np.zeros((n_p, n_f, n_f), dtype=float)
+    for i in range(n_p):
+        for m in range(n_f):
+            for mp in range(n_f):
+                if mp != m:
+                    r_sub[i, m, mp] = round(x[vs(i, m, mp)])
+    return float(res.fun), r_remfg, r_sub, r_cancel
 
 
 # ---------------------------------------------------------------------------
@@ -298,9 +308,10 @@ def _evaluate_plan(
     Y_oos: np.ndarray,   # (N, n_p, n_f)
     B_oos: np.ndarray,   # (N, n_p)
     verbose: bool = True,
-) -> dict:
+) -> tuple[dict, dict]:
     N   = Y_oos.shape[0]
     n_p = inst.n_patients
+    n_f = inst.n_facilities
     x_mat = plan["x_mat"]
     C_arr = plan["C"]
     s1    = plan["stage1_cost"]
@@ -308,38 +319,66 @@ def _evaluate_plan(
     mats = _build_stage2_matrices(inst, x_mat)
 
     per_s2_cost  = np.zeros(N)
+    per_r_remfg  = np.zeros((N, n_p, n_f))
+    per_r_sub    = np.zeros((N, n_p, n_f, n_f))
     per_r_cancel = np.zeros((N, n_p))
 
     t0 = time.perf_counter()
-    for ω in range(N):
-        s2, r_cancel = _solve_one_scenario(mats, x_mat, C_arr, Y_oos[ω], B_oos[ω])
-        per_s2_cost[ω]   = s2
-        per_r_cancel[ω]  = r_cancel
-        if verbose and (ω + 1) % 400 == 0:
+    for w in range(N):
+        s2, r_remfg, r_sub, r_cancel = _solve_one_scenario(
+            mats, x_mat, C_arr, Y_oos[w], B_oos[w])
+        per_s2_cost[w]   = s2
+        per_r_remfg[w]   = r_remfg
+        per_r_sub[w]     = r_sub
+        per_r_cancel[w]  = r_cancel
+        if verbose and (w + 1) % 400 == 0:
             elapsed = time.perf_counter() - t0
-            print(f"    {ω+1}/{N} scenarios  "
-                  f"({elapsed:.1f}s, {elapsed/(ω+1)*1000:.1f}ms/scen)")
+            print(f"    {w+1}/{N} scenarios  "
+                  f"({elapsed:.1f}s, {elapsed/(w+1)*1000:.1f}ms/scen)")
 
     elapsed = time.perf_counter() - t0
     if verbose:
         print(f"    Done: {elapsed:.1f}s total ({elapsed/N*1000:.1f}ms/scen)")
 
+    # Sanity check: reconstruct stage-2 cost from recourse arrays
+    rho_r = inst.rho_leuk + inst.rho_remfg            # (n_f,)
+    rho_s = inst.rho_leuk + inst.rho_sub               # (n_f, n_f)
+    s2_remfg   = (per_r_remfg  * rho_r[np.newaxis, np.newaxis, :]).sum(axis=(1, 2))
+    s2_sub     = (per_r_sub    * rho_s[np.newaxis, np.newaxis, :, :]).sum(axis=(1, 2, 3))
+    s2_cancel  = (per_r_cancel * inst.rho_cancel[np.newaxis, :]).sum(axis=1)
+    s2_check   = s2_remfg + s2_sub + s2_cancel
+    max_err    = float(np.max(np.abs(s2_check - per_s2_cost)))
+    if max_err > 1e-6:
+        raise RuntimeError(
+            f"Recourse-array sanity check failed: max |err| = {max_err:.2e}"
+        )
+    if verbose:
+        print(f"    Sanity check OK: max |reconstructed - LP| = {max_err:.2e}")
+
     per_total_cost = s1 + per_s2_cost
 
     # Tier cancel rates
-    th_rates = per_r_cancel[:, TIER_IDX["H"]].sum(axis=1) / len(TIER_IDX["H"]) * 100
-    tm_rates = per_r_cancel[:, TIER_IDX["M"]].sum(axis=1) / len(TIER_IDX["M"]) * 100
-    tl_rates = per_r_cancel[:, TIER_IDX["L"]].sum(axis=1) / len(TIER_IDX["L"]) * 100
+    th_rates = per_r_cancel[:, list(TIER_IDX["H"])].sum(axis=1) / len(TIER_IDX["H"]) * 100
+    tm_rates = per_r_cancel[:, list(TIER_IDX["M"])].sum(axis=1) / len(TIER_IDX["M"]) * 100
+    tl_rates = per_r_cancel[:, list(TIER_IDX["L"])].sum(axis=1) / len(TIER_IDX["L"]) * 100
     sv_rates = (1.0 - per_r_cancel.sum(axis=1) / n_p) * 100
 
-    return {
+    summary = {
         "stage1_cost":                       round(float(s1), 6),
         "per_scenario_total_cost":           per_total_cost.tolist(),
         "per_scenario_tier_H_cancel_rate":   th_rates.tolist(),
         "per_scenario_tier_M_cancel_rate":   tm_rates.tolist(),
         "per_scenario_tier_L_cancel_rate":   tl_rates.tolist(),
         "per_scenario_service_level":        sv_rates.tolist(),
+        # Per-scenario recourse arrays stored in results/out_of_sample_recourse.npz
+        "_recourse_npz_key": None,   # filled in by caller after saving
     }
+    arrays = {
+        "r_remfg":  per_r_remfg,
+        "r_sub":    per_r_sub,
+        "r_cancel": per_r_cancel,
+    }
+    return summary, arrays
 
 
 # ---------------------------------------------------------------------------
@@ -399,9 +438,12 @@ def main() -> None:
     # Evaluate each plan
     # ------------------------------------------------------------------
     plan_results = {}
+    recourse_arrays = {}
     for key, plan in plans.items():
         print(f"\nEvaluating: {plan['label']} …")
-        plan_results[key] = _evaluate_plan(inst, plan, Y_oos, B_oos, verbose=True)
+        summary, arrays = _evaluate_plan(inst, plan, Y_oos, B_oos, verbose=True)
+        plan_results[key] = summary
+        recourse_arrays[key] = arrays
 
     # ------------------------------------------------------------------
     # Summary stats
@@ -413,8 +455,12 @@ def main() -> None:
         tc = np.array(pr["per_scenario_total_cost"])
         th = np.array(pr["per_scenario_tier_H_cancel_rate"])
         sv = np.array(pr["per_scenario_service_level"])
+        mean_c, ci_lo_mc, ci_hi_mc = _bootstrap_ci(tc, lambda a: a.mean())
         row = {
             "mean_total_cost":    round(float(tc.mean()), 6),
+            "mean_cost_ci":       {"value":   round(float(mean_c), 6),
+                                   "ci_low":  round(float(ci_lo_mc), 6),
+                                   "ci_high": round(float(ci_hi_mc), 6)},
             "p05_total_cost":     round(float(np.percentile(tc, 5)), 6),
             "p95_total_cost":     round(float(np.percentile(tc, 95)), 6),
             "mean_tier_H_rate":   round(float(th.mean()), 4),
@@ -424,6 +470,7 @@ def main() -> None:
         label = plans[key]["label"]
         print(f"  {label}:")
         print(f"    Cost  mean={row['mean_total_cost']:.4f}  "
+              f"90%CI [{ci_lo_mc:.4f}, {ci_hi_mc:.4f}]  "
               f"P05={row['p05_total_cost']:.4f}  P95={row['p95_total_cost']:.4f}")
         print(f"    Tier-H mean={row['mean_tier_H_rate']:.4f}%  "
               f"SvcLv mean={row['mean_service_level']:.4f}%")
@@ -459,6 +506,26 @@ def main() -> None:
         return
 
     print("  All sanity checks passed. OOS confirms in-sample finding.")
+
+    # ------------------------------------------------------------------
+    # Mean cost CI overlap check
+    # ------------------------------------------------------------------
+    print("\n=== Mean cost 90% CI overlap check ===")
+    ci_sp    = summary["stochastic_plan"]["mean_cost_ci"]
+    ci_ecd   = summary["expected_cost_deterministic"]["mean_cost_ci"]
+    ci_naive = summary["naive_deterministic"]["mean_cost_ci"]
+    overlaps_sp_ecd   = ci_sp["ci_high"]  >= ci_ecd["ci_low"]
+    overlaps_sp_naive = ci_sp["ci_high"]  >= ci_naive["ci_low"]
+    overlaps_ecd_naive = ci_ecd["ci_high"] >= ci_naive["ci_low"]
+    for lbl, lo, hi in [
+        ("SP   ", ci_sp["ci_low"],    ci_sp["ci_high"]),
+        ("ECD  ", ci_ecd["ci_low"],   ci_ecd["ci_high"]),
+        ("Naive", ci_naive["ci_low"], ci_naive["ci_high"]),
+    ]:
+        print(f"  {lbl}  90%CI [{lo:.4f}, {hi:.4f}]")
+    print(f"  SP vs ECD overlap:   {'YES — CIs touch' if overlaps_sp_ecd  else 'NO  — clearly separated'}")
+    print(f"  SP vs Naive overlap: {'YES — CIs touch' if overlaps_sp_naive else 'NO  — clearly separated'}")
+    print(f"  ECD vs Naive overlap:{'YES — CIs touch' if overlaps_ecd_naive else 'NO  — clearly separated'}")
 
     # ------------------------------------------------------------------
     # Budget threshold
@@ -504,6 +571,32 @@ def main() -> None:
               f"90%CI [{ci_lo_t:.4f}, {ci_hi_t:.4f}]")
         print(f"    P(SvcLv≥95%)    = {p_sv:.4f}  "
               f"90%CI [{ci_lo_s:.4f}, {ci_hi_s:.4f}]")
+
+    # ------------------------------------------------------------------
+    # Attach first-stage decisions (needed for cost decomposition figure)
+    # ------------------------------------------------------------------
+    for key in plans:
+        plan_results[key]["first_stage"] = {
+            "z": plans[key]["z"].tolist(),
+            "C": plans[key]["C"].tolist(),
+            "x": plans[key]["x_mat"].tolist(),
+        }
+
+    # ------------------------------------------------------------------
+    # Save per-scenario recourse arrays to compressed numpy file
+    # (kept out of the JSON to stay under GitHub's 100 MB limit)
+    # ------------------------------------------------------------------
+    npz_path = _REPO_RESULTS / "out_of_sample_recourse.npz"
+    npz_data = {"Y_oos": Y_oos}
+    for key in plans:
+        pfx = key  # e.g. "naive_deterministic"
+        npz_data[f"{pfx}__r_remfg"]  = recourse_arrays[key]["r_remfg"]
+        npz_data[f"{pfx}__r_sub"]    = recourse_arrays[key]["r_sub"]
+        npz_data[f"{pfx}__r_cancel"] = recourse_arrays[key]["r_cancel"]
+        plan_results[key]["_recourse_npz_key"] = pfx
+    np.savez_compressed(str(npz_path), **npz_data)
+    print(f"\nRecourse arrays saved: {npz_path}  "
+          f"({npz_path.stat().st_size // (1024*1024)} MB compressed)")
 
     # ------------------------------------------------------------------
     # Assemble and save JSON

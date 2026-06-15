@@ -34,7 +34,7 @@ _RESULTS.mkdir(exist_ok=True)
 
 SIZES = [50, 100, 200, 500]
 
-SCENARIO_COUNT = {50: 200, 100: 200, 200: 100, 500: 50}
+SCENARIO_COUNT = {50: 200, 100: 200, 200: 200, 500: 200}
 
 # Tier mix proportions (20 % H, 50 % M, 30 % L) — held constant
 TIER_PROPS = {"H": 0.20, "M": 0.50, "L": 0.30}

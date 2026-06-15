@@ -1,7 +1,7 @@
 {
   "instance_size": 200,
   "n_facilities": 4,
-  "n_scenarios": 100,
+  "n_scenarios": 200,
   "seed": 0,
   "tier_mix": {
     "H": 40,
@@ -14,9 +14,9 @@
   },
   "naive_eev": {
     "stage1": 50.5,
-    "stage2": 20.3828,
-    "total": 70.8828,
-    "solve_time": 9.24,
+    "stage2": 20.59135,
+    "total": 71.09135,
+    "solve_time": 38.07,
     "opens": [
       0,
       1
@@ -24,9 +24,9 @@
   },
   "smart_eev": {
     "stage1": 53.0,
-    "stage2": 12.0801,
-    "total": 65.0801,
-    "solve_time": 9.1,
+    "stage2": 11.014812,
+    "total": 64.014812,
+    "solve_time": 37.95,
     "facility_allocation_differs_from_naive": true,
     "opens": [
       1,
@@ -35,49 +35,49 @@
   },
   "rp": {
     "stage1": 53.0,
-    "stage2": 7.832375,
-    "total": 60.832375,
-    "solve_time": 25.75,
+    "stage2": 7.916362,
+    "total": 60.916362,
+    "solve_time": 74.72,
     "gap": 0.0,
     "opens": [
       1,
       2
     ]
   },
-  "vss_vs_naive_pct": 16.5215,
-  "vss_smart_vs_rp_pct": 6.9827,
+  "vss_vs_naive_pct": 16.7032,
+  "vss_smart_vs_rp_pct": 5.0864,
   "tier_cancel_rates": {
     "naive": {
-      "H": 4.85,
-      "M": 2.41,
-      "L": 0.8667
+      "H": 4.8875,
+      "M": 2.47,
+      "L": 0.775
     },
     "smart": {
-      "H": 2.95,
-      "M": 1.55,
-      "L": 0.4667
+      "H": 2.5625,
+      "M": 1.465,
+      "L": 0.475
     },
     "sp": {
-      "H": 1.825,
-      "M": 0.87,
-      "L": 0.2833
+      "H": 1.775,
+      "M": 0.915,
+      "L": 0.3167
     }
   },
   "recourse_mix": {
     "naive": {
-      "remfg": 78.5179,
+      "remfg": 78.6742,
       "sub": 0.0,
-      "cancel": 21.4821
+      "cancel": 21.3258
     },
     "smart": {
-      "remfg": 66.5627,
-      "sub": 9.9766,
-      "cancel": 23.4606
+      "remfg": 69.4477,
+      "sub": 8.8132,
+      "cancel": 21.7391
     },
     "sp": {
-      "remfg": 75.4803,
-      "sub": 8.3257,
-      "cancel": 16.194
+      "remfg": 76.2462,
+      "sub": 8.0191,
+      "cancel": 15.7347
     }
   },
   "facility_allocation": {
@@ -132,14 +132,14 @@
         "L": 0
       },
       "m_1": {
-        "H": 15,
-        "M": 50,
-        "L": 35
+        "H": 14,
+        "M": 46,
+        "L": 40
       },
       "m_2": {
-        "H": 25,
-        "M": 50,
-        "L": 25
+        "H": 26,
+        "M": 54,
+        "L": 20
       },
       "m_3": {
         "H": 0,
@@ -148,5 +148,5 @@
       }
     }
   },
-  "elapsed_s": 44.1
+  "elapsed_s": 150.7
 }
