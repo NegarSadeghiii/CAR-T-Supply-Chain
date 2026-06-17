@@ -37,16 +37,27 @@ C_LOW  = AMBER
 C_CCP = NAVY
 C_TS  = TEAL
 
+# ── Shared font sizes (single source of truth for all five figures) ────────────
+# Every figure uses these constants for the corresponding text role so that no
+# figure ends up with noticeably larger or smaller text than the others.
+FS_SUPTITLE = 13   # top-level figure title / suptitle
+FS_TITLE    = 12   # panel / axes title
+FS_LABEL    = 11   # axis labels
+FS_TICK     = 10   # tick labels
+FS_LEGEND   = 10   # legend entries
+FS_ANNOT    = 9    # in-plot annotations and value labels
+FS_SMALL    = 8    # secondary annotations (narrow-bar day labels, footnotes, n/a)
+
 # ── Global rcParams ───────────────────────────────────────────────────────────
 plt.rcParams.update({
     'font.family':        'serif',
     'font.serif':         ['Times New Roman', 'DejaVu Serif', 'serif'],
-    'font.size':          11,
-    'axes.titlesize':     12,
-    'axes.labelsize':     11,
-    'xtick.labelsize':    10,
-    'ytick.labelsize':    10,
-    'legend.fontsize':    10,
+    'font.size':          FS_LABEL,
+    'axes.titlesize':     FS_TITLE,
+    'axes.labelsize':     FS_LABEL,
+    'xtick.labelsize':    FS_TICK,
+    'ytick.labelsize':    FS_TICK,
+    'legend.fontsize':    FS_LEGEND,
     'figure.facecolor':   WHITE,
     'axes.facecolor':     WHITE,
     'axes.edgecolor':     '#444444',
@@ -151,7 +162,7 @@ def fig_process_flow():
     steps = [
         ('Leukapheresis',    r'$T_{LS} = 1$ day',                     NAVY+'22'),
         ('Outbound\nTransport', r'$TT_1 \in \{1,4\}$ days',           NAVY+'22'),
-        ('Manufacturing',    r'$T_{MF} \sim \mathrm{LogN}(\mu,\sigma_L^2)$', AMBER+'44'),
+        ('Manufacturing',    'stochastic duration\n(lognormal)',       AMBER+'44'),
         ('Quality\nControl', r'$T_{QC} = 7$ days',                    NAVY+'22'),
         ('Return\nTransport', r'$TT_3 \in \{1,4\}$ days',             TEAL+'44'),
         ('Infusion',         r'(patient)',                             '#2E7D3222'),
@@ -165,9 +176,9 @@ def fig_process_flow():
                               edgecolor='#333333', facecolor=fc, zorder=3)
         ax.add_patch(rect)
         ax.text(xc, Y + 0.09, title, ha='center', va='center',
-                fontsize=9.0, fontweight='bold', zorder=4)
+                fontsize=FS_ANNOT, fontweight='bold', zorder=4)
         ax.text(xc, Y - 0.20, sub, ha='center', va='center',
-                fontsize=7.5, color='#555555', zorder=4)
+                fontsize=FS_SMALL, color='#555555', zorder=4)
 
     # Arrows between boxes
     for i in range(len(steps) - 1):
@@ -185,7 +196,7 @@ def fig_process_flow():
                 arrowprops=dict(arrowstyle='<->', color=NAVY, lw=1.4))
     ax.text((s1_x0 + s1_x1) / 2, s1_y - 0.16,
             'Stage 1: facility and route selection (column generation)',
-            ha='center', fontsize=9, color=NAVY, fontstyle='italic')
+            ha='center', fontsize=FS_ANNOT, color=NAVY, fontstyle='italic')
 
     # Stage 2 dashed oval — encloses ONLY the Return Transport box (step 4)
     rt_xc = xcs[4]
@@ -197,11 +208,11 @@ def fig_process_flow():
     # Label below the diagram with an arrow pointing up to the oval
     label_y = s1_y - 0.48
     ax.annotate(
-        r'Stage 2: if $T_{MF} > K_i$, switch ground$\to$air ($\delta$ days saved, cost $\pi_p$)',
+        'Stage 2: expedite (air freight) if manufacturing runs long',
         xy=(rt_xc, Y - BOX_H/2 - 0.17),        # tip of arrow at oval bottom
         xytext=(rt_xc, label_y),                # label sits below Stage 1 bracket
         ha='center', va='top',
-        fontsize=8.5, color=AMBER, fontweight='bold',
+        fontsize=FS_ANNOT, color=AMBER, fontweight='bold',
         arrowprops=dict(arrowstyle='->', color=AMBER, lw=1.4, shrinkA=2),
         bbox=dict(boxstyle='round,pad=0.25', facecolor='white',
                   edgecolor=AMBER, alpha=0.95, linewidth=1.2),
@@ -214,7 +225,7 @@ def fig_process_flow():
     ax.set_ylim(label_y - 0.3, Y + BOX_H/2 + 0.5)
 
     ax.set_title('CAR-T Cell Therapy Supply Chain — Process Flow',
-                 fontsize=13, pad=8, fontweight='bold')
+                 fontsize=FS_SUPTITLE, pad=8, fontweight='bold')
     _save(fig, 'fig_process_flow.pdf')
 
 
@@ -222,7 +233,7 @@ def fig_process_flow():
 # FIGURE 2 — Violation Bar Chart (two panel groups: N=15 | N=50)
 # ─────────────────────────────────────────────────────────────────────────────
 def fig_violation_bar():
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5.0), sharey=True)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4.5), sharey=True)
     fig.subplots_adjust(wspace=0.08, top=0.88, bottom=0.22)
 
     def _draw_panel(ax, viol_ccp, viol_ts, title):
@@ -246,46 +257,47 @@ def fig_violation_bar():
             h = bar.get_height()
             if orig is None:
                 ax.text(bar.get_x() + bar.get_width()/2, 1.5,
-                        'n/a', ha='center', va='bottom', fontsize=8,
+                        'n/a', ha='center', va='bottom', fontsize=FS_SMALL,
                         color=GREY, fontstyle='italic')
             elif h > 0:
                 ax.text(bar.get_x() + bar.get_width()/2, h + 1.2,
-                        f'{h:.0f}', ha='center', va='bottom', fontsize=9)
+                        f'{h:.0f}', ha='center', va='bottom', fontsize=FS_ANNOT)
 
         for bar, orig in zip(b2, viol_ts):
             h = bar.get_height()
             if orig is None:
                 ax.text(bar.get_x() + bar.get_width()/2, 1.5,
-                        'n/a', ha='center', va='bottom', fontsize=8,
+                        'n/a', ha='center', va='bottom', fontsize=FS_SMALL,
                         color=GREY, fontstyle='italic')
             elif h > 0:
                 ax.text(bar.get_x() + bar.get_width()/2, h + 1.2,
-                        f'{h:.0f}', ha='center', va='bottom', fontsize=9)
+                        f'{h:.0f}', ha='center', va='bottom', fontsize=FS_ANNOT)
 
         ax.set_xticks(x)
-        ax.set_xticklabels([f'$\\sigma_L={s:.2f}$' for s in SIGMA], fontsize=10)
-        ax.set_xlabel('Manufacturing Variability $\\sigma_L$')
-        ax.set_title(title, fontsize=12, pad=6)
+        ax.set_xticklabels([f'$\\sigma_L={s:.2f}$' for s in SIGMA], fontsize=FS_TICK)
+        ax.set_xlabel('Manufacturing Variability $\\sigma_L$', fontsize=FS_LABEL)
+        ax.set_title(title, fontsize=FS_TITLE, pad=6)
         ax.set_ylim(0, 98)
         return b1, b2
 
     b1, b2 = _draw_panel(ax1, VIOL_CCP_N15, VIOL_TS_N15, '$N = 15$ patients')
     _draw_panel(ax2, VIOL_CCP_N50, VIOL_TS_N50, '$N = 50$ patients')
 
-    ax1.set_ylabel('Out-of-sample Deadline Violation Rate (\\%)')
+    ax1.set_ylabel('Out-of-sample Deadline Violation Rate (%)', fontsize=FS_LABEL)
 
-    # Per-panel legends — added after both panels are drawn
-    for ax in (ax1, ax2):
-        ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99),
-                  framealpha=0.9, fontsize=10)
+    # Single shared legend on the N=15 panel (its bars are short, leaving the
+    # upper-left free). The N=50 panel has tall bars (84, 75) that the legend
+    # would otherwise overlap, hiding their value labels.
+    ax1.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99),
+               framealpha=0.9, fontsize=FS_LEGEND)
 
     # Footnote sits inside the bottom margin (below xlabel, above figure edge)
     fig.text(0.5, 0.06,
              '$n = 2{,}000$ held-out scenarios. "n/a" = model infeasible.',
-             ha='center', fontsize=9, color='#666666', fontstyle='italic')
+             ha='center', fontsize=FS_SMALL, color='#666666', fontstyle='italic')
 
     fig.suptitle('Out-of-sample Deadline Violation Rate: CCP vs.\ Two-stage Stochastic',
-                 fontsize=13, fontweight='bold')
+                 fontsize=FS_SUPTITLE, fontweight='bold')
     _save(fig, 'fig_violation_bar.pdf')
 
 
@@ -320,17 +332,18 @@ def fig_tau_sensitivity():
             ax.annotate('CCP infeasible',
                         xy=(it, last_feasible_y + 0.0005),
                         xytext=(it - 0.25, last_feasible_y + 0.003),
-                        fontsize=9, color=RED_X, fontstyle='italic',
+                        fontsize=FS_ANNOT, color=RED_X, fontstyle='italic',
                         arrowprops=dict(arrowstyle='->', color=RED_X,
                                         lw=1.2, shrinkB=4))
 
-    ax.set_xlabel('Deadline Tightness Parameter $\\tau$')
-    ax.set_ylabel('Normalised Expected Total Cost\n(relative to $\\tau = 0$)')
+    ax.set_xlabel('Deadline Tightness Parameter $\\tau$', fontsize=FS_LABEL)
+    ax.set_ylabel('Normalised Expected Total Cost\n(relative to $\\tau = 0$)',
+                  fontsize=FS_LABEL)
     ax.set_title('Cost vs.\ Deadline Tightness\n'
-                 '($N=15$, $\\sigma_L = 0.20$)', pad=8)
+                 '($N=15$, $\\sigma_L = 0.20$)', fontsize=FS_TITLE, pad=8)
     ax.set_xticks(tau_arr)
-    ax.set_xticklabels([f'{t:.1f}' for t in tau_arr])
-    ax.legend(framealpha=0.9, loc='upper left')
+    ax.set_xticklabels([f'{t:.1f}' for t in tau_arr], fontsize=FS_TICK)
+    ax.legend(framealpha=0.9, loc='upper left', fontsize=FS_LEGEND)
 
     _save(fig, 'fig_tau_sensitivity.pdf')
 
@@ -350,16 +363,16 @@ def fig_urgency_analysis():
             h = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2, h + 0.3,
                     fmt.format(f'{h:.1f}'),
-                    ha='center', va='bottom', fontsize=9)
+                    ha='center', va='bottom', fontsize=FS_ANNOT)
 
     # Panel A — P(expedite)
     b1 = ax1.bar(x, URG_PEXP, w, color=URG_COLORS, alpha=0.88,
                  edgecolor='white', linewidth=0.8)
-    _label_bars(ax1, b1, '{}\\%')
-    ax1.set_xticks(x); ax1.set_xticklabels(URG_GROUPS)
-    ax1.set_xlabel('Urgency Class')
-    ax1.set_ylabel('Expediting Probability (\\%)')
-    ax1.set_title('P(Stage 2 Expediting\nActivated)', pad=6)
+    _label_bars(ax1, b1, '{}%')
+    ax1.set_xticks(x); ax1.set_xticklabels(URG_GROUPS, fontsize=FS_TICK)
+    ax1.set_xlabel('Urgency Class', fontsize=FS_LABEL)
+    ax1.set_ylabel('Expediting Probability (%)', fontsize=FS_LABEL)
+    ax1.set_title('P(Stage 2 Expediting\nActivated)', fontsize=FS_TITLE, pad=6)
     ax1.set_ylim(0, max(URG_PEXP) * 1.35)
 
     # Panel B — Expected expediting cost
@@ -368,22 +381,22 @@ def fig_urgency_analysis():
     for bar, val in zip(b2, URG_EXPCOST):
         ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
                  f'\\${val:.0f}',
-                 ha='center', va='bottom', fontsize=9)
-    ax2.set_xticks(x); ax2.set_xticklabels(URG_GROUPS)
-    ax2.set_xlabel('Urgency Class')
-    ax2.set_ylabel('Expected Expediting Cost (\\$ per patient)')
-    ax2.set_title('Expected Expediting Cost\nper Patient', pad=6)
+                 ha='center', va='bottom', fontsize=FS_ANNOT)
+    ax2.set_xticks(x); ax2.set_xticklabels(URG_GROUPS, fontsize=FS_TICK)
+    ax2.set_xlabel('Urgency Class', fontsize=FS_LABEL)
+    ax2.set_ylabel('Expected Expediting Cost (\\$ per patient)', fontsize=FS_LABEL)
+    ax2.set_title('Expected Expediting Cost\nper Patient', fontsize=FS_TITLE, pad=6)
     ax2.set_ylim(0, max(URG_EXPCOST) * 1.35)
 
     # Shared legend
     patches = [mpatches.Patch(color=c, alpha=0.88, label=g)
                for c, g in zip(URG_COLORS, URG_GROUPS)]
     fig.legend(handles=patches, loc='lower center', ncol=3,
-               framealpha=0.9, bbox_to_anchor=(0.5, -0.04))
+               framealpha=0.9, bbox_to_anchor=(0.5, -0.04), fontsize=FS_LEGEND)
 
     fig.suptitle('Per-Patient Expediting Analysis by Urgency Class\n'
                  '(Two-stage model, $N=15$, $\\sigma_L = 0.20$)',
-                 fontsize=12, fontweight='bold', y=1.02)
+                 fontsize=FS_SUPTITLE, fontweight='bold', y=1.02)
 
     plt.tight_layout(pad=2.0)
     plt.subplots_adjust(bottom=0.18)
@@ -420,7 +433,7 @@ def fig_gantt():
     for row in rows:
         if row.get('empty'):
             ax.text(0.5, row['y'], '(no patients assigned)',
-                    va='center', ha='left', fontsize=8.5,
+                    va='center', ha='left', fontsize=FS_ANNOT,
                     color=GREY, fontstyle='italic')
             continue
 
@@ -442,11 +455,11 @@ def fig_gantt():
         label_text = f"D{row['start']}–{row['end']}"
         if dur > 3:
             ax.text(mid, row['y'], label_text,
-                    ha='center', va='center', fontsize=8,
+                    ha='center', va='center', fontsize=FS_SMALL,
                     color='white', fontweight='bold')
         else:
             ax.text(row['end'] + 0.4, row['y'], label_text,
-                    ha='left', va='center', fontsize=8, color='#333333')
+                    ha='left', va='center', fontsize=FS_SMALL, color='#333333')
 
     # Facility background bands + divider lines with labels above each group
     band_colors = [NAVY + '0A', TEAL + '0A', AMBER + '0A']
@@ -459,13 +472,13 @@ def fig_gantt():
             # Label just above the divider (y0 - 0.55 is visually above divider
             # on inverted axis; clip_on=False lets it render over the axes frame)
             ax.text(0, y0 - 0.55, f'{fname}  (capacity {fcap})',
-                    ha='left', va='bottom', fontsize=9, clip_on=False,
+                    ha='left', va='bottom', fontsize=FS_ANNOT, clip_on=False,
                     color=NAVY, fontweight='bold')
         else:
             # First facility: label inside the band, just above the first row
             # (y0 + 0.45 on inverted axis = above y0=0, but inside axes limits)
             ax.text(0, y0 - 0.02, f'{fname}  (capacity {fcap})',
-                    ha='left', va='bottom', fontsize=9, clip_on=False,
+                    ha='left', va='bottom', fontsize=FS_ANNOT, clip_on=False,
                     color=NAVY, fontweight='bold',
                     bbox=dict(boxstyle='round,pad=0.15', facecolor='white',
                               edgecolor='none', alpha=0.75))
@@ -475,13 +488,13 @@ def fig_gantt():
 
     # Axes
     ax.set_yticks([r['y'] for r in rows])
-    ax.set_yticklabels([r['id'] for r in rows], fontsize=9)
+    ax.set_yticklabels([r['id'] for r in rows], fontsize=FS_TICK)
     ax.invert_yaxis()
     ax.set_xlim(-1, xmax)
-    ax.set_xlabel('Manufacturing Day')
+    ax.set_xlabel('Manufacturing Day', fontsize=FS_LABEL)
     ax.set_title('Manufacturing Schedule — Gantt Chart\n'
                  '($N=15$, two-stage stochastic, seed=42; overlapping bars = concurrent slots)',
-                 pad=8, fontsize=12, fontweight='bold')
+                 pad=8, fontsize=FS_TITLE, fontweight='bold')
     ax.grid(axis='x', alpha=0.25, linestyle='--', zorder=0)
     ax.set_axisbelow(True)
     ax.spines['left'].set_visible(False)
@@ -496,7 +509,7 @@ def fig_gantt():
                        label='Stage 2 expediting activated'),
     ]
     ax.legend(handles=legend_patches, loc='lower right',
-              framealpha=0.95, fontsize=9)
+              framealpha=0.95, fontsize=FS_LEGEND)
 
     _save(fig, 'fig_gantt.pdf')
 
