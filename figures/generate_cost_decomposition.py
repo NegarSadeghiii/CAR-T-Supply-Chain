@@ -211,6 +211,48 @@ def generate_figure14() -> None:
     save_figure(fig, "figure14_cost_decomposition")
 
 
+def generate_bar_figure() -> None:
+    data = _load()
+
+    x_labels = [
+        "Deterministic\nplan",
+        "Expected-parameter\ndet.",
+        "Stochastic\nplan",
+    ]
+    x = range(len(PLAN_KEYS))
+    width = 0.52
+
+    fig, ax = plt.subplots(figsize=(7, 5))
+    fig.subplots_adjust(bottom=0.28)
+
+    bottoms = [0.0] * len(PLAN_KEYS)
+    bars_list = []
+    for comp_idx, (comp_label, comp_color) in enumerate(zip(COMP_LABELS, COMP_COLORS)):
+        vals = [data[k][comp_idx] for k in PLAN_KEYS]
+        bars = ax.bar(x, vals, width, bottom=bottoms,
+                      color=comp_color, zorder=3, label=comp_label)
+        bars_list.append(bars)
+        bottoms = [b + v for b, v in zip(bottoms, vals)]
+
+    # Total cost annotation above each bar
+    for xi, total in enumerate(bottoms):
+        ax.text(xi, total + 0.15, f"{total:.3f} M",
+                ha="center", va="bottom", fontsize=9, fontweight="bold",
+                color="#111111")
+
+    ax.set_xticks(list(x))
+    ax.set_xticklabels(x_labels, fontsize=9)
+    ax.set_ylabel("Mean total cost (M USD)")
+    ax.set_ylim(0, max(bottoms) * 1.15)
+    ax.set_title("Cost composition by plan (2,000 OOS scenarios)", fontsize=11)
+    ax.tick_params(axis="x", length=0)
+
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.10),
+              ncol=6, frameon=True, fontsize=8)
+
+    save_figure(fig, "figure14_cost_decomposition_bar")
+
+
 def _print_table(data: dict) -> dict[str, str]:
     """Print per-plan component tables and return the headline observation."""
     print()
@@ -245,7 +287,7 @@ def update_readme() -> None:
     readme   = _HERE / "README.md"
     existing = readme.read_text()
 
-    entry = (
+    entry_donut = (
         "| `figure14_cost_decomposition.png` | "
         "Three donut charts decomposing mean total cost (2,000 OOS scenarios) "
         "into six components per plan: facility opening, capacity, primary manufacturing "
@@ -255,11 +297,20 @@ def update_readme() -> None:
         "Segment labels appear outside the ring for components >= 3%. "
         "| `results/out_of_sample_results.json` + `results/out_of_sample_recourse.npz` |\n"
     )
+    entry_bar = (
+        "| `figure14_cost_decomposition_bar.png` | "
+        "Stacked bar chart companion to the donut chart, showing absolute M USD values "
+        "for each of the six cost components across the three planning strategies. "
+        "Stage-1 components (facility opening, capacity, primary mfg) appear in the "
+        "bottom portion; Stage-2 recourse components (re-manufacture, subcontract, "
+        "cancellation) appear in the top portion. Total cost is annotated above each bar. "
+        "| `results/out_of_sample_results.json` + `results/out_of_sample_recourse.npz` |\n"
+    )
 
-    # Remove any existing entry for figure14_cost_decomposition or old figure_cost_decomposition
+    # Remove any existing entries for figure14_cost_decomposition
     cleaned = _re.sub(r"\| `figure(?:14_cost_decomposition|_cost_decomposition)[^|]+\|[^|]+\|\n?",
                       "", existing)
-    readme.write_text(cleaned.rstrip("\n") + "\n" + entry)
+    readme.write_text(cleaned.rstrip("\n") + "\n" + entry_donut + entry_bar)
     print(f"  Updated: {readme}")
 
 
@@ -269,25 +320,29 @@ def main() -> None:
     data = _load()
     _print_table(data)
 
-    print("\n[1/2] Generating figure14_cost_decomposition …")
+    print("\n[1/2] Generating figure14_cost_decomposition (donuts) …")
     generate_figure14()
+
+    print("\n[2/2] Generating figure14_cost_decomposition_bar (stacked bar) …")
+    generate_bar_figure()
 
     print()
     update_readme()
 
     print("\nOutput verification:")
     ok = True
-    for ext in ("png", "pdf"):
-        p = _HERE / ext / f"figure14_cost_decomposition.{ext}"
-        if p.exists():
-            print(f"  [OK]      {p.name}  ({p.stat().st_size // 1024} KB)")
-        else:
-            print(f"  [MISSING] {p.name}")
-            ok = False
+    for name in ("figure14_cost_decomposition", "figure14_cost_decomposition_bar"):
+        for ext in ("png", "pdf"):
+            p = _HERE / ext / f"{name}.{ext}"
+            if p.exists():
+                print(f"  [OK]      {p.name}  ({p.stat().st_size // 1024} KB)")
+            else:
+                print(f"  [MISSING] {p.name}")
+                ok = False
 
     if not ok:
         sys.exit(1)
-    print("\nFigure 14 generated successfully.")
+    print("\nFigure 14 (both variants) generated successfully.")
 
 
 if __name__ == "__main__":
