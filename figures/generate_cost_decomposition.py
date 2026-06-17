@@ -40,6 +40,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.patheffects as pe
 
 setup_style()
 
@@ -226,12 +227,24 @@ def generate_bar_figure() -> None:
     fig.subplots_adjust(bottom=0.28)
 
     bottoms = [0.0] * len(PLAN_KEYS)
-    bars_list = []
+    MIN_LABEL = 0.40   # M USD — skip segments smaller than this
     for comp_idx, (comp_label, comp_color) in enumerate(zip(COMP_LABELS, COMP_COLORS)):
         vals = [data[k][comp_idx] for k in PLAN_KEYS]
-        bars = ax.bar(x, vals, width, bottom=bottoms,
-                      color=comp_color, zorder=3, label=comp_label)
-        bars_list.append(bars)
+        ax.bar(x, vals, width, bottom=bottoms,
+               color=comp_color, zorder=3, label=comp_label)
+        # Per-segment value labels
+        for xi, (val, bot) in enumerate(zip(vals, bottoms)):
+            if val >= MIN_LABEL:
+                ax.text(
+                    xi, bot + val / 2, f"{val:.2f}",
+                    ha="center", va="center",
+                    fontsize=9, fontweight="bold", color="white",
+                    path_effects=[
+                        pe.Stroke(linewidth=2, foreground="black"),
+                        pe.Normal(),
+                    ],
+                    zorder=5,
+                )
         bottoms = [b + v for b, v in zip(bottoms, vals)]
 
     # Total cost annotation above each bar
@@ -244,7 +257,11 @@ def generate_bar_figure() -> None:
     ax.set_xticklabels(x_labels, fontsize=9)
     ax.set_ylabel("Mean total cost (M USD)")
     ax.set_ylim(0, max(bottoms) * 1.15)
-    ax.set_title("Cost composition by plan (2,000 OOS scenarios)", fontsize=11)
+    ax.set_title(
+        "Cost decomposition across planning strategies\n"
+        "(Stage-1 committed + expected Stage-2 recourse, 2,000 OOS scenarios)",
+        fontsize=11,
+    )
     ax.tick_params(axis="x", length=0)
 
     ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.10),
