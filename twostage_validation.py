@@ -248,13 +248,21 @@ def out_of_sample_validate(ccp_r, ts_r, tmfe, sigma_L, delta, pi_map,
         for p in ccp_pats
     }
 
+    # Per-urgency days-late tracking (lateness magnitude, not just rate).
+    # CCP: late = T_MF > mfg_budget (no recourse).
+    # Two-Stage: late = T_MF > K + delta (recourse exhausted).
+    ccp_late_by_urg = {'high': [], 'medium': [], 'low': []}
+    ts_late_by_urg  = {'high': [], 'medium': [], 'low': []}
+
     ccp_costs, ccp_viols = [], []
     for _ in range(n_sim):
         nv = 0
         for p in ccp_pats:
             tmf_p = rng.lognormvariate(mu_L, sigma_L)   # per-patient draw
-            if tmf_p > mfg_budgets.get(p['id'], 999):
+            budget = mfg_budgets.get(p['id'], 999)
+            if tmf_p > budget:
                 nv += 1
+                ccp_late_by_urg.setdefault(p.get('group', 'low'), []).append(tmf_p - budget)
         ccp_costs.append(ccp_transport)   # cost is fixed — no recourse
         ccp_viols.append(nv)
 
@@ -275,11 +283,34 @@ def out_of_sample_validate(ccp_r, ts_r, tmfe, sigma_L, delta, pi_map,
                 ec += pi_p; ne += 1
                 if tmf_p > K + delta:
                     nv += 1
+                    ts_late_by_urg.setdefault(p.get('group', 'low'), []).append(tmf_p - (K + delta))
         ts_costs.append(ts_transport + ec)
         ts_viols.append(nv)
         ts_exps.append(ne)
 
     n_ts = max(len(ts_pats), 1)
+
+    def _late_stats(late_by_urg, pats):
+        """Mean / p95 days-late per urgency class, averaged over LATE patients only.
+        Also reports per-class patient sample size in the selected plan."""
+        n_pat_by_urg = {'high': 0, 'medium': 0, 'low': 0}
+        for p in pats:
+            n_pat_by_urg[p.get('group', 'low')] = n_pat_by_urg.get(p.get('group', 'low'), 0) + 1
+        out = {}
+        for g in ('high', 'medium', 'low'):
+            vals = sorted(late_by_urg.get(g, []))
+            if vals:
+                p95 = vals[min(int(0.95 * len(vals)), len(vals) - 1)]
+                out[g] = {
+                    'mean_days_late': round(_st.mean(vals), 3),
+                    'p95_days_late':  round(p95, 3),
+                    'n_late':         len(vals),
+                    'n_patients':     n_pat_by_urg.get(g, 0),
+                }
+            else:
+                out[g] = {'mean_days_late': 0.0, 'p95_days_late': 0.0,
+                          'n_late': 0, 'n_patients': n_pat_by_urg.get(g, 0)}
+        return out
 
     def _metrics(costs, viols, exps=None):
         sc = sorted(costs)
@@ -301,6 +332,8 @@ def out_of_sample_validate(ccp_r, ts_r, tmfe, sigma_L, delta, pi_map,
         'n_ts':          len(ts_pats),
         'ccp':           _metrics(ccp_costs, ccp_viols),
         'ts':            _metrics(ts_costs,  ts_viols, ts_exps),
+        'ccp_late':      _late_stats(ccp_late_by_urg, ccp_pats),
+        'ts_late':       _late_stats(ts_late_by_urg,  ts_pats),
         'ccp_transport': ccp_transport,
         'ts_transport':  ts_transport,
         'tmfe_eff':      tmfe_eff,
