@@ -296,7 +296,7 @@ def fig_violation_bar():
              '$n = 2{,}000$ held-out scenarios. "n/a" = model infeasible.',
              ha='center', fontsize=FS_SMALL, color='#666666', fontstyle='italic')
 
-    fig.suptitle('Out-of-sample Deadline Violation Rate: CCP vs.\ Two-stage Stochastic',
+    fig.suptitle('Out-of-sample Deadline Violation Rate: CCP vs. Two-stage Stochastic',
                  fontsize=FS_SUPTITLE, fontweight='bold')
     _save(fig, 'fig_violation_bar.pdf')
 
@@ -339,7 +339,7 @@ def fig_tau_sensitivity():
     ax.set_xlabel('Deadline Tightness Parameter $\\tau$', fontsize=FS_LABEL)
     ax.set_ylabel('Normalised Expected Total Cost\n(relative to $\\tau = 0$)',
                   fontsize=FS_LABEL)
-    ax.set_title('Cost vs.\ Deadline Tightness\n'
+    ax.set_title('Cost vs. Deadline Tightness\n'
                  '($N=15$, $\\sigma_L = 0.20$)', fontsize=FS_TITLE, pad=8)
     ax.set_xticks(tau_arr)
     ax.set_xticklabels([f'{t:.1f}' for t in tau_arr], fontsize=FS_TICK)
