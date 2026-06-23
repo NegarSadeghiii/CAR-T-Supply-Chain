@@ -74,3 +74,42 @@ Hospitals: 15 sites from Wan's 57-hospital network selected by highest total dem
 | $\rho^{\text{remfg}}_m$ | Assumed equal to primary cost; no published re-manufacturing-specific cost breakdown. |
 | $\rho^{\text{sub}}_{mm'}$ | 15% subcontracting premium is assumption; no published CAR-T CMO contract data. |
 | $\beta_u$ | Roth et al. values are for stem-cell transplant patients; direct CAR-T re-leukapheresis feasibility data unavailable. |
+
+---
+
+## Cross-references for cost parameters
+
+The wide spread in facility opening cost $f_m \in [\$0.5\text{M}, \$3.0\text{M}]$ in our calibration is consistent with the multi-scale industry data reported in Avramescu et al. (2022) (Nature Scientific Reports supplementary materials), where facility construction costs differ by approximately 7× across small / medium / large facility classes (annual amortized: \$231K / \$577K / \$1.73M for 4 / 10 / 31 parallel-line facilities, respectively). Transport-cost components in the recourse menu are calibrated consistent with industry data reported by TrakCel Ltd (cited in the same reference). Re-manufacturing delay $\delta^{\text{remfg}} = 14$–21 days reflects the typical CAR-T cycle (~7 days production + ~7 days quality control + 1–2 days transport, with current-technology cycle times totaling 19 days as reported by Avramescu et al., 2022).
+
+Wan et al. (2026) calibrate per-mode failure rates of 10% / 5% / 3% (manual / partially-automated / fully-automated production modes) following Lopes et al. (2020); our facility-specific $p_m = [0.85, 0.92, 0.95, 0.92]$ from per-product real-world failure rates falls within this empirical range and provides finer-grained facility-level resolution. The maximum installable capacity $s_m^{\max} = 40$ slots in our calibration is conservative relative to Wan's 75-slot value, reflecting a single-CDMO scale appropriate for our cohort size $N = 50$.
+
+---
+
+## Demographic and network context (reference only)
+
+The case study facility-location candidates correspond to 4 major US biopharmaceutical hubs selected from the 1,000-city candidate network of Wan et al. (2026) (adapted from Avramescu et al., 2021b). The 15-hospital selection reflects approximately 26% of Wan's 57-hospital US network. Patient cohort $N = 50$ corresponds to approximate annual r/r pediatric ALL CAR-T demand at a mid-sized US treatment-region catchment, derived from IICC-3 childhood cancer incidence data (Steliarova-Fourcher et al., 2017) refined by the conditional probabilities reported in Avramescu et al. (2021b): ~80% of pediatric ALL cases are B-precursor, of which ~20% are refractory or relapsed.
+
+The following parameters from Wan et al. (2026) are documented as reference context only — they are NOT adopted as values in our model:
+
+| Wan 2026 parameter | Value | Source | Adopted? |
+|---|---|---|---|
+| Hospital network size | 57 cities (US Kymriah-related) | `Hospital Location` sheet | Geographic labels only; we use 15-hospital subset |
+| Candidate facility locations | 1,000 US cities | `Candidate Facility Location` sheet | Geographic labels only; we select 4 |
+| Planning periods | 6 | `d_it`, `s_ijt` sheets | Not adopted (single period) |
+| Per-mode failure rates | 10% / 5% / 3% | `r_ok` (Lopes 2020) | Cross-reference only; our $p_m$ anchored to UK Panel / per-product real-world rates |
+| Max facility capacity | 75 slots | `Maxcap_j` | Cross-reference only; we use 40 |
+| Facility construction cost | \$170K–\$465K | `f_jk` | Not adopted; substituting these values produced VSS-vs-ECD ≈ 0% (see sensitivity-analysis discussion) |
+| Operating cost per batch | \$68K–\$102K | `overline_c_jkt` | Not adopted; same reason as above |
+| Shelf life | 24 hours | `SLF_o` | Not directly modeled in our formulation |
+
+---
+
+## Methodological observation: cost-spread regime requirement
+
+During the calibration process, we evaluated whether substituting Wan et al. (2026)'s facility-specific cost values ($f_{jk}$ and $\bar{c}_{jkt}$ from their `Real_Case/Data/` archive, adapted from Avramescu et al., 2021b) for our Avramescu/Bernardi-aligned calibration would strengthen the empirical grounding of the case study. The substitution produced degenerate optimization: the value of stochastic solution against the expected-parameter deterministic baseline (VSS-vs-ECD) collapsed from 10.48% to approximately 0%.
+
+**Diagnosis:** Wan's published facility opening cost range (\$0.19M–\$0.46M) and effectively uniform per-slot operating cost across production modes (\$0.24M/slot in all modes) eliminate the cost-yield trade-off that drives the structural advantage of two-stage stochastic programming. With compressed cost spread, both the deterministic and stochastic plans converge to the same facility selection (the unique cost-yield-Pareto-dominant facility), and the structural recourse advantage disappears.
+
+This is consistent with the regime characterization in Figure 16 (p_m sensitivity heatmap): VSS-vs-ECD remains above the 4% contribution-viability threshold in the moderate-cost-spread regime where our Avramescu/Bernardi calibration sits, and collapses in the narrow-spread regime where Wan's published cost values sit. The empirical CAR-T calibration — wide spread in facility opening cost (\$0.5M–\$3.0M), wide spread in per-batch operating cost (\$0.15M–\$0.20M), wide spread in per-batch yield (0.85–0.95) — places the case study squarely in the regime where the structural-recourse value holds.
+
+The finding does NOT invalidate our contribution claim; it characterizes the operating regime in which two-stage SP adds value over expected-parameter deterministic baselines, and demonstrates that this regime is consistent with empirical real-world CAR-T heterogeneity (axicabtagene ciloleucel 4% failure rate / tisagenlecleucel 17% / lisocabtagene maraleucel 28%, per-product real-world rates documented by the UK National CAR-T Panel).

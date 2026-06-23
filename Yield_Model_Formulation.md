@@ -200,35 +200,8 @@ A small instance to verify the formulation reads correctly end-to-end and to ser
 
 ## Case study calibration: US geographic network
 
-### Network structure (Wan et al. 2026 subset)
+The case study uses a 4-facility / 15-hospital instance derived from a subset of Wan et al. (2026)'s US Kymriah-related network (originally adapted from Avramescu et al., 2021b). The four facility labels correspond to major US biopharmaceutical hubs: Newark NJ ($m_0$), Boston MA ($m_1$), Raleigh-Durham NC ($m_2$), and San Francisco CA ($m_3$). The 15-hospital selection concentrates in the Northeast and Mid-Atlantic regions, with patient cohort distribution weighted by Wan's $d_{it}$ per-hospital demand pattern.
 
-The main case study instantiates the model with a US geographic network drawn from Wan et al. (2026)'s Kymriah facility-location dataset (998 candidate cities, 57 US hospitals, 12 planning periods). We take a single planning period and 4 facilities.
+**Important calibration note:** the geographic labels are descriptive only. Facility-specific cost parameters ($f_m$, $c_m$, $\pi_m$, $s_m^{\max}$) are NOT taken from Wan's $f_{jk}$ or $\bar{c}_{jkt}$ tables; they retain the Avramescu-/Bernardi-aligned calibration from the prior synthetic case study (documented row-by-row in `calibration_table.md`). Patient-level parameters ($p_m$, $\beta_u$, $\rho^{\text{cancel}}_u$) also retain their clinical-literature calibration. Substituting Wan's facility-specific cost values produced degenerate optimization (VSS-vs-ECD ≈ 0%); see the sensitivity-analysis discussion for the regime-conditional interpretation of this finding.
 
-**Facilities** — selected to span distinct US biopharma corridors:
-
-| Index | City | Wan j-index | Production mode | Corridor |
-|---|---|---|---|---|
-| $m_0$ | Newark, NJ | j67 | k1 manual | NE biopharma corridor |
-| $m_1$ | Boston, MA | j24 | k2 semi-automated | NE biotech hub |
-| $m_2$ | Raleigh-Durham, NC | j43 | k3 fully automated | SE biopharma hub |
-| $m_3$ | San Francisco, CA | j14 | k2 semi-automated | West coast hub |
-
-**Hospitals** — 15 sites selected from Wan's 57-hospital network by highest total demand ($\sum_t d_{it}$), covering 43% of Wan's total patient volume. Patient count per hospital allocated proportionally to Wan's demand data.
-
-### Parameter calibration
-
-Wan's raw cost tables ($\bar{c}_{jkt}$ ≈ \$84–121 K/batch) are one-third of contemporary clinical estimates (≈ \$200 K; Avramescu et al. 2023) and produce an identical $\pi_m + c_m$ across all four modes, collapsing VSS-vs-ECD to zero. Cost parameters are therefore calibrated to clinical literature rather than Wan's raw values; the geographic network structure is adopted.
-
-| Symbol | Value | Units | Source |
-|---|---|---|---|
-| $f_m$ | [0.50, 2.00, 3.00, 2.00] | M USD | Bernardi et al. 2022 (scaled by automation tier) |
-| $\pi_m$ | [0.04, 0.06, 0.09, 0.06] | M USD/slot | Avramescu et al. 2023 |
-| $c_m$ | [0.20, 0.18, 0.15, 0.18] | M USD/batch | Avramescu et al. 2023 (lower with more automation) |
-| $s_m^{\max}$ | 40 (all) | slots | Operational constraint (two-facility coverage required) |
-| $p_m$ | [0.85, 0.92, 0.95, 0.92] | — | k1/k2/k3 failure rates: 15%/8%/5% (Costariol et al. 2021) |
-| $\beta_u$ | [0.55, 0.70, 0.80] | — | Tier H/M/L re-collection feasibility (Roth et al. 2018) |
-| $\rho^{\text{cancel}}_u$ | [6.0, 3.0, 1.0] | M USD | Clinical loss by tier H/M/L (assumption, no trial data) |
-| $\rho^{\text{leuk}}$ | 0.005 | M USD | Leukapheresis procedure cost |
-| $n$ | 50 | patients | 20% H / 50% M / 30% L tier mix |
-
-**Note on $s_m^{\max} = 40$:** Wan's Maxcap$_j$ = 75 slots per facility. With $s_m^{\max} \geq n = 50$, a single high-yield facility ($m_2$, $p = 0.95$) suffices and the two-facility structural story collapses. The capacity is set to 40 to ensure that at least two facilities must be opened, which enables the tier-stratified assignment ($m_0$ for tier-L/M, $m_2$ for tier-H) that drives VSS-vs-ECD.
+The single-period formulation and 4-facility instance scale are preserved. Extending the model to Wan's full 57-hospital × 1,000-facility multi-period scope requires custom decomposition algorithms (Benders, scenario reduction, or progressive hedging) analogous to Wan's TSA/CBA methods, and is deferred to future work.

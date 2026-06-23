@@ -11,31 +11,24 @@ Run: python case_study.py
 
 Solver: HiGHS (open-source MILP, no license required, no size limit).
 
-Geographic positioning
-  Four facilities sited at real US biopharma hubs drawn from Wan et al.
-  (2026)'s US Kymriah case-study network (998 candidate cities, 57 hospitals):
-    m0  Newark NJ           j67  k1 (manual)          NE biopharma corridor
-    m1  Boston MA           j24  k2 (semi-automated)  NE biotech hub
-    m2  Raleigh-Durham NC   j43  k3 (fully automated) SE biopharma hub
-    m3  San Francisco CA    j14  k2 (semi-automated)  West coast biotech hub
-
-  15 hospitals selected from Wan's 57-hospital network by highest total
-  demand (Σ_t d_{it}), covering 43% of Wan's total patient volume:
-    i40 LA area (5 pts), i37 Raleigh area (4), i46 SF area (4),
-    i30 Buffalo/NE (4), i10 Indianapolis (4), i45 Denver (4),
-    i35 NYC/Bronx (4), i18 LA area (3), i21 Palo Alto (3),
-    i13 Boston (3), i24 Baltimore (3), i49 Boston area (3),
-    i44 San Diego (2), i41 Tampa (2), i51 Ann Arbor (2).
-  Patient allocation: ⌊50 × d_{it} / Σ_top15 d_{it}⌋ per Wan's demand data.
-  Single planning period (multi-period scale-up deferred to future work).
-
-  NOTE on cost parameters: Wan's overline_c_jkt values (~$84–121K/batch) are
-  one-third of contemporary clinical estimates (~$200K, Avramescu et al. 2023)
-  and produce a degenerate cost structure where pi_m+c_m is equal across all
-  production modes, collapsing VSS-vs-ECD to zero.  Cost parameters therefore
-  follow clinical calibration (Avramescu 2023, Bernardi 2022) rather than
-  Wan's raw cost tables; the geographic facility network structure is adopted.
-  Wan's Maxcap_j = 75 slots per facility is used directly.
+Case study calibration: facility labels correspond to four US biopharmaceutical
+  hubs — Newark NJ, Boston MA, Raleigh-Durham NC, San Francisco CA — selected
+  from the candidate-city network of Wan et al. (2026) (adapted from Avramescu
+  et al., 2021b). Cost parameters (f_m facility opening cost, c_m per-batch
+  primary manufacturing cost, π_m per-slot capacity contracting cost,
+  s_m^max maximum capacity) are NOT taken from Wan's f_jk / c_jkt / Maxcap_j
+  tables; they retain the Avramescu-/Bernardi-aligned calibration documented in
+  `calibration_table.md`. Preliminary experiments substituting Wan's
+  facility-specific cost values produced degenerate optimization with
+  VSS-vs-ECD ≈ 0%, indicating that Wan's compressed cost spread does not
+  satisfy the cost-yield trade-off conditions required for two-stage stochastic
+  programming to add value at this scale; this finding is consistent with the
+  narrow-spread regime characterized in the p_m sensitivity heatmap (Figure 16)
+  and is reported in the sensitivity-analysis discussion of the manuscript.
+  Patient yield p_m and tier-dependent eligibility β_u retain their clinical
+  literature calibration (UK National CAR-T Panel, CARTITUDE-4, Bachy 2022,
+  Locke 2022). Single planning period preserved; multi-period extension and
+  57-hospital × 1,000-facility scale-up deferred to future work.
 
 Cost and clinical calibration
   f_m: annual CDMO access / slot-reservation fee (Avramescu 2023 supp.).
