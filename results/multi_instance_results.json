@@ -10,7 +10,7 @@
     "tier_h_naive": 5.4,
     "tier_h_smart": 6.05,
     "tier_h_sp": 2.15,
-    "sp_solve_time": 11.48,
+    "sp_solve_time": 12.14,
     "sp_gap_pct": 0.0,
     "naive_opens": [
       0,
@@ -27,8 +27,8 @@
     "sp_remfg_pct": 73.8806,
     "sp_sub_pct": 9.2537,
     "sp_cancel_pct": 16.8657,
-    "naive_time": 2.73,
-    "smart_time": 1.99
+    "naive_time": 2.02,
+    "smart_time": 2.01
   },
   {
     "size": 100,
@@ -41,7 +41,7 @@
     "tier_h_naive": 5.45,
     "tier_h_smart": 2.75,
     "tier_h_sp": 2.025,
-    "sp_solve_time": 14.09,
+    "sp_solve_time": 15.38,
     "sp_gap_pct": 0.0,
     "naive_opens": [
       0,
@@ -58,8 +58,8 @@
     "sp_remfg_pct": 73.0574,
     "sp_sub_pct": 9.4595,
     "sp_cancel_pct": 17.4831,
-    "naive_time": 7.12,
-    "smart_time": 7.0
+    "naive_time": 8.5,
+    "smart_time": 7.79
   },
   {
     "size": 200,
@@ -72,7 +72,7 @@
     "tier_h_naive": 4.8875,
     "tier_h_smart": 2.5625,
     "tier_h_sp": 1.775,
-    "sp_solve_time": 74.72,
+    "sp_solve_time": 68.42,
     "sp_gap_pct": 0.0,
     "naive_opens": [
       0,
@@ -89,8 +89,8 @@
     "sp_remfg_pct": 76.2462,
     "sp_sub_pct": 8.0191,
     "sp_cancel_pct": 15.7347,
-    "naive_time": 38.07,
-    "smart_time": 37.95
+    "naive_time": 32.8,
+    "smart_time": 30.16
   },
   {
     "size": 500,
@@ -103,7 +103,7 @@
     "tier_h_naive": 4.725,
     "tier_h_smart": 3.465,
     "tier_h_sp": 2.13,
-    "sp_solve_time": 456.99,
+    "sp_solve_time": 395.76,
     "sp_gap_pct": 0.0,
     "naive_opens": [
       0,
@@ -120,7 +120,7 @@
     "sp_remfg_pct": 74.1235,
     "sp_sub_pct": 8.9316,
     "sp_cancel_pct": 16.9449,
-    "naive_time": 227.68,
-    "smart_time": 229.28
+    "naive_time": 176.24,
+    "smart_time": 169.9
   }
 ]

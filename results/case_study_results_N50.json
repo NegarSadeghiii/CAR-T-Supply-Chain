@@ -16,7 +16,7 @@
     "stage1": 14.5,
     "stage2": 5.977425,
     "total": 20.477425,
-    "solve_time": 2.73,
+    "solve_time": 2.02,
     "opens": [
       0,
       1
@@ -26,7 +26,7 @@
     "stage1": 14.5,
     "stage2": 5.24025,
     "total": 19.74025,
-    "solve_time": 1.99,
+    "solve_time": 2.01,
     "facility_allocation_differs_from_naive": true,
     "opens": [
       0,
@@ -37,7 +37,7 @@
     "stage1": 15.5,
     "stage2": 2.36765,
     "total": 17.86765,
-    "solve_time": 11.48,
+    "solve_time": 12.14,
     "gap": 0.0,
     "opens": [
       0,
@@ -148,5 +148,5 @@
       }
     }
   },
-  "elapsed_s": 16.4
+  "elapsed_s": 16.2
 }

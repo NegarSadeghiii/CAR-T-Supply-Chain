@@ -48,7 +48,10 @@ _RESULT = _REPO / "results" / "out_of_sample_results.json"
 _NPZ    = _REPO / "results" / "out_of_sample_recourse.npz"
 
 # Instance parameters (calibrated case-study, fixed across all plans)
-_F   = np.array([0.5, 2.0, 3.0, 2.0])
+# Instance parameters — must match case_study.py build_case_study_instance()
+# Geographic network: Wan et al. (2026) US Kymriah subset (j67/j24/j43/j14).
+# Cost parameters: clinical calibration (Avramescu 2023, Bernardi 2022).
+_F   = np.array([0.5,  2.0,  3.0,  2.0 ])
 _PI  = np.array([0.04, 0.06, 0.09, 0.06])
 _C   = np.array([0.20, 0.18, 0.15, 0.18])
 _RHO_LEUK   = 0.005

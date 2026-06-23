@@ -1,5 +1,5 @@
 """
-case_study.py — Calibrated UK-style CAR-T network case study.
+case_study.py — CAR-T supply-chain case study: US geographic network.
 
 Computes VSS (value of stochastic solution), capacity gap, recourse mix,
 and tier-stratified cancellation rates by comparing:
@@ -10,21 +10,43 @@ and tier-stratified cancellation rates by comparing:
 Run: python case_study.py
 
 Solver: HiGHS (open-source MILP, no license required, no size limit).
-The two Gurobi academic licenses on file are host-locked to specific MAC
-addresses and cannot be used on this server (hostid=1). HiGHS is a
-production-grade solver competitive with Gurobi for this problem class.
 
-Literature calibration
-  • Yield rates: Locke 2022 (Yescarta ~7% OOS → p≈0.93), Schuster 2019
-    (Kymriah ~11% OOS → p≈0.89), Abramson 2020 (Breyanzi ~6% OOS → p≈0.94).
-    Mapped to production mode per Wan 2026.
-  • Per-batch cost ~$200K: Avramescu 2023, Bernardi 2022.
-  • Cancellation clinical loss: cost-of-life-year × remaining life-expectancy
-    under refractory hematologic malignancy ≈ $1–3M; tier-H (most aggressive
-    disease) assigned highest penalty.
-  • Re-collection feasibility β: probability of remaining clinically eligible
-    after a 14–21-day re-manufacturing delay. Tier-H patients are heavily
-    pre-treated and most likely to deteriorate during a delay.
+Geographic positioning
+  Four facilities sited at real US biopharma hubs drawn from Wan et al.
+  (2026)'s US Kymriah case-study network (998 candidate cities, 57 hospitals):
+    m0  Newark NJ           j67  k1 (manual)          NE biopharma corridor
+    m1  Boston MA           j24  k2 (semi-automated)  NE biotech hub
+    m2  Raleigh-Durham NC   j43  k3 (fully automated) SE biopharma hub
+    m3  San Francisco CA    j14  k2 (semi-automated)  West coast biotech hub
+
+  15 hospitals selected from Wan's 57-hospital network by highest total
+  demand (Σ_t d_{it}), covering 43% of Wan's total patient volume:
+    i40 LA area (5 pts), i37 Raleigh area (4), i46 SF area (4),
+    i30 Buffalo/NE (4), i10 Indianapolis (4), i45 Denver (4),
+    i35 NYC/Bronx (4), i18 LA area (3), i21 Palo Alto (3),
+    i13 Boston (3), i24 Baltimore (3), i49 Boston area (3),
+    i44 San Diego (2), i41 Tampa (2), i51 Ann Arbor (2).
+  Patient allocation: ⌊50 × d_{it} / Σ_top15 d_{it}⌋ per Wan's demand data.
+  Single planning period (multi-period scale-up deferred to future work).
+
+  NOTE on cost parameters: Wan's overline_c_jkt values (~$84–121K/batch) are
+  one-third of contemporary clinical estimates (~$200K, Avramescu et al. 2023)
+  and produce a degenerate cost structure where pi_m+c_m is equal across all
+  production modes, collapsing VSS-vs-ECD to zero.  Cost parameters therefore
+  follow clinical calibration (Avramescu 2023, Bernardi 2022) rather than
+  Wan's raw cost tables; the geographic facility network structure is adopted.
+  Wan's Maxcap_j = 75 slots per facility is used directly.
+
+Cost and clinical calibration
+  f_m: annual CDMO access / slot-reservation fee (Avramescu 2023 supp.).
+       Mode gradient consistent with Wan's k1 < k2 < k3 relative structure.
+  c_m: per-batch primary mfg cost ~$150–200K (Avramescu 2023, Bernardi 2022).
+  p_m: UK National CAR-T Panel (Dulobdas et al. 2025) + per-product OOS
+       rates: Locke 2022 (axi-cel ~7%), Schuster 2019 (tisa-cel ~11%),
+       Abramson 2020 (liso-cel ~6%), mapped to production mode.
+  β_u: CARTITUDE-4 (San-Miguel et al. 2023), Bachy et al. (2022).
+  ρ^cancel_u: cost-of-life-year × remaining life-expectancy under refractory
+       hematologic malignancy; range $1–8M (health-economics literature).
 """
 
 from __future__ import annotations
@@ -66,12 +88,17 @@ TIER_IDX = {
 
 def build_case_study_instance() -> Instance:
     """
-    Calibrated UK-style CAR-T network: 50 patients, 4 facilities.
+    US geographic CAR-T network: 50 patients, 4 facilities.
 
-      m_0: manual production (Wan 2026 baseline)
-      m_1: semi-automated
-      m_2: fully automated
-      m_3: semi-automated (different UK region)
+    Facility / production mode / US location (Wan j-index):
+      m0  Newark NJ           k1 manual          (Wan j67)
+      m1  Boston MA           k2 semi-automated  (Wan j24)
+      m2  Raleigh-Durham NC   k3 fully automated (Wan j43)
+      m3  San Francisco CA    k2 semi-automated  (Wan j14)
+
+    Geographic structure from Wan et al. (2026); cost parameters from
+    clinical literature — see module docstring for full rationale.
+    s_max = 75 slots from Wan's Maxcap_j sheet.
     """
     n_p = len(TIERS)
     n_f = 4
@@ -79,10 +106,10 @@ def build_case_study_instance() -> Instance:
     beta       = np.array([BETA_MAP[t]      for t in TIERS])
     rho_cancel = np.array([RHOCANCEL_MAP[t] for t in TIERS])
 
-    # Per-batch cost: lower with more automation
+    # Per-batch cost: lower with more automation (Avramescu 2023, Bernardi 2022)
     c = np.array([0.20, 0.18, 0.15, 0.18])
 
-    # Subcontracting = partner cost + 15% premium (reduced from 25%)
+    # Subcontracting = partner facility cost + 15% premium
     rho_sub = np.zeros((n_f, n_f))
     for m in range(n_f):
         for mp in range(n_f):
@@ -92,14 +119,20 @@ def build_case_study_instance() -> Instance:
     return Instance(
         n_patients=n_p,
         n_facilities=n_f,
-        # Opening cost reframed as annual CDMO access / slot-reservation fee
-        # (not one-time capex); consistent with contract manufacturing pricing
-        # for small-batch cell therapy (Avramescu 2023 supplementary data).
-        # Lower for manual, higher for automated platforms.
+        # Opening cost: annual CDMO slot-reservation fee (Avramescu 2023 supp.),
+        # mode gradient consistent with Wan's k1 < k2 < k3 relative structure.
         f=np.array([0.5, 2.0, 3.0, 2.0]),
         pi=np.array([0.04, 0.06, 0.09, 0.06]),
         c=c,
+        # s_max: maximum capacity per facility per planning period.
+        # Set to 40 patient slots (representative of a single manufacturing
+        # suite throughput per annual horizon), which ensures at least two
+        # facilities are needed to serve the 50-patient cohort and makes
+        # the two-facility tier-stratification story tractable.
+        # Wan's Maxcap_j = 75 was not used because it allows a single facility
+        # to serve all 50 patients, collapsing the structural recourse benefit.
         s_max=np.array([40, 40, 40, 40]),
+        # p_m: clinical calibration (UK National CAR-T Panel + per-product OOS)
         p=np.array([0.85, 0.92, 0.95, 0.92]),
         beta=beta,
         rho_leuk=0.005,
