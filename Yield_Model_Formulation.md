@@ -205,3 +205,36 @@ The case study uses a 4-facility / 15-hospital instance derived from a subset of
 **Important calibration note:** the geographic labels are descriptive only. Facility-specific cost parameters ($f_m$, $c_m$, $\pi_m$, $s_m^{\max}$) are NOT taken from Wan's $f_{jk}$ or $\bar{c}_{jkt}$ tables; they retain the Avramescu-/Bernardi-aligned calibration from the prior synthetic case study (documented row-by-row in `calibration_table.md`). Patient-level parameters ($p_m$, $\beta_u$, $\rho^{\text{cancel}}_u$) also retain their clinical-literature calibration. Substituting Wan's facility-specific cost values produced degenerate optimization (VSS-vs-ECD ≈ 0%); see the sensitivity-analysis discussion for the regime-conditional interpretation of this finding.
 
 The single-period formulation and 4-facility instance scale are preserved. Extending the model to Wan's full 57-hospital × 1,000-facility multi-period scope requires custom decomposition algorithms (Benders, scenario reduction, or progressive hedging) analogous to Wan's TSA/CBA methods, and is deferred to future work.
+
+### Shelf-life and capacity-network constraints (Yield_upgrade)
+
+Transport time $t_{\text{trans}}[i,m]$ (hours) is derived from Wan et al. (2026)'s latitude/longitude data for the 4 selected US facility cities and 15 selected hospital cities using the Haversine great-circle formula, assuming temperature-controlled air freight at an effective speed of 600 km/h door-to-door with a 6-hour fixed handling overhead:
+
+$$t_{\text{trans}}[i,m] = 6.0 + \frac{d_{\text{Haversine}}(i, m)}{600}$$
+
+This produces transport times in the range $[6.0, 13.2]$ hours across all 60 (hospital, facility) pairs at the US scale.
+
+**Constraint (13) — Shelf-life feasibility for primary assignment:**
+
+$$t_{\text{trans}}[i,m] \cdot x_{im} \leq \text{SHELF\_LIFE} \qquad \forall i \in \mathcal{I}, m \in \mathcal{M}$$
+
+Equivalently, $x_{im} = 0$ is forced for all pairs where $t_{\text{trans}}[i,m] > \text{SHELF\_LIFE}$. With SHELF\_LIFE = 24 hours and $\max(t_{\text{trans}}) = 13.2$ hours, this constraint is structurally present but non-binding at the US scale — a finding documented in §5.3 of the manuscript.
+
+**Constraint (14) — Shelf-life feasibility for subcontracting recourse:**
+
+$$t_{\text{trans}}[i,m'] \cdot r^{\text{sub}}_{imm'}(\omega) \leq \text{SHELF\_LIFE} \qquad \forall i, m, m', \omega$$
+
+Re-transported product must also arrive within shelf life at the destination facility $m'$.
+
+**Constraint (15) — Maximum number of facilities open (MNF):**
+
+$$\sum_{m \in \mathcal{M}} z_m \leq \text{MNF}$$
+
+With $|\mathcal{M}| = 4$ candidates and MNF = 3, at most 3 facilities may be opened, consistent with industry practice of dual- or triple-sourcing autologous CDMO agreements. At the central calibration (N=50 patients), the SP opens only 2 facilities (m0+m2), so MNF = 3 is non-binding — a finding that confirms the model's structural preference for concentrated sourcing under the Avramescu/Bernardi cost calibration.
+
+| Parameter | Value | Units | Source |
+|---|---|---|---|
+| SHELF\_LIFE | 24.0 | hours | Cryopreservation shelf life, Wan et al. (2026) |
+| Air-freight speed | 600 | km/h effective door-to-door | Industry standard for cold-chain biologics |
+| Handling overhead | 6.0 | hours | Fixed per-shipment overhead |
+| MNF | 3 | facilities | Industry-aligned assumption (dual/triple CDMO) |

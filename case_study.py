@@ -30,6 +30,21 @@ Case study calibration: facility labels correspond to four US biopharmaceutical
   Locke 2022). Single planning period preserved; multi-period extension and
   57-hospital × 1,000-facility scale-up deferred to future work.
 
+Yield_upgrade structural additions (branch Yield_upgrade):
+  t_trans[i,m]: transport time (hours) from each patient's hospital to each
+    facility, computed via Haversine great-circle distance + 600 km/h effective
+    air-freight speed + 6h fixed handling overhead.  Derived from Wan et al.
+    (2026) lat/lon for 4 facility cities and 15 selected hospital cities.
+    t_trans[i,m] ∈ [6.0, 13.2] hours across all 60 (hospital, facility) pairs.
+  SHELF_LIFE_HOURS = 24.0: cryopreservation shelf life for CAR-T product.
+    Constraint (13): x[i,m] = 0 if t_trans[i,m] > SHELF_LIFE_HOURS.
+    At this scale all pairs satisfy t_trans ≤ 13.2h << 24h — constraint is
+    structurally present but non-binding (finding documented in paper §5.3).
+  MAX_FACILITIES_OPEN = 3: maximum number of open facilities (MNF constraint).
+    Constraint (15): Σ_m z[m] ≤ 3.  With 4 candidates and MNF=3, one facility
+    is excluded; SP selects the best 2-facility combination, consistent with
+    industry practice of dual-sourcing autologous CDMO agreements.
+
 Cost and clinical calibration
   f_m: annual CDMO access / slot-reservation fee (Avramescu 2023 supp.).
        Mode gradient consistent with Wan's k1 < k2 < k3 relative structure.
@@ -51,6 +66,86 @@ import numpy as np
 import highspy as hs
 
 from yield_sp_v1 import Instance, sample_scenarios
+
+
+# ---------------------------------------------------------------------------
+# Geographic data (Yield_upgrade)
+# ---------------------------------------------------------------------------
+# Facility lat/lon extracted from Wan et al. (2026) 'Candidate Facility
+# Location' sheet, rows j67/j24/j43/j14.
+_FACILITY_COORDS = [
+    ("Newark NJ",         "j67", 40.7357,  -74.1724),
+    ("Boston MA",         "j24", 42.3601,  -71.0589),
+    ("Raleigh-Durham NC", "j43", 35.7796,  -78.6382),
+    ("San Francisco CA",  "j14", 37.7749, -122.4194),
+]
+
+# Hospital lat/lon from Wan's 'Hospital Location' sheet.
+# 15 hospitals selected by highest total demand (Σ_t d_{it}).
+# Demand-proportional patient allocation (floor + largest-remainder):
+#   i40→5, i37→4, i46→4, i30→4, i10→4, i45→4, i35→4,
+#   i18→4, i21→3, i13→3, i24→3, i49→3, i44→2, i41→2, i51→2  (total=50)
+_HOSPITAL_COORDS = [
+    ("i40",  34.0664646, -118.4465068, 5),   # LA area
+    ("i37",  35.9050278,  -79.0506418, 4),   # Raleigh area (NC)
+    ("i46",  37.7647716, -122.3896641, 4),   # SF area
+    ("i30",  42.5354,     -78.5212,    4),   # Buffalo/NE
+    ("i10",  39.7772703,  -86.1800216, 4),   # Indianapolis
+    ("i45",  39.742,     -104.83489,   4),   # Denver
+    ("i35",  40.841895,   -73.941973,  4),   # NYC/Bronx
+    ("i18",  34.0975008, -118.2900796, 3),   # LA area
+    ("i21",  37.43689,   -122.17529,   3),   # Palo Alto
+    ("i13",  42.34981,    -71.064,     3),   # Boston
+    ("i24",  39.295609,   -76.597191,  3),   # Baltimore
+    ("i49",  42.3375312,  -71.1081393, 3),   # Boston area
+    ("i44",  32.7982304, -117.1521134, 2),   # San Diego
+    ("i41",  27.76496,    -82.6406,    2),   # Tampa
+    ("i51",  42.2820788,  -83.727315,  2),   # Ann Arbor
+]
+
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    R = 6371.0
+    phi1, phi2 = np.radians(lat1), np.radians(lat2)
+    dphi = np.radians(lat2 - lat1)
+    dlam = np.radians(lon2 - lon1)
+    a = np.sin(dphi / 2) ** 2 + np.cos(phi1) * np.cos(phi2) * np.sin(dlam / 2) ** 2
+    return R * 2 * np.arctan2(np.sqrt(a), np.sqrt(1.0 - a))
+
+
+def _transport_hours(dist_km: float, overhead: float = 6.0, speed: float = 600.0) -> float:
+    """Air-freight door-to-door: fixed overhead + great-circle / effective speed."""
+    return overhead + dist_km / speed
+
+
+def _build_patient_transport_matrix() -> np.ndarray:
+    """
+    Return t_trans[i, m] in hours for 50 patients × 4 facilities.
+    Patients are allocated to hospitals in demand-proportional order.
+    """
+    # Build per-patient hospital assignments
+    patient_rows = []
+    for _iname, hlat, hlon, n_pts in _HOSPITAL_COORDS:
+        for _ in range(n_pts):
+            patient_rows.append((hlat, hlon))
+    assert len(patient_rows) == 50, f"Expected 50 patients, got {len(patient_rows)}"
+
+    n_f = len(_FACILITY_COORDS)
+    t = np.zeros((50, n_f))
+    for i, (hlat, hlon) in enumerate(patient_rows):
+        for m, (_fname, _fj, flat, flon) in enumerate(_FACILITY_COORDS):
+            dist = _haversine_km(hlat, hlon, flat, flon)
+            t[i, m] = _transport_hours(dist)
+    return t
+
+
+# Transport-time matrix [50 patients × 4 facilities] — pre-computed at import.
+# All values in hours; range = [6.0, 13.2] << SHELF_LIFE_HOURS.
+T_TRANS: np.ndarray = _build_patient_transport_matrix()
+
+# Structural constraint parameters (Yield_upgrade)
+SHELF_LIFE_HOURS: float = 24.0   # cryopreservation shelf life (Wan et al. 2026)
+MAX_FACILITIES_OPEN: int = 3     # max facilities open (MNF industry default)
 
 
 # ---------------------------------------------------------------------------
@@ -132,6 +227,10 @@ def build_case_study_instance() -> Instance:
         rho_remfg=c.copy(),
         rho_sub=rho_sub,
         rho_cancel=rho_cancel,
+        # Yield_upgrade structural parameters
+        t_trans=T_TRANS,
+        shelf_life=SHELF_LIFE_HOURS,
+        mnf=MAX_FACILITIES_OPEN,
     )
 
 
@@ -229,6 +328,14 @@ def _highs_solve_sp(
         for (i, m), v in fix_first_stage.get("x", {}).items():
             h.changeColBounds(vx(i, m), float(v), float(v))
 
+    # Shelf-life prefiltering (constraint 13): force x[i,m] = 0 when
+    # transport time exceeds cryopreservation shelf life.
+    if inst.t_trans is not None and inst.shelf_life is not None:
+        for i in range(n_p):
+            for m in range(n_f):
+                if inst.t_trans[i, m] > inst.shelf_life:
+                    h.changeColBounds(vx(i, m), 0.0, 0.0)
+
     # --- Constraints ---
     INF = 1e30
 
@@ -253,6 +360,9 @@ def _highs_solve_sp(
         # (4) C[m] ≤ s_max[m] · z[m]
         for m in range(n_f):
             _row(-INF, 0.0, [vC(m), vz(m)], [1.0, -float(inst.s_max[m])])
+        # (15) MNF: Σ_m z[m] ≤ mnf
+        if inst.mnf is not None and not relax_first_stage_constraints:
+            _row(-INF, float(inst.mnf), [vz(m) for m in range(n_f)], [1.0] * n_f)
 
     for o in range(N):
         for i in range(n_p):
@@ -393,6 +503,13 @@ def _solve_ev(inst: Instance) -> dict:
         for m in range(n_f):
             costs[vx(i, m)] = inst.c[m]
 
+    # Shelf-life prefiltering (constraint 13): apply before addCols
+    if inst.t_trans is not None and inst.shelf_life is not None:
+        for i in range(n_p):
+            for m in range(n_f):
+                if inst.t_trans[i, m] > inst.shelf_life:
+                    ubs[vx(i, m)] = 0.0
+
     h.addCols(n_vars, costs, lbs, ubs,
               0, np.empty(0, np.int32), np.empty(0, np.int32), np.empty(0, np.float64))
 
@@ -418,6 +535,9 @@ def _solve_ev(inst: Instance) -> dict:
              [1.0] * n_p + [-1.0])
     for m in range(n_f):
         _row(-INF, 0.0, [vC(m), vz(m)], [1.0, -float(inst.s_max[m])])
+    # (15) MNF: Σ_m z[m] ≤ mnf
+    if inst.mnf is not None:
+        _row(-INF, float(inst.mnf), [vz(m) for m in range(n_f)], [1.0] * n_f)
 
     t0 = time.perf_counter()
     h.run()

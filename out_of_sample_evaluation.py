@@ -100,6 +100,9 @@ def _load_plans(inst: Instance) -> dict[str, dict]:
         rho_remfg=inst.rho_remfg.copy(),
         rho_sub=inst.rho_sub.copy(),
         rho_cancel=inst.rho_cancel.copy(),
+        t_trans=inst.t_trans,
+        shelf_life=inst.shelf_life,
+        mnf=inst.mnf,
     )
     ev_smart = _solve_ev(inst_smart)
     z_ecd = ev_smart["z"]

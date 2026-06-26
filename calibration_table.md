@@ -16,6 +16,20 @@ All monetary values in millions of USD (M USD). Parameters from `case_study.py :
 
 ---
 
+## Transport and structural constraint parameters (Yield_upgrade)
+
+| Symbol | Value | Units | Status | Primary source |
+|---|---|---|---|---|
+| $t_{\text{trans}}[i,m]$ | [6.0, 13.2] range across 60 pairs | hours | Computed | Haversine distance from Wan et al. (2026) lat/lon; 600 km/h air-freight + 6h overhead |
+| SHELF\_LIFE | 24.0 | hours | Literature-derived | Cryopreservation shelf life; Wan et al. (2026), Avramescu et al. (2023) |
+| Air-freight speed | 600 | km/h effective | Industry-aligned | Door-to-door effective speed including handling; consistent with TrakCel/cold-chain industry norms |
+| Handling overhead | 6.0 | hours | Assumption | Fixed per-shipment overhead for leukapheresis-to-facility cold chain |
+| MNF | 3 | facilities | Industry-aligned | Maximum number of open facilities; industry practice of dual/triple-sourcing autologous CDMO |
+
+**Structural finding (Yield_upgrade):** At the US geographic scale (4 facilities sited at Newark/Boston/Raleigh-Durham/SF), all 60 (hospital, facility) pairs have $t_{\text{trans}} \leq 13.2$ hours $\ll$ 24 hours shelf life. The shelf-life constraint (13) is structurally present but non-binding. The MNF constraint (15, MNF=3) is also non-binding at the central calibration: the SP opens only 2 facilities (m0+m2), confirming that the model's structural preference for concentrated sourcing is robust to the network constraint.
+
+---
+
 ## Patient tier / clinical parameters
 
 | Symbol | Value(s) | Units | Status | Primary source |

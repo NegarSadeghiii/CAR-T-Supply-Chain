@@ -149,6 +149,9 @@ def main() -> None:
         rho_remfg=inst_orig.rho_remfg.copy(),
         rho_sub=inst_orig.rho_sub.copy(),
         rho_cancel=inst_orig.rho_cancel.copy(),
+        t_trans=inst_orig.t_trans,
+        shelf_life=inst_orig.shelf_life,
+        mnf=inst_orig.mnf,
     )
 
     # ------------------------------------------------------------------

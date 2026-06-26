@@ -15,8 +15,9 @@ For each grid point three plans are solved:
   (2) ECD expected-cost deterministic → EEV
   (3) Full two-stage stochastic plan (SP / RP)
 
-Sanity check at (shift=0, spread=1.0): VSS/naive ≈ 14.6%, VSS/ECD ≈ 10.5%,
-SP opens m0+m2.
+Sanity check at (shift=0, spread=1.0): VSS/naive ≈ 14.6%, VSS/ECD ≈ 6.9%
+(Yield_upgrade: ECD now finds m0+m3 instead of m0+m1; same stage-1 cost, lower
+EEV due to more patients at higher-yield m3), SP opens m0+m2.
 
 Run: python sensitivity_p_m.py
 Output: results/sensitivity_p_m_results.json
@@ -34,7 +35,10 @@ from sensitivity_beta import (
     _ecd_effective_costs, _fix_dict, _tier_h_rate, _opens,
     N_SCENARIOS, SEED,
 )
-from case_study import TIERS, TIER_IDX, RHOCANCEL_MAP, _highs_solve_sp, _solve_ev
+from case_study import (
+    TIERS, TIER_IDX, RHOCANCEL_MAP, _highs_solve_sp, _solve_ev,
+    T_TRANS, SHELF_LIFE_HOURS, MAX_FACILITIES_OPEN,
+)
 from yield_sp_v1 import Instance, sample_scenarios
 
 _REPO = Path(__file__).parent
@@ -83,6 +87,9 @@ def build_pm_instance(p_shift: float, p_spread: float) -> Instance:
         rho_remfg=c.copy(),
         rho_sub=rho_sub,
         rho_cancel=rho_cancel,
+        t_trans=T_TRANS,
+        shelf_life=SHELF_LIFE_HOURS,
+        mnf=MAX_FACILITIES_OPEN,
     )
 
 
@@ -109,6 +116,9 @@ def run_point(p_shift: float, p_spread: float) -> dict:
         rho_remfg=inst.rho_remfg.copy(),
         rho_sub=inst.rho_sub.copy(),
         rho_cancel=inst.rho_cancel.copy(),
+        t_trans=inst.t_trans,
+        shelf_life=inst.shelf_life,
+        mnf=inst.mnf,
     )
     ev_ecd = _solve_ev(inst_ecd)
     fix_e  = _fix_dict(inst, ev_ecd["z"], ev_ecd["C"], ev_ecd["x"])
@@ -189,12 +199,12 @@ def main() -> None:
     print(f"  VSS/naive = {calib['vss_vs_naive_pct']:.2f}%  "
           f"(expect ≈ 14.6%)")
     print(f"  VSS/ECD   = {calib['vss_vs_ecd_pct']:.2f}%  "
-          f"(expect ≈ 10.5%)")
+          f"(expect ≈ 6.9%, Yield_upgrade: ECD finds m0+m3)")
     print(f"  SP opens  = {calib['stochastic']['facilities']}  "
           f"(expect ['m0', 'm2'])")
 
     ok_vss_n = abs(calib["vss_vs_naive_pct"] - 14.6) < 2.0
-    ok_vss_e = abs(calib["vss_vs_ecd_pct"]   - 10.5) < 2.0
+    ok_vss_e = abs(calib["vss_vs_ecd_pct"]   - 6.9) < 2.0
     ok_fac   = set(calib["stochastic"]["facilities"]) == {"m0", "m2"}
     status = "PASS" if (ok_vss_n and ok_vss_e and ok_fac) else "WARN"
     print(f"  Status: {status}")

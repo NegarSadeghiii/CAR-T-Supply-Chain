@@ -14,7 +14,7 @@
       0.7,
       0.85
     ],
-    "total_wall_time_s": 57.2
+    "total_wall_time_s": 58.4
   },
   "sweep": [
     {
@@ -41,8 +41,8 @@
           0.240168
         ],
         "ev_cost": 18.034846,
-        "eev_cost": 19.7303,
-        "tier_h_pct": 5.9,
+        "eev_cost": 20.36995,
+        "tier_h_pct": 7.1,
         "facilities": [
           "m0",
           "m3"
@@ -58,7 +58,7 @@
         "stage2_cost": 2.981238,
         "tier_h_pct": 3.2,
         "gap_pct": 0.0,
-        "solve_time": 10.9,
+        "solve_time": 11.22,
         "facilities": [
           "m0",
           "m2"
@@ -69,7 +69,7 @@
         }
       },
       "vss_vs_naive_pct": 18.3315,
-      "vss_vs_ecd_pct": 6.7585
+      "vss_vs_ecd_pct": 10.2196
     },
     {
       "beta_H": 0.55,
@@ -95,15 +95,15 @@
           0.234786
         ],
         "ev_cost": 17.718654,
-        "eev_cost": 19.74025,
-        "tier_h_pct": 6.05,
+        "eev_cost": 19.09235,
+        "tier_h_pct": 4.9,
         "facilities": [
           "m0",
-          "m1"
+          "m3"
         ],
         "capacities": {
           "m0": 10,
-          "m1": 40
+          "m3": 40
         }
       },
       "stochastic": {
@@ -112,7 +112,7 @@
         "stage2_cost": 2.36765,
         "tier_h_pct": 2.15,
         "gap_pct": 0.0,
-        "solve_time": 11.89,
+        "solve_time": 4.99,
         "facilities": [
           "m0",
           "m2"
@@ -123,7 +123,7 @@
         }
       },
       "vss_vs_naive_pct": 14.6061,
-      "vss_vs_ecd_pct": 10.4804
+      "vss_vs_ecd_pct": 6.8543
     },
     {
       "beta_H": 0.7,
@@ -149,15 +149,15 @@
           0.229404
         ],
         "ev_cost": 17.402461,
-        "eev_cost": 18.027775,
-        "tier_h_pct": 3.05,
+        "eev_cost": 18.04715,
+        "tier_h_pct": 3.1,
         "facilities": [
           "m0",
-          "m1"
+          "m3"
         ],
         "capacities": {
           "m0": 10,
-          "m1": 40
+          "m3": 40
         }
       },
       "stochastic": {
@@ -166,7 +166,7 @@
         "stage2_cost": 1.930925,
         "tier_h_pct": 1.4,
         "gap_pct": 0.0,
-        "solve_time": 8.5,
+        "solve_time": 10.74,
         "facilities": [
           "m0",
           "m2"
@@ -177,7 +177,7 @@
         }
       },
       "vss_vs_naive_pct": 11.4871,
-      "vss_vs_ecd_pct": 3.4241
+      "vss_vs_ecd_pct": 3.5352
     },
     {
       "beta_H": 0.85,
@@ -203,15 +203,15 @@
           0.224022
         ],
         "ev_cost": 17.086269,
-        "eev_cost": 17.23755,
-        "tier_h_pct": 1.65,
+        "eev_cost": 17.0597,
+        "tier_h_pct": 1.4,
         "facilities": [
           "m0",
-          "m1"
+          "m3"
         ],
         "capacities": {
           "m0": 10,
-          "m1": 40
+          "m3": 40
         }
       },
       "stochastic": {
@@ -220,7 +220,7 @@
         "stage2_cost": 2.1995,
         "tier_h_pct": 1.05,
         "gap_pct": 0.0,
-        "solve_time": 11.16,
+        "solve_time": 17.72,
         "facilities": [
           "m0",
           "m3"
@@ -231,7 +231,7 @@
         }
       },
       "vss_vs_naive_pct": 10.2931,
-      "vss_vs_ecd_pct": 3.222
+      "vss_vs_ecd_pct": 2.157
     }
   ]
 }

@@ -16,7 +16,7 @@
     "stage1": 26.5,
     "stage2": 10.895925,
     "total": 37.395925,
-    "solve_time": 8.5,
+    "solve_time": 6.0,
     "opens": [
       0,
       3
@@ -24,20 +24,20 @@
   },
   "smart_eev": {
     "stage1": 29.0,
-    "stage2": 5.611737,
-    "total": 34.611737,
-    "solve_time": 7.79,
+    "stage2": 6.148525,
+    "total": 35.148525,
+    "solve_time": 5.93,
     "facility_allocation_differs_from_naive": true,
     "opens": [
-      1,
-      2
+      2,
+      3
     ]
   },
   "rp": {
     "stage1": 29.0,
     "stage2": 4.379425,
     "total": 33.379425,
-    "solve_time": 15.38,
+    "solve_time": 13.93,
     "gap": 0.0,
     "opens": [
       1,
@@ -45,7 +45,7 @@
     ]
   },
   "vss_vs_naive_pct": 12.0329,
-  "vss_smart_vs_rp_pct": 3.6918,
+  "vss_smart_vs_rp_pct": 5.3,
   "tier_cancel_rates": {
     "naive": {
       "H": 5.45,
@@ -53,9 +53,9 @@
       "L": 0.9833
     },
     "smart": {
-      "H": 2.75,
-      "M": 1.33,
-      "L": 0.5333
+      "H": 3.125,
+      "M": 1.43,
+      "L": 0.4667
     },
     "sp": {
       "H": 2.025,
@@ -70,9 +70,9 @@
       "cancel": 22.377
     },
     "smart": {
-      "remfg": 68.8679,
-      "sub": 9.5126,
-      "cancel": 21.6195
+      "remfg": 68.7692,
+      "sub": 8.4615,
+      "cancel": 22.7692
     },
     "sp": {
       "remfg": 73.0574,
@@ -110,19 +110,19 @@
         "L": 0
       },
       "m_1": {
-        "H": 7,
-        "M": 24,
-        "L": 19
-      },
-      "m_2": {
-        "H": 13,
-        "M": 26,
-        "L": 11
-      },
-      "m_3": {
         "H": 0,
         "M": 0,
         "L": 0
+      },
+      "m_2": {
+        "H": 9,
+        "M": 23,
+        "L": 18
+      },
+      "m_3": {
+        "H": 11,
+        "M": 27,
+        "L": 12
       }
     },
     "sp": {
@@ -148,5 +148,5 @@
       }
     }
   },
-  "elapsed_s": 31.7
+  "elapsed_s": 25.9
 }

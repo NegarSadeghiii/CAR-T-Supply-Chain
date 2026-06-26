@@ -7,7 +7,7 @@ Run: python yield_sp_v1.py
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
@@ -31,6 +31,10 @@ class Instance:
     rho_remfg: np.ndarray # [m] re-manufacturing cost
     rho_sub: np.ndarray   # [m, m'] subcontracting cost
     rho_cancel: np.ndarray  # [i] cancellation clinical loss (tier-dependent)
+    # Optional structural constraints (Yield_upgrade)
+    t_trans: Optional[np.ndarray] = None   # [i, m] transport time in hours (Haversine)
+    shelf_life: Optional[float] = None     # cryopreservation shelf life in hours
+    mnf: Optional[int] = None             # max number of facilities open (MNF)
 
     @property
     def I(self):

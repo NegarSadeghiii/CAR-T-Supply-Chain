@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 
-from case_study import TIER_IDX, _highs_solve_sp, _solve_ev
+from case_study import TIER_IDX, _highs_solve_sp, _solve_ev, MAX_FACILITIES_OPEN
 from expected_cost_baseline import _compute_effective_costs
 from yield_sp_v1 import Instance, sample_scenarios
 
@@ -86,6 +86,7 @@ def _build_instance(n: int) -> Instance:
         rho_remfg=C_BASE.copy(),
         rho_sub=rho_sub,
         rho_cancel=rho_cancel,
+        mnf=MAX_FACILITIES_OPEN,   # MNF applied; t_trans/shelf_life omitted (non-binding at scale)
     )
 
 
@@ -203,6 +204,7 @@ def run_instance(n: int) -> dict:
         s_max=inst.s_max.copy(), p=inst.p.copy(), beta=inst.beta.copy(),
         rho_leuk=inst.rho_leuk, rho_remfg=inst.rho_remfg.copy(),
         rho_sub=inst.rho_sub.copy(), rho_cancel=inst.rho_cancel.copy(),
+        mnf=inst.mnf,
     )
     ev_smart = _solve_ev(inst_smart)
     ev_fix_smart = {
