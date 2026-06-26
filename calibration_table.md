@@ -127,3 +127,26 @@ During the calibration process, we evaluated whether substituting Wan et al. (20
 This is consistent with the regime characterization in Figure 16 (p_m sensitivity heatmap): VSS-vs-ECD remains above the 4% contribution-viability threshold in the moderate-cost-spread regime where our Avramescu/Bernardi calibration sits, and collapses in the narrow-spread regime where Wan's published cost values sit. The empirical CAR-T calibration — wide spread in facility opening cost (\$0.5M–\$3.0M), wide spread in per-batch operating cost (\$0.15M–\$0.20M), wide spread in per-batch yield (0.85–0.95) — places the case study squarely in the regime where the structural-recourse value holds.
 
 The finding does NOT invalidate our contribution claim; it characterizes the operating regime in which two-stage SP adds value over expected-parameter deterministic baselines, and demonstrates that this regime is consistent with empirical real-world CAR-T heterogeneity (axicabtagene ciloleucel 4% failure rate / tisagenlecleucel 17% / lisocabtagene maraleucel 28%, per-product real-world rates documented by the UK National CAR-T Panel).
+
+---
+
+### Structural constraint sensitivity (Yield_upgrade)
+
+A 2×2 sweep on the structural constraints added in the Yield_upgrade branch, testing whether tighter, biologically/operationally realistic values become binding. Infeasible-pair counts are over the full patient-facility grid (50 patients × 4 facilities = 200 pairs). Source: `sensitivity_constraints.py` → `results/sensitivity_constraints_results.json`.
+
+| Configuration | Infeasible (i, m) pairs | SP facility set | VSS-vs-Naive | VSS-vs-ECD | Tier-H SP rate |
+|---|---|---|---|---|---|
+| Baseline (24h, MNF=3)   | 0 / 200  | m0 + m2 | 14.61% | 6.85% | 2.15% |
+| Fresh-cell (12h, MNF=3) | 69 / 200 | m1 + m3 | 1.90%  | 1.90% | 3.40% |
+| Tight-MNF (24h, MNF=2)  | 0 / 200  | m0 + m2 | 14.61% | 6.85% | 2.15% |
+| Joint (12h, MNF=2)      | 69 / 200 | m1 + m3 | 1.90%  | 1.90% | 3.40% |
+
+**Interpretation:**
+
+- **Shelf-life becomes binding at 12 hours.** Dropping from the 24h cryopreserved shelf life to a 12h fresh-cell window renders 69 of 200 patient-facility pairs infeasible — the long transcontinental legs (East-coast facilities ↔ West-coast patients and vice versa, all with $t_{\text{trans}} \in (12, 13.2]$ h). No patient is left without *any* feasible facility, so the instance stays solvable, but the geographic feasible region is materially reshaped. The SP responds by **shifting its facility selection from m0 + m2 (Newark + Raleigh-Durham, both East-coast) to m1 + m3 (Boston + San Francisco)** — opening the San Francisco facility (m3) becomes mandatory to serve West-coast patients within the 12h window, and a bi-coastal pair is forced. This sacrifices the cost-yield advantage of the m0 + m2 selection.
+
+- **The contribution claim collapses under the 12h constraint, for a structural reason.** VSS-vs-Naive and VSS-vs-ECD both fall to **1.90%** (below the 4% contribution-viability threshold), and — notably — they become *identical*. When the shelf-life constraint geographically pins the facility set, the naive deterministic, expected-cost deterministic, and stochastic plans all converge to the same m1 + m3 selection; the cost-yield trade-off that the two-stage recourse exploits is dominated by a hard geographic feasibility constraint. This is the same regime mechanism documented above for the compressed-cost-spread case: when an exogenous constraint removes the structural choice, the value of stochastic solution disappears. It is a finding about the operating regime, not a defect in the model.
+
+- **MNF=2 is non-binding.** Tightening the maximum-open-facility cap from 3 to 2 leaves every reported quantity unchanged (SP = m0 + m2, VSS 14.61% / 6.85%, identical to baseline), because the SP already opens exactly 2 facilities at the central calibration. The constraint is structurally present but inactive at this network scale.
+
+- **Joint (12h + MNF=2) is governed entirely by the shelf-life constraint.** The joint cell is identical to the fresh-cell (12h, MNF=3) cell: the forced m1 + m3 selection already uses only 2 facilities, so MNF=2 adds no further restriction. The shelf-life constraint is the sole active driver.
