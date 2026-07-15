@@ -44,11 +44,12 @@ def main():
     # 2. Nesting gate (must reproduce v1 before any experiment is trusted).
     _run(["test_nesting.py"], "2. Nesting validation — dynamic_sp(kappa=0) == v1")
 
-    # 3. Value-of-Endogeneity experiment (designs + simulator + sweep + figures).
-    # --quick skips figures so it never overwrites the full-run figures.
-    voe_cmd = (["value_of_endogeneity.py", "--quick", "--no-figures"]
-               if args.quick else ["value_of_endogeneity.py"])
-    _run(voe_cmd, "3. Value of Endogeneity experiment")
+    # 3. Capacity-tight deterioration rerun in healthcare terms (main deliverable):
+    #    real capacity, growing demand, decline-speed sweep; writes RESULTS.md
+    #    figures to figures/ and validation figures to figures/technical/.
+    det_cmd = (["deterioration_experiment.py", "--quick", "--no-figures"]
+               if args.quick else ["deterioration_experiment.py"])
+    _run(det_cmd, "3. Capacity-tight deterioration experiment (patient outcomes)")
 
     print(f"\n{'='*70}\nAll stages completed. See RESULTS.md, figures/figureD*, "
           f"results/value_of_endogeneity*.json\n{'='*70}")

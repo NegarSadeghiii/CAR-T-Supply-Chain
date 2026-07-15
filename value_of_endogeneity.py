@@ -68,7 +68,7 @@ def _tier_hr(tiers):
 
 
 def simulate_endogenous(inst, design, tiers, Y, B, U, *,
-                        kappa, gamma, clearing=DEFAULT_CLEARING):
+                        kappa, gamma, clearing=DEFAULT_CLEARING, tier_idx=None):
     """
     Evaluate a FIXED design under the true endogenous dynamics on shared OOS
     draws (Y yields, B baseline eligibility, U uniforms for the decline event).
@@ -120,7 +120,8 @@ def simulate_endogenous(inst, design, tiers, Y, B, U, *,
     stage1 = (sum(inst.f[m] * z[m] for m in range(n_f))
               + sum(inst.pi[m] * C[m] for m in range(n_f))
               + sum(inst.c[m] * x[i, m] for i in range(n_p) for m in range(n_f)))
-    tier_cancel = {t: float(r_cancel[:, TIER_IDX[t]].sum() / N) for t in ("H", "M", "L")}
+    tidx = tier_idx if tier_idx is not None else TIER_IDX
+    tier_cancel = {t: float(r_cancel[:, tidx[t]].sum() / N) for t in ("H", "M", "L")}
     return {
         "total_cost": float(stage1 + s2),
         "expected_stage2_cost": float(s2),
