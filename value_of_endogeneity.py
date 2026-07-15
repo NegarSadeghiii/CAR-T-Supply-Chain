@@ -310,19 +310,29 @@ def make_figures(payload):
     ax.legend()
     fig.tight_layout(); save_figure(fig, "figureD1_voe_vs_kappa")
 
-    # Figure 2: tier-H mortality vs kappa (exo vs endo), per gamma.
+    # Figure 2: TRUE tier-H mortality vs kappa (endo design under true dynamics),
+    # against the flat mortality the exogenous model assumes (its kappa=0 level).
+    # The endogenous and exogenous designs incur essentially the same tier-H
+    # mortality here (the high-yield facility serving tier-H is pinned at s_max),
+    # so the message is the large gap between TRUE mortality and what an
+    # exogenous (no-delay) model would predict.
     setup_style(); fig = double_column(); ax = fig.add_subplot(111)
+    base = next(r["tierH_mort_endo"] for r in payload["results"]
+                if r["kappa"] == 0.0 and r["gamma"] == gammas[0])
     for g in gammas:
         rs = sorted([r for r in payload["results"] if r["gamma"] == g], key=lambda r: r["kappa"])
         k = [r["kappa"] for r in rs]
-        ax.plot(k, [r["tierH_mort_exo"] for r in rs], "--s", color=gcolors.get(g, COLORS["sp"]),
-                ms=4, alpha=0.7, label=f"exo (ignore delay), gamma={g}")
         ax.plot(k, [r["tierH_mort_endo"] for r in rs], "-o", color=gcolors.get(g, COLORS["sp"]),
-                ms=4, label=f"endo (model delay), gamma={g}")
+                ms=4, label=f"true tier-H mortality, gamma={g}")
+    ax.axhline(base, color="#555", ls="--", lw=1.2,
+               label="exogenous model's assumption (no delay)")
+    ax.annotate("mortality the exogenous\nmodel is blind to",
+                xy=(1.5, 0.47), xytext=(0.9, 0.30), fontsize=8,
+                arrowprops=dict(arrowstyle="->", color="#555"))
     ax.set_xlabel("Delay-sensitivity  kappa")
     ax.set_ylabel("Tier-H cancellations / scenario  (mortality proxy)")
-    ax.set_title("Tier-H mortality: modelling vs ignoring delay", fontweight="bold")
-    ax.legend(fontsize=7, ncol=2)
+    ax.set_title("True tier-H mortality vs the exogenous assumption", fontweight="bold")
+    ax.legend(fontsize=8)
     fig.tight_layout(); save_figure(fig, "figureD2_tierH_mortality_vs_kappa")
 
 
