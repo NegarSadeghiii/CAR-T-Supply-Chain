@@ -41,7 +41,7 @@ from yield_sp_v1 import Instance, sample_scenarios
 from case_study import build_case_study_instance, TIERS, TIER_IDX
 from declineprob import calibrate_lambda, extra_survival, HR_TIER
 from clearing_function import ClearingFunction, DEFAULT_CLEARING
-from dynamic_sp import solve_dynamic_sp
+from dynamic_sp import solve_dynamic_sp, solve_dynamic_sp_endogenous
 
 _HERE = Path(__file__).resolve().parent
 _FIG = _HERE / "figures"
@@ -90,17 +90,24 @@ def simulate_endogenous(inst, design, tiers, Y, B, U, *,
     Yass = Y[:, np.arange(n_p), m_assign]                    # (N, n_p)
     F = 1.0 - Yass
 
-    # Decision-dependent congestion -> delay -> StillEligible.
+    # Decision-dependent congestion -> delay -> StillEligible. rho_m combines
+    # the design's primary utilization (a_m / C_m) with the per-scenario failure
+    # surge (batches needing a re-make at m), exactly as the optimizer's
+    # still_eligible_for_design does — so the design is scored on the congestion
+    # it actually creates.
+    a_m = np.zeros(n_f)
+    for i in range(n_p):
+        a_m[m_assign[i]] += 1.0
     still = np.zeros((N, n_p))
     wait = np.zeros((N, n_p))
     rho_acc = np.zeros((N, n_f))
     Csafe = np.maximum(C, 1e-9)
     for o in range(N):
-        demand = np.zeros(n_f)
+        surge = np.zeros(n_f)
         for i in range(n_p):
             if F[o, i] > 0.5:
-                demand[m_assign[i]] += 1.0
-        rho = demand / Csafe
+                surge[m_assign[i]] += 1.0
+        rho = (a_m + surge) / Csafe
         rho_acc[o] = rho
         delay_m = clearing.remake_delay(rho)                 # (n_f,)
         w = F[o] * delay_m[m_assign]                         # (n_p,)
@@ -226,9 +233,11 @@ def run_experiment(quick=False):
             if kappa == 0.0:
                 D_endo = D_exo                          # identical by construction
             else:
-                D_endo = solve_dynamic_sp(inst, Ytr, Btr, tiers=tiers, kappa=kappa,
-                                          gamma=gamma, seed=SEED_TRAIN,
-                                          mip_gap=MIP_GAP, time_limit=tl)
+                # Fixed-point endogenous design: congestion consistent with the
+                # design's own capacity/routing (matches the true simulator).
+                D_endo = solve_dynamic_sp_endogenous(
+                    inst, Ytr, Btr, tiers, kappa=kappa, gamma=gamma,
+                    seed=SEED_TRAIN, mip_gap=MIP_GAP, time_limit=tl)
             designs[key] = {"z": D_endo["z"].tolist(), "C": D_endo["C"].tolist()}
 
             # Evaluate BOTH designs under the common true dynamics at (kappa, gamma).
