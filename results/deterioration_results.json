@@ -1,0 +1,2203 @@
+{
+  "calib_kappa": 1.0,
+  "s_max_real": 75,
+  "n_train": 80,
+  "n_oos": 500,
+  "seed_train": 0,
+  "seed_oos": 100,
+  "lambda_by_gamma": {
+    "1.0": 36.38596471481464,
+    "1.5": 25.139097250185223,
+    "2.0": 20.895731061098957
+  },
+  "main_tight": {
+    "label": "tight",
+    "n_patients": 150,
+    "s_max": 75,
+    "gamma": 1.0,
+    "kappas": [
+      0.0,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.4,
+      0.5,
+      1.0,
+      1.5,
+      2.0
+    ],
+    "naive_predicted": {
+      "high_urgency_deaths": 0.842,
+      "med_not_treated": 1.084,
+      "low_not_treated": 0.238,
+      "treated_share": 0.9855733333333334,
+      "treated_share_by_tier": {
+        "H": 0.9719333333333333,
+        "M": 0.9855466666666667,
+        "L": 0.9947111111111111
+      },
+      "total_cost": 49.703214999999986,
+      "cost_per_treated": 0.33620508536486365,
+      "facilities_open": 2,
+      "open_facilities": [
+        2,
+        3
+      ],
+      "spare_capacity_built": 0.0,
+      "capacity": [
+        0.0,
+        0.0,
+        75.0,
+        75.0
+      ]
+    },
+    "D_exo": {
+      "z": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "C": [
+        0,
+        0,
+        75,
+        75
+      ]
+    },
+    "rows": [
+      {
+        "kappa": 0.0,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.842,
+          "med_not_treated": 1.084,
+          "low_not_treated": 0.238,
+          "treated_share": 0.9855733333333334,
+          "treated_share_by_tier": {
+            "H": 0.9719333333333333,
+            "M": 0.9855466666666667,
+            "L": 0.9947111111111111
+          },
+          "total_cost": 49.703214999999986,
+          "cost_per_treated": 0.33620508536486365,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.842,
+          "med_not_treated": 1.084,
+          "low_not_treated": 0.238,
+          "treated_share": 0.9855733333333334,
+          "treated_share_by_tier": {
+            "H": 0.9719333333333333,
+            "M": 0.9855466666666667,
+            "L": 0.9947111111111111
+          },
+          "total_cost": 49.703214999999986,
+          "cost_per_treated": 0.33620508536486365,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      },
+      {
+        "kappa": 0.1,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.024,
+          "med_not_treated": 1.89,
+          "low_not_treated": 0.732,
+          "treated_share": 0.9756933333333334,
+          "treated_share_by_tier": {
+            "H": 0.9658666666666667,
+            "M": 0.9748,
+            "L": 0.9837333333333333
+          },
+          "total_cost": 52.51708999999997,
+          "cost_per_treated": 0.3588360413791216,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.024,
+          "med_not_treated": 1.89,
+          "low_not_treated": 0.732,
+          "treated_share": 0.9756933333333334,
+          "treated_share_by_tier": {
+            "H": 0.9658666666666667,
+            "M": 0.9748,
+            "L": 0.9837333333333333
+          },
+          "total_cost": 52.51708999999997,
+          "cost_per_treated": 0.3588360413791216,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      },
+      {
+        "kappa": 0.15,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.104,
+          "med_not_treated": 2.216,
+          "low_not_treated": 0.908,
+          "treated_share": 0.9718133333333333,
+          "treated_share_by_tier": {
+            "H": 0.9632,
+            "M": 0.9704533333333333,
+            "L": 0.9798222222222223
+          },
+          "total_cost": 53.67838499999991,
+          "cost_per_treated": 0.36823522349971133,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.104,
+          "med_not_treated": 2.216,
+          "low_not_treated": 0.908,
+          "treated_share": 0.9718133333333333,
+          "treated_share_by_tier": {
+            "H": 0.9632,
+            "M": 0.9704533333333333,
+            "L": 0.9798222222222223
+          },
+          "total_cost": 53.67838499999991,
+          "cost_per_treated": 0.36823522349971133,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      },
+      {
+        "kappa": 0.2,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.178,
+          "med_not_treated": 2.53,
+          "low_not_treated": 1.116,
+          "treated_share": 0.9678399999999999,
+          "treated_share_by_tier": {
+            "H": 0.9607333333333333,
+            "M": 0.9662666666666667,
+            "L": 0.9752
+          },
+          "total_cost": 54.802589999999846,
+          "cost_per_treated": 0.37749070094230347,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.178,
+          "med_not_treated": 2.53,
+          "low_not_treated": 1.116,
+          "treated_share": 0.9678399999999999,
+          "treated_share_by_tier": {
+            "H": 0.9607333333333333,
+            "M": 0.9662666666666667,
+            "L": 0.9752
+          },
+          "total_cost": 54.802589999999846,
+          "cost_per_treated": 0.37749070094230347,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      },
+      {
+        "kappa": 0.25,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.236,
+          "med_not_treated": 2.796,
+          "low_not_treated": 1.302,
+          "treated_share": 0.96444,
+          "treated_share_by_tier": {
+            "H": 0.9588,
+            "M": 0.96272,
+            "L": 0.9710666666666666
+          },
+          "total_cost": 55.73415999999978,
+          "cost_per_treated": 0.385260945902975,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.236,
+          "med_not_treated": 2.796,
+          "low_not_treated": 1.302,
+          "treated_share": 0.96444,
+          "treated_share_by_tier": {
+            "H": 0.9588,
+            "M": 0.96272,
+            "L": 0.9710666666666666
+          },
+          "total_cost": 55.73415999999978,
+          "cost_per_treated": 0.385260945902975,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      },
+      {
+        "kappa": 0.3,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.288,
+          "med_not_treated": 2.99,
+          "low_not_treated": 1.446,
+          "treated_share": 0.96184,
+          "treated_share_by_tier": {
+            "H": 0.9570666666666666,
+            "M": 0.9601333333333333,
+            "L": 0.9678666666666667
+          },
+          "total_cost": 56.47447999999976,
+          "cost_per_treated": 0.39143364107682327,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.288,
+          "med_not_treated": 2.99,
+          "low_not_treated": 1.446,
+          "treated_share": 0.96184,
+          "treated_share_by_tier": {
+            "H": 0.9570666666666666,
+            "M": 0.9601333333333333,
+            "L": 0.9678666666666667
+          },
+          "total_cost": 56.47447999999976,
+          "cost_per_treated": 0.39143364107682327,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      },
+      {
+        "kappa": 0.4,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.396,
+          "med_not_treated": 3.398,
+          "low_not_treated": 1.686,
+          "treated_share": 0.9568000000000001,
+          "treated_share_by_tier": {
+            "H": 0.9534666666666667,
+            "M": 0.9546933333333333,
+            "L": 0.9625333333333334
+          },
+          "total_cost": 57.98802499999974,
+          "cost_per_treated": 0.4040414227982144,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.396,
+          "med_not_treated": 3.398,
+          "low_not_treated": 1.686,
+          "treated_share": 0.9568000000000001,
+          "treated_share_by_tier": {
+            "H": 0.9534666666666667,
+            "M": 0.9546933333333333,
+            "L": 0.9625333333333334
+          },
+          "total_cost": 57.98802499999974,
+          "cost_per_treated": 0.4040414227982144,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      },
+      {
+        "kappa": 0.5,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.474,
+          "med_not_treated": 3.698,
+          "low_not_treated": 1.878,
+          "treated_share": 0.953,
+          "treated_share_by_tier": {
+            "H": 0.9508666666666666,
+            "M": 0.9506933333333334,
+            "L": 0.9582666666666667
+          },
+          "total_cost": 59.10262999999978,
+          "cost_per_treated": 0.41344966771598307,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.474,
+          "med_not_treated": 3.698,
+          "low_not_treated": 1.878,
+          "treated_share": 0.953,
+          "treated_share_by_tier": {
+            "H": 0.9508666666666666,
+            "M": 0.9506933333333334,
+            "L": 0.9582666666666667
+          },
+          "total_cost": 59.10262999999978,
+          "cost_per_treated": 0.41344966771598307,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      },
+      {
+        "kappa": 1.0,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.666,
+          "med_not_treated": 4.606,
+          "low_not_treated": 2.498,
+          "treated_share": 0.9415333333333332,
+          "treated_share_by_tier": {
+            "H": 0.9444666666666667,
+            "M": 0.9385866666666667,
+            "L": 0.9444888888888889
+          },
+          "total_cost": 62.242134999999905,
+          "cost_per_treated": 0.44071468526516966,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.666,
+          "med_not_treated": 4.606,
+          "low_not_treated": 2.498,
+          "treated_share": 0.9415333333333332,
+          "treated_share_by_tier": {
+            "H": 0.9444666666666667,
+            "M": 0.9385866666666667,
+            "L": 0.9444888888888889
+          },
+          "total_cost": 62.242134999999905,
+          "cost_per_treated": 0.44071468526516966,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      },
+      {
+        "kappa": 1.5,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.736,
+          "med_not_treated": 4.912,
+          "low_not_treated": 2.706,
+          "treated_share": 0.9376400000000001,
+          "treated_share_by_tier": {
+            "H": 0.9421333333333334,
+            "M": 0.9345066666666667,
+            "L": 0.9398666666666666
+          },
+          "total_cost": 63.331439999999944,
+          "cost_per_treated": 0.4502896634102636,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.736,
+          "med_not_treated": 4.912,
+          "low_not_treated": 2.706,
+          "treated_share": 0.9376400000000001,
+          "treated_share_by_tier": {
+            "H": 0.9421333333333334,
+            "M": 0.9345066666666667,
+            "L": 0.9398666666666666
+          },
+          "total_cost": 63.331439999999944,
+          "cost_per_treated": 0.4502896634102636,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      },
+      {
+        "kappa": 2.0,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.77,
+          "med_not_treated": 5.018,
+          "low_not_treated": 2.804,
+          "treated_share": 0.9360533333333333,
+          "treated_share_by_tier": {
+            "H": 0.941,
+            "M": 0.9330933333333333,
+            "L": 0.9376888888888889
+          },
+          "total_cost": 63.78089999999996,
+          "cost_per_treated": 0.45425403110933826,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.77,
+          "med_not_treated": 5.018,
+          "low_not_treated": 2.804,
+          "treated_share": 0.9360533333333333,
+          "treated_share_by_tier": {
+            "H": 0.941,
+            "M": 0.9330933333333333,
+            "L": 0.9376888888888889
+          },
+          "total_cost": 63.78089999999996,
+          "cost_per_treated": 0.45425403110933826,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            75.0,
+            75.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      }
+    ]
+  },
+  "low_demand": {
+    "label": "low",
+    "n_patients": 50,
+    "s_max": 75,
+    "gamma": 1.0,
+    "kappas": [
+      0.0,
+      0.1,
+      0.15,
+      0.2,
+      0.25,
+      0.3,
+      0.4,
+      0.5,
+      1.0,
+      1.5,
+      2.0
+    ],
+    "naive_predicted": {
+      "high_urgency_deaths": 0.324,
+      "med_not_treated": 0.476,
+      "low_not_treated": 0.082,
+      "treated_share": 0.98236,
+      "treated_share_by_tier": {
+        "H": 0.9676,
+        "M": 0.98096,
+        "L": 0.9945333333333334
+      },
+      "total_cost": 17.513239999999882,
+      "cost_per_treated": 0.35655441996823733,
+      "facilities_open": 1,
+      "open_facilities": [
+        3
+      ],
+      "spare_capacity_built": 0.0,
+      "capacity": [
+        0.0,
+        0.0,
+        0.0,
+        50.0
+      ]
+    },
+    "D_exo": {
+      "z": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "C": [
+        0,
+        0,
+        0,
+        50
+      ]
+    },
+    "rows": [
+      {
+        "kappa": 0.0,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.324,
+          "med_not_treated": 0.476,
+          "low_not_treated": 0.082,
+          "treated_share": 0.98236,
+          "treated_share_by_tier": {
+            "H": 0.9676,
+            "M": 0.98096,
+            "L": 0.9945333333333334
+          },
+          "total_cost": 17.513239999999882,
+          "cost_per_treated": 0.35655441996823733,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.324,
+          "med_not_treated": 0.476,
+          "low_not_treated": 0.082,
+          "treated_share": 0.98236,
+          "treated_share_by_tier": {
+            "H": 0.9676,
+            "M": 0.98096,
+            "L": 0.9945333333333334
+          },
+          "total_cost": 17.513239999999882,
+          "cost_per_treated": 0.35655441996823733,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      },
+      {
+        "kappa": 0.1,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.418,
+          "med_not_treated": 0.838,
+          "low_not_treated": 0.274,
+          "treated_share": 0.9693999999999999,
+          "treated_share_by_tier": {
+            "H": 0.9582,
+            "M": 0.96648,
+            "L": 0.9817333333333333
+          },
+          "total_cost": 18.825359999999897,
+          "cost_per_treated": 0.3883919950484815,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.412,
+          "med_not_treated": 0.816,
+          "low_not_treated": 0.258,
+          "treated_share": 0.97028,
+          "treated_share_by_tier": {
+            "H": 0.9588,
+            "M": 0.96736,
+            "L": 0.9828
+          },
+          "total_cost": 18.861499999999893,
+          "cost_per_treated": 0.3887846807107204,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 2.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            52.0
+          ]
+        },
+        "voe": -0.036139999999996064,
+        "high_urgency_deaths_saved": 0.006000000000000005
+      },
+      {
+        "kappa": 0.15,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.45,
+          "med_not_treated": 0.962,
+          "low_not_treated": 0.344,
+          "treated_share": 0.96488,
+          "treated_share_by_tier": {
+            "H": 0.955,
+            "M": 0.96152,
+            "L": 0.9770666666666666
+          },
+          "total_cost": 19.276049999999906,
+          "cost_per_treated": 0.3995533123289923,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.426,
+          "med_not_treated": 0.868,
+          "low_not_treated": 0.29,
+          "treated_share": 0.96832,
+          "treated_share_by_tier": {
+            "H": 0.9574,
+            "M": 0.96528,
+            "L": 0.9806666666666667
+          },
+          "total_cost": 19.2353699999999,
+          "cost_per_treated": 0.39729366325181553,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 5.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            55.0
+          ]
+        },
+        "voe": 0.04068000000000538,
+        "high_urgency_deaths_saved": 0.02400000000000002
+      },
+      {
+        "kappa": 0.2,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.476,
+          "med_not_treated": 1.104,
+          "low_not_treated": 0.418,
+          "treated_share": 0.96004,
+          "treated_share_by_tier": {
+            "H": 0.9524,
+            "M": 0.95584,
+            "L": 0.9721333333333333
+          },
+          "total_cost": 19.726779999999913,
+          "cost_per_treated": 0.41095746010582707,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.442,
+          "med_not_treated": 0.936,
+          "low_not_treated": 0.334,
+          "treated_share": 0.96576,
+          "treated_share_by_tier": {
+            "H": 0.9558,
+            "M": 0.96256,
+            "L": 0.9777333333333333
+          },
+          "total_cost": 19.536689999999904,
+          "cost_per_treated": 0.4045868538767376,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 6.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            56.0
+          ]
+        },
+        "voe": 0.19009000000000853,
+        "high_urgency_deaths_saved": 0.033999999999999975
+      },
+      {
+        "kappa": 0.25,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.506,
+          "med_not_treated": 1.202,
+          "low_not_treated": 0.482,
+          "treated_share": 0.9562,
+          "treated_share_by_tier": {
+            "H": 0.9494,
+            "M": 0.95192,
+            "L": 0.9678666666666667
+          },
+          "total_cost": 20.11525999999992,
+          "cost_per_treated": 0.42073331938924746,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.464,
+          "med_not_treated": 1.032,
+          "low_not_treated": 0.382,
+          "treated_share": 0.96244,
+          "treated_share_by_tier": {
+            "H": 0.9536,
+            "M": 0.95872,
+            "L": 0.9745333333333334
+          },
+          "total_cost": 19.865979999999908,
+          "cost_per_treated": 0.41282531898092156,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 6.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            56.0
+          ]
+        },
+        "voe": 0.24928000000001305,
+        "high_urgency_deaths_saved": 0.04199999999999998
+      },
+      {
+        "kappa": 0.3,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.534,
+          "med_not_treated": 1.31,
+          "low_not_treated": 0.55,
+          "treated_share": 0.9521200000000001,
+          "treated_share_by_tier": {
+            "H": 0.9466,
+            "M": 0.9476,
+            "L": 0.9633333333333334
+          },
+          "total_cost": 20.51251999999993,
+          "cost_per_treated": 0.4308809813888991,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.482,
+          "med_not_treated": 1.128,
+          "low_not_treated": 0.444,
+          "treated_share": 0.95892,
+          "treated_share_by_tier": {
+            "H": 0.9518,
+            "M": 0.95488,
+            "L": 0.9704
+          },
+          "total_cost": 20.179919999999917,
+          "cost_per_treated": 0.4208884995620056,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 6.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            56.0
+          ]
+        },
+        "voe": 0.33260000000001355,
+        "high_urgency_deaths_saved": 0.052000000000000046
+      },
+      {
+        "kappa": 0.4,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.574,
+          "med_not_treated": 1.45,
+          "low_not_treated": 0.644,
+          "treated_share": 0.94664,
+          "treated_share_by_tier": {
+            "H": 0.9426,
+            "M": 0.942,
+            "L": 0.9570666666666666
+          },
+          "total_cost": 21.05232999999994,
+          "cost_per_treated": 0.4447800642271601,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.524,
+          "med_not_treated": 1.274,
+          "low_not_treated": 0.522,
+          "treated_share": 0.9536,
+          "treated_share_by_tier": {
+            "H": 0.9476,
+            "M": 0.94904,
+            "L": 0.9652
+          },
+          "total_cost": 20.733209999999925,
+          "cost_per_treated": 0.4348408137583877,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 6.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            56.0
+          ]
+        },
+        "voe": 0.31912000000001584,
+        "high_urgency_deaths_saved": 0.04999999999999993
+      },
+      {
+        "kappa": 0.5,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.604,
+          "med_not_treated": 1.554,
+          "low_not_treated": 0.756,
+          "treated_share": 0.94172,
+          "treated_share_by_tier": {
+            "H": 0.9396,
+            "M": 0.93784,
+            "L": 0.9496
+          },
+          "total_cost": 21.478819999999953,
+          "cost_per_treated": 0.45616149173852,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.556,
+          "med_not_treated": 1.386,
+          "low_not_treated": 0.602,
+          "treated_share": 0.9491200000000001,
+          "treated_share_by_tier": {
+            "H": 0.9444,
+            "M": 0.94456,
+            "L": 0.9598666666666666
+          },
+          "total_cost": 21.167769999999933,
+          "cost_per_treated": 0.4460504467296007,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 6.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            56.0
+          ]
+        },
+        "voe": 0.31105000000001937,
+        "high_urgency_deaths_saved": 0.04799999999999993
+      },
+      {
+        "kappa": 1.0,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.686,
+          "med_not_treated": 1.874,
+          "low_not_treated": 0.986,
+          "treated_share": 0.92908,
+          "treated_share_by_tier": {
+            "H": 0.9314,
+            "M": 0.92504,
+            "L": 0.9342666666666667
+          },
+          "total_cost": 22.66639999999999,
+          "cost_per_treated": 0.48793214793128664,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.61,
+          "med_not_treated": 1.584,
+          "low_not_treated": 0.774,
+          "treated_share": 0.9406399999999999,
+          "treated_share_by_tier": {
+            "H": 0.9390000000000001,
+            "M": 0.93664,
+            "L": 0.9484
+          },
+          "total_cost": 22.238329999999955,
+          "cost_per_treated": 0.47283402789589973,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 11.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            61.0
+          ]
+        },
+        "voe": 0.4280700000000337,
+        "high_urgency_deaths_saved": 0.07600000000000007
+      },
+      {
+        "kappa": 1.5,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.716,
+          "med_not_treated": 1.974,
+          "low_not_treated": 1.07,
+          "treated_share": 0.9248000000000001,
+          "treated_share_by_tier": {
+            "H": 0.9284,
+            "M": 0.92104,
+            "L": 0.9286666666666666
+          },
+          "total_cost": 23.069809999999997,
+          "cost_per_treated": 0.4989145761245674,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.692,
+          "med_not_treated": 1.898,
+          "low_not_treated": 1.004,
+          "treated_share": 0.92812,
+          "treated_share_by_tier": {
+            "H": 0.9308,
+            "M": 0.92408,
+            "L": 0.9330666666666667
+          },
+          "total_cost": 23.115019999999987,
+          "cost_per_treated": 0.4981041244666635,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 6.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            56.0
+          ]
+        },
+        "voe": -0.0452099999999902,
+        "high_urgency_deaths_saved": 0.02400000000000002
+      },
+      {
+        "kappa": 2.0,
+        "gamma": 1.0,
+        "on_time_plan": {
+          "high_urgency_deaths": 0.734,
+          "med_not_treated": 2.0,
+          "low_not_treated": 1.116,
+          "treated_share": 0.9229999999999999,
+          "treated_share_by_tier": {
+            "H": 0.9266,
+            "M": 0.92,
+            "L": 0.9256
+          },
+          "total_cost": 23.247659999999996,
+          "cost_per_treated": 0.5037412784398699,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.734,
+          "med_not_treated": 2.0,
+          "low_not_treated": 1.116,
+          "treated_share": 0.9229999999999999,
+          "treated_share_by_tier": {
+            "H": 0.9266,
+            "M": 0.92,
+            "L": 0.9256
+          },
+          "total_cost": 23.247659999999996,
+          "cost_per_treated": 0.5037412784398699,
+          "facilities_open": 1,
+          "open_facilities": [
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            0.0,
+            50.0
+          ]
+        },
+        "voe": 0.0,
+        "high_urgency_deaths_saved": 0.0
+      }
+    ]
+  },
+  "cap_sweep": {
+    "kappa": 1.0,
+    "rows": [
+      {
+        "s_max": 40,
+        "n_patients": 100,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.204,
+          "med_not_treated": 3.488,
+          "low_not_treated": 2.662,
+          "treated_share": 0.9264600000000001,
+          "treated_share_by_tier": {
+            "H": 0.9398,
+            "M": 0.93024,
+            "L": 0.9112666666666667
+          },
+          "total_cost": 45.79976999999994,
+          "cost_per_treated": 0.49435237355093514,
+          "facilities_open": 3,
+          "open_facilities": [
+            0,
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            20.0,
+            0.0,
+            40.0,
+            40.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.156,
+          "med_not_treated": 3.178,
+          "low_not_treated": 2.042,
+          "treated_share": 0.93624,
+          "treated_share_by_tier": {
+            "H": 0.9422,
+            "M": 0.9364399999999999,
+            "L": 0.9319333333333333
+          },
+          "total_cost": 45.410174999999825,
+          "cost_per_treated": 0.4850270763906672,
+          "facilities_open": 3,
+          "open_facilities": [
+            0,
+            2,
+            3
+          ],
+          "spare_capacity_built": 20.0,
+          "capacity": [
+            40.0,
+            0.0,
+            40.0,
+            40.0
+          ]
+        }
+      },
+      {
+        "s_max": 55,
+        "n_patients": 100,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.07,
+          "med_not_treated": 2.818,
+          "low_not_treated": 1.678,
+          "treated_share": 0.94434,
+          "treated_share_by_tier": {
+            "H": 0.9465,
+            "M": 0.94364,
+            "L": 0.9440666666666667
+          },
+          "total_cost": 42.40310999999995,
+          "cost_per_treated": 0.44902376262786653,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            55.0,
+            45.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 1.07,
+          "med_not_treated": 2.818,
+          "low_not_treated": 1.678,
+          "treated_share": 0.94434,
+          "treated_share_by_tier": {
+            "H": 0.9465,
+            "M": 0.94364,
+            "L": 0.9440666666666667
+          },
+          "total_cost": 42.40310999999995,
+          "cost_per_treated": 0.44902376262786653,
+          "facilities_open": 2,
+          "open_facilities": [
+            2,
+            3
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            0.0,
+            0.0,
+            55.0,
+            45.0
+          ]
+        }
+      },
+      {
+        "s_max": 75,
+        "n_patients": 100,
+        "on_time_plan": {
+          "high_urgency_deaths": 1.01,
+          "med_not_treated": 3.178,
+          "low_not_treated": 2.538,
+          "treated_share": 0.93274,
+          "treated_share_by_tier": {
+            "H": 0.9495,
+            "M": 0.9364399999999999,
+            "L": 0.9154
+          },
+          "total_cost": 41.919594999999944,
+          "cost_per_treated": 0.4494242232562123,
+          "facilities_open": 2,
+          "open_facilities": [
+            0,
+            2
+          ],
+          "spare_capacity_built": 0.0,
+          "capacity": [
+            25.0,
+            0.0,
+            75.0,
+            0.0
+          ]
+        },
+        "decline_aware_plan": {
+          "high_urgency_deaths": 0.962,
+          "med_not_treated": 2.75,
+          "low_not_treated": 1.808,
+          "treated_share": 0.9448000000000001,
+          "treated_share_by_tier": {
+            "H": 0.9519,
+            "M": 0.945,
+            "L": 0.9397333333333333
+          },
+          "total_cost": 41.48798999999978,
+          "cost_per_treated": 0.43911928450465476,
+          "facilities_open": 2,
+          "open_facilities": [
+            0,
+            2
+          ],
+          "spare_capacity_built": 26.0,
+          "capacity": [
+            51.0,
+            0.0,
+            75.0,
+            0.0
+          ]
+        }
+      }
+    ]
+  },
+  "tech_gamma": [
+    {
+      "label": "g1.5",
+      "n_patients": 50,
+      "s_max": 75,
+      "gamma": 1.5,
+      "kappas": [
+        0.0,
+        0.25,
+        0.5,
+        1.0,
+        2.0
+      ],
+      "naive_predicted": {
+        "high_urgency_deaths": 0.324,
+        "med_not_treated": 0.476,
+        "low_not_treated": 0.082,
+        "treated_share": 0.98236,
+        "treated_share_by_tier": {
+          "H": 0.9676,
+          "M": 0.98096,
+          "L": 0.9945333333333334
+        },
+        "total_cost": 17.513239999999882,
+        "cost_per_treated": 0.35655441996823733,
+        "facilities_open": 1,
+        "open_facilities": [
+          3
+        ],
+        "spare_capacity_built": 0.0,
+        "capacity": [
+          0.0,
+          0.0,
+          0.0,
+          50.0
+        ]
+      },
+      "D_exo": {
+        "z": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "C": [
+          0,
+          0,
+          0,
+          50
+        ]
+      },
+      "rows": [
+        {
+          "kappa": 0.0,
+          "gamma": 1.5,
+          "on_time_plan": {
+            "high_urgency_deaths": 0.324,
+            "med_not_treated": 0.476,
+            "low_not_treated": 0.082,
+            "treated_share": 0.98236,
+            "treated_share_by_tier": {
+              "H": 0.9676,
+              "M": 0.98096,
+              "L": 0.9945333333333334
+            },
+            "total_cost": 17.513239999999882,
+            "cost_per_treated": 0.35655441996823733,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "decline_aware_plan": {
+            "high_urgency_deaths": 0.324,
+            "med_not_treated": 0.476,
+            "low_not_treated": 0.082,
+            "treated_share": 0.98236,
+            "treated_share_by_tier": {
+              "H": 0.9676,
+              "M": 0.98096,
+              "L": 0.9945333333333334
+            },
+            "total_cost": 17.513239999999882,
+            "cost_per_treated": 0.35655441996823733,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "voe": 0.0,
+          "high_urgency_deaths_saved": 0.0
+        },
+        {
+          "kappa": 0.25,
+          "gamma": 1.5,
+          "on_time_plan": {
+            "high_urgency_deaths": 0.606,
+            "med_not_treated": 1.588,
+            "low_not_treated": 0.774,
+            "treated_share": 0.9406399999999999,
+            "treated_share_by_tier": {
+              "H": 0.9394,
+              "M": 0.93648,
+              "L": 0.9484
+            },
+            "total_cost": 21.562329999999953,
+            "cost_per_treated": 0.4584608351760494,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "decline_aware_plan": {
+            "high_urgency_deaths": 0.476,
+            "med_not_treated": 1.074,
+            "low_not_treated": 0.416,
+            "treated_share": 0.96068,
+            "treated_share_by_tier": {
+              "H": 0.9524,
+              "M": 0.95704,
+              "L": 0.9722666666666666
+            },
+            "total_cost": 20.391199999999913,
+            "cost_per_treated": 0.42451596785610013,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 12.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              62.0
+            ]
+          },
+          "voe": 1.1711300000000406,
+          "high_urgency_deaths_saved": 0.13
+        },
+        {
+          "kappa": 0.5,
+          "gamma": 1.5,
+          "on_time_plan": {
+            "high_urgency_deaths": 0.692,
+            "med_not_treated": 1.896,
+            "low_not_treated": 1.004,
+            "treated_share": 0.92816,
+            "treated_share_by_tier": {
+              "H": 0.9308,
+              "M": 0.92416,
+              "L": 0.9330666666666667
+            },
+            "total_cost": 22.75138999999999,
+            "cost_per_treated": 0.4902471556628165,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "decline_aware_plan": {
+            "high_urgency_deaths": 0.524,
+            "med_not_treated": 1.258,
+            "low_not_treated": 0.512,
+            "treated_share": 0.9541200000000001,
+            "treated_share_by_tier": {
+              "H": 0.9476,
+              "M": 0.94968,
+              "L": 0.9658666666666667
+            },
+            "total_cost": 21.598519999999926,
+            "cost_per_treated": 0.4527422127195725,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 21.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              71.0
+            ]
+          },
+          "voe": 1.152870000000064,
+          "high_urgency_deaths_saved": 0.16799999999999993
+        },
+        {
+          "kappa": 1.0,
+          "gamma": 1.5,
+          "on_time_plan": {
+            "high_urgency_deaths": 0.734,
+            "med_not_treated": 2.006,
+            "low_not_treated": 1.12,
+            "treated_share": 0.9228000000000001,
+            "treated_share_by_tier": {
+              "H": 0.9266,
+              "M": 0.91976,
+              "L": 0.9253333333333333
+            },
+            "total_cost": 23.260809999999996,
+            "cost_per_treated": 0.5041354573038578,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "decline_aware_plan": {
+            "high_urgency_deaths": 0.616,
+            "med_not_treated": 1.596,
+            "low_not_treated": 0.782,
+            "treated_share": 0.94012,
+            "treated_share_by_tier": {
+              "H": 0.9384,
+              "M": 0.93616,
+              "L": 0.9478666666666666
+            },
+            "total_cost": 22.899519999999953,
+            "cost_per_treated": 0.4871616389397088,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 21.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              71.0
+            ]
+          },
+          "voe": 0.36129000000004297,
+          "high_urgency_deaths_saved": 0.118
+        },
+        {
+          "kappa": 2.0,
+          "gamma": 1.5,
+          "on_time_plan": {
+            "high_urgency_deaths": 0.736,
+            "med_not_treated": 2.018,
+            "low_not_treated": 1.132,
+            "treated_share": 0.92228,
+            "treated_share_by_tier": {
+              "H": 0.9264,
+              "M": 0.91928,
+              "L": 0.9245333333333333
+            },
+            "total_cost": 23.300999999999995,
+            "cost_per_treated": 0.5052912347660146,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "decline_aware_plan": {
+            "high_urgency_deaths": 0.736,
+            "med_not_treated": 2.018,
+            "low_not_treated": 1.132,
+            "treated_share": 0.92228,
+            "treated_share_by_tier": {
+              "H": 0.9264,
+              "M": 0.91928,
+              "L": 0.9245333333333333
+            },
+            "total_cost": 23.300999999999995,
+            "cost_per_treated": 0.5052912347660146,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "voe": 0.0,
+          "high_urgency_deaths_saved": 0.0
+        }
+      ]
+    },
+    {
+      "label": "g2.0",
+      "n_patients": 50,
+      "s_max": 75,
+      "gamma": 2.0,
+      "kappas": [
+        0.0,
+        0.25,
+        0.5,
+        1.0,
+        2.0
+      ],
+      "naive_predicted": {
+        "high_urgency_deaths": 0.324,
+        "med_not_treated": 0.476,
+        "low_not_treated": 0.082,
+        "treated_share": 0.98236,
+        "treated_share_by_tier": {
+          "H": 0.9676,
+          "M": 0.98096,
+          "L": 0.9945333333333334
+        },
+        "total_cost": 17.513239999999882,
+        "cost_per_treated": 0.35655441996823733,
+        "facilities_open": 1,
+        "open_facilities": [
+          3
+        ],
+        "spare_capacity_built": 0.0,
+        "capacity": [
+          0.0,
+          0.0,
+          0.0,
+          50.0
+        ]
+      },
+      "D_exo": {
+        "z": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "C": [
+          0,
+          0,
+          0,
+          50
+        ]
+      },
+      "rows": [
+        {
+          "kappa": 0.0,
+          "gamma": 2.0,
+          "on_time_plan": {
+            "high_urgency_deaths": 0.324,
+            "med_not_treated": 0.476,
+            "low_not_treated": 0.082,
+            "treated_share": 0.98236,
+            "treated_share_by_tier": {
+              "H": 0.9676,
+              "M": 0.98096,
+              "L": 0.9945333333333334
+            },
+            "total_cost": 17.513239999999882,
+            "cost_per_treated": 0.35655441996823733,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "decline_aware_plan": {
+            "high_urgency_deaths": 0.324,
+            "med_not_treated": 0.476,
+            "low_not_treated": 0.082,
+            "treated_share": 0.98236,
+            "treated_share_by_tier": {
+              "H": 0.9676,
+              "M": 0.98096,
+              "L": 0.9945333333333334
+            },
+            "total_cost": 17.513239999999882,
+            "cost_per_treated": 0.35655441996823733,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "voe": 0.0,
+          "high_urgency_deaths_saved": 0.0
+        },
+        {
+          "kappa": 0.25,
+          "gamma": 2.0,
+          "on_time_plan": {
+            "high_urgency_deaths": 0.698,
+            "med_not_treated": 1.906,
+            "low_not_treated": 1.008,
+            "treated_share": 0.9277599999999999,
+            "treated_share_by_tier": {
+              "H": 0.9302,
+              "M": 0.92376,
+              "L": 0.9328
+            },
+            "total_cost": 22.80668999999999,
+            "cost_per_treated": 0.491650642407519,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "decline_aware_plan": {
+            "high_urgency_deaths": 0.468,
+            "med_not_treated": 1.058,
+            "low_not_treated": 0.404,
+            "treated_share": 0.9614,
+            "treated_share_by_tier": {
+              "H": 0.9532,
+              "M": 0.95768,
+              "L": 0.9730666666666666
+            },
+            "total_cost": 20.84885999999991,
+            "cost_per_treated": 0.433718743499062,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 21.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              71.0
+            ]
+          },
+          "voe": 1.9578300000000795,
+          "high_urgency_deaths_saved": 0.22999999999999993
+        },
+        {
+          "kappa": 0.5,
+          "gamma": 2.0,
+          "on_time_plan": {
+            "high_urgency_deaths": 0.734,
+            "med_not_treated": 2.008,
+            "low_not_treated": 1.124,
+            "treated_share": 0.9226800000000001,
+            "treated_share_by_tier": {
+              "H": 0.9266,
+              "M": 0.91968,
+              "L": 0.9250666666666667
+            },
+            "total_cost": 23.266699999999993,
+            "cost_per_treated": 0.5043286946720421,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "decline_aware_plan": {
+            "high_urgency_deaths": 0.568,
+            "med_not_treated": 1.414,
+            "low_not_treated": 0.62,
+            "treated_share": 0.94796,
+            "treated_share_by_tier": {
+              "H": 0.9432,
+              "M": 0.9434400000000001,
+              "L": 0.9586666666666667
+            },
+            "total_cost": 22.198539999999937,
+            "cost_per_treated": 0.46834339001645503,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 21.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              71.0
+            ]
+          },
+          "voe": 1.0681600000000557,
+          "high_urgency_deaths_saved": 0.16600000000000004
+        },
+        {
+          "kappa": 1.0,
+          "gamma": 2.0,
+          "on_time_plan": {
+            "high_urgency_deaths": 0.736,
+            "med_not_treated": 2.018,
+            "low_not_treated": 1.132,
+            "treated_share": 0.92228,
+            "treated_share_by_tier": {
+              "H": 0.9264,
+              "M": 0.91928,
+              "L": 0.9245333333333333
+            },
+            "total_cost": 23.300999999999995,
+            "cost_per_treated": 0.5052912347660146,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "decline_aware_plan": {
+            "high_urgency_deaths": 0.736,
+            "med_not_treated": 2.018,
+            "low_not_treated": 1.132,
+            "treated_share": 0.92228,
+            "treated_share_by_tier": {
+              "H": 0.9264,
+              "M": 0.91928,
+              "L": 0.9245333333333333
+            },
+            "total_cost": 23.300999999999995,
+            "cost_per_treated": 0.5052912347660146,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "voe": 0.0,
+          "high_urgency_deaths_saved": 0.0
+        },
+        {
+          "kappa": 2.0,
+          "gamma": 2.0,
+          "on_time_plan": {
+            "high_urgency_deaths": 0.736,
+            "med_not_treated": 2.018,
+            "low_not_treated": 1.132,
+            "treated_share": 0.92228,
+            "treated_share_by_tier": {
+              "H": 0.9264,
+              "M": 0.91928,
+              "L": 0.9245333333333333
+            },
+            "total_cost": 23.300999999999995,
+            "cost_per_treated": 0.5052912347660146,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "decline_aware_plan": {
+            "high_urgency_deaths": 0.736,
+            "med_not_treated": 2.018,
+            "low_not_treated": 1.132,
+            "treated_share": 0.92228,
+            "treated_share_by_tier": {
+              "H": 0.9264,
+              "M": 0.91928,
+              "L": 0.9245333333333333
+            },
+            "total_cost": 23.300999999999995,
+            "cost_per_treated": 0.5052912347660146,
+            "facilities_open": 1,
+            "open_facilities": [
+              3
+            ],
+            "spare_capacity_built": 0.0,
+            "capacity": [
+              0.0,
+              0.0,
+              0.0,
+              50.0
+            ]
+          },
+          "voe": 0.0,
+          "high_urgency_deaths_saved": 0.0
+        }
+      ]
+    }
+  ],
+  "planned_vs_sim": {
+    "busiest_facility": 3,
+    "base_load": 50,
+    "kappa": 1.0,
+    "gamma": 1.0,
+    "points": [
+      {
+        "spare_at_busiest": 0,
+        "planned_delay_death_cost": 5.430786692621231,
+        "simulated_delay_cost": 5.153160000000106
+      },
+      {
+        "spare_at_busiest": 4,
+        "planned_delay_death_cost": 4.829321854277608,
+        "simulated_delay_cost": 4.791940000000093
+      },
+      {
+        "spare_at_busiest": 8,
+        "planned_delay_death_cost": 4.400774810754778,
+        "simulated_delay_cost": 4.338840000000079
+      },
+      {
+        "spare_at_busiest": 12,
+        "planned_delay_death_cost": 4.158982879311878,
+        "simulated_delay_cost": 3.988990000000072
+      },
+      {
+        "spare_at_busiest": 16,
+        "planned_delay_death_cost": 3.924481127614599,
+        "simulated_delay_cost": 3.765470000000068
+      },
+      {
+        "spare_at_busiest": 20,
+        "planned_delay_death_cost": 3.697900903564636,
+        "simulated_delay_cost": 3.6406200000000624
+      },
+      {
+        "spare_at_busiest": 24,
+        "planned_delay_death_cost": 3.6189686858046906,
+        "simulated_delay_cost": 3.4716200000000583
+      }
+    ]
+  },
+  "compute_seconds": 948.098529973
+}
