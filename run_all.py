@@ -5,12 +5,19 @@ Runs (all randomness seeded; see calibration_table.md):
   1. Unit tests            : declineprob, clearing function.
   2. Nesting validation    : dynamic_sp(kappa=0) == yield_sp_v1 on the toy
                              (total ~ 2.774, VSS ~ 0.154). MUST pass first.
-  3. VoE experiment        : value_of_endogeneity.py (designs, simulator, sweep,
-                             figures -> figures/, numbers -> results/).
+  3. Causes + priority     : causes_priority_experiment.py — the main deliverable.
+                             STEP 1 (why high-urgency patients are lost: normal
+                             wait vs after a failure) and STEP 2 (does putting the
+                             sickest first protect them when factories are full).
+                             Plain-language figures -> figures/figureP1-P6,
+                             numbers -> results/causes_priority_results.json.
+  4. Technical validation  : deterioration_experiment.py — internal-model
+                             diagnostics behind TECHNICAL_APPENDIX.md
+                             (figures/technical/).
 
 Usage:
   python run_all.py            # full reproduction (minutes)
-  python run_all.py --quick    # fast smoke run of the VoE sweep
+  python run_all.py --quick    # fast smoke run
 Exit code is non-zero if the unit tests or the nesting gate fail.
 """
 
@@ -44,15 +51,21 @@ def main():
     # 2. Nesting gate (must reproduce v1 before any experiment is trusted).
     _run(["test_nesting.py"], "2. Nesting validation — dynamic_sp(kappa=0) == v1")
 
-    # 3. Capacity-tight deterioration rerun in healthcare terms (main deliverable):
-    #    real capacity, growing demand, decline-speed sweep; writes RESULTS.md
-    #    figures to figures/ and validation figures to figures/technical/.
+    # 3. Main deliverable (RESULTS.md): why high-urgency patients are lost
+    #    (Step 1) and whether putting the sickest first protects them when
+    #    factories are full (Step 2). Writes figures/figureP1-P6 and
+    #    results/causes_priority_results.json.
+    cp_cmd = (["causes_priority_experiment.py", "--quick", "--no-figures"]
+              if args.quick else ["causes_priority_experiment.py"])
+    _run(cp_cmd, "3. Causes + sickest-first experiment (patient outcomes)")
+
+    # 4. Technical validation behind TECHNICAL_APPENDIX.md (figures/technical/).
     det_cmd = (["deterioration_experiment.py", "--quick", "--no-figures"]
                if args.quick else ["deterioration_experiment.py"])
-    _run(det_cmd, "3. Capacity-tight deterioration experiment (patient outcomes)")
+    _run(det_cmd, "4. Technical validation (nesting, surrogate, benefit curve)")
 
-    print(f"\n{'='*70}\nAll stages completed. See RESULTS.md, figures/figureD*, "
-          f"results/value_of_endogeneity*.json\n{'='*70}")
+    print(f"\n{'='*70}\nAll stages completed. See RESULTS.md, figures/figureP1-P6, "
+          f"results/causes_priority_results.json\n{'='*70}")
 
 
 if __name__ == "__main__":

@@ -215,27 +215,21 @@ def fig_tech_inverted_u(main_sweep, gamma_sweeps):
 # ===========================================================================
 
 def make_all_figures(payload):
+    """
+    TECHNICAL validation figures only (figures/technical/). The plain-language MAIN
+    figures are now produced by causes_priority_figures.py (figureP1-P6), which
+    carries the loss-cause split and the sickest-first lever; the earlier H-series
+    main figures are superseded and no longer generated here.
+    """
     tight = payload["main_tight"]
     low = payload["low_demand"]
-    calib = payload["calib_kappa"]
 
-    # MAIN — headline uses the capacity-tight setting; treated-in-time / network
-    # / cost from whichever setting has headroom to show the plan contrast.
-    fig_high_urgency_deaths(tight, tag="")
-    fig_cost_per_patient(tight, tag="")
-    fig_treated_in_time(low, calib_kappa=calib, tag="")
-    fig_capacity_cap(payload["cap_sweep"])
-    fig_network_decision(low, calib_kappa=calib)
-    # low-demand contrast headline (kept in main; shows the plan difference clearly)
-    fig_high_urgency_deaths(low, tag="_low_demand")
-
-    # TECHNICAL
     fig_tech_nesting(tight)
     fig_tech_planned_vs_sim(payload["planned_vs_sim"])
     # Inverted-U appears where the design has headroom to build spare (low-demand);
     # the saturated tight setting has VoE==0 by construction.
     fig_tech_inverted_u(low, payload.get("tech_gamma", []))
-    print("All figures written (main -> figures/, technical -> figures/technical/).")
+    print("Technical validation figures written to figures/technical/.")
 
 
 if __name__ == "__main__":
