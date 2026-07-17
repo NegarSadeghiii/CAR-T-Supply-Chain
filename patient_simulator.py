@@ -79,18 +79,28 @@ def _priority_exposure(assign, tiers, n_f, priority):
 
 
 def simulate_patients(inst, design, tiers, tier_idx, Y, B, U, *,
-                      kappa, gamma, clearing=DEFAULT_CLEARING, priority=False):
+                      kappa, gamma, clearing=DEFAULT_CLEARING, priority=False,
+                      base_wait_death=None, hr_tier=None):
     """
     Score a fixed design on out-of-sample scenarios, returning plain patient
     outcomes with each loss split into cause (a) / (b), by urgency tier.
+
+    Optional overrides (default to the module constants, so results are
+    unchanged unless a sweep passes them):
+      base_wait_death : dict{H,M,L} 6-week normal-wait mortality (drives cause a).
+      hr_tier         : dict{H,M,L} delay hazard ratios (drives cause b).
+    These exist for the sensitivity experiments (E5, decline-shape/HR grids); with
+    both left None the function is byte-for-byte the calibrated model.
     """
+    bwd = BASE_WAIT_DEATH_6WK if base_wait_death is None else base_wait_death
+    hrt = HR_TIER if hr_tier is None else hr_tier
     z = np.asarray(design["z"], float)
     C = np.asarray(design["C"], float)
     x = np.asarray(design["x"], float)
     N, n_p, n_f = Y.shape
     lam = calibrate_lambda(gamma)
-    hr = np.array([HR_TIER[t] for t in tiers])
-    h_norm = np.array([-np.log(1.0 - BASE_WAIT_DEATH_6WK[t]) for t in tiers])   # baseline hazard
+    hr = np.array([hrt[t] for t in tiers])
+    h_norm = np.array([-np.log(1.0 - bwd[t]) for t in tiers])   # baseline hazard
     rho_cancel = np.asarray(inst.rho_cancel, float)
     tau = clearing.tau_proc
 

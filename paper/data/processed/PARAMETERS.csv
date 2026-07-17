@@ -1,0 +1,28 @@
+group,name,symbol,value,units,source_tag,citation_or_basis
+Facility / production,Facility opening cost,f_m,"[0.50, 2.00, 3.00, 2.00]",M USD,literature-derived,Bernardi et al. 2022; Avramescu et al. 2023 (scaled by automation class k1<k2<k3)
+Facility / production,Capacity contracting cost,pi_m,"[0.04, 0.06, 0.09, 0.06]",M USD/slot,literature-derived,Avramescu et al. 2023
+Facility / production,Primary batch mfg cost,c_m,"[0.20, 0.18, 0.15, 0.18]",M USD/batch,literature-derived,Avramescu et al. 2023; Bernardi et al. 2022 (decreasing with automation)
+Facility / production,Max capacity per facility (real),s_max,75,slots,data-anchored,Wan et al. 2026 (Maxcap_j). Base case_study.py uses 40 as an assumption to force two-facility coverage.
+Facility / production,Per-facility yield success,p_m,"[0.85, 0.92, 0.95, 0.92]",-,literature-derived,UK National CAR-T Panel (Dulobdas et al. 2025); Locke 2022 / Schuster 2019 / Abramson 2020; within Lopes 2020 / Costariol 2021 10/5/3% band
+Patient / clinical,Re-collection eligibility,beta_u,"[0.55, 0.78, 0.92]",-,literature-derived,Roth et al. 2018; CARTITUDE-4 (San-Miguel et al. 2023); Bachy et al. 2022 (H/M/L ordering)
+Patient / clinical,Cancellation loss,rho_cancel_u,"[6.00, 2.00, 0.75]",M USD,assumption (sensitivity-tested),Health-economics value-of-life range $1-8M for curative oncology (ICER; Lin et al.); no per-tier trial data
+Patient / clinical,Urgency tier mix (H/M/L),-,20% / 50% / 30%,-,literature-derived,Kymriah DLBCL indication epidemiology; Avramescu et al. 2021b conditional r/r probabilities
+Recourse,Leukapheresis cost,rho_leuk,0.005,M USD,literature-derived,Published leukapheresis procedure cost
+Recourse,Re-manufacture cost,rho_remfg_m,= c_m,M USD/batch,assumption (sensitivity-tested),Set equal to primary batch cost; no published re-mfg-specific breakdown
+Recourse,Subcontracting cost,rho_sub_mm',= 1.15 x c_m',M USD,assumption (sensitivity-tested),15% premium on destination primary cost; no public CAR-T CMO contract data
+Transport / structural,Transport time (60 pairs),"t_trans[i,m]",6.0-13.2,hours,synthetic,"Haversine great-circle from Wan et al. 2026 lat/lon; 600 km/h effective air-freight + 6h handling overhead. Deterministic, computed per (hospital,facility) pair."
+Transport / structural,Product shelf life,SHELF_LIFE,24.0,hours,literature-derived,Cryopreservation shelf life; Wan et al. 2026; Avramescu et al. 2023
+Transport / structural,Max open facilities,MNF,3,facilities,literature-derived,Industry dual/triple-sourcing of autologous CDMOs
+Deterioration kernel,Re-manufacture delay anchor,DELAY_ANCHOR,12,days,data-anchored,Cohet 2023 real-world OOS cohort: vein-to-vein 57.6 vs 45.9 d (delta ~12 d)
+Deterioration kernel,Delayed-vs-control PFS hazard ratio,HR_PFS,1.64,-,data-anchored,UK National CAR-T Panel (Dulobdas et al. 2025): delayed-infused vs controls-infused PFS HR 1.64 (P=0.25)
+Deterioration kernel,Tier delay hazard ratios (H/M/L),HR_u,"[1.6, 1.5, 1.4]",-,calibrated from multiple,Ordered within the observed 1.4-1.6 delay-HR band (Dulobdas 2025 OOS HR 1.41 / delayed HR 1.64; Cohet 2023). Spread is a sensitivity-tested assumption.
+Deterioration kernel,Weibull scale by shape,lambda(gamma),"[36.4, 25.1, 20.9]",days (gamma=1.0/1.5/2.0),calibrated from multiple,Solved so mid-tier decline over the +12 d delay reproduces PFS HR 1.64 (Cohet 2023 + Dulobdas 2025)
+Deterioration kernel,Decline-curve shape,gamma,"{1.0, 1.5, 2.0}",-,assumption (sensitivity-tested),"Not identified from two endpoints; SWEPT, not fitted"
+Deterioration kernel,Calibrated decline speed,kappa,1.0,-,calibrated from multiple,Matches the Dulobdas 2025 PFS HR 1.64 at the Cohet 2023 delay; kappa=0 nests the base model
+Congestion (clearing fn),Baseline re-mfg processing time,tau_proc,19,days,literature-derived,~7 d production + ~7 d QC + 1-2 d transport (Avramescu et al. 2022/2023)
+Congestion (clearing fn),Utilization breakpoints,b_s,"(0.70, 0.90)",-,assumption (sensitivity-tested),Convex PWL clearing-function form (Karmarkar 1989; Missbauer & Uzsoy 2011); no public CDMO congestion data
+Congestion (clearing fn),Incremental delay slopes,a_s,"(0, 45, 90)",days/util,assumption (sensitivity-tested),Convex; tuned so rho=1 roughly doubles turnaround. Sweepable.
+Normal-wait mortality,6-week wait mortality (H/M/L),BASE_WAIT_DEATH_6WK,"[0.15, 0.05, 0.02]",prob.,assumption (sensitivity-tested),Order-of-magnitude progression risk during the standard manufacturing wait; basis: reduced vein-to-vein time improves 3L+ LBCL outcomes (Jo/Kwong vein-to-vein study); real-world pre-infusion drop-out. Swept x0.5-x2.0 in E5.
+Population / scenario,Base cohort size,n,50 (tiled to 100/150),patients,synthetic,Tiling of the 50-patient cohort preserving tier mix and geography (scaled_instance.py). Base n=50 from IICC-3 pediatric ALL incidence (Steliarova-Foucher 2017) refined by Avramescu 2021b r/r conditional probabilities.
+Population / scenario,Training / OOS scenarios,N_train / N_oos,80 / 500,scenarios,assumption (sensitivity-tested),"Convergence-checked; seeds train 0, OOS 100. Yields Bernoulli(p_m); eligibility Bernoulli(beta_u)."
+Population / scenario,Geographic network,-,4 facilities / 15 hospitals,-,data-anchored,"Wan et al. 2026 (Newark/Boston/Raleigh-Durham/SF; 15 highest-demand hospitals), adapted from Avramescu et al. 2021b"

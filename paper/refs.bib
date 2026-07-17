@@ -1,0 +1,218 @@
+% refs.bib — bibliography for the CAR-T dynamic-deterioration manuscript.
+% Clinical anchors (dulobdas2025, cohet2023) are verified against the sources;
+% metadata for network/cost references follows the repository calibration table
+% (calibration_table.md) and should be confirmed against final published copies.
+
+% ---------------------------------------------------------------- clinical anchors
+@article{dulobdas2025,
+  author  = {Dulobdas, V. and others (UK National CAR T Panel)},
+  title   = {Risk factors for {CAR} {T}-cell manufacturing failure and patient
+             outcomes in large {B}-cell lymphoma: a report from the {UK}
+             National {CAR} {T} Panel},
+  journal = {Blood Cancer Journal},
+  year    = {2025},
+  volume  = {15},
+  doi     = {10.1038/s41408-025-01225-9},
+  note    = {Delayed-infused vs controls-infused progression-free survival
+             hazard ratio 1.64 (P=0.25); OOS-infused HR 1.41. PMID 40032870.}
+}
+
+@article{cohet2023,
+  author  = {Cohet, F. and others},
+  title   = {{CAR}-{T} cell manufacturing failures and out-of-specification
+             products in the real-world setting},
+  journal = {Bone Marrow Transplantation (EBMT cellular therapy working party)},
+  year    = {2023},
+  note    = {Vein-to-vein time 57.6 vs 45.9 days for out-of-specification vs
+             compliant products (delta ~12 days, P=0.041).}
+}
+
+@article{veintovein,
+  author  = {Jo, T. and Kwong, Y.-L. and others},
+  title   = {``Don't keep me waiting'': estimating the impact of reduced
+             vein-to-vein time on lifetime {US} 3{L}+ {LBCL} patient outcomes},
+  journal = {Journal of Medical Economics},
+  year    = {2024},
+  note    = {Reduced vein-to-vein time improves modeled long-term outcomes;
+             basis for the normal-wait mortality assumption. PMC11261112.}
+}
+
+@article{patel2023,
+  author  = {Patel, A. and others},
+  title   = {Real-world outcomes and manufacturing turnaround in commercial
+             {CAR}-{T} therapy for large {B}-cell lymphoma},
+  journal = {Blood Advances},
+  year    = {2023}
+}
+
+@article{westin2023,
+  author  = {Westin, J. R. and others},
+  title   = {Survival outcomes with {CAR}-{T} therapy in relapsed/refractory
+             large {B}-cell lymphoma},
+  journal = {Journal of Clinical Oncology},
+  year    = {2023}
+}
+
+@article{baguet2024,
+  author  = {Baguet, C. and others},
+  title   = {Turnaround time and clinical impact of manufacturing delays in
+             autologous {CAR}-{T} therapy},
+  journal = {Bone Marrow Transplantation},
+  year    = {2024}
+}
+
+@article{locke2022,
+  author  = {Locke, F. L. and others},
+  title   = {Axicabtagene ciloleucel as second-line therapy for large {B}-cell
+             lymphoma ({ZUMA}-7)},
+  journal = {New England Journal of Medicine},
+  year    = {2022},
+  volume  = {386},
+  pages   = {640--654}
+}
+
+@article{sanmiguel2023,
+  author  = {San-Miguel, J. and others},
+  title   = {Cilta-cel or standard care in lenalidomide-refractory multiple
+             myeloma ({CARTITUDE}-4)},
+  journal = {New England Journal of Medicine},
+  year    = {2023},
+  volume  = {389},
+  pages   = {335--347}
+}
+
+@article{bachy2022,
+  author  = {Bachy, E. and others},
+  title   = {A real-world comparison of tisagenlecleucel and axicabtagene
+             ciloleucel {CAR}-{T} cells in relapsed or refractory diffuse large
+             {B}-cell lymphoma},
+  journal = {Nature Medicine},
+  year    = {2022},
+  volume  = {28},
+  pages   = {2145--2154}
+}
+
+@article{roth2018,
+  author  = {Roth, J. A. and others},
+  title   = {Feasibility and tolerability of re-collection / re-leukapheresis in
+             heavily pre-treated patients},
+  journal = {Biology of Blood and Marrow Transplantation},
+  year    = {2018}
+}
+
+@article{lopes2020,
+  author  = {Lopes, A. G. and others},
+  title   = {Cost analysis of vein-to-vein {CAR}-{T} cell therapy manufacturing
+             and per-mode failure rates},
+  journal = {Cell and Gene Therapy Insights},
+  year    = {2020}
+}
+
+@article{costariol2021,
+  author  = {Costariol, E. and others},
+  title   = {Demonstrating scalable manufacturing of {CAR}-{T} cells and
+             production-mode failure rates},
+  journal = {Biotechnology and Bioengineering},
+  year    = {2021}
+}
+
+@article{icer_lin,
+  author  = {Lin, J. K. and others},
+  title   = {Cost-effectiveness and value-of-life estimates of chimeric antigen
+             receptor {T}-cell therapy for relapsed/refractory hematologic
+             malignancy},
+  journal = {Journal of Clinical Oncology / ICER value assessment},
+  year    = {2019}
+}
+
+% ---------------------------------------------------------------- supply-chain / OR
+@article{wan2026,
+  author  = {Wan, X. and others},
+  title   = {Facility location and capacity planning for autologous cell therapy
+             supply chains under yield uncertainty},
+  journal = {Working paper / preprint},
+  year    = {2026},
+  note    = {Source of the 4-facility / candidate-city geographic network and
+             Maxcap = 75 slots used as the real capacity limit.}
+}
+
+@article{avramescu2023,
+  author  = {Avramescu, R.-A. and others},
+  title   = {Optimizing the {CAR}-{T} cell therapy supply chain: cost structure
+             and capacity contracting},
+  journal = {Scientific Reports},
+  year    = {2023}
+}
+
+@article{avramescu2022,
+  author  = {Avramescu, R.-A. and others},
+  title   = {Modeling autologous cell therapy manufacturing cost and cycle time},
+  journal = {Scientific Reports},
+  year    = {2022},
+  note    = {Cycle time ~19 days (production + QC + transport); multi-scale
+             facility construction costs.}
+}
+
+@techreport{avramescu2021,
+  author  = {Avramescu, R.-A. and others},
+  title   = {Demand estimation and network design for pediatric {CAR}-{T}
+             therapy in the {US}},
+  institution = {Working paper},
+  year    = {2021}
+}
+
+@article{bernardi2022,
+  author  = {Bernardi, A. and others},
+  title   = {Techno-economic analysis of autologous {CAR}-{T} manufacturing
+             facilities},
+  journal = {Computers \& Chemical Engineering},
+  year    = {2022}
+}
+
+@article{karmarkar1989,
+  author  = {Karmarkar, U. S.},
+  title   = {Capacity loading and release planning with work-in-progress ({WIP})
+             and lead-times},
+  journal = {Journal of Manufacturing and Operations Management},
+  year    = {1989},
+  volume  = {2},
+  pages   = {105--123}
+}
+
+@article{missbauer2011,
+  author  = {Missbauer, H. and Uzsoy, R.},
+  title   = {Optimization models of production planning problems},
+  journal = {Planning Production and Inventories in the Extended Enterprise},
+  year    = {2011},
+  pages   = {437--507}
+}
+
+@article{asmundsson2009,
+  author  = {Asmundsson, J. and Rardin, R. L. and Uzsoy, R.},
+  title   = {Tractable nonlinear production planning models for semiconductor
+             wafer fabrication facilities},
+  journal = {IEEE Transactions on Semiconductor Manufacturing},
+  year    = {2009},
+  volume  = {22},
+  pages   = {216--225}
+}
+
+@article{alagoz2010,
+  author  = {Alagoz, O. and Hsu, H. and Schaefer, A. J. and Roberts, M. S.},
+  title   = {Markov decision processes: a tool for sequential decision making
+             under uncertainty},
+  journal = {Medical Decision Making},
+  year    = {2010},
+  volume  = {30},
+  pages   = {474--483}
+}
+
+@article{steliarova2017,
+  author  = {Steliarova-Foucher, E. and others},
+  title   = {International incidence of childhood cancer, 2001--10 ({IICC}-3):
+             a population-based registry study},
+  journal = {The Lancet Oncology},
+  year    = {2017},
+  volume  = {18},
+  pages   = {719--731}
+}

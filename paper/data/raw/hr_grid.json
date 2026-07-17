@@ -1,0 +1,34 @@
+{
+  "rows": [
+    {
+      "spread": "narrow",
+      "hr_tier": {
+        "H": 1.55,
+        "M": 1.5,
+        "L": 1.45
+      },
+      "on_time_H_lost": 5.85,
+      "sickest_first_H_lost": 2.38
+    },
+    {
+      "spread": "central",
+      "hr_tier": {
+        "H": 1.6,
+        "M": 1.5,
+        "L": 1.4
+      },
+      "on_time_H_lost": 5.859999999999999,
+      "sickest_first_H_lost": 2.3899999999999997
+    },
+    {
+      "spread": "wide",
+      "hr_tier": {
+        "H": 1.7,
+        "M": 1.5,
+        "L": 1.3
+      },
+      "on_time_H_lost": 5.874,
+      "sickest_first_H_lost": 2.4139999999999997
+    }
+  ]
+}

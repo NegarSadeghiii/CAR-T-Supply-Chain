@@ -1,0 +1,7 @@
+setting,tier,normal_wait_lost,after_failure_lost,total_lost,pct_from_normal_wait
+busy-150,H,4.194,1.666,5.860,71.6
+busy-150,M,3.474,4.606,8.080,43.0
+busy-150,L,0.814,2.498,3.312,24.6
+low-50,H,1.358,0.686,2.044,66.4
+low-50,M,1.092,1.874,2.966,36.8
+low-50,L,0.266,0.986,1.252,21.2

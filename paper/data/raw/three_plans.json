@@ -1,0 +1,150 @@
+{
+  "kappa": 1.0,
+  "n_patients": 150,
+  "D_exo": {
+    "z": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "C": [
+      0,
+      0,
+      75,
+      75
+    ]
+  },
+  "D_endo": {
+    "z": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "C": [
+      0,
+      0,
+      75,
+      75
+    ]
+  },
+  "plans": {
+    "on_time": {
+      "high_urgency_lost": 5.859999999999999,
+      "lost_by_tier": {
+        "H": 5.859999999999999,
+        "M": 8.08,
+        "L": 3.3120000000000003
+      },
+      "cause_a_by_tier": {
+        "H": 4.194,
+        "M": 3.474,
+        "L": 0.814
+      },
+      "cause_b_by_tier": {
+        "H": 1.666,
+        "M": 4.606,
+        "L": 2.498
+      },
+      "treated_share_by_tier": {
+        "H": 0.8046666666666666,
+        "M": 0.8922666666666667,
+        "L": 0.9264
+      },
+      "total_cost": 94.9646349999999,
+      "cost_per_treated": 0.7153752598909204,
+      "spare_capacity_built": 0.0,
+      "facilities_open": 2,
+      "open_facilities": [
+        2,
+        3
+      ],
+      "capacity": [
+        0.0,
+        0.0,
+        75.0,
+        75.0
+      ]
+    },
+    "decline_aware": {
+      "high_urgency_lost": 5.859999999999999,
+      "lost_by_tier": {
+        "H": 5.859999999999999,
+        "M": 8.08,
+        "L": 3.3120000000000003
+      },
+      "cause_a_by_tier": {
+        "H": 4.194,
+        "M": 3.474,
+        "L": 0.814
+      },
+      "cause_b_by_tier": {
+        "H": 1.666,
+        "M": 4.606,
+        "L": 2.498
+      },
+      "treated_share_by_tier": {
+        "H": 0.8046666666666666,
+        "M": 0.8922666666666667,
+        "L": 0.9264
+      },
+      "total_cost": 94.9646349999999,
+      "cost_per_treated": 0.7153752598909204,
+      "spare_capacity_built": 0.0,
+      "facilities_open": 2,
+      "open_facilities": [
+        2,
+        3
+      ],
+      "capacity": [
+        0.0,
+        0.0,
+        75.0,
+        75.0
+      ]
+    },
+    "sickest_first": {
+      "high_urgency_lost": 2.3899999999999997,
+      "lost_by_tier": {
+        "H": 2.3899999999999997,
+        "M": 7.634,
+        "L": 4.0120000000000005
+      },
+      "cause_a_by_tier": {
+        "H": 0.94,
+        "M": 3.164,
+        "L": 1.338
+      },
+      "cause_b_by_tier": {
+        "H": 1.45,
+        "M": 4.47,
+        "L": 2.674
+      },
+      "treated_share_by_tier": {
+        "H": 0.9203333333333333,
+        "M": 0.8982133333333333,
+        "L": 0.9108444444444445
+      },
+      "total_cost": 73.80840999999987,
+      "cost_per_treated": 0.5428525933335285,
+      "spare_capacity_built": 0.0,
+      "facilities_open": 2,
+      "open_facilities": [
+        2,
+        3
+      ],
+      "capacity": [
+        0.0,
+        0.0,
+        75.0,
+        75.0
+      ]
+    }
+  },
+  "tradeoff": {
+    "high_urgency_saved": 3.4699999999999998,
+    "lower_urgency_extra_lost": 0.25400000000000134,
+    "saved_per_extra": 13.661417322834573
+  }
+}

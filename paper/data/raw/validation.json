@@ -1,0 +1,68 @@
+{
+  "nesting": {
+    "cause_a_total": 0.0,
+    "high_urgency_lost": 0.842,
+    "total_cost": 49.703214999999986,
+    "cause_a_by_tier": {
+      "H": 0.0,
+      "M": 0.0,
+      "L": 0.0
+    },
+    "toy_nesting_test": {
+      "returncode": 0,
+      "tail": [
+        "[PASS] dynamic == v1 (fixed |\u0394|<1e-6; free design z=[0, 1], C=[0, 3] identical)",
+        "",
+        "3 / 3 nesting tests passed \u2014 dynamic_sp nests yield_sp_v1 at kappa=0."
+      ]
+    }
+  },
+  "priority_off": {
+    "identical": true,
+    "high_urgency_lost": 5.859999999999999,
+    "total_cost": 94.9646349999999
+  },
+  "planned_vs_simulated": {
+    "busiest_facility": 3,
+    "base_load": 50,
+    "kappa": 1.0,
+    "gamma": 1.0,
+    "points": [
+      {
+        "spare_at_busiest": 0,
+        "planned_delay_death_cost": 5.430786692621231,
+        "simulated_delay_cost": 5.153160000000106
+      },
+      {
+        "spare_at_busiest": 4,
+        "planned_delay_death_cost": 4.829321854277608,
+        "simulated_delay_cost": 4.791940000000093
+      },
+      {
+        "spare_at_busiest": 8,
+        "planned_delay_death_cost": 4.400774810754778,
+        "simulated_delay_cost": 4.338840000000079
+      },
+      {
+        "spare_at_busiest": 12,
+        "planned_delay_death_cost": 4.158982879311878,
+        "simulated_delay_cost": 3.988990000000072
+      },
+      {
+        "spare_at_busiest": 16,
+        "planned_delay_death_cost": 3.924481127614599,
+        "simulated_delay_cost": 3.765470000000068
+      },
+      {
+        "spare_at_busiest": 20,
+        "planned_delay_death_cost": 3.697900903564636,
+        "simulated_delay_cost": 3.6406200000000624
+      },
+      {
+        "spare_at_busiest": 24,
+        "planned_delay_death_cost": 3.6189686858046906,
+        "simulated_delay_cost": 3.4716200000000583
+      }
+    ]
+  }
+}
