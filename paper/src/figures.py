@@ -198,6 +198,74 @@ def t3_hr(P, outdir):
     fig.tight_layout(); ps.save(fig, "T3_hazard_ratio_spread", outdir)
 
 
+def f6a_survival(P, outdir):
+    """F6a: survival rate at therapy across the rules (mean with min-max range)."""
+    e6 = P.get("e6")
+    if not e6:
+        return
+    rules = e6["rules"]
+    labels = [r["rule"].replace("Threshold-", "Th-") for r in rules]
+    avg = [100 * r["avg_survival"] for r in rules]
+    lo = [100 * r["min_survival"] for r in rules]
+    hi = [100 * r["max_survival"] for r in rules]
+    x = np.arange(len(rules))
+    fig = ps.fig("double", 0.5); ax = fig.add_subplot(111)
+    yerr = np.vstack([np.array(avg) - np.array(lo), np.array(hi) - np.array(avg)])
+    ax.errorbar(x, avg, yerr=yerr, fmt="o", color=ps.C["sickest"], ecolor=ps.C["grey"],
+                elinewidth=1.0, capsize=3, ms=5)
+    cut = 100 * e6["eligibility_cutoff"]
+    ax.axhline(cut, color=ps.C["ref"], ls="--", lw=1.0)
+    ax.set_ylim(cut - 1.5, max(hi) + 1.5)
+    ax.text(0.02, cut + 0.4, "75% eligibility line (Tseng)", transform=ax.get_yaxis_transform(),
+            fontsize=7.5, color=ps.C["ref"], va="bottom")
+    ax.text(0.02, 0.97, "point = mean   •   bar = min–max", transform=ax.transAxes,
+            fontsize=7.5, color="#444", va="top")
+    ax.set_xticks(x); ax.set_xticklabels(labels)
+    ax.set_ylabel("Survival rate at therapy (%)")
+    ax.set_xlabel("Priority rule")
+    fig.tight_layout(); ps.save(fig, "F6a_survival_across_rules", outdir)
+
+
+def f6b_benefit(P, outdir):
+    """F6b: who benefits vs who pays across the rules. (a) number with higher vs
+    lower survival rate than FIFO; (b) the worst-off (minimum) survival rate,
+    which rises as the rules protect the sickest. At the real rate no patient
+    crosses the 75% eligibility line (become-eligible / -ineligible are both 0,
+    reported in the table); the rules lift the floor instead."""
+    e6 = P.get("e6")
+    if not e6:
+        return
+    nonf = [r for r in e6["rules"] if r["rule"] != "FIFO"]
+    labels = [r["rule"].replace("Threshold-", "Th-") for r in nonf]
+    x = np.arange(len(nonf)); w = 0.38
+    fig = ps.fig("double", 0.5, ncols=2)
+    ax1 = fig.add_subplot(121); ax2 = fig.add_subplot(122)
+    ax1.bar(x - w/2, [r["n_increased"] for r in nonf], w, color=ps.C["sickest"],
+            label="higher survival")
+    ax1.bar(x + w/2, [-r["n_decreased"] for r in nonf], w, color=ps.C["after_fail"],
+            label="lower survival")
+    ax1.axhline(0, color=ps.C["grey"], lw=0.8)
+    ax1.set_xticks(x); ax1.set_xticklabels(labels, fontsize=7.5)
+    ax1.set_ylabel("Patients vs FIFO")
+    ax1.set_title("(a) Who benefits, who pays", fontsize=9)
+    ax1.legend(loc="upper left")
+    # (b) worst-off (minimum) survival rate across all rules incl. FIFO.
+    allr = e6["rules"]
+    xall = np.arange(len(allr))
+    labels_all = [r["rule"].replace("Threshold-", "Th-").replace("FIFO", "FIFO") for r in allr]
+    mins = [100 * r["min_survival"] for r in allr]
+    cut = 100 * e6["eligibility_cutoff"]
+    ax2.plot(xall, mins, "-o", color=ps.C["sickest"])
+    ax2.axhline(cut, color=ps.C["ref"], ls="--", lw=1.0)
+    ax2.set_ylim(cut - 0.8, max(mins) + 0.8)
+    ax2.text(0.03, cut + 0.25, "75% eligibility line (no patient crosses it)",
+             transform=ax2.get_yaxis_transform(), fontsize=7, color=ps.C["ref"], va="bottom")
+    ax2.set_xticks(xall); ax2.set_xticklabels(labels_all, fontsize=7)
+    ax2.set_ylabel("Worst-off survival rate (%)")
+    ax2.set_title("(b) The floor rises", fontsize=9)
+    fig.tight_layout(); ps.save(fig, "F6b_who_benefits", outdir)
+
+
 def make_all(P, main_dir, tech_dir):
     print("Main figures:")
     f1_decline_sweep(P, main_dir)
@@ -205,6 +273,8 @@ def make_all(P, main_dir, tech_dir):
     f3_three_plans(P, main_dir)
     f4_capacity(P, main_dir)
     f5_robustness(P, main_dir)
+    f6a_survival(P, main_dir)
+    f6b_benefit(P, main_dir)
     print("Technical figures:")
     t1_planned_vs_sim(P, tech_dir)
     t2_gamma(P, tech_dir)

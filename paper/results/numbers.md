@@ -43,6 +43,9 @@ Source-tag vocabulary: `[data-anchored]`, `[literature-derived]`, `[calibrated f
 | Base cohort size | `n` | 50 (tiled to 100/150) | patients | [synthetic] | Tiling of the 50-patient cohort preserving tier mix and geography (scaled_instance.py). Base n=50 from IICC-3 pediatric ALL incidence (Steliarova-Foucher 2017) refined by Avramescu 2021b r/r conditional probabilities. |
 | Training / OOS scenarios | `N_train / N_oos` | 80 / 500 | scenarios | [assumption (sensitivity-tested)] | Convergence-checked; seeds train 0, OOS 100. Yields Bernoulli(p_m); eligibility Bernoulli(beta_u). |
 | Geographic network | `-` | 4 facilities / 15 hospitals | - | [data-anchored] | Wan et al. 2026 (Newark/Boston/Raleigh-Durham/SF; 15 highest-demand hospitals), adapted from Avramescu et al. 2021b |
+| **Priority rule (E6)** | | | | | |
+| Rule family (FIFO, Threshold-X) | `rule` | FIFO; X in {75,80,85,90,95,100}% | - | [literature-derived] | Prioritization framework of Tseng et al. 2024 (SimPAC): survival-rate-based ordering of scarce slots; extended here to manufacturing failure, re-manufacture recourse, and network design |
+| Survival-rate eligibility cutoff | `ELIGIBILITY_CUTOFF` | 75 | % | [literature-derived] | Tseng et al. 2024 eligibility threshold; sensitivity-testable |
 
 ## B. Results (outputs)
 
@@ -125,4 +128,36 @@ Anchor `BASE_WAIT_DEATH_6WK = {H:0.15, M:0.05, L:0.02}` scaled by a multiplier (
 | central (1.6/1.5/1.4) | 5.86 | 2.39 |
 | wide (1.7/1.5/1.3) | 5.87 | 2.41 |
 
-_Compute time: 807 s. lambda(gamma): {'1.0': 36.38596471481464, '1.5': 25.139097250185223, '2.0': 20.895731061098957}._
+### E6 — priority-rule comparison (busy 150-patient network, real rate)
+
+Prioritization framework of Tseng et al. 2024 (SimPAC), extended to our setting (manufacturing failure, re-manufacture recourse, network design). The priority SIGNAL is each patient's survival rate at therapy; urgency tiers supply heterogeneous decline and clinical value. Rule family and the 75% eligibility cutoff are `[literature-derived: Tseng et al. 2024]`; all outcomes are `[computed: this study]`. FIFO reproduces the no-prioritization model; Threshold-100% is the sickest-first rule.
+
+Tseng survival metrics (survival rate at therapy, over all patients):
+
+| Rule | Eligible (>75%) | Avg surv. | SD | Max | Min | N inc. vs FIFO | avg inc. | become elig. | N dec. vs FIFO | avg dec. | become inelig. |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| FIFO | 150 | 88.6% | 4.5 | 94.9% | 78.2% | 0 | 0.00% | 0 | 0 | 0.00% | 0 |
+| Threshold-75 | 150 | 88.6% | 4.5 | 94.9% | 78.2% | 0 | 0.00% | 0 | 0 | 0.00% | 0 |
+| Threshold-80 | 150 | 89.2% | 3.9 | 94.9% | 78.5% | 10 | 14.17% | 0 | 65 | 0.65% | 0 |
+| Threshold-85 | 150 | 90.4% | 2.5 | 96.4% | 84.9% | 30 | 12.47% | 0 | 120 | 0.88% | 0 |
+| Threshold-90 | 150 | 90.7% | 2.1 | 96.4% | 87.6% | 62 | 7.28% | 0 | 87 | 1.46% | 0 |
+| Threshold-95 | 150 | 90.9% | 1.8 | 96.4% | 87.6% | 74 | 6.26% | 0 | 74 | 1.53% | 0 |
+| Threshold-100 | 150 | 90.9% | 1.8 | 96.4% | 87.6% | 74 | 6.26% | 0 | 74 | 1.53% | 0 |
+
+Our additions by urgency (high-urgency lost, treated-within-deadline, cost, cause split):
+
+| Rule | High-urg. lost | Treated H/M/L (%) | Cost/patient | Total cost | H normal-wait / after-failure | % from wait |
+|---|---|---|---|---|---|---|
+| FIFO | 5.86 | 80/89/93 | 0.72 | 94.96 | 4.19 / 1.67 | 72% |
+| Threshold-75 | 5.86 | 80/89/93 | 0.72 | 94.96 | 4.19 / 1.67 | 72% |
+| Threshold-80 | 4.54 | 85/89/92 | 0.66 | 87.67 | 2.99 / 1.54 | 66% |
+| Threshold-85 | 2.39 | 92/88/92 | 0.56 | 75.83 | 0.94 / 1.45 | 39% |
+| Threshold-90 | 2.39 | 92/89/91 | 0.55 | 74.36 | 0.94 / 1.45 | 39% |
+| Threshold-95 | 2.39 | 92/90/91 | 0.54 | 73.67 | 0.94 / 1.45 | 39% |
+| Threshold-100 | 2.39 | 92/90/91 | 0.54 | 73.67 | 0.94 / 1.45 | 39% |
+
+**Validation:** FIFO high-urgency lost 5.86 (== no-prioritization model); Threshold-100% 2.39 (== sickest-first).
+
+**Reading the sweep.** Under FIFO the worst-off (minimum) survival rate is 78.2%, just above the 75% eligibility line, so no patient is below the cutoff and `become-eligible` / `become-ineligible` are 0 for every rule. Threshold-75% therefore prioritizes nobody (== FIFO); the protection turns on from Threshold-80% upward, and high-urgency losses reach the sickest-first floor (2.39) by Threshold-85%. The rules lift the worst-off survival floor from 78.2% to 87.6% and the average from 88.6% to 90.9%, reallocating survival-rate margin toward the sickest rather than moving patients across the eligibility line.
+
+_Compute time: 634 s. lambda(gamma): {'1.0': 36.38596471481464, '1.5': 25.139097250185223, '2.0': 20.895731061098957}._

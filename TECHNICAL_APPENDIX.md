@@ -120,15 +120,31 @@ Bernoulli. The simulator then reproduces the original model exactly: at
 `kappa = 0` the busy 150-patient network gives high-urgency lost 0.842 and total
 cost 49.70 M USD (50-patient: 17.51 M USD), matching `dynamic_sp(kappa=0)` and v1.
 
-**Priority (`priority` flag) — wait-exposure reallocation.** Without priority
-`e_i ≡ 1` (everyone waits the normal schedule and shares any backlog equally),
-which reproduces the no-lever model exactly. With priority, patients at each
-facility are ordered sickest-first and `e_i` runs linearly `0` (front) → `2`
-(back) with mean 1: high-urgency patients yield the least waiting (their `e_i`
-falls toward 0, cutting both (a) and their backlog share in (b)), while
-lower-urgency patients absorb it (`e_i` up to ~2). Total waiting is conserved;
-it is only reallocated. The mean-1 construction means the lever is budget-neutral
-in aggregate exposure — it moves risk, it does not remove it.
+**Priority rule family (`rule` / `threshold`) — wait-exposure reallocation.**
+Generalizes the earlier sickest-first switch to the prioritization framework of
+Tseng et al. (2024) (SimPAC). The priority SIGNAL is each patient's *survival
+rate* under FIFO (expected survival at therapy, `_fifo_survival_signal`);
+urgency tiers only supply heterogeneous decline and clinical value.
+
+- `rule = "FIFO"` → `e_i ≡ 1` (equal backlog sharing) → reproduces the
+  no-prioritization model exactly.
+- `rule = "THRESHOLD"`, cutoff `X` → patients with survival rate `< X` form the
+  priority group, served lowest-survival-first: they take the front (fast) slots
+  with `e_i` ramping `0 → 2(k-1)/(n-1)`, and the rest (FIFO) share the leftover
+  waiting uniformly at `e_i > 1`. Per-facility mean exposure is exactly 1
+  (budget-neutral: reallocates waiting, never creates/removes it).
+- `threshold = 1.0` puts everyone in the priority group ⇒ pure
+  lowest-survival-first. Within a facility the survival signal is monotone in
+  tier (H lowest), so this ordering coincides with the tier ordering and
+  `threshold = 1.0` reproduces the earlier sickest-first exposure exactly.
+
+**Validation of the rule family** (busy 150-patient network, real rate; E6 /
+`paper/`): `rule = "FIFO"` reproduces the no-prioritization outcome (high-urgency
+lost 5.86, identical cost); `threshold = 1.0` (Threshold-100%) reproduces
+sickest-first (high-urgency lost 5.86 → 2.39); and at decline speed 0 the survival
+signal is 1 for everyone, so no patient is prioritized and every rule collapses to
+the base model. `priority=True/False` remain as backward-compatible aliases for
+Threshold-100% / FIFO.
 
 ---
 

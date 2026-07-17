@@ -53,45 +53,98 @@ _URGENCY_RANK = {"H": 0, "M": 1, "L": 2}
 # product is ready). FLAGGED CLINICAL ASSUMPTION — sensitivity-tested.
 BASE_WAIT_DEATH_6WK = {"H": 0.15, "M": 0.05, "L": 0.02}
 
+# Survival-rate eligibility cutoff for the priority-rule family. A patient whose
+# survival rate at therapy falls below this is "ineligible" and, under a
+# Threshold rule, joins the higher-priority group. Value 0.75 follows the
+# prioritization framework of Tseng et al. (2024) (SimPAC). Sensitivity-testable.
+ELIGIBILITY_CUTOFF = 0.75
 
-def _priority_exposure(assign, tiers, n_f, priority):
+
+def _rule_exposure(assign, signal, n_f, rule, threshold):
     """
-    Per-patient wait exposure e_i. Without priority e_i=1 for all. With priority,
-    patients at each factory are ordered sickest-first and exposure runs linearly
-    0 (front) -> 2 (back), average 1 — high-urgency yield the least waiting, low-
-    urgency the most.
+    Per-patient wait exposure e_i under a priority RULE (generalizes the earlier
+    sickest-first switch). `signal[i]` is the patient's survival rate under FIFO
+    (lower = sicker); `rule` is "FIFO" or "THRESHOLD"; `threshold` in (0,1].
+
+    - FIFO: e_i = 1 for all — everyone shares any re-make backlog equally
+      (reproduces the no-lever / no-prioritization model exactly).
+    - THRESHOLD: within each facility, patients with survival rate < `threshold`
+      form the priority group, served lowest-survival-first; they take the front
+      (fast) slots with exposure ramping 0 -> 2(k-1)/(n-1), and the remaining
+      patients (FIFO) share the leftover waiting uniformly at exposure > 1. Total
+      exposure per facility is conserved (mean 1), so the lever reallocates
+      waiting, it does not create or remove it. `threshold = 1.0` puts everyone
+      in the priority group -> pure lowest-survival-first (== sickest-first).
+
+    Within a facility the survival signal is monotincreasing from H to L, so
+    ordering by survival reproduces the tier ordering; `threshold = 1.0` therefore
+    reproduces the earlier sickest-first exposure exactly.
     """
     n_p = len(assign)
     e = np.ones(n_p)
-    if not priority:
+    if rule == "FIFO":
         return e
     for m in range(n_f):
         idx = [i for i in range(n_p) if assign[i] == m]
-        if len(idx) <= 1:
-            for i in idx:
-                e[i] = 0.0
-            continue
-        idx.sort(key=lambda i: (_URGENCY_RANK[tiers[i]], i))
         n = len(idx)
-        for r, i in enumerate(idx):
-            e[i] = 2.0 * r / (n - 1)
+        if n <= 1:
+            continue                                    # lone patient: no queue -> e=1
+        prio = sorted((i for i in idx if signal[i] < threshold), key=lambda i: (signal[i], i))
+        rest = [i for i in idx if signal[i] >= threshold]
+        k = len(prio)
+        if k == 0:
+            continue                                    # nobody prioritized -> FIFO (e=1)
+        for r, i in enumerate(prio):
+            e[i] = 2.0 * r / (n - 1)                     # front / fast slots
+        sum_prio = k * (k - 1) / (n - 1)                # = sum_{r=0}^{k-1} 2r/(n-1)
+        if rest:
+            e_rest = (n - sum_prio) / len(rest)          # uniform, > 1, conserves mean 1
+            for i in rest:
+                e[i] = e_rest
     return e
+
+
+def _fifo_survival_signal(assign, hr, h_norm, p_by_fac, Dbar, tau, lam, gamma, kappa):
+    """
+    Per-patient expected survival rate under FIFO (exposure 1), used as the
+    priority SIGNAL. Combines the normal-wait branch and the re-make branch at the
+    facility's mean backlog:
+        signal_i = p_m * exp(-kappa h_norm_i) + (1-p_m) * exp(-kappa hr_i ((tau+Dbar_m)/lam)^gamma).
+    Monotone-decreasing from tier L to H within a facility (kappa>0). At kappa=0
+    it is 1 for everyone (no deterioration), so no patient is ever prioritized.
+    """
+    wait_fail = tau + np.asarray(Dbar)[assign]           # mean total re-make wait per patient (e=1)
+    surv_norm1 = np.exp(-kappa * h_norm)
+    surv_fail1 = np.exp(-kappa * hr * (wait_fail / lam) ** gamma)
+    pm = np.asarray(p_by_fac)[assign]
+    return pm * surv_norm1 + (1.0 - pm) * surv_fail1
 
 
 def simulate_patients(inst, design, tiers, tier_idx, Y, B, U, *,
                       kappa, gamma, clearing=DEFAULT_CLEARING, priority=False,
+                      rule=None, threshold=1.0, signal=None,
                       base_wait_death=None, hr_tier=None):
     """
     Score a fixed design on out-of-sample scenarios, returning plain patient
     outcomes with each loss split into cause (a) / (b), by urgency tier.
 
+    Priority rule (Tseng et al. 2024 framework):
+      rule="FIFO"       — no survival-based prioritization (== no-lever model).
+      rule="THRESHOLD"  — patients with survival rate < `threshold` are served
+                          lowest-survival-first; `threshold=1.0` == sickest-first.
+      signal            — per-patient survival rate (lower = sicker) used to order.
+                          If None it is computed internally as the FIFO expected
+                          survival rate (monotone in tier per facility).
+    Backward compatibility: `priority=True`  -> rule="THRESHOLD", threshold=1.0;
+    `priority=False` -> rule="FIFO". Passing `rule` overrides `priority`.
+
     Optional overrides (default to the module constants, so results are
     unchanged unless a sweep passes them):
       base_wait_death : dict{H,M,L} 6-week normal-wait mortality (drives cause a).
       hr_tier         : dict{H,M,L} delay hazard ratios (drives cause b).
-    These exist for the sensitivity experiments (E5, decline-shape/HR grids); with
-    both left None the function is byte-for-byte the calibrated model.
     """
+    if rule is None:
+        rule = "THRESHOLD" if priority else "FIFO"
     bwd = BASE_WAIT_DEATH_6WK if base_wait_death is None else base_wait_death
     hrt = HR_TIER if hr_tier is None else hr_tier
     z = np.asarray(design["z"], float)
@@ -109,10 +162,20 @@ def simulate_patients(inst, design, tiers, tier_idx, Y, B, U, *,
     Csafe = np.maximum(C, 1e-9)
     Yass = Y[:, np.arange(n_p), assign]
     F = 1.0 - Yass                                             # 1 if batch failed
-    e = _priority_exposure(assign, tiers, n_f, priority)       # wait exposure per patient
+
+    # Mean re-make backlog per facility (rule-independent) -> priority signal.
+    surge_all = np.stack([np.bincount(assign[F[o] > 0.5], minlength=n_f).astype(float)
+                          for o in range(N)])                 # (N, n_f)
+    Dbar = np.maximum(0.0, clearing.remake_delay((a_m[None, :] + surge_all) / Csafe[None, :])
+                      - tau).mean(axis=0)                      # (n_f,)
+    if signal is None:
+        signal = _fifo_survival_signal(assign, hr, h_norm, np.asarray(inst.p, float),
+                                       Dbar, tau, lam, gamma, kappa)
+    e = _rule_exposure(assign, np.asarray(signal, float), n_f, rule, threshold)
 
     still = np.zeros((N, n_p))                                 # re-collection eligibility (failed)
     cause_a = np.zeros((N, n_p))                               # lost on a successful batch
+    surv_rate = np.zeros(n_p)                                  # expected survival at therapy
     # Cause (a): normal-wait mortality (design-independent), reallocated by priority.
     surv_norm = np.exp(-kappa * h_norm * e)                    # (n_p,)
     for o in range(N):
@@ -128,9 +191,12 @@ def simulate_patients(inst, design, tiers, tier_idx, Y, B, U, *,
         for i in range(n_p):
             if F[o, i] > 0.5:
                 still[o, i] = B[o, i] * (1.0 if U[o, i] < surv_fail[i] else 0.0)
+                surv_rate[i] += surv_fail[i]
             else:
                 if U[o, i] >= surv_norm[i]:
                     cause_a[o, i] = 1.0
+                surv_rate[i] += surv_norm[i]
+    surv_rate /= N                                             # per-patient survival rate at therapy
 
     # Re-collection / re-manufacture for failed batches (cost-driven -> sickest
     # salvaged first). Cancellations here are cause (b).
@@ -164,4 +230,8 @@ def simulate_patients(inst, design, tiers, tier_idx, Y, B, U, *,
         "facilities_open": int((z > 0.5).sum()),
         "open_facilities": [m for m in range(n_f) if z[m] > 0.5],
         "capacity": C.tolist(),
+        "rule": rule,
+        "threshold": float(threshold),
+        "survival_rate_by_patient": surv_rate.tolist(),   # expected survival at therapy
+        "signal_by_patient": np.asarray(signal, float).tolist(),
     }

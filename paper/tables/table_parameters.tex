@@ -43,6 +43,9 @@ Incremental delay slopes ($a\_s$) & (0, 45, 90) & days/util & assumption (sensit
 Base cohort size ($n$) & 50 (tiled to 100/150) & patients & synthetic~\cite{steliarova2017} \\
 Training / OOS scenarios ($N\_train / N\_oos$) & 80 / 500 & scenarios & assumption (sensitivity-tested)~\cite{wan2026} \\
 Geographic network ($-$) & 4 facilities / 15 hospitals & - & data-anchored~\cite{avramescu2021} \\
+\multicolumn{4}{@{}l}{\textit{Priority rule (E6)}} \\
+Rule family (FIFO, Threshold-X) ($rule$) & FIFO; X in {75,80,85,90,95,100}\% & - & literature-derived~\cite{tseng2024} \\
+Survival-rate eligibility cutoff ($ELIGIBILITY\_CUTOFF$) & 75 & \% & literature-derived~\cite{tseng2024} \\
 \bottomrule
 \end{tabular}
 \end{table}

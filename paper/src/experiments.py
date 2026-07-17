@@ -45,7 +45,8 @@ from scaled_instance import scaled_case_study_instance        # noqa: E402
 from declineprob import calibrate_lambda, HR_TIER             # noqa: E402
 from clearing_function import DEFAULT_CLEARING                # noqa: E402
 from dynamic_sp import solve_dynamic_sp, solve_dynamic_sp_endogenous  # noqa: E402
-from patient_simulator import simulate_patients, BASE_WAIT_DEATH_6WK  # noqa: E402
+from patient_simulator import (simulate_patients, BASE_WAIT_DEATH_6WK,  # noqa: E402
+                               ELIGIBILITY_CUTOFF)
 
 # ---- fixed experiment settings (seeded / reproducible) ----------------------
 CALIB_KAPPA = 1.0                # decline speed matched to Dulobdas 2025 PFS HR 1.64
@@ -64,6 +65,8 @@ HR_GRIDS = {
     "central": {"H": 1.60, "M": 1.50, "L": 1.40},
     "wide": {"H": 1.70, "M": 1.50, "L": 1.30},
 }
+# E6 priority-rule family (Tseng et al. 2024). FIFO baseline + Threshold-X.
+THRESHOLD_GRID = [75, 80, 85, 90, 95, 100]
 _RAW = _ROOT / "paper" / "data" / "raw"
 
 
@@ -229,6 +232,66 @@ def hr_grid(busy_ctx):
     return {"rows": rows}
 
 
+def _tseng_metrics(surv_rule, surv_fifo, cutoff=ELIGIBILITY_CUTOFF, eps=1e-6):
+    """Tseng-style survival-rate metrics for one rule vs FIFO, over all patients
+    (each patient's survival rate at therapy = expected survival at realized wait)."""
+    sr = np.asarray(surv_rule, float)
+    sf = np.asarray(surv_fifo, float)
+    inc = sr > sf + eps
+    dec = sr < sf - eps
+    become_elig = (sf < cutoff) & (sr >= cutoff)
+    become_inelig = (sf >= cutoff) & (sr < cutoff)
+    return {
+        "n_eligible": int((sr > cutoff).sum()),
+        "avg_survival": float(sr.mean()), "sd_survival": float(sr.std()),
+        "max_survival": float(sr.max()), "min_survival": float(sr.min()),
+        "n_increased": int(inc.sum()),
+        "avg_increase": float((sr[inc] - sf[inc]).mean()) if inc.any() else 0.0,
+        "n_become_eligible": int(become_elig.sum()),
+        "n_decreased": int(dec.sum()),
+        "avg_decrease": float((sf[dec] - sr[dec]).mean()) if dec.any() else 0.0,
+        "n_become_ineligible": int(become_inelig.sum()),
+    }
+
+
+def e6_priority_rules(s):
+    """E6: FIFO vs Threshold-X priority-rule comparison in the busy 150p network at
+    the real decline rate. Tseng survival metrics + our tier / cost / cause columns.
+    The FIFO survival rates are the ordering signal AND the comparison baseline."""
+    inst, tiers, tidx = scaled_case_study_instance(mult=3, s_max=S_MAX_REAL)
+    Ytr, Btr, Yte, Bte, U = _draws(inst, s["n_train"], s["n_oos"])
+    D = solve_on_time(inst, Ytr, Btr, tiers, s)
+    fifo = _sim(inst, D, tiers, tidx, Yte, Bte, U, CALIB_KAPPA, priority=False)
+    signal = fifo["survival_rate_by_patient"]           # FIFO survival = ordering signal
+    surv_fifo = fifo["survival_rate_by_patient"]
+
+    def our_cols(sim):
+        return {"high_urgency_lost": sim["high_urgency_lost"],
+                "lost_by_tier": sim["lost_by_tier"],
+                "cause_a_by_tier": sim["cause_a_by_tier"],
+                "cause_b_by_tier": sim["cause_b_by_tier"],
+                "treated_share_by_tier": sim["treated_share_by_tier"],
+                "cost_per_treated": sim["cost_per_treated"],
+                "total_cost": sim["total_cost"]}
+
+    rules = []
+    m = _tseng_metrics(surv_fifo, surv_fifo)
+    rules.append({"rule": "FIFO", "threshold": None, **m, **our_cols(fifo)})
+    print(f"    FIFO: elig={m['n_eligible']} avg-surv={m['avg_survival']:.3f} H-lost={fifo['high_urgency_lost']:.2f}")
+    for X in THRESHOLD_GRID:
+        sim = simulate_patients(inst, D, tiers, tidx, Yte, Bte, U, kappa=CALIB_KAPPA,
+                                gamma=GAMMA, rule="THRESHOLD", threshold=X / 100.0,
+                                signal=signal)
+        mt = _tseng_metrics(sim["survival_rate_by_patient"], surv_fifo)
+        rules.append({"rule": f"Threshold-{X}", "threshold": X, **mt, **our_cols(sim)})
+        print(f"    Th-{X}: elig={mt['n_eligible']} avg-surv={mt['avg_survival']:.3f} "
+              f"inc={mt['n_increased']} dec={mt['n_decreased']} H-lost={sim['high_urgency_lost']:.2f}")
+    return {"n_patients": inst.n_patients, "kappa": CALIB_KAPPA,
+            "eligibility_cutoff": ELIGIBILITY_CUTOFF, "thresholds": THRESHOLD_GRID,
+            "D_on_time": {"z": D["z"].tolist(), "C": D["C"].tolist()},
+            "fifo_survival_by_patient": surv_fifo, "tiers": tiers, "rules": rules}
+
+
 def validation(busy_ctx, s):
     """V1 nesting, V2 priority-OFF equivalence, V3 planning vs detailed sim."""
     inst, tiers, tidx, D, Yte, Bte, U = busy_ctx
@@ -315,6 +378,8 @@ def run(quick=False):
     payload["gamma_grid"] = gamma_grid(busy_ctx)
     print("[SENS tier hazard-ratio grid]")
     payload["hr_grid"] = hr_grid(busy_ctx)
+    print("[E6 priority-rule comparison]")
+    payload["e6"] = e6_priority_rules(s)
     print("[VALIDATION]")
     payload["validation"] = validation(busy_ctx, s)
 
@@ -322,7 +387,7 @@ def run(quick=False):
 
     # Raw dumps (per experiment) + a combined raw log.
     for name in ("busy", "low", "three_plans", "cap_sweep", "e5_bwd",
-                 "gamma_grid", "hr_grid", "validation"):
+                 "gamma_grid", "hr_grid", "e6", "validation"):
         with open(_RAW / f"{name}.json", "w") as fh:
             json.dump(payload[name], fh, indent=2)
     with open(_RAW / "run_meta.json", "w") as fh:
