@@ -19,8 +19,8 @@
   },
   "priority_off": {
     "identical": true,
-    "high_urgency_lost": 5.859999999999999,
-    "total_cost": 94.9646349999999
+    "high_urgency_lost": 4.54,
+    "total_cost": 84.23403499999989
   },
   "planned_vs_simulated": {
     "busiest_facility": 3,

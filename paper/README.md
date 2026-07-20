@@ -50,7 +50,17 @@ paper/
 | E3 | three plans @150p: on-time / decline-aware-spare / sickest-first | `E3_three_plans.csv`, `F3` |
 | E4 | capacity-cap sweep s_max in {40,55,75} | `E4_capacity_cap.csv`, `F4` |
 | E5 | robustness to the normal-wait mortality anchor | `E5_bwd_robustness.csv`, `F5` |
+| E6 | priority-rule family (Tseng et al. 2024): FIFO vs Threshold-X | `E6_priority_rules.csv`, `F6a/F6b` |
 | Sensitivity | decline-curve shape (gamma) and tier hazard-ratio grids | `SENS_*.csv`, `T2`, `T3` |
+| Issue 1 | normal vein-to-vein wait `T_V2V` sweep {21,28,35,42} d | `ISSUE1_tv2v_sweep.csv` |
+| Issue 4 | re-make delay: observed 12 d vs full cycle (= T_V2V) | `ISSUE4_remake_delay.csv` |
+| Issue 5 | implemented / not-implemented scope | `ISSUE5_implemented.csv`, `tables/implemented.tex` |
+| Issue 6 | failure rate × T_V2V: where waiting vs failure dominates | `ISSUE6_failure_x_tv2v.csv`, `F7` |
+| Issue 7 | OLD-vs-NEW headline comparison | `numbers.md`, `tables/old_vs_new.tex` |
+
+The waiting-time model was corrected after review (explicit `T_V2V`, hazard-rate
+normal wait, extra-only kernel, compound hazards); see `TECHNICAL_APPENDIX.md
+§4b` and validate with `python test_waiting_model.py`.
 
 ## Figures
 

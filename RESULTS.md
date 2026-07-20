@@ -1,5 +1,14 @@
 # CAR-T Network Planning — Why High-Urgency Patients Are Lost, and How to Protect Them
 
+> **Note (model review).** The manuscript bundle in `paper/` carries the
+> corrected waiting-time model: an explicit vein-to-vein wait `T_V2V` (base
+> 4 weeks), a hazard-rate normal wait, and the re-make kernel applied to the
+> extra delay only (see `paper/results/numbers.md`, Issue 7 OLD-vs-NEW, and
+> `TECHNICAL_APPENDIX.md §4b`). The plain-language figures below use the earlier
+> calibration and are superseded by the `paper/` assets for exact numbers; the
+> qualitative conclusions (large prediction gap; a survival-based priority rule
+> roughly halves high-urgency losses) are unchanged.
+
 Autologous CAR-T is made from each patient's own cells. Between collection and
 treatment a patient waits about six weeks — and if the batch fails and has to be
 re-made, they wait longer still. High-urgency patients can get sicker during that

@@ -96,29 +96,29 @@
     {
       "kappa": 0.1,
       "on_time": {
-        "high_urgency_lost": 0.59,
+        "high_urgency_lost": 0.532,
         "lost_by_tier": {
-          "H": 0.59,
-          "M": 0.964,
-          "L": 0.30600000000000005
+          "H": 0.532,
+          "M": 0.8999999999999999,
+          "L": 0.28
         },
         "cause_a_by_tier": {
-          "H": 0.172,
-          "M": 0.126,
-          "L": 0.032
+          "H": 0.12,
+          "M": 0.086,
+          "L": 0.026
         },
         "cause_b_by_tier": {
-          "H": 0.418,
-          "M": 0.838,
-          "L": 0.274
+          "H": 0.412,
+          "M": 0.814,
+          "L": 0.254
         },
         "treated_share_by_tier": {
-          "H": 0.9410000000000001,
-          "M": 0.96144,
-          "L": 0.9796
+          "H": 0.9468,
+          "M": 0.964,
+          "L": 0.9813333333333333
         },
-        "total_cost": 20.133359999999897,
-        "cost_per_treated": 0.4182251765683402,
+        "total_cost": 19.647109999999895,
+        "cost_per_treated": 0.40687355036447764,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -132,29 +132,29 @@
         ]
       },
       "sickest_first": {
-        "high_urgency_lost": 0.406,
+        "high_urgency_lost": 0.376,
         "lost_by_tier": {
-          "H": 0.406,
-          "M": 0.9279999999999999,
-          "L": 0.388
+          "H": 0.376,
+          "M": 0.862,
+          "L": 0.356
         },
         "cause_a_by_tier": {
-          "H": 0.034,
-          "M": 0.11,
-          "L": 0.056
+          "H": 0.018,
+          "M": 0.082,
+          "L": 0.038
         },
         "cause_b_by_tier": {
-          "H": 0.372,
-          "M": 0.818,
-          "L": 0.332
+          "H": 0.358,
+          "M": 0.78,
+          "L": 0.318
         },
         "treated_share_by_tier": {
-          "H": 0.9594,
-          "M": 0.96288,
-          "L": 0.9741333333333333
+          "H": 0.9624,
+          "M": 0.96552,
+          "L": 0.9762666666666666
         },
-        "total_cost": 19.0203399999999,
-        "cost_per_treated": 0.39397530966485567,
+        "total_cost": 18.696549999999895,
+        "cost_per_treated": 0.38624447382555666,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -171,29 +171,29 @@
     {
       "kappa": 0.15,
       "on_time": {
-        "high_urgency_lost": 0.696,
+        "high_urgency_lost": 0.612,
         "lost_by_tier": {
-          "H": 0.696,
-          "M": 1.158,
-          "L": 0.39599999999999996
+          "H": 0.612,
+          "M": 1.044,
+          "L": 0.352
         },
         "cause_a_by_tier": {
-          "H": 0.246,
-          "M": 0.196,
-          "L": 0.052
+          "H": 0.172,
+          "M": 0.126,
+          "L": 0.032
         },
         "cause_b_by_tier": {
-          "H": 0.45,
-          "M": 0.962,
-          "L": 0.344
+          "H": 0.44,
+          "M": 0.918,
+          "L": 0.32
         },
         "treated_share_by_tier": {
-          "H": 0.9304,
-          "M": 0.95368,
-          "L": 0.9736
+          "H": 0.9388,
+          "M": 0.95824,
+          "L": 0.9765333333333334
         },
-        "total_cost": 21.183049999999906,
-        "cost_per_treated": 0.4436240837696315,
+        "total_cost": 20.432479999999902,
+        "cost_per_treated": 0.42574762460409865,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -207,29 +207,29 @@
         ]
       },
       "sickest_first": {
-        "high_urgency_lost": 0.446,
+        "high_urgency_lost": 0.41200000000000003,
         "lost_by_tier": {
-          "H": 0.446,
-          "M": 1.1,
-          "L": 0.53
+          "H": 0.41200000000000003,
+          "M": 0.996,
+          "L": 0.478
         },
         "cause_a_by_tier": {
-          "H": 0.05,
-          "M": 0.17,
-          "L": 0.08
+          "H": 0.034,
+          "M": 0.11,
+          "L": 0.056
         },
         "cause_b_by_tier": {
-          "H": 0.396,
-          "M": 0.93,
-          "L": 0.45
+          "H": 0.378,
+          "M": 0.886,
+          "L": 0.422
         },
         "treated_share_by_tier": {
-          "H": 0.9554,
-          "M": 0.956,
-          "L": 0.9646666666666667
+          "H": 0.9588,
+          "M": 0.96016,
+          "L": 0.9681333333333333
         },
-        "total_cost": 19.663849999999908,
-        "cost_per_treated": 0.4103132042400448,
+        "total_cost": 19.229499999999906,
+        "cost_per_treated": 0.39966537806043784,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -246,29 +246,29 @@
     {
       "kappa": 0.2,
       "on_time": {
-        "high_urgency_lost": 0.782,
+        "high_urgency_lost": 0.684,
         "lost_by_tier": {
-          "H": 0.782,
-          "M": 1.356,
-          "L": 0.482
+          "H": 0.684,
+          "M": 1.2,
+          "L": 0.422
         },
         "cause_a_by_tier": {
-          "H": 0.306,
-          "M": 0.252,
-          "L": 0.064
+          "H": 0.218,
+          "M": 0.172,
+          "L": 0.046
         },
         "cause_b_by_tier": {
-          "H": 0.476,
-          "M": 1.104,
-          "L": 0.418
+          "H": 0.466,
+          "M": 1.028,
+          "L": 0.376
         },
         "treated_share_by_tier": {
-          "H": 0.9218,
-          "M": 0.94576,
-          "L": 0.9678666666666667
+          "H": 0.9316,
+          "M": 0.952,
+          "L": 0.9718666666666667
         },
-        "total_cost": 22.11477999999991,
-        "cost_per_treated": 0.46675348248205806,
+        "total_cost": 21.193459999999906,
+        "cost_per_treated": 0.44436323227240127,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -282,29 +282,29 @@
         ]
       },
       "sickest_first": {
-        "high_urgency_lost": 0.488,
+        "high_urgency_lost": 0.444,
         "lost_by_tier": {
-          "H": 0.488,
-          "M": 1.294,
-          "L": 0.638
+          "H": 0.444,
+          "M": 1.144,
+          "L": 0.576
         },
         "cause_a_by_tier": {
-          "H": 0.072,
-          "M": 0.23,
-          "L": 0.102
+          "H": 0.046,
+          "M": 0.15,
+          "L": 0.072
         },
         "cause_b_by_tier": {
-          "H": 0.416,
-          "M": 1.064,
-          "L": 0.536
+          "H": 0.398,
+          "M": 0.994,
+          "L": 0.504
         },
         "treated_share_by_tier": {
-          "H": 0.9512,
-          "M": 0.94824,
-          "L": 0.9574666666666667
+          "H": 0.9556,
+          "M": 0.95424,
+          "L": 0.9616
         },
-        "total_cost": 20.340449999999915,
-        "cost_per_treated": 0.4274999999999982,
+        "total_cost": 19.75214999999991,
+        "cost_per_treated": 0.4129139142068716,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -321,29 +321,29 @@
     {
       "kappa": 0.25,
       "on_time": {
-        "high_urgency_lost": 0.872,
+        "high_urgency_lost": 0.754,
         "lost_by_tier": {
-          "H": 0.872,
-          "M": 1.502,
-          "L": 0.5579999999999999
+          "H": 0.754,
+          "M": 1.3699999999999999,
+          "L": 0.51
         },
         "cause_a_by_tier": {
-          "H": 0.366,
-          "M": 0.3,
-          "L": 0.076
+          "H": 0.262,
+          "M": 0.214,
+          "L": 0.06
         },
         "cause_b_by_tier": {
-          "H": 0.506,
-          "M": 1.202,
-          "L": 0.482
+          "H": 0.492,
+          "M": 1.156,
+          "L": 0.45
         },
         "treated_share_by_tier": {
-          "H": 0.9128000000000001,
-          "M": 0.93992,
-          "L": 0.9628
+          "H": 0.9246,
+          "M": 0.9452,
+          "L": 0.966
         },
-        "total_cost": 22.968259999999923,
-        "cost_per_treated": 0.4879803688280769,
+        "total_cost": 21.977279999999922,
+        "cost_per_treated": 0.4639885149685412,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -357,29 +357,29 @@
         ]
       },
       "sickest_first": {
-        "high_urgency_lost": 0.504,
+        "high_urgency_lost": 0.474,
         "lost_by_tier": {
-          "H": 0.504,
-          "M": 1.444,
-          "L": 0.736
+          "H": 0.474,
+          "M": 1.302,
+          "L": 0.6699999999999999
         },
         "cause_a_by_tier": {
-          "H": 0.078,
-          "M": 0.266,
-          "L": 0.12
+          "H": 0.062,
+          "M": 0.184,
+          "L": 0.088
         },
         "cause_b_by_tier": {
-          "H": 0.426,
-          "M": 1.178,
-          "L": 0.616
+          "H": 0.412,
+          "M": 1.118,
+          "L": 0.582
         },
         "treated_share_by_tier": {
-          "H": 0.9496,
-          "M": 0.94224,
-          "L": 0.9509333333333333
+          "H": 0.9526,
+          "M": 0.94792,
+          "L": 0.9553333333333334
         },
-        "total_cost": 20.772209999999923,
-        "cost_per_treated": 0.4390102713669778,
+        "total_cost": 20.278689999999923,
+        "cost_per_treated": 0.42643500021028563,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -396,29 +396,29 @@
     {
       "kappa": 0.3,
       "on_time": {
-        "high_urgency_lost": 0.966,
+        "high_urgency_lost": 0.8280000000000001,
         "lost_by_tier": {
-          "H": 0.966,
-          "M": 1.6420000000000001,
-          "L": 0.64
+          "H": 0.8280000000000001,
+          "M": 1.482,
+          "L": 0.556
         },
         "cause_a_by_tier": {
-          "H": 0.432,
-          "M": 0.332,
-          "L": 0.09
+          "H": 0.306,
+          "M": 0.252,
+          "L": 0.064
         },
         "cause_b_by_tier": {
-          "H": 0.534,
-          "M": 1.31,
-          "L": 0.55
+          "H": 0.522,
+          "M": 1.23,
+          "L": 0.492
         },
         "treated_share_by_tier": {
-          "H": 0.9034,
-          "M": 0.93432,
-          "L": 0.9573333333333334
+          "H": 0.9172,
+          "M": 0.94072,
+          "L": 0.9629333333333333
         },
-        "total_cost": 23.83601999999993,
-        "cost_per_treated": 0.50983957905544,
+        "total_cost": 22.652769999999926,
+        "cost_per_treated": 0.48060359825179116,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -432,29 +432,29 @@
         ]
       },
       "sickest_first": {
-        "high_urgency_lost": 0.538,
+        "high_urgency_lost": 0.494,
         "lost_by_tier": {
-          "H": 0.538,
-          "M": 1.57,
-          "L": 0.836
+          "H": 0.494,
+          "M": 1.434,
+          "L": 0.744
         },
         "cause_a_by_tier": {
-          "H": 0.092,
-          "M": 0.304,
-          "L": 0.14
+          "H": 0.072,
+          "M": 0.23,
+          "L": 0.102
         },
         "cause_b_by_tier": {
-          "H": 0.446,
-          "M": 1.266,
-          "L": 0.696
+          "H": 0.422,
+          "M": 1.204,
+          "L": 0.642
         },
         "treated_share_by_tier": {
-          "H": 0.9462,
-          "M": 0.9372,
-          "L": 0.9442666666666667
+          "H": 0.9506,
+          "M": 0.94264,
+          "L": 0.9504
         },
-        "total_cost": 21.26842999999993,
-        "cost_per_treated": 0.45198125637538106,
+        "total_cost": 20.689329999999927,
+        "cost_per_treated": 0.43714777721433246,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -471,29 +471,29 @@
     {
       "kappa": 0.4,
       "on_time": {
-        "high_urgency_lost": 1.168,
+        "high_urgency_lost": 0.9380000000000001,
         "lost_by_tier": {
-          "H": 1.168,
-          "M": 1.89,
-          "L": 0.76
+          "H": 0.9380000000000001,
+          "M": 1.696,
+          "L": 0.6779999999999999
         },
         "cause_a_by_tier": {
-          "H": 0.594,
-          "M": 0.44,
-          "L": 0.116
+          "H": 0.378,
+          "M": 0.31,
+          "L": 0.08
         },
         "cause_b_by_tier": {
-          "H": 0.574,
-          "M": 1.45,
-          "L": 0.644
+          "H": 0.56,
+          "M": 1.386,
+          "L": 0.598
         },
         "treated_share_by_tier": {
-          "H": 0.8832,
-          "M": 0.9244,
-          "L": 0.9493333333333334
+          "H": 0.9062,
+          "M": 0.93216,
+          "L": 0.9548
         },
-        "total_cost": 25.58332999999994,
-        "cost_per_treated": 0.5539675631198289,
+        "total_cost": 23.776769999999935,
+        "cost_per_treated": 0.5092694054146661,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -507,29 +507,29 @@
         ]
       },
       "sickest_first": {
-        "high_urgency_lost": 0.588,
+        "high_urgency_lost": 0.526,
         "lost_by_tier": {
-          "H": 0.588,
-          "M": 1.8119999999999998,
-          "L": 0.978
+          "H": 0.526,
+          "M": 1.624,
+          "L": 0.904
         },
         "cause_a_by_tier": {
-          "H": 0.114,
-          "M": 0.396,
-          "L": 0.182
+          "H": 0.082,
+          "M": 0.278,
+          "L": 0.126
         },
         "cause_b_by_tier": {
-          "H": 0.474,
-          "M": 1.416,
-          "L": 0.796
+          "H": 0.444,
+          "M": 1.346,
+          "L": 0.778
         },
         "treated_share_by_tier": {
-          "H": 0.9412,
-          "M": 0.92752,
-          "L": 0.9348
+          "H": 0.9474,
+          "M": 0.93504,
+          "L": 0.9397333333333333
         },
-        "total_cost": 22.107499999999945,
-        "cost_per_treated": 0.474186006606322,
+        "total_cost": 21.32582999999994,
+        "cost_per_treated": 0.4542629830017454,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -546,29 +546,29 @@
     {
       "kappa": 0.5,
       "on_time": {
-        "high_urgency_lost": 1.3399999999999999,
+        "high_urgency_lost": 1.08,
         "lost_by_tier": {
-          "H": 1.3399999999999999,
-          "M": 2.112,
-          "L": 0.89
+          "H": 1.08,
+          "M": 1.8599999999999999,
+          "L": 0.8019999999999999
         },
         "cause_a_by_tier": {
-          "H": 0.736,
-          "M": 0.558,
-          "L": 0.134
+          "H": 0.492,
+          "M": 0.362,
+          "L": 0.098
         },
         "cause_b_by_tier": {
-          "H": 0.604,
-          "M": 1.554,
-          "L": 0.756
+          "H": 0.588,
+          "M": 1.498,
+          "L": 0.704
         },
         "treated_share_by_tier": {
-          "H": 0.866,
-          "M": 0.91552,
-          "L": 0.9406666666666667
+          "H": 0.892,
+          "M": 0.9256,
+          "L": 0.9465333333333333
         },
-        "total_cost": 27.111319999999953,
-        "cost_per_treated": 0.5937912304524936,
+        "total_cost": 25.00425999999995,
+        "cost_per_treated": 0.5405391499848663,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -582,29 +582,29 @@
         ]
       },
       "sickest_first": {
-        "high_urgency_lost": 0.642,
+        "high_urgency_lost": 0.562,
         "lost_by_tier": {
-          "H": 0.642,
-          "M": 2.034,
-          "L": 1.102
+          "H": 0.562,
+          "M": 1.796,
+          "L": 1.002
         },
         "cause_a_by_tier": {
-          "H": 0.142,
-          "M": 0.516,
-          "L": 0.234
+          "H": 0.096,
+          "M": 0.336,
+          "L": 0.152
         },
         "cause_b_by_tier": {
-          "H": 0.5,
-          "M": 1.518,
-          "L": 0.868
+          "H": 0.466,
+          "M": 1.46,
+          "L": 0.85
         },
         "treated_share_by_tier": {
-          "H": 0.9358,
-          "M": 0.91864,
-          "L": 0.9265333333333333
+          "H": 0.9438,
+          "M": 0.92816,
+          "L": 0.9332
         },
-        "total_cost": 22.93149999999995,
-        "cost_per_treated": 0.49611656786811364,
+        "total_cost": 21.920849999999945,
+        "cost_per_treated": 0.4700010720411652,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -621,29 +621,29 @@
     {
       "kappa": 1.0,
       "on_time": {
-        "high_urgency_lost": 2.044,
+        "high_urgency_lost": 1.604,
         "lost_by_tier": {
-          "H": 2.044,
-          "M": 2.966,
-          "L": 1.252
+          "H": 1.604,
+          "M": 2.558,
+          "L": 1.1199999999999999
         },
         "cause_a_by_tier": {
-          "H": 1.358,
-          "M": 1.092,
-          "L": 0.266
+          "H": 0.932,
+          "M": 0.716,
+          "L": 0.172
         },
         "cause_b_by_tier": {
-          "H": 0.686,
-          "M": 1.874,
-          "L": 0.986
+          "H": 0.672,
+          "M": 1.842,
+          "L": 0.948
         },
         "treated_share_by_tier": {
-          "H": 0.7956,
-          "M": 0.88136,
-          "L": 0.9165333333333333
+          "H": 0.8396,
+          "M": 0.89768,
+          "L": 0.9253333333333333
         },
-        "total_cost": 33.19789999999999,
-        "cost_per_treated": 0.7590173304677852,
+        "total_cost": 29.658439999999985,
+        "cost_per_treated": 0.6632327027147901,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -657,29 +657,29 @@
         ]
       },
       "sickest_first": {
-        "high_urgency_lost": 0.86,
+        "high_urgency_lost": 0.7180000000000001,
         "lost_by_tier": {
-          "H": 0.86,
-          "M": 2.848,
-          "L": 1.47
+          "H": 0.7180000000000001,
+          "M": 2.424,
+          "L": 1.34
         },
         "cause_a_by_tier": {
-          "H": 0.26,
-          "M": 1.018,
-          "L": 0.408
+          "H": 0.164,
+          "M": 0.666,
+          "L": 0.294
         },
         "cause_b_by_tier": {
-          "H": 0.6,
-          "M": 1.83,
-          "L": 1.062
+          "H": 0.554,
+          "M": 1.758,
+          "L": 1.046
         },
         "treated_share_by_tier": {
-          "H": 0.914,
-          "M": 0.88608,
-          "L": 0.902
+          "H": 0.9282,
+          "M": 0.9030400000000001,
+          "L": 0.9106666666666666
         },
-        "total_cost": 26.031389999999977,
-        "cost_per_treated": 0.5807726116639145,
+        "total_cost": 24.25867999999997,
+        "cost_per_treated": 0.5329469660354139,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -696,29 +696,29 @@
     {
       "kappa": 1.5,
       "on_time": {
-        "high_urgency_lost": 2.6479999999999997,
+        "high_urgency_lost": 2.072,
         "lost_by_tier": {
-          "H": 2.6479999999999997,
-          "M": 3.662,
-          "L": 1.4380000000000002
+          "H": 2.072,
+          "M": 3.034,
+          "L": 1.31
         },
         "cause_a_by_tier": {
-          "H": 1.932,
-          "M": 1.688,
-          "L": 0.368
+          "H": 1.358,
+          "M": 1.092,
+          "L": 0.266
         },
         "cause_b_by_tier": {
-          "H": 0.716,
-          "M": 1.974,
-          "L": 1.07
+          "H": 0.714,
+          "M": 1.942,
+          "L": 1.044
         },
         "treated_share_by_tier": {
-          "H": 0.7352000000000001,
-          "M": 0.8535200000000001,
-          "L": 0.9041333333333333
+          "H": 0.7928,
+          "M": 0.87864,
+          "L": 0.9126666666666666
         },
-        "total_cost": 38.31381,
-        "cost_per_treated": 0.9067928145413233,
+        "total_cost": 33.51690999999999,
+        "cost_per_treated": 0.7690186765785606,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -732,29 +732,29 @@
         ]
       },
       "sickest_first": {
-        "high_urgency_lost": 1.052,
+        "high_urgency_lost": 0.868,
         "lost_by_tier": {
-          "H": 1.052,
-          "M": 3.448,
-          "L": 1.758
+          "H": 0.868,
+          "M": 2.932,
+          "L": 1.53
         },
         "cause_a_by_tier": {
-          "H": 0.416,
-          "M": 1.502,
-          "L": 0.63
+          "H": 0.26,
+          "M": 1.018,
+          "L": 0.408
         },
         "cause_b_by_tier": {
-          "H": 0.636,
-          "M": 1.946,
-          "L": 1.128
+          "H": 0.608,
+          "M": 1.914,
+          "L": 1.122
         },
         "treated_share_by_tier": {
-          "H": 0.8948,
-          "M": 0.86208,
-          "L": 0.8828
+          "H": 0.9132,
+          "M": 0.88272,
+          "L": 0.898
         },
-        "total_cost": 28.55905999999999,
-        "cost_per_treated": 0.6528979013305288,
+        "total_cost": 26.264269999999986,
+        "cost_per_treated": 0.5879621670024622,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -771,29 +771,29 @@
     {
       "kappa": 2.0,
       "on_time": {
-        "high_urgency_lost": 3.208,
+        "high_urgency_lost": 2.488,
         "lost_by_tier": {
-          "H": 3.208,
-          "M": 4.246,
-          "L": 1.608
+          "H": 2.488,
+          "M": 3.476,
+          "L": 1.4200000000000002
         },
         "cause_a_by_tier": {
-          "H": 2.474,
-          "M": 2.246,
-          "L": 0.492
+          "H": 1.76,
+          "M": 1.482,
+          "L": 0.322
         },
         "cause_b_by_tier": {
-          "H": 0.734,
-          "M": 2.0,
-          "L": 1.116
+          "H": 0.728,
+          "M": 1.994,
+          "L": 1.098
         },
         "treated_share_by_tier": {
-          "H": 0.6792,
-          "M": 0.83016,
-          "L": 0.8928
+          "H": 0.7512,
+          "M": 0.86096,
+          "L": 0.9053333333333333
         },
-        "total_cost": 42.952659999999995,
-        "cost_per_treated": 1.049212467633983,
+        "total_cost": 36.95720999999999,
+        "cost_per_treated": 0.8672144265064762,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [
@@ -807,29 +807,29 @@
         ]
       },
       "sickest_first": {
-        "high_urgency_lost": 1.2160000000000002,
+        "high_urgency_lost": 0.996,
         "lost_by_tier": {
-          "H": 1.2160000000000002,
-          "M": 3.958,
-          "L": 2.006
+          "H": 0.996,
+          "M": 3.308,
+          "L": 1.686
         },
         "cause_a_by_tier": {
-          "H": 0.546,
-          "M": 1.97,
-          "L": 0.876
+          "H": 0.36,
+          "M": 1.334,
+          "L": 0.558
         },
         "cause_b_by_tier": {
-          "H": 0.67,
-          "M": 1.988,
-          "L": 1.13
+          "H": 0.636,
+          "M": 1.974,
+          "L": 1.128
         },
         "treated_share_by_tier": {
-          "H": 0.8784,
-          "M": 0.84168,
-          "L": 0.8662666666666667
+          "H": 0.9004,
+          "M": 0.86768,
+          "L": 0.8876
         },
-        "total_cost": 30.73463,
-        "cost_per_treated": 0.7177634283045305,
+        "total_cost": 27.883879999999994,
+        "cost_per_treated": 0.6335805498750283,
         "spare_capacity_built": 0.0,
         "facilities_open": 1,
         "open_facilities": [

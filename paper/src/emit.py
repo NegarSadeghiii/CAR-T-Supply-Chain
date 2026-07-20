@@ -55,9 +55,9 @@ PARAMETERS = [
     ("Transport / structural", "Max open facilities", "MNF", "3", "facilities",
      "literature-derived", "Industry dual/triple-sourcing of autologous CDMOs"),
     ("Deterioration kernel", "Re-manufacture delay anchor", "DELAY_ANCHOR", "12", "days",
-     "data-anchored", "Cohet 2023 real-world OOS cohort: vein-to-vein 57.6 vs 45.9 d (delta ~12 d)"),
+     "data-anchored", "Cohet 2023 real-world OOS cohort: vein-to-vein 57.6 vs 45.9 d (delta ~12 d). Kernel applied to the EXTRA delay only (Issue 2), matching this anchor: extra=12 d gives mid-tier survival 1/1.64."),
     ("Deterioration kernel", "Delayed-vs-control PFS hazard ratio", "HR_PFS", "1.64", "-",
-     "data-anchored", "UK National CAR-T Panel (Dulobdas et al. 2025): delayed-infused vs controls-infused PFS HR 1.64 (P=0.25)"),
+     "data-anchored", "UK National CAR-T Panel (Dulobdas et al. 2025): delayed-infused vs controls-infused PFS HR 1.64. CAVEAT: P=0.25 from only 11 delayed-infused patients; the authors conclude OS/PFS were NOT significantly different. The kernel treats 1.64 as a modelling anchor, not an established effect."),
     ("Deterioration kernel", "Tier delay hazard ratios (H/M/L)", "HR_u", "[1.6, 1.5, 1.4]", "-",
      "calibrated from multiple", "Ordered within the observed 1.4-1.6 delay-HR band (Dulobdas 2025 OOS HR 1.41 / delayed HR 1.64; Cohet 2023). Spread is a sensitivity-tested assumption."),
     ("Deterioration kernel", "Weibull scale by shape", "lambda(gamma)", "[36.4, 25.1, 20.9]", "days (gamma=1.0/1.5/2.0)",
@@ -66,14 +66,18 @@ PARAMETERS = [
      "assumption (sensitivity-tested)", "Not identified from two endpoints; SWEPT, not fitted"),
     ("Deterioration kernel", "Calibrated decline speed", "kappa", "1.0", "-",
      "calibrated from multiple", "Matches the Dulobdas 2025 PFS HR 1.64 at the Cohet 2023 delay; kappa=0 nests the base model"),
-    ("Congestion (clearing fn)", "Baseline re-mfg processing time", "tau_proc", "19", "days",
-     "literature-derived", "~7 d production + ~7 d QC + 1-2 d transport (Avramescu et al. 2022/2023)"),
+    ("Waiting time", "Normal vein-to-vein wait", "T_V2V", "28 (sweep 21/28/35/42)", "days",
+     "literature-derived", "Commercial autologous CAR-T vein-to-vein generally 3-5 weeks; base 4 weeks. Swept in Issue-1 / Issue-6 analyses."),
+    ("Waiting time", "Re-make extra delay", "DELTA_REMAKE", "12 (also = T_V2V)", "days",
+     "data-anchored", "Observed increment (Cohet 2023 delayed-vs-compliant, ~12 d); alternative = a full additional cycle (= T_V2V). Both reported (Issue 4)."),
+    ("Congestion (clearing fn)", "Clearing-fn base time", "tau_proc", "19", "days",
+     "literature-derived", "~7 d production + ~7 d QC + 1-2 d transport (Avramescu et al. 2022/2023). Used ONLY to extract the congestion excess remake_delay(rho)-tau_proc; the applied re-make delay is DELTA_REMAKE (not tau_proc)."),
     ("Congestion (clearing fn)", "Utilization breakpoints", "b_s", "(0.70, 0.90)", "-",
      "assumption (sensitivity-tested)", "Convex PWL clearing-function form (Karmarkar 1989; Missbauer & Uzsoy 2011); no public CDMO congestion data"),
     ("Congestion (clearing fn)", "Incremental delay slopes", "a_s", "(0, 45, 90)", "days/util",
      "assumption (sensitivity-tested)", "Convex; tuned so rho=1 roughly doubles turnaround. Sweepable."),
-    ("Normal-wait mortality", "6-week wait mortality (H/M/L)", "BASE_WAIT_DEATH_6WK", "[0.15, 0.05, 0.02]", "prob.",
-     "assumption (sensitivity-tested)", "Order-of-magnitude progression risk during the standard manufacturing wait; basis: reduced vein-to-vein time improves 3L+ LBCL outcomes (Jo/Kwong vein-to-vein study); real-world pre-infusion drop-out. Swept x0.5-x2.0 in E5."),
+    ("Normal-wait mortality", "Reference wait mortality (H/M/L)", "WAIT_DEATH_REF over T_REF", "[0.15, 0.05, 0.02] over 42 d", "prob.",
+     "assumption (sensitivity-tested)", "Converted to a hazard rate h_norm=-ln(1-w0)/T_REF and applied over T_V2V (Issue 1). Order-of-magnitude progression risk during the wait; basis: reduced vein-to-vein time improves 3L+ LBCL outcomes (Jo/Kwong). Swept x0.5-x2.0 in E5; T_V2V=42 recovers the reference exactly."),
     ("Population / scenario", "Base cohort size", "n", "50 (tiled to 100/150)", "patients",
      "synthetic", "Tiling of the 50-patient cohort preserving tier mix and geography (scaled_instance.py). Base n=50 from IICC-3 pediatric ALL incidence (Steliarova-Foucher 2017) refined by Avramescu 2021b r/r conditional probabilities."),
     ("Population / scenario", "Training / OOS scenarios", "N_train / N_oos", "80 / 500", "scenarios",
@@ -85,6 +89,24 @@ PARAMETERS = [
     ("Priority rule (E6)", "Survival-rate eligibility cutoff", "ELIGIBILITY_CUTOFF", "75", "%",
      "literature-derived", "Tseng et al. 2024 eligibility threshold; sensitivity-testable"),
 ]
+
+# Issue 8 — source verification. Citations NOT held in the library (Zotero) and
+# therefore UNVERIFIED against the primary source. A row is UNVERIFIED if any of
+# these appear in its citation string.
+_UNVERIFIED_SOURCES = ["Cohet", "Roth", "Lopes", "Costariol", "Bachy", "ICER", "Lin et al.",
+                       "Wan et al. 2026"]
+
+
+def _verified(cite):
+    """Return the VERIFIED-column status for a parameter row (Issue 8)."""
+    hits = [s for s in _UNVERIFIED_SOURCES if s in cite]
+    if not hits:
+        return "verified (in library)"
+    # Distinguish rows whose PRIMARY anchor is verified but a secondary source is not.
+    verified_primary = any(k in cite for k in ("Dulobdas", "UK National CAR-T Panel",
+                                               "Locke", "Avramescu", "Bernardi", "Tseng"))
+    tag = "partly UNVERIFIED" if verified_primary else "UNVERIFIED"
+    return f"{tag} ({', '.join(hits)} not in library)"
 
 
 def _w(path, header, rows):
@@ -175,6 +197,37 @@ def write_csvs(P, outdir):
        [[r["spread"], r["hr_tier"]["H"], r["hr_tier"]["M"], r["hr_tier"]["L"],
          f"{r['on_time_H_lost']:.3f}", f"{r['sickest_first_H_lost']:.3f}"]
         for r in P["hr_grid"]["rows"]])
+
+    # Issue 1: T_V2V sweep.
+    if "tv2v_sweep" in P:
+        _w(outdir / "ISSUE1_tv2v_sweep.csv",
+           ["t_v2v_days", "on_time_H_lost", "sickest_first_H_lost", "share_from_normal_wait_H", "cost_per_patient_MUSD"],
+           [[r["t_v2v"], f"{r['on_time_H_lost']:.3f}", f"{r['sickest_first_H_lost']:.3f}",
+             f"{r['share_from_normal_wait_H']:.3f}", f"{r['cost_per_treated']:.3f}"]
+            for r in sorted(P["tv2v_sweep"]["rows"], key=lambda r: r["t_v2v"])])
+    # Issue 4: re-make delay comparison.
+    if "remake_compare" in P:
+        _w(outdir / "ISSUE4_remake_delay.csv",
+           ["setting", "delta_remake_days", "on_time_H_lost", "sickest_first_H_lost",
+            "H_normal_wait_lost", "H_after_failure_lost", "share_from_normal_wait_H", "cost_per_patient_MUSD"],
+           [[r["setting"], f"{r['delta_remake']:.0f}", f"{r['on_time_H_lost']:.3f}",
+             f"{r['sickest_first_H_lost']:.3f}", f"{r['H_normal_wait']:.3f}", f"{r['H_after_failure']:.3f}",
+             f"{r['share_from_normal_wait_H']:.3f}", f"{r['cost_per_treated']:.3f}"]
+            for r in P["remake_compare"]["rows"]])
+    # Issue 6: failure x T_V2V heatmap (long form).
+    if "failure_tv2v" in P:
+        _w(outdir / "ISSUE6_failure_x_tv2v.csv",
+           ["failure_rate", "t_v2v_days", "share_from_normal_wait_H", "H_lost_fifo",
+            "H_lost_best_rule", "cost_per_patient_MUSD"],
+           [[f"{c['failure_rate']:.2f}", c["t_v2v"], f"{c['share_from_normal_wait_H']:.3f}",
+             f"{c['H_lost_fifo']:.3f}", f"{c['H_lost_best_rule']:.3f}", f"{c['cost_per_treated']:.3f}"]
+            for c in P["failure_tv2v"]["cells"]])
+    # Issue 5: implemented / not-implemented.
+    if "implemented" in P:
+        _w(outdir / "ISSUE5_implemented.csv",
+           ["feature", "implemented", "note"],
+           [[it["feature"], "yes" if it["implemented"] else "no", it["note"]]
+            for it in P["implemented"]["items"]])
 
     # Validation summary.
     v = P["validation"]
@@ -296,6 +349,44 @@ def write_tables(P, outdir):
         (outdir / "e6_priority_rules.tex").write_text("\n".join(el))
         print("  tex e6_priority_rules.tex")
 
+    # Issue 5 implemented / not-implemented.
+    if "implemented" in P:
+        il = [r"% Auto-generated by paper/src/emit.py — do not edit by hand.",
+              r"\begin{table}[t]", r"\centering", r"\small",
+              r"\caption{Scope of the model: what is and is not represented.}",
+              r"\label{tab:implemented}", r"\begin{tabular}{@{}llp{0.5\textwidth}@{}}",
+              r"\toprule", r"Feature & In model? & Note \\", r"\midrule"]
+        for it in P["implemented"]["items"]:
+            il.append(f"{_tex_escape(it['feature'])} & {'Yes' if it['implemented'] else 'No'} & "
+                      f"{_tex_escape(it['note'])} \\\\")
+        il += [r"\bottomrule", r"\end{tabular}", r"\end{table}", ""]
+        (outdir / "implemented.tex").write_text("\n".join(il))
+        print("  tex implemented.tex")
+
+    # Issue 7 OLD vs NEW.
+    busy_now = _row_at(P["busy"]["rows"], 1.0)["on_time"]
+    busy_ass = _row_at(P["busy"]["rows"], 0.0)["on_time"]
+    a, b = busy_now["cause_a_by_tier"]["H"], busy_now["cause_b_by_tier"]["H"]
+    ws = 100 * a / (a + b) if (a + b) > 1e-9 else 0.0
+    e6r = P.get("e6", {}).get("rules")
+    nf = e6r[0]["high_urgency_lost"] if e6r else busy_now["high_urgency_lost"]
+    nb = min((r["high_urgency_lost"] for r in e6r), default=nf) if e6r else nf
+    ol = [r"% Auto-generated by paper/src/emit.py — do not edit by hand.",
+          r"\begin{table}[t]", r"\centering", r"\small",
+          r"\caption{Headline numbers before and after the model-review corrections "
+          r"(busy 150-patient network, real decline rate).}",
+          r"\label{tab:oldnew}", r"\begin{tabular}{@{}lrr@{}}", r"\toprule",
+          r"Quantity & OLD & NEW \\", r"\midrule",
+          f"High-urgency lost, assumed & 0.84 & {busy_ass['lost_by_tier']['H']:.2f} \\\\",
+          f"High-urgency lost, actual & 5.86 & {busy_now['lost_by_tier']['H']:.2f} \\\\",
+          f"Total cost, assumed $\\to$ actual (M USD) & 49.7$\\to$95.0 & "
+          f"{busy_ass['total_cost']:.1f}$\\to${busy_now['total_cost']:.1f} \\\\",
+          f"High-urgency losses from the normal wait & 72\\% & {ws:.0f}\\% \\\\",
+          f"Prioritization: FIFO $\\to$ best rule & 5.86$\\to$2.39 & {nf:.2f}$\\to${nb:.2f} \\\\",
+          r"\bottomrule", r"\end{tabular}", r"\end{table}", ""]
+    (outdir / "old_vs_new.tex").write_text("\n".join(ol))
+    print("  tex old_vs_new.tex")
+
 
 # citation string -> bibkey (first author surname + year) for the tex table.
 _BIBMAP = [
@@ -349,14 +440,16 @@ def write_numbers_md(P, path):
 
     # --- Part A: parameters ---
     L.append("## A. Parameters (inputs)\n")
-    L.append("| Parameter | Symbol | Value | Units | Source tag | Citation / basis |")
-    L.append("|---|---|---|---|---|---|")
+    L.append("Last column (VERIFIED, Issue 8): whether the cited source is held in the "
+             "library. Sources not in the library are marked UNVERIFIED.\n")
+    L.append("| Parameter | Symbol | Value | Units | Source tag | Citation / basis | VERIFIED |")
+    L.append("|---|---|---|---|---|---|---|")
     cur = None
     for (g, n, s, val, u, tag, cite) in PARAMETERS:
         if g != cur:
-            L.append(f"| **{g}** | | | | | |")
+            L.append(f"| **{g}** | | | | | | |")
             cur = g
-        L.append(f"| {n} | `{s}` | {val} | {u} | [{tag}] | {cite} |")
+        L.append(f"| {n} | `{s}` | {val} | {u} | [{tag}] | {cite} | {_verified(cite)} |")
     L.append("")
 
     # --- Part B: results ---
@@ -430,9 +523,9 @@ def write_numbers_md(P, path):
     L.append("")
 
     L.append("### E5 — robustness to the normal-wait mortality anchor (busy 150p)\n")
-    L.append("Anchor `BASE_WAIT_DEATH_6WK = {H:0.15, M:0.05, L:0.02}` scaled by a multiplier "
-             "(high-urgency 6-week mortality 7.5%-30%). Basis: reduced vein-to-vein time improves "
-             "3L+ LBCL outcomes; real-world pre-infusion progression. `[assumption (sensitivity-tested)]`\n")
+    L.append("Reference anchor `WAIT_DEATH_REF = {H:0.15, M:0.05, L:0.02}` over T_REF=42 d "
+             "scaled by a multiplier. Basis: reduced vein-to-vein time improves 3L+ LBCL "
+             "outcomes; real-world pre-infusion progression. `[assumption (sensitivity-tested)]`\n")
     L.append("| Multiplier | 6-wk H mortality | % of H losses from wait | On-time H lost | Sickest-first H lost | Reduction |")
     L.append("|---|---|---|---|---|---|")
     for r in sorted(P["e5_bwd"]["rows"], key=lambda r: r["multiplier"]):
@@ -489,22 +582,112 @@ def write_numbers_md(P, path):
                      f"{r['cost_per_treated']:.2f} | {r['total_cost']:.2f} | "
                      f"{a:.2f} / {b:.2f} | {sh:.0f}% |")
         fifo = e6["rules"][0]; th100 = e6["rules"][-1]
+        best = min(e6["rules"], key=lambda r: r["high_urgency_lost"])["high_urgency_lost"]
+        sat = next((r["rule"] for r in e6["rules"]
+                    if abs(r["high_urgency_lost"] - best) < 0.05), th100["rule"])
         L.append(f"\n**Validation:** FIFO high-urgency lost {fifo['high_urgency_lost']:.2f} "
                  f"(== no-prioritization model); Threshold-100% {th100['high_urgency_lost']:.2f} "
                  f"(== sickest-first).\n")
         L.append(f"**Reading the sweep.** Under FIFO the worst-off (minimum) survival rate is "
-                 f"{100*fifo['min_survival']:.1f}%, just above the {int(100*e6['eligibility_cutoff'])}% "
-                 f"eligibility line, so no patient is below the cutoff and `become-eligible` / "
-                 f"`become-ineligible` are 0 for every rule. Threshold-75% therefore prioritizes "
-                 f"nobody (== FIFO); the protection turns on from Threshold-80% upward, and "
-                 f"high-urgency losses reach the sickest-first floor (2.39) by Threshold-85%. The "
-                 f"rules lift the worst-off survival floor from {100*fifo['min_survival']:.1f}% to "
-                 f"{100*th100['min_survival']:.1f}% and the average from {100*fifo['avg_survival']:.1f}% "
-                 f"to {100*th100['avg_survival']:.1f}%, reallocating survival-rate margin toward the "
-                 f"sickest rather than moving patients across the eligibility line.\n")
+                 f"{100*fifo['min_survival']:.1f}%, near the {int(100*e6['eligibility_cutoff'])}% "
+                 f"eligibility line. High-urgency losses fall from {fifo['high_urgency_lost']:.2f} "
+                 f"(FIFO) to {best:.2f} and saturate at {sat}. The rules lift the worst-off "
+                 f"survival floor from {100*fifo['min_survival']:.1f}% to {100*th100['min_survival']:.1f}% "
+                 f"and the average from {100*fifo['avg_survival']:.1f}% to {100*th100['avg_survival']:.1f}%.\n")
+
+    # --- Issue 1: T_V2V sweep ---
+    if "tv2v_sweep" in P:
+        L.append("### Issue 1 — normal vein-to-vein wait sweep (busy 150p, real rate)\n")
+        L.append("Normal wait `T_V2V` as an explicit parameter (base 28 d). Longer waits raise "
+                 "both the number of high-urgency losses and the share attributable to the wait.\n")
+        L.append("| T_V2V (days) | On-time H lost | Sickest-first H lost | % from normal wait | Cost/patient |")
+        L.append("|---|---|---|---|---|")
+        for r in sorted(P["tv2v_sweep"]["rows"], key=lambda r: r["t_v2v"]):
+            L.append(f"| {r['t_v2v']} | {r['on_time_H_lost']:.2f} | {r['sickest_first_H_lost']:.2f} | "
+                     f"{100*r['share_from_normal_wait_H']:.0f}% | {r['cost_per_treated']:.2f} |")
+        L.append("")
+
+    # --- Issue 4: re-make delay ---
+    if "remake_compare" in P:
+        L.append("### Issue 4 — re-make delay definition (busy 150p, real rate)\n")
+        L.append("`DELTA_REMAKE` = observed increment (12 d) vs a full additional cycle (= T_V2V). "
+                 "Congestion backlog is added on top of both.\n")
+        L.append("| Re-make delay | days | On-time H lost | H normal-wait / after-failure | % from wait | Cost/patient |")
+        L.append("|---|---|---|---|---|---|")
+        for r in P["remake_compare"]["rows"]:
+            L.append(f"| {r['setting']} | {r['delta_remake']:.0f} | {r['on_time_H_lost']:.2f} | "
+                     f"{r['H_normal_wait']:.2f} / {r['H_after_failure']:.2f} | "
+                     f"{100*r['share_from_normal_wait_H']:.0f}% | {r['cost_per_treated']:.2f} |")
+        L.append("")
+
+    # --- Issue 6: failure x T_V2V ---
+    if "failure_tv2v" in P:
+        ft = P["failure_tv2v"]
+        L.append("### Issue 6 — where waiting dominates vs where failure dominates\n")
+        L.append("Two-way sweep: mean manufacturing failure rate x normal wait `T_V2V`. Each cell "
+                 "shows the SHARE of high-urgency losses from the normal wait. Waiting dominates at "
+                 "low failure / long wait; manufacturing failure dominates at high out-of-spec "
+                 "rates. `[computed: this study]`\n")
+        hdr = "| failure \\ T_V2V | " + " | ".join(f"{tv} d" for tv in ft["t_v2v_grid"]) + " |"
+        L.append(hdr); L.append("|" + "---|" * (len(ft["t_v2v_grid"]) + 1))
+        for f in ft["failure_grid"]:
+            cells = {c["t_v2v"]: c for c in ft["cells"] if c["failure_rate"] == f}
+            row = f"| {100*f:.0f}% | " + " | ".join(
+                f"{100*cells[tv]['share_from_normal_wait_H']:.0f}%" for tv in ft["t_v2v_grid"]) + " |"
+            L.append(row)
+        L.append("\nHigh-urgency lost, FIFO -> best threshold rule (same grid):\n")
+        L.append(hdr); L.append("|" + "---|" * (len(ft["t_v2v_grid"]) + 1))
+        for f in ft["failure_grid"]:
+            cells = {c["t_v2v"]: c for c in ft["cells"] if c["failure_rate"] == f}
+            row = f"| {100*f:.0f}% | " + " | ".join(
+                f"{cells[tv]['H_lost_fifo']:.1f}->{cells[tv]['H_lost_best_rule']:.1f}"
+                for tv in ft["t_v2v_grid"]) + " |"
+            L.append(row)
+        L.append("")
+
+    # --- Issue 5: implemented / not-implemented ---
+    if "implemented" in P:
+        L.append("### Issue 5 — implemented / not implemented\n")
+        L.append("| Feature | In the model? | Note |")
+        L.append("|---|---|---|")
+        for it in P["implemented"]["items"]:
+            L.append(f"| {it['feature']} | {'YES' if it['implemented'] else 'NO'} | {it['note']} |")
+        L.append("")
+
+    # --- Issue 7: OLD vs NEW ---
+    L.append("### Issue 7 — OLD vs NEW (model-review corrections)\n")
+    L.append("OLD = pre-review model (fixed normal-wait probability; kernel on the ABSOLUTE "
+             "re-make wait ~19 d + backlog; failed patients missed the normal-wait hazard). "
+             "NEW = corrected model (T_V2V=28 d base; hazard-rate normal wait; kernel on the "
+             "EXTRA delay; compound hazards). Busy 150p, real rate.\n")
+    busy_now = _row_at(P["busy"]["rows"], 1.0)["on_time"]
+    def _ws(r, t="H"):
+        a, b = r["cause_a_by_tier"][t], r["cause_b_by_tier"][t]
+        return 100 * a / (a + b) if (a + b) > 1e-9 else 0.0
+    e6r = P.get("e6", {}).get("rules")
+    new_fifo = e6r[0]["high_urgency_lost"] if e6r else busy_now["high_urgency_lost"]
+    new_best = min((r["high_urgency_lost"] for r in e6r), default=None) if e6r else None
+    new_sat = next((r["rule"] for r in e6r if abs(r["high_urgency_lost"] - new_best) < 0.05), "Th-100") if e6r else "-"
+    L.append("| Quantity | OLD | NEW |")
+    L.append("|---|---|---|")
+    L.append(f"| Prediction gap: high-urgency lost, assumed | 0.84 | {busy_assumed['lost_by_tier']['H']:.2f} |")
+    L.append(f"| Prediction gap: high-urgency lost, actual | 5.86 | {busy_actual['lost_by_tier']['H']:.2f} |")
+    L.append(f"| Prediction gap: total cost assumed -> actual | 49.70 -> 94.96 | "
+             f"{busy_assumed['total_cost']:.2f} -> {busy_actual['total_cost']:.2f} |")
+    L.append(f"| Wait-vs-failure split (high-urgency, % from wait) | 72% | {_ws(busy_actual):.0f}% |")
+    L.append(f"| Prioritization: FIFO -> best rule (high-urgency lost) | 5.86 -> 2.39 | "
+             f"{new_fifo:.2f} -> {new_best:.2f} |")
+    L.append(f"| Threshold at which the benefit saturates | Threshold-85 | {new_sat} |")
+    L.append("\n**Which conclusions survive:** the prediction gap (an on-time plan loses several "
+             "times more high-urgency patients than it assumes) and the prioritization benefit "
+             "(a survival-based rule roughly halves high-urgency losses) both survive. **What "
+             "changes:** absolute losses are lower at the 4-week base wait than the old (implicitly "
+             "6-week) model; the wait-vs-failure split is no longer a fixed headline — Issue 6 shows "
+             "it flips to failure-dominated at high out-of-spec rates.\n")
 
     L.append(f"_Compute time: {m.get('compute_seconds', 0):.0f} s. "
-             f"lambda(gamma): {m['lambda_by_gamma']}._\n")
+             f"lambda(gamma): {m['lambda_by_gamma']}. T_V2V={m.get('t_v2v')} d, "
+             f"DELTA_REMAKE={m.get('delta_remake')} d._\n")
 
     Path(path).write_text("\n".join(L))
     print(f"  ledger {Path(path).name}")

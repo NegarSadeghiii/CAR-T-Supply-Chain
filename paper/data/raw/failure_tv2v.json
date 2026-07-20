@@ -1,0 +1,144 @@
+{
+  "failure_grid": [
+    0.05,
+    0.1,
+    0.2,
+    0.28
+  ],
+  "t_v2v_grid": [
+    21,
+    28,
+    35,
+    42
+  ],
+  "cells": [
+    {
+      "failure_rate": 0.05,
+      "t_v2v": 21,
+      "share_from_normal_wait_H": 0.6412300683371298,
+      "H_lost_fifo": 3.5119999999999996,
+      "H_lost_best_rule": 1.532,
+      "cost_per_treated": 0.5332486750388854
+    },
+    {
+      "failure_rate": 0.05,
+      "t_v2v": 28,
+      "share_from_normal_wait_H": 0.6970278044103547,
+      "H_lost_fifo": 4.172,
+      "H_lost_best_rule": 1.634,
+      "cost_per_treated": 0.5766332838773498
+    },
+    {
+      "failure_rate": 0.05,
+      "t_v2v": 35,
+      "share_from_normal_wait_H": 0.7387721466831478,
+      "H_lost_fifo": 4.854,
+      "H_lost_best_rule": 1.778,
+      "cost_per_treated": 0.6219749448934614
+    },
+    {
+      "failure_rate": 0.05,
+      "t_v2v": 42,
+      "share_from_normal_wait_H": 0.7693144722524483,
+      "H_lost_fifo": 5.514,
+      "H_lost_best_rule": 1.976,
+      "cost_per_treated": 0.6672034414157618
+    },
+    {
+      "failure_rate": 0.1,
+      "t_v2v": 21,
+      "share_from_normal_wait_H": 0.5418695228821812,
+      "H_lost_fifo": 4.108,
+      "H_lost_best_rule": 2.0380000000000003,
+      "cost_per_treated": 0.5998437270402909
+    },
+    {
+      "failure_rate": 0.1,
+      "t_v2v": 28,
+      "share_from_normal_wait_H": 0.6027801179443977,
+      "H_lost_fifo": 4.748,
+      "H_lost_best_rule": 2.168,
+      "cost_per_treated": 0.6435589893893294
+    },
+    {
+      "failure_rate": 0.1,
+      "t_v2v": 35,
+      "share_from_normal_wait_H": 0.6506291635825314,
+      "H_lost_fifo": 5.404,
+      "H_lost_best_rule": 2.314,
+      "cost_per_treated": 0.6891141944769267
+    },
+    {
+      "failure_rate": 0.1,
+      "t_v2v": 42,
+      "share_from_normal_wait_H": 0.6867549668874172,
+      "H_lost_fifo": 6.039999999999999,
+      "H_lost_best_rule": 2.5,
+      "cost_per_treated": 0.7345770920106015
+    },
+    {
+      "failure_rate": 0.2,
+      "t_v2v": 21,
+      "share_from_normal_wait_H": 0.35766170875129716,
+      "H_lost_fifo": 5.782,
+      "H_lost_best_rule": 3.548,
+      "cost_per_treated": 0.8226785062740948
+    },
+    {
+      "failure_rate": 0.2,
+      "t_v2v": 28,
+      "share_from_normal_wait_H": 0.41593475533249685,
+      "H_lost_fifo": 6.376,
+      "H_lost_best_rule": 3.722,
+      "cost_per_treated": 0.8686167051171154
+    },
+    {
+      "failure_rate": 0.2,
+      "t_v2v": 35,
+      "share_from_normal_wait_H": 0.4663227285755231,
+      "H_lost_fifo": 6.978,
+      "H_lost_best_rule": 3.888,
+      "cost_per_treated": 0.9164140392334602
+    },
+    {
+      "failure_rate": 0.2,
+      "t_v2v": 42,
+      "share_from_normal_wait_H": 0.507269362939466,
+      "H_lost_fifo": 7.566000000000001,
+      "H_lost_best_rule": 4.054,
+      "cost_per_treated": 0.9643258302945091
+    },
+    {
+      "failure_rate": 0.28,
+      "t_v2v": 21,
+      "share_from_normal_wait_H": 0.29308836395450566,
+      "H_lost_fifo": 6.858,
+      "H_lost_best_rule": 4.616,
+      "cost_per_treated": 1.0244081807683187
+    },
+    {
+      "failure_rate": 0.28,
+      "t_v2v": 28,
+      "share_from_normal_wait_H": 0.34678504170029595,
+      "H_lost_fifo": 7.433999999999999,
+      "H_lost_best_rule": 4.818,
+      "cost_per_treated": 1.0734444149027436
+    },
+    {
+      "failure_rate": 0.28,
+      "t_v2v": 35,
+      "share_from_normal_wait_H": 0.39427148194271483,
+      "H_lost_fifo": 8.03,
+      "H_lost_best_rule": 5.034000000000001,
+      "cost_per_treated": 1.1253813985335184
+    },
+    {
+      "failure_rate": 0.28,
+      "t_v2v": 42,
+      "share_from_normal_wait_H": 0.43345742205677057,
+      "H_lost_fifo": 8.596,
+      "H_lost_best_rule": 5.21,
+      "cost_per_treated": 1.1764399936946113
+    }
+  ]
+}

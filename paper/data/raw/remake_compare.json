@@ -1,0 +1,24 @@
+{
+  "rows": [
+    {
+      "setting": "observed_12d",
+      "delta_remake": 12.0,
+      "on_time_H_lost": 4.54,
+      "sickest_first_H_lost": 1.972,
+      "H_normal_wait": 2.89,
+      "H_after_failure": 1.65,
+      "share_from_normal_wait_H": 0.6365638766519824,
+      "cost_per_treated": 0.6205999778972954
+    },
+    {
+      "setting": "full_cycle_T_V2V",
+      "delta_remake": 28.0,
+      "on_time_H_lost": 4.6,
+      "sickest_first_H_lost": 2.172,
+      "H_normal_wait": 2.89,
+      "H_after_failure": 1.71,
+      "share_from_normal_wait_H": 0.6282608695652174,
+      "cost_per_treated": 0.6303526622579254
+    }
+  ]
+}

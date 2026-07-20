@@ -33,12 +33,15 @@ Tier delay hazard ratios (H/M/L) ($HR\_u$) & [1.6, 1.5, 1.4] & - & calibrated fr
 Weibull scale by shape ($lambda(gamma)$) & [36.4, 25.1, 20.9] & days (gamma=1.0/1.5/2.0) & calibrated from multiple~\cite{dulobdas2025} \\
 Decline-curve shape ($gamma$) & {1.0, 1.5, 2.0} & - & assumption (sensitivity-tested)~\cite{wan2026} \\
 Calibrated decline speed ($kappa$) & 1.0 & - & calibrated from multiple~\cite{dulobdas2025} \\
+\multicolumn{4}{@{}l}{\textit{Waiting time}} \\
+Normal vein-to-vein wait ($T\_V2V$) & 28 (sweep 21/28/35/42) & days & literature-derived~\cite{veintovein} \\
+Re-make extra delay ($DELTA\_REMAKE$) & 12 (also = T\_V2V) & days & data-anchored~\cite{cohet2023} \\
 \multicolumn{4}{@{}l}{\textit{Congestion (clearing fn)}} \\
-Baseline re-mfg processing time ($tau\_proc$) & 19 & days & literature-derived~\cite{avramescu2022} \\
+Clearing-fn base time ($tau\_proc$) & 19 & days & literature-derived~\cite{avramescu2022} \\
 Utilization breakpoints ($b\_s$) & (0.70, 0.90) & - & assumption (sensitivity-tested)~\cite{karmarkar1989} \\
 Incremental delay slopes ($a\_s$) & (0, 45, 90) & days/util & assumption (sensitivity-tested)~\cite{wan2026} \\
 \multicolumn{4}{@{}l}{\textit{Normal-wait mortality}} \\
-6-week wait mortality (H/M/L) ($BASE\_WAIT\_DEATH\_6WK$) & [0.15, 0.05, 0.02] & prob. & assumption (sensitivity-tested)~\cite{veintovein} \\
+Reference wait mortality (H/M/L) ($WAIT\_DEATH\_REF over T\_REF$) & [0.15, 0.05, 0.02] over 42 d & prob. & assumption (sensitivity-tested)~\cite{veintovein} \\
 \multicolumn{4}{@{}l}{\textit{Population / scenario}} \\
 Base cohort size ($n$) & 50 (tiled to 100/150) & patients & synthetic~\cite{steliarova2017} \\
 Training / OOS scenarios ($N\_train / N\_oos$) & 80 / 500 & scenarios & assumption (sensitivity-tested)~\cite{wan2026} \\

@@ -43,7 +43,8 @@ TAB = _HERE / "tables"
 def _load_cached():
     P = {}
     for name in ("busy", "low", "three_plans", "cap_sweep", "e5_bwd",
-                 "gamma_grid", "hr_grid", "e6", "validation"):
+                 "gamma_grid", "hr_grid", "e6", "tv2v_sweep", "remake_compare",
+                 "failure_tv2v", "implemented", "validation"):
         P[name] = json.loads((RAW / f"{name}.json").read_text())
     P["meta"] = json.loads((RAW / "run_meta.json").read_text())
     return P

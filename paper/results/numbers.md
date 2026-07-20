@@ -6,46 +6,51 @@ Source-tag vocabulary: `[data-anchored]`, `[literature-derived]`, `[calibrated f
 
 ## A. Parameters (inputs)
 
-| Parameter | Symbol | Value | Units | Source tag | Citation / basis |
-|---|---|---|---|---|---|
-| **Facility / production** | | | | | |
-| Facility opening cost | `f_m` | [0.50, 2.00, 3.00, 2.00] | M USD | [literature-derived] | Bernardi et al. 2022; Avramescu et al. 2023 (scaled by automation class k1<k2<k3) |
-| Capacity contracting cost | `pi_m` | [0.04, 0.06, 0.09, 0.06] | M USD/slot | [literature-derived] | Avramescu et al. 2023 |
-| Primary batch mfg cost | `c_m` | [0.20, 0.18, 0.15, 0.18] | M USD/batch | [literature-derived] | Avramescu et al. 2023; Bernardi et al. 2022 (decreasing with automation) |
-| Max capacity per facility (real) | `s_max` | 75 | slots | [data-anchored] | Wan et al. 2026 (Maxcap_j). Base case_study.py uses 40 as an assumption to force two-facility coverage. |
-| Per-facility yield success | `p_m` | [0.85, 0.92, 0.95, 0.92] | - | [literature-derived] | UK National CAR-T Panel (Dulobdas et al. 2025); Locke 2022 / Schuster 2019 / Abramson 2020; within Lopes 2020 / Costariol 2021 10/5/3% band |
-| **Patient / clinical** | | | | | |
-| Re-collection eligibility | `beta_u` | [0.55, 0.78, 0.92] | - | [literature-derived] | Roth et al. 2018; CARTITUDE-4 (San-Miguel et al. 2023); Bachy et al. 2022 (H/M/L ordering) |
-| Cancellation loss | `rho_cancel_u` | [6.00, 2.00, 0.75] | M USD | [assumption (sensitivity-tested)] | Health-economics value-of-life range $1-8M for curative oncology (ICER; Lin et al.); no per-tier trial data |
-| Urgency tier mix (H/M/L) | `-` | 20% / 50% / 30% | - | [literature-derived] | Kymriah DLBCL indication epidemiology; Avramescu et al. 2021b conditional r/r probabilities |
-| **Recourse** | | | | | |
-| Leukapheresis cost | `rho_leuk` | 0.005 | M USD | [literature-derived] | Published leukapheresis procedure cost |
-| Re-manufacture cost | `rho_remfg_m` | = c_m | M USD/batch | [assumption (sensitivity-tested)] | Set equal to primary batch cost; no published re-mfg-specific breakdown |
-| Subcontracting cost | `rho_sub_mm'` | = 1.15 x c_m' | M USD | [assumption (sensitivity-tested)] | 15% premium on destination primary cost; no public CAR-T CMO contract data |
-| **Transport / structural** | | | | | |
-| Transport time (60 pairs) | `t_trans[i,m]` | 6.0-13.2 | hours | [synthetic] | Haversine great-circle from Wan et al. 2026 lat/lon; 600 km/h effective air-freight + 6h handling overhead. Deterministic, computed per (hospital,facility) pair. |
-| Product shelf life | `SHELF_LIFE` | 24.0 | hours | [literature-derived] | Cryopreservation shelf life; Wan et al. 2026; Avramescu et al. 2023 |
-| Max open facilities | `MNF` | 3 | facilities | [literature-derived] | Industry dual/triple-sourcing of autologous CDMOs |
-| **Deterioration kernel** | | | | | |
-| Re-manufacture delay anchor | `DELAY_ANCHOR` | 12 | days | [data-anchored] | Cohet 2023 real-world OOS cohort: vein-to-vein 57.6 vs 45.9 d (delta ~12 d) |
-| Delayed-vs-control PFS hazard ratio | `HR_PFS` | 1.64 | - | [data-anchored] | UK National CAR-T Panel (Dulobdas et al. 2025): delayed-infused vs controls-infused PFS HR 1.64 (P=0.25) |
-| Tier delay hazard ratios (H/M/L) | `HR_u` | [1.6, 1.5, 1.4] | - | [calibrated from multiple] | Ordered within the observed 1.4-1.6 delay-HR band (Dulobdas 2025 OOS HR 1.41 / delayed HR 1.64; Cohet 2023). Spread is a sensitivity-tested assumption. |
-| Weibull scale by shape | `lambda(gamma)` | [36.4, 25.1, 20.9] | days (gamma=1.0/1.5/2.0) | [calibrated from multiple] | Solved so mid-tier decline over the +12 d delay reproduces PFS HR 1.64 (Cohet 2023 + Dulobdas 2025) |
-| Decline-curve shape | `gamma` | {1.0, 1.5, 2.0} | - | [assumption (sensitivity-tested)] | Not identified from two endpoints; SWEPT, not fitted |
-| Calibrated decline speed | `kappa` | 1.0 | - | [calibrated from multiple] | Matches the Dulobdas 2025 PFS HR 1.64 at the Cohet 2023 delay; kappa=0 nests the base model |
-| **Congestion (clearing fn)** | | | | | |
-| Baseline re-mfg processing time | `tau_proc` | 19 | days | [literature-derived] | ~7 d production + ~7 d QC + 1-2 d transport (Avramescu et al. 2022/2023) |
-| Utilization breakpoints | `b_s` | (0.70, 0.90) | - | [assumption (sensitivity-tested)] | Convex PWL clearing-function form (Karmarkar 1989; Missbauer & Uzsoy 2011); no public CDMO congestion data |
-| Incremental delay slopes | `a_s` | (0, 45, 90) | days/util | [assumption (sensitivity-tested)] | Convex; tuned so rho=1 roughly doubles turnaround. Sweepable. |
-| **Normal-wait mortality** | | | | | |
-| 6-week wait mortality (H/M/L) | `BASE_WAIT_DEATH_6WK` | [0.15, 0.05, 0.02] | prob. | [assumption (sensitivity-tested)] | Order-of-magnitude progression risk during the standard manufacturing wait; basis: reduced vein-to-vein time improves 3L+ LBCL outcomes (Jo/Kwong vein-to-vein study); real-world pre-infusion drop-out. Swept x0.5-x2.0 in E5. |
-| **Population / scenario** | | | | | |
-| Base cohort size | `n` | 50 (tiled to 100/150) | patients | [synthetic] | Tiling of the 50-patient cohort preserving tier mix and geography (scaled_instance.py). Base n=50 from IICC-3 pediatric ALL incidence (Steliarova-Foucher 2017) refined by Avramescu 2021b r/r conditional probabilities. |
-| Training / OOS scenarios | `N_train / N_oos` | 80 / 500 | scenarios | [assumption (sensitivity-tested)] | Convergence-checked; seeds train 0, OOS 100. Yields Bernoulli(p_m); eligibility Bernoulli(beta_u). |
-| Geographic network | `-` | 4 facilities / 15 hospitals | - | [data-anchored] | Wan et al. 2026 (Newark/Boston/Raleigh-Durham/SF; 15 highest-demand hospitals), adapted from Avramescu et al. 2021b |
-| **Priority rule (E6)** | | | | | |
-| Rule family (FIFO, Threshold-X) | `rule` | FIFO; X in {75,80,85,90,95,100}% | - | [literature-derived] | Prioritization framework of Tseng et al. 2024 (SimPAC): survival-rate-based ordering of scarce slots; extended here to manufacturing failure, re-manufacture recourse, and network design |
-| Survival-rate eligibility cutoff | `ELIGIBILITY_CUTOFF` | 75 | % | [literature-derived] | Tseng et al. 2024 eligibility threshold; sensitivity-testable |
+Last column (VERIFIED, Issue 8): whether the cited source is held in the library. Sources not in the library are marked UNVERIFIED.
+
+| Parameter | Symbol | Value | Units | Source tag | Citation / basis | VERIFIED |
+|---|---|---|---|---|---|---|
+| **Facility / production** | | | | | | |
+| Facility opening cost | `f_m` | [0.50, 2.00, 3.00, 2.00] | M USD | [literature-derived] | Bernardi et al. 2022; Avramescu et al. 2023 (scaled by automation class k1<k2<k3) | verified (in library) |
+| Capacity contracting cost | `pi_m` | [0.04, 0.06, 0.09, 0.06] | M USD/slot | [literature-derived] | Avramescu et al. 2023 | verified (in library) |
+| Primary batch mfg cost | `c_m` | [0.20, 0.18, 0.15, 0.18] | M USD/batch | [literature-derived] | Avramescu et al. 2023; Bernardi et al. 2022 (decreasing with automation) | verified (in library) |
+| Max capacity per facility (real) | `s_max` | 75 | slots | [data-anchored] | Wan et al. 2026 (Maxcap_j). Base case_study.py uses 40 as an assumption to force two-facility coverage. | UNVERIFIED (Wan et al. 2026 not in library) |
+| Per-facility yield success | `p_m` | [0.85, 0.92, 0.95, 0.92] | - | [literature-derived] | UK National CAR-T Panel (Dulobdas et al. 2025); Locke 2022 / Schuster 2019 / Abramson 2020; within Lopes 2020 / Costariol 2021 10/5/3% band | partly UNVERIFIED (Lopes, Costariol not in library) |
+| **Patient / clinical** | | | | | | |
+| Re-collection eligibility | `beta_u` | [0.55, 0.78, 0.92] | - | [literature-derived] | Roth et al. 2018; CARTITUDE-4 (San-Miguel et al. 2023); Bachy et al. 2022 (H/M/L ordering) | UNVERIFIED (Roth, Bachy not in library) |
+| Cancellation loss | `rho_cancel_u` | [6.00, 2.00, 0.75] | M USD | [assumption (sensitivity-tested)] | Health-economics value-of-life range $1-8M for curative oncology (ICER; Lin et al.); no per-tier trial data | UNVERIFIED (ICER, Lin et al. not in library) |
+| Urgency tier mix (H/M/L) | `-` | 20% / 50% / 30% | - | [literature-derived] | Kymriah DLBCL indication epidemiology; Avramescu et al. 2021b conditional r/r probabilities | verified (in library) |
+| **Recourse** | | | | | | |
+| Leukapheresis cost | `rho_leuk` | 0.005 | M USD | [literature-derived] | Published leukapheresis procedure cost | verified (in library) |
+| Re-manufacture cost | `rho_remfg_m` | = c_m | M USD/batch | [assumption (sensitivity-tested)] | Set equal to primary batch cost; no published re-mfg-specific breakdown | verified (in library) |
+| Subcontracting cost | `rho_sub_mm'` | = 1.15 x c_m' | M USD | [assumption (sensitivity-tested)] | 15% premium on destination primary cost; no public CAR-T CMO contract data | verified (in library) |
+| **Transport / structural** | | | | | | |
+| Transport time (60 pairs) | `t_trans[i,m]` | 6.0-13.2 | hours | [synthetic] | Haversine great-circle from Wan et al. 2026 lat/lon; 600 km/h effective air-freight + 6h handling overhead. Deterministic, computed per (hospital,facility) pair. | UNVERIFIED (Wan et al. 2026 not in library) |
+| Product shelf life | `SHELF_LIFE` | 24.0 | hours | [literature-derived] | Cryopreservation shelf life; Wan et al. 2026; Avramescu et al. 2023 | partly UNVERIFIED (Wan et al. 2026 not in library) |
+| Max open facilities | `MNF` | 3 | facilities | [literature-derived] | Industry dual/triple-sourcing of autologous CDMOs | verified (in library) |
+| **Deterioration kernel** | | | | | | |
+| Re-manufacture delay anchor | `DELAY_ANCHOR` | 12 | days | [data-anchored] | Cohet 2023 real-world OOS cohort: vein-to-vein 57.6 vs 45.9 d (delta ~12 d). Kernel applied to the EXTRA delay only (Issue 2), matching this anchor: extra=12 d gives mid-tier survival 1/1.64. | UNVERIFIED (Cohet not in library) |
+| Delayed-vs-control PFS hazard ratio | `HR_PFS` | 1.64 | - | [data-anchored] | UK National CAR-T Panel (Dulobdas et al. 2025): delayed-infused vs controls-infused PFS HR 1.64. CAVEAT: P=0.25 from only 11 delayed-infused patients; the authors conclude OS/PFS were NOT significantly different. The kernel treats 1.64 as a modelling anchor, not an established effect. | verified (in library) |
+| Tier delay hazard ratios (H/M/L) | `HR_u` | [1.6, 1.5, 1.4] | - | [calibrated from multiple] | Ordered within the observed 1.4-1.6 delay-HR band (Dulobdas 2025 OOS HR 1.41 / delayed HR 1.64; Cohet 2023). Spread is a sensitivity-tested assumption. | partly UNVERIFIED (Cohet not in library) |
+| Weibull scale by shape | `lambda(gamma)` | [36.4, 25.1, 20.9] | days (gamma=1.0/1.5/2.0) | [calibrated from multiple] | Solved so mid-tier decline over the +12 d delay reproduces PFS HR 1.64 (Cohet 2023 + Dulobdas 2025) | partly UNVERIFIED (Cohet not in library) |
+| Decline-curve shape | `gamma` | {1.0, 1.5, 2.0} | - | [assumption (sensitivity-tested)] | Not identified from two endpoints; SWEPT, not fitted | verified (in library) |
+| Calibrated decline speed | `kappa` | 1.0 | - | [calibrated from multiple] | Matches the Dulobdas 2025 PFS HR 1.64 at the Cohet 2023 delay; kappa=0 nests the base model | partly UNVERIFIED (Cohet not in library) |
+| **Waiting time** | | | | | | |
+| Normal vein-to-vein wait | `T_V2V` | 28 (sweep 21/28/35/42) | days | [literature-derived] | Commercial autologous CAR-T vein-to-vein generally 3-5 weeks; base 4 weeks. Swept in Issue-1 / Issue-6 analyses. | verified (in library) |
+| Re-make extra delay | `DELTA_REMAKE` | 12 (also = T_V2V) | days | [data-anchored] | Observed increment (Cohet 2023 delayed-vs-compliant, ~12 d); alternative = a full additional cycle (= T_V2V). Both reported (Issue 4). | UNVERIFIED (Cohet not in library) |
+| **Congestion (clearing fn)** | | | | | | |
+| Clearing-fn base time | `tau_proc` | 19 | days | [literature-derived] | ~7 d production + ~7 d QC + 1-2 d transport (Avramescu et al. 2022/2023). Used ONLY to extract the congestion excess remake_delay(rho)-tau_proc; the applied re-make delay is DELTA_REMAKE (not tau_proc). | verified (in library) |
+| Utilization breakpoints | `b_s` | (0.70, 0.90) | - | [assumption (sensitivity-tested)] | Convex PWL clearing-function form (Karmarkar 1989; Missbauer & Uzsoy 2011); no public CDMO congestion data | verified (in library) |
+| Incremental delay slopes | `a_s` | (0, 45, 90) | days/util | [assumption (sensitivity-tested)] | Convex; tuned so rho=1 roughly doubles turnaround. Sweepable. | verified (in library) |
+| **Normal-wait mortality** | | | | | | |
+| Reference wait mortality (H/M/L) | `WAIT_DEATH_REF over T_REF` | [0.15, 0.05, 0.02] over 42 d | prob. | [assumption (sensitivity-tested)] | Converted to a hazard rate h_norm=-ln(1-w0)/T_REF and applied over T_V2V (Issue 1). Order-of-magnitude progression risk during the wait; basis: reduced vein-to-vein time improves 3L+ LBCL outcomes (Jo/Kwong). Swept x0.5-x2.0 in E5; T_V2V=42 recovers the reference exactly. | verified (in library) |
+| **Population / scenario** | | | | | | |
+| Base cohort size | `n` | 50 (tiled to 100/150) | patients | [synthetic] | Tiling of the 50-patient cohort preserving tier mix and geography (scaled_instance.py). Base n=50 from IICC-3 pediatric ALL incidence (Steliarova-Foucher 2017) refined by Avramescu 2021b r/r conditional probabilities. | verified (in library) |
+| Training / OOS scenarios | `N_train / N_oos` | 80 / 500 | scenarios | [assumption (sensitivity-tested)] | Convergence-checked; seeds train 0, OOS 100. Yields Bernoulli(p_m); eligibility Bernoulli(beta_u). | verified (in library) |
+| Geographic network | `-` | 4 facilities / 15 hospitals | - | [data-anchored] | Wan et al. 2026 (Newark/Boston/Raleigh-Durham/SF; 15 highest-demand hospitals), adapted from Avramescu et al. 2021b | partly UNVERIFIED (Wan et al. 2026 not in library) |
+| **Priority rule (E6)** | | | | | | |
+| Rule family (FIFO, Threshold-X) | `rule` | FIFO; X in {75,80,85,90,95,100}% | - | [literature-derived] | Prioritization framework of Tseng et al. 2024 (SimPAC): survival-rate-based ordering of scarce slots; extended here to manufacturing failure, re-manufacture recourse, and network design | verified (in library) |
+| Survival-rate eligibility cutoff | `ELIGIBILITY_CUTOFF` | 75 | % | [literature-derived] | Tseng et al. 2024 eligibility threshold; sensitivity-testable | verified (in library) |
 
 ## B. Results (outputs)
 
@@ -65,52 +70,52 @@ All patient counts are expected losses per cohort over 500 out-of-sample scenari
 
 | Tier | Assumed lost (no deterioration) | Actual lost (real rate) | Gap |
 |---|---|---|---|
-| H | 0.84 | 5.86 | +5.02 |
-| M | 1.08 | 8.08 | +7.00 |
-| L | 0.24 | 3.31 | +3.07 |
+| H | 0.84 | 4.54 | +3.70 |
+| M | 1.08 | 6.80 | +5.71 |
+| L | 0.24 | 2.93 | +2.70 |
 
-Total cost assumed vs actual: 49.70 -> 94.96 M USD. High-urgency actual/assumed ratio: 7.0x.
+Total cost assumed vs actual: 49.70 -> 84.23 M USD. High-urgency actual/assumed ratio: 5.4x.
 
 ### E2 — loss-cause split (real rate)
 
 | Setting | Tier | During normal wait | After a failure | Total | % from wait |
 |---|---|---|---|---|---|
-| Busy 150p | H | 4.19 | 1.67 | 5.86 | 72% |
-| Busy 150p | M | 3.47 | 4.61 | 8.08 | 43% |
-| Busy 150p | L | 0.81 | 2.50 | 3.31 | 25% |
-| Low-demand 50p | H | 1.36 | 0.69 | 2.04 | 66% |
-| Low-demand 50p | M | 1.09 | 1.87 | 2.97 | 37% |
-| Low-demand 50p | L | 0.27 | 0.99 | 1.25 | 21% |
+| Busy 150p | H | 2.89 | 1.65 | 4.54 | 64% |
+| Busy 150p | M | 2.31 | 4.49 | 6.80 | 34% |
+| Busy 150p | L | 0.55 | 2.39 | 2.93 | 19% |
+| Low-demand 50p | H | 0.93 | 0.67 | 1.60 | 58% |
+| Low-demand 50p | M | 0.72 | 1.84 | 2.56 | 28% |
+| Low-demand 50p | L | 0.17 | 0.95 | 1.12 | 15% |
 
 ### E3 — three plans (busy 150-patient network, real rate)
 
 | Plan | High-urgency lost | Treated H/M/L (%) | Lower-urgency lost | Cost/patient | Total cost |
 |---|---|---|---|---|---|
-| On-time | 5.86 | 80/89/93 | 11.39 | 0.72 | 94.96 |
-| Decline-aware (spare) | 5.86 | 80/89/93 | 11.39 | 0.72 | 94.96 |
-| Decline-aware + sickest first | 2.39 | 92/90/91 | 11.65 | 0.54 | 73.81 |
+| On-time | 4.54 | 85/91/93 | 9.73 | 0.62 | 84.23 |
+| Decline-aware (spare) | 4.54 | 85/91/93 | 9.73 | 0.62 | 84.23 |
+| Decline-aware + sickest first | 1.97 | 93/92/92 | 9.92 | 0.50 | 68.47 |
 
-Designs: on-time capacity [0.0, 0.0, 75.0, 75.0], decline-aware capacity [0.0, 0.0, 75.0, 75.0] (identical -> spare capacity cannot help when full). Equity trade-off: 3.47 high-urgency saved for 0.25 extra lower-urgency lost (14 saved per extra).
+Designs: on-time capacity [0.0, 0.0, 75.0, 75.0], decline-aware capacity [0.0, 0.0, 75.0, 75.0] (identical -> spare capacity cannot help when full). Equity trade-off: 2.57 high-urgency saved for 0.19 extra lower-urgency lost (14 saved per extra).
 
 ### E4 — capacity-cap sweep (100-patient network, on-time plan, real rate)
 
 | s_max | High-urgency lost | Facilities opened |
 |---|---|---|
-| 40 | 4.05 | [0, 2, 3] |
-| 55 | 3.93 | [2, 3] |
-| 75 | 3.89 | [0, 2] |
+| 40 | 3.14 | [0, 2, 3] |
+| 55 | 3.01 | [2, 3] |
+| 75 | 2.96 | [0, 2] |
 
 ### E5 — robustness to the normal-wait mortality anchor (busy 150p)
 
-Anchor `BASE_WAIT_DEATH_6WK = {H:0.15, M:0.05, L:0.02}` scaled by a multiplier (high-urgency 6-week mortality 7.5%-30%). Basis: reduced vein-to-vein time improves 3L+ LBCL outcomes; real-world pre-infusion progression. `[assumption (sensitivity-tested)]`
+Reference anchor `WAIT_DEATH_REF = {H:0.15, M:0.05, L:0.02}` over T_REF=42 d scaled by a multiplier. Basis: reduced vein-to-vein time improves 3L+ LBCL outcomes; real-world pre-infusion progression. `[assumption (sensitivity-tested)]`
 
 | Multiplier | 6-wk H mortality | % of H losses from wait | On-time H lost | Sickest-first H lost | Reduction |
 |---|---|---|---|---|---|
-| x0.5 | 7.5% | 57% | 3.84 | 1.94 | 1.90 |
-| x0.75 | 11.2% | 65% | 4.83 | 2.14 | 2.69 |
-| x1.0 | 15.0% | 72% | 5.86 | 2.39 | 3.47 |
-| x1.5 | 22.5% | 79% | 7.93 | 2.86 | 5.07 |
-| x2.0 | 30.0% | 83% | 10.07 | 3.40 | 6.67 |
+| x0.5 | 7.5% | 47% | 3.09 | 1.67 | 1.42 |
+| x0.75 | 11.2% | 57% | 3.87 | 1.85 | 2.02 |
+| x1.0 | 15.0% | 64% | 4.54 | 1.97 | 2.57 |
+| x1.5 | 22.5% | 73% | 6.06 | 2.33 | 3.73 |
+| x2.0 | 30.0% | 78% | 7.53 | 2.69 | 4.84 |
 
 **Qualitative story is stable:** across the whole range the majority of high-urgency losses come from the normal wait, and sickest-first reduces high-urgency losses at every anchor level.
 
@@ -118,15 +123,15 @@ Anchor `BASE_WAIT_DEATH_6WK = {H:0.15, M:0.05, L:0.02}` scaled by a multiplier (
 
 | gamma | lambda (d) | On-time H lost | Sickest-first H lost | % from wait |
 |---|---|---|---|---|
-| 1.0 | 36.4 | 5.86 | 2.39 | 72% |
-| 1.5 | 25.1 | 5.97 | 2.50 | 70% |
-| 2.0 | 20.9 | 5.98 | 2.59 | 70% |
+| 1.0 | 36.4 | 4.54 | 1.97 | 64% |
+| 1.5 | 25.1 | 4.64 | 2.02 | 62% |
+| 2.0 | 20.9 | 4.68 | 2.08 | 62% |
 
 | HR spread (H/M/L) | On-time H lost | Sickest-first H lost |
 |---|---|---|
-| narrow (1.55/1.5/1.45) | 5.85 | 2.38 |
-| central (1.6/1.5/1.4) | 5.86 | 2.39 |
-| wide (1.7/1.5/1.3) | 5.87 | 2.41 |
+| narrow (1.55/1.5/1.45) | 4.53 | 1.96 |
+| central (1.6/1.5/1.4) | 4.54 | 1.97 |
+| wide (1.7/1.5/1.3) | 4.55 | 1.98 |
 
 ### E6 — priority-rule comparison (busy 150-patient network, real rate)
 
@@ -136,28 +141,91 @@ Tseng survival metrics (survival rate at therapy, over all patients):
 
 | Rule | Eligible (>75%) | Avg surv. | SD | Max | Min | N inc. vs FIFO | avg inc. | become elig. | N dec. vs FIFO | avg dec. | become inelig. |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| FIFO | 150 | 88.6% | 4.5 | 94.9% | 78.2% | 0 | 0.00% | 0 | 0 | 0.00% | 0 |
-| Threshold-75 | 150 | 88.6% | 4.5 | 94.9% | 78.2% | 0 | 0.00% | 0 | 0 | 0.00% | 0 |
-| Threshold-80 | 150 | 89.2% | 3.9 | 94.9% | 78.5% | 10 | 14.17% | 0 | 65 | 0.65% | 0 |
-| Threshold-85 | 150 | 90.4% | 2.5 | 96.4% | 84.9% | 30 | 12.47% | 0 | 120 | 0.88% | 0 |
-| Threshold-90 | 150 | 90.7% | 2.1 | 96.4% | 87.6% | 62 | 7.28% | 0 | 87 | 1.46% | 0 |
-| Threshold-95 | 150 | 90.9% | 1.8 | 96.4% | 87.6% | 74 | 6.26% | 0 | 74 | 1.53% | 0 |
-| Threshold-100 | 150 | 90.9% | 1.8 | 96.4% | 87.6% | 74 | 6.26% | 0 | 74 | 1.53% | 0 |
+| FIFO | 150 | 90.6% | 3.2 | 95.7% | 82.7% | 0 | 0.00% | 0 | 0 | 0.00% | 0 |
+| Threshold-75 | 150 | 90.6% | 3.2 | 95.7% | 82.7% | 0 | 0.00% | 0 | 0 | 0.00% | 0 |
+| Threshold-80 | 150 | 90.6% | 3.2 | 95.7% | 82.7% | 0 | 0.00% | 0 | 0 | 0.00% | 0 |
+| Threshold-85 | 150 | 91.3% | 2.9 | 97.4% | 84.9% | 13 | 11.20% | 0 | 137 | 0.34% | 0 |
+| Threshold-90 | 150 | 92.2% | 2.1 | 97.4% | 88.2% | 50 | 6.78% | 0 | 100 | 1.09% | 0 |
+| Threshold-95 | 150 | 92.4% | 1.7 | 97.4% | 89.6% | 74 | 4.92% | 0 | 74 | 1.27% | 0 |
+| Threshold-100 | 150 | 92.4% | 1.7 | 97.4% | 89.6% | 74 | 4.92% | 0 | 74 | 1.27% | 0 |
 
 Our additions by urgency (high-urgency lost, treated-within-deadline, cost, cause split):
 
 | Rule | High-urg. lost | Treated H/M/L (%) | Cost/patient | Total cost | H normal-wait / after-failure | % from wait |
 |---|---|---|---|---|---|---|
-| FIFO | 5.86 | 80/89/93 | 0.72 | 94.96 | 4.19 / 1.67 | 72% |
-| Threshold-75 | 5.86 | 80/89/93 | 0.72 | 94.96 | 4.19 / 1.67 | 72% |
-| Threshold-80 | 4.54 | 85/89/92 | 0.66 | 87.67 | 2.99 / 1.54 | 66% |
-| Threshold-85 | 2.39 | 92/88/92 | 0.56 | 75.83 | 0.94 / 1.45 | 39% |
-| Threshold-90 | 2.39 | 92/89/91 | 0.55 | 74.36 | 0.94 / 1.45 | 39% |
-| Threshold-95 | 2.39 | 92/90/91 | 0.54 | 73.67 | 0.94 / 1.45 | 39% |
-| Threshold-100 | 2.39 | 92/90/91 | 0.54 | 73.67 | 0.94 / 1.45 | 39% |
+| FIFO | 4.54 | 85/91/93 | 0.62 | 84.23 | 2.89 / 1.65 | 64% |
+| Threshold-75 | 4.54 | 85/91/93 | 0.62 | 84.23 | 2.89 / 1.65 | 64% |
+| Threshold-80 | 4.54 | 85/91/93 | 0.62 | 84.23 | 2.89 / 1.65 | 64% |
+| Threshold-85 | 3.29 | 89/91/93 | 0.57 | 77.38 | 1.84 / 1.45 | 56% |
+| Threshold-90 | 1.98 | 93/91/93 | 0.50 | 69.54 | 0.63 / 1.35 | 32% |
+| Threshold-95 | 1.98 | 93/92/92 | 0.50 | 68.45 | 0.63 / 1.35 | 32% |
+| Threshold-100 | 1.98 | 93/92/92 | 0.50 | 68.45 | 0.63 / 1.35 | 32% |
 
-**Validation:** FIFO high-urgency lost 5.86 (== no-prioritization model); Threshold-100% 2.39 (== sickest-first).
+**Validation:** FIFO high-urgency lost 4.54 (== no-prioritization model); Threshold-100% 1.98 (== sickest-first).
 
-**Reading the sweep.** Under FIFO the worst-off (minimum) survival rate is 78.2%, just above the 75% eligibility line, so no patient is below the cutoff and `become-eligible` / `become-ineligible` are 0 for every rule. Threshold-75% therefore prioritizes nobody (== FIFO); the protection turns on from Threshold-80% upward, and high-urgency losses reach the sickest-first floor (2.39) by Threshold-85%. The rules lift the worst-off survival floor from 78.2% to 87.6% and the average from 88.6% to 90.9%, reallocating survival-rate margin toward the sickest rather than moving patients across the eligibility line.
+**Reading the sweep.** Under FIFO the worst-off (minimum) survival rate is 82.7%, near the 75% eligibility line. High-urgency losses fall from 4.54 (FIFO) to 1.98 and saturate at Threshold-90. The rules lift the worst-off survival floor from 82.7% to 89.6% and the average from 90.6% to 92.4%.
 
-_Compute time: 634 s. lambda(gamma): {'1.0': 36.38596471481464, '1.5': 25.139097250185223, '2.0': 20.895731061098957}._
+### Issue 1 — normal vein-to-vein wait sweep (busy 150p, real rate)
+
+Normal wait `T_V2V` as an explicit parameter (base 28 d). Longer waits raise both the number of high-urgency losses and the share attributable to the wait.
+
+| T_V2V (days) | On-time H lost | Sickest-first H lost | % from normal wait | Cost/patient |
+|---|---|---|---|---|
+| 21 | 3.90 | 1.86 | 58% | 0.58 |
+| 28 | 4.54 | 1.97 | 64% | 0.62 |
+| 35 | 5.21 | 2.11 | 68% | 0.67 |
+| 42 | 5.85 | 2.30 | 72% | 0.71 |
+
+### Issue 4 — re-make delay definition (busy 150p, real rate)
+
+`DELTA_REMAKE` = observed increment (12 d) vs a full additional cycle (= T_V2V). Congestion backlog is added on top of both.
+
+| Re-make delay | days | On-time H lost | H normal-wait / after-failure | % from wait | Cost/patient |
+|---|---|---|---|---|---|
+| observed_12d | 12 | 4.54 | 2.89 / 1.65 | 64% | 0.62 |
+| full_cycle_T_V2V | 28 | 4.60 | 2.89 / 1.71 | 63% | 0.63 |
+
+### Issue 6 — where waiting dominates vs where failure dominates
+
+Two-way sweep: mean manufacturing failure rate x normal wait `T_V2V`. Each cell shows the SHARE of high-urgency losses from the normal wait. Waiting dominates at low failure / long wait; manufacturing failure dominates at high out-of-spec rates. `[computed: this study]`
+
+| failure \ T_V2V | 21 d | 28 d | 35 d | 42 d |
+|---|---|---|---|---|
+| 5% | 64% | 70% | 74% | 77% |
+| 10% | 54% | 60% | 65% | 69% |
+| 20% | 36% | 42% | 47% | 51% |
+| 28% | 29% | 35% | 39% | 43% |
+
+High-urgency lost, FIFO -> best threshold rule (same grid):
+
+| failure \ T_V2V | 21 d | 28 d | 35 d | 42 d |
+|---|---|---|---|---|
+| 5% | 3.5->1.5 | 4.2->1.6 | 4.9->1.8 | 5.5->2.0 |
+| 10% | 4.1->2.0 | 4.7->2.2 | 5.4->2.3 | 6.0->2.5 |
+| 20% | 5.8->3.5 | 6.4->3.7 | 7.0->3.9 | 7.6->4.1 |
+| 28% | 6.9->4.6 | 7.4->4.8 | 8.0->5.0 | 8.6->5.2 |
+
+### Issue 5 — implemented / not implemented
+
+| Feature | In the model? | Note |
+|---|---|---|
+| Per-class clinical deadline tau_u | NO | No explicit per-tier deadline; a loss is any patient not treated. 'Treated within deadline' means simply treated (not lost). |
+| Transport time t_im in the deterioration wait | NO | Transport time enters only the shelf-life feasibility filter (case_study.py); it does not add to the deterioration wait. |
+| Subcontracting to m' != m | YES | Recourse LP includes subcontracting at rho_sub[m,m'] = 1.15 c_m' (off-diagonal), solved for failed batches. |
+
+### Issue 7 — OLD vs NEW (model-review corrections)
+
+OLD = pre-review model (fixed normal-wait probability; kernel on the ABSOLUTE re-make wait ~19 d + backlog; failed patients missed the normal-wait hazard). NEW = corrected model (T_V2V=28 d base; hazard-rate normal wait; kernel on the EXTRA delay; compound hazards). Busy 150p, real rate.
+
+| Quantity | OLD | NEW |
+|---|---|---|
+| Prediction gap: high-urgency lost, assumed | 0.84 | 0.84 |
+| Prediction gap: high-urgency lost, actual | 5.86 | 4.54 |
+| Prediction gap: total cost assumed -> actual | 49.70 -> 94.96 | 49.70 -> 84.23 |
+| Wait-vs-failure split (high-urgency, % from wait) | 72% | 64% |
+| Prioritization: FIFO -> best rule (high-urgency lost) | 5.86 -> 2.39 | 4.54 -> 1.98 |
+| Threshold at which the benefit saturates | Threshold-85 | Threshold-90 |
+
+**Which conclusions survive:** the prediction gap (an on-time plan loses several times more high-urgency patients than it assumes) and the prioritization benefit (a survival-based rule roughly halves high-urgency losses) both survive. **What changes:** absolute losses are lower at the 4-week base wait than the old (implicitly 6-week) model; the wait-vs-failure split is no longer a fixed headline — Issue 6 shows it flips to failure-dominated at high out-of-spec rates.
+
+_Compute time: 1051 s. lambda(gamma): {'1.0': 36.38596471481464, '1.5': 25.139097250185223, '2.0': 20.895731061098957}. T_V2V=28.0 d, DELTA_REMAKE=12.0 d._

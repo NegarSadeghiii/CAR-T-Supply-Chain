@@ -1,4 +1,4 @@
 plan,high_urgency_lost,treated_H_pct,treated_M_pct,treated_L_pct,lower_urgency_lost,cost_per_patient_MUSD,total_cost_MUSD,spare_slots
-on_time,5.860,80.5,89.2,92.6,11.392,0.715,94.96,0
-decline_aware,5.860,80.5,89.2,92.6,11.392,0.715,94.96,0
-sickest_first,2.390,92.0,89.8,91.1,11.646,0.543,73.81,0
+on_time,4.540,84.9,90.9,93.5,9.730,0.621,84.23,0
+decline_aware,4.540,84.9,90.9,93.5,9.730,0.621,84.23,0
+sickest_first,1.972,93.4,91.5,92.1,9.918,0.496,68.47,0

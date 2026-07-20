@@ -148,6 +148,48 @@ Threshold-100% / FIFO.
 
 ---
 
+## 4b. Model-review corrections (waiting time & deterioration kernel)
+
+A model review found four internal inconsistencies in how waiting time and the
+deterioration kernel were defined; all are corrected in `patient_simulator.py`.
+
+1. **Explicit vein-to-vein time (Issue 1).** The normal wait is now an explicit
+   parameter `T_V2V` (base 28 d = 4 weeks; swept {21, 28, 35, 42}). Normal-wait
+   mortality is a HAZARD RATE `h_norm_u = -ln(1 - WAIT_DEATH_REF_u) / T_REF`
+   (`WAIT_DEATH_REF = {0.15, 0.05, 0.02}`, `T_REF = 42 d`) applied over the
+   modelled wait, so it scales with `T_V2V`. **Regression:** at `T_V2V = 42` the
+   normal-wait (cause-a) mortality equals the old fixed probabilities exactly.
+2. **Calibration point = application point (Issue 2).** The re-make kernel is
+   applied to the EXTRA delay only (`extra_i = DELTA_REMAKE + congestion`),
+   matching how `lambda` was calibrated (Delta = 12 d → PFS HR 1.64). Previously
+   the kernel used the ABSOLUTE wait (`tau_proc = 19 d` + backlog), applying an
+   effective HR near 2.2. **Unit test** (`test_waiting_model.py`): `extra = 12 d`,
+   mid-tier, `kappa = 1` gives survival `1/1.64 = 0.610`.
+3. **Compound hazards (Issue 3).** Every patient faces the normal-wait hazard over
+   `T_V2V`; a failed patient additionally faces the extra-delay hazard:
+   `S_success = exp(-kappa h_norm T_V2V e)`, `S_failed = S_success ·
+   exp(-kappa HR (extra/lambda)^gamma)`. Failed patients previously escaped the
+   normal-wait hazard entirely.
+4. **Honest re-make delay (Issue 4).** `DELTA_REMAKE` is the extra days a re-make
+   adds — reported for two settings: the observed increment (12 d) and a full
+   additional cycle (= `T_V2V`). `tau_proc` is retained only to extract the
+   congestion excess `remake_delay(rho) - tau_proc`, not as the applied delay.
+
+**Scope (Issue 5).** Not implemented: a per-class clinical deadline `tau_u`;
+transport time in the deterioration wait (it enters only the shelf-life filter).
+Implemented: subcontracting to `m' != m` in the recourse LP. See
+`paper/data/processed/ISSUE5_implemented.csv`.
+
+**Two-way sensitivity (Issue 6).** The claim "most high-urgency losses occur
+during the normal wait" is tested against failure rate × `T_V2V`
+(`paper/figures/F7`): it holds at low failure / long wait and flips to
+failure-dominated at high out-of-spec rates (~20-28%).
+
+All four validation checks (kappa = 0 nesting; priority OFF == no-lever;
+`T_V2V = 42` regression; `extra = 12 → 0.610`) pass in `test_waiting_model.py`.
+
+---
+
 ## 5. Flagged assumptions (sensitivity-tested)
 
 - **`gamma` (Weibull shape)** — swept {1.0, 1.5, 2.0}; `lambda` recomputed per

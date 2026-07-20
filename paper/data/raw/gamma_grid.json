@@ -3,23 +3,23 @@
     {
       "gamma": 1.0,
       "lambda_days": 36.38596471481464,
-      "on_time_H_lost": 5.859999999999999,
-      "sickest_first_H_lost": 2.3899999999999997,
-      "share_from_normal_wait_H": 0.7156996587030717
+      "on_time_H_lost": 4.54,
+      "sickest_first_H_lost": 1.972,
+      "share_from_normal_wait_H": 0.6365638766519824
     },
     {
       "gamma": 1.5,
       "lambda_days": 25.139097250185223,
-      "on_time_H_lost": 5.97,
-      "sickest_first_H_lost": 2.498,
-      "share_from_normal_wait_H": 0.7025125628140704
+      "on_time_H_lost": 4.640000000000001,
+      "sickest_first_H_lost": 2.02,
+      "share_from_normal_wait_H": 0.6228448275862069
     },
     {
       "gamma": 2.0,
       "lambda_days": 20.895731061098957,
-      "on_time_H_lost": 5.98,
-      "sickest_first_H_lost": 2.594,
-      "share_from_normal_wait_H": 0.7013377926421404
+      "on_time_H_lost": 4.676,
+      "sickest_first_H_lost": 2.084,
+      "share_from_normal_wait_H": 0.6180496150556031
     }
   ]
 }

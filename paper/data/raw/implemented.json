@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "feature": "Per-class clinical deadline tau_u",
+      "implemented": false,
+      "note": "No explicit per-tier deadline; a loss is any patient not treated. 'Treated within deadline' means simply treated (not lost)."
+    },
+    {
+      "feature": "Transport time t_im in the deterioration wait",
+      "implemented": false,
+      "note": "Transport time enters only the shelf-life feasibility filter (case_study.py); it does not add to the deterioration wait."
+    },
+    {
+      "feature": "Subcontracting to m' != m",
+      "implemented": true,
+      "note": "Recourse LP includes subcontracting at rho_sub[m,m'] = 1.15 c_m' (off-diagonal), solved for failed batches."
+    }
+  ]
+}

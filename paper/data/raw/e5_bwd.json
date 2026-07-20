@@ -8,10 +8,10 @@
         "M": 0.025,
         "L": 0.01
       },
-      "share_from_normal_wait_H": 0.5665972944849116,
-      "on_time_H_lost": 3.844,
-      "sickest_first_H_lost": 1.944,
-      "sickest_first_reduction": 1.9
+      "share_from_normal_wait_H": 0.4683053040103493,
+      "on_time_H_lost": 3.0919999999999996,
+      "sickest_first_H_lost": 1.6720000000000002,
+      "sickest_first_reduction": 1.4199999999999995
     },
     {
       "multiplier": 0.75,
@@ -20,10 +20,10 @@
         "M": 0.037500000000000006,
         "L": 0.015
       },
-      "share_from_normal_wait_H": 0.6549295774647887,
-      "on_time_H_lost": 4.827999999999999,
-      "sickest_first_H_lost": 2.136,
-      "sickest_first_reduction": 2.6919999999999993
+      "share_from_normal_wait_H": 0.5745998967475477,
+      "on_time_H_lost": 3.8739999999999997,
+      "sickest_first_H_lost": 1.852,
+      "sickest_first_reduction": 2.0219999999999994
     },
     {
       "multiplier": 1.0,
@@ -32,10 +32,10 @@
         "M": 0.05,
         "L": 0.02
       },
-      "share_from_normal_wait_H": 0.7156996587030717,
-      "on_time_H_lost": 5.859999999999999,
-      "sickest_first_H_lost": 2.3899999999999997,
-      "sickest_first_reduction": 3.4699999999999998
+      "share_from_normal_wait_H": 0.6365638766519824,
+      "on_time_H_lost": 4.54,
+      "sickest_first_H_lost": 1.972,
+      "sickest_first_reduction": 2.568
     },
     {
       "multiplier": 1.5,
@@ -44,10 +44,10 @@
         "M": 0.07500000000000001,
         "L": 0.03
       },
-      "share_from_normal_wait_H": 0.7900176455760021,
-      "on_time_H_lost": 7.933999999999999,
-      "sickest_first_H_lost": 2.864,
-      "sickest_first_reduction": 5.069999999999999
+      "share_from_normal_wait_H": 0.7269725982172334,
+      "on_time_H_lost": 6.058,
+      "sickest_first_H_lost": 2.33,
+      "sickest_first_reduction": 3.7279999999999998
     },
     {
       "multiplier": 2.0,
@@ -56,10 +56,10 @@
         "M": 0.1,
         "L": 0.04
       },
-      "share_from_normal_wait_H": 0.8346237839984118,
-      "on_time_H_lost": 10.074,
-      "sickest_first_H_lost": 3.4,
-      "sickest_first_reduction": 6.6739999999999995
+      "share_from_normal_wait_H": 0.7801380775358471,
+      "on_time_H_lost": 7.532,
+      "sickest_first_H_lost": 2.692,
+      "sickest_first_reduction": 4.84
     }
   ]
 }

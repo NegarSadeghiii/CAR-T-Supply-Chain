@@ -3,4 +3,4 @@ nesting (decline speed 0),"normal-wait deaths (cause a), all tiers",0.0000
 nesting (decline speed 0),high-urgency lost (busy 150p),0.8420
 nesting (toy),test_nesting.py returncode,0
 priority OFF == no-lever,identical to on-time plan,True
-priority OFF == no-lever,high-urgency lost,5.8600
+priority OFF == no-lever,high-urgency lost,4.5400

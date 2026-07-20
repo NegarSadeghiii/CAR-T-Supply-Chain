@@ -51,6 +51,10 @@ def main():
     # 2. Nesting gate (must reproduce v1 before any experiment is trusted).
     _run(["test_nesting.py"], "2. Nesting validation — dynamic_sp(kappa=0) == v1")
 
+    # 2b. Waiting-model / kernel corrections (extra=12->0.610, T_V2V=42 regression,
+    #     kappa=0 nesting, priority OFF == no-lever).
+    _run(["test_waiting_model.py"], "2b. Waiting-model validation (kernel corrections)")
+
     # 3. Main deliverable (RESULTS.md): why high-urgency patients are lost
     #    (Step 1) and whether putting the sickest first protects them when
     #    factories are full (Step 2). Writes figures/figureP1-P6 and

@@ -1,0 +1,38 @@
+{
+  "grid": [
+    21,
+    28,
+    35,
+    42
+  ],
+  "rows": [
+    {
+      "t_v2v": 21,
+      "on_time_H_lost": 3.8979999999999997,
+      "sickest_first_H_lost": 1.858,
+      "share_from_normal_wait_H": 0.577219086711134,
+      "cost_per_treated": 0.5772241311389295
+    },
+    {
+      "t_v2v": 28,
+      "on_time_H_lost": 4.54,
+      "sickest_first_H_lost": 1.972,
+      "share_from_normal_wait_H": 0.6365638766519824,
+      "cost_per_treated": 0.6205999778972954
+    },
+    {
+      "t_v2v": 35,
+      "on_time_H_lost": 5.21,
+      "sickest_first_H_lost": 2.114,
+      "share_from_normal_wait_H": 0.6829174664107486,
+      "cost_per_treated": 0.6666004749426786
+    },
+    {
+      "t_v2v": 42,
+      "on_time_H_lost": 5.846,
+      "sickest_first_H_lost": 2.2960000000000003,
+      "share_from_normal_wait_H": 0.7174136161477933,
+      "cost_per_treated": 0.7116034337539661
+    }
+  ]
+}

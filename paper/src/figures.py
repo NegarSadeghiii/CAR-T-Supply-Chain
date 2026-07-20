@@ -266,6 +266,34 @@ def f6b_benefit(P, outdir):
     fig.tight_layout(); ps.save(fig, "F6b_who_benefits", outdir)
 
 
+def f7_failure_wait_heatmap(P, outdir):
+    """F7 (Issue 6): where waiting dominates vs where failure dominates — share of
+    high-urgency losses from the normal wait, over failure rate x normal wait."""
+    ft = P.get("failure_tv2v")
+    if not ft:
+        return
+    fr = ft["failure_grid"]; tv = ft["t_v2v_grid"]
+    M = np.zeros((len(fr), len(tv)))
+    by = {(c["failure_rate"], c["t_v2v"]): c for c in ft["cells"]}
+    for i, f in enumerate(fr):
+        for j, t in enumerate(tv):
+            M[i, j] = 100 * by[(f, t)]["share_from_normal_wait_H"]
+    fig = ps.fig("single", 0.85); ax = fig.add_subplot(111)
+    im = ax.imshow(M, origin="lower", aspect="auto", cmap="RdYlBu", vmin=0, vmax=100)
+    ax.set_xticks(range(len(tv))); ax.set_xticklabels([f"{t}" for t in tv])
+    ax.set_yticks(range(len(fr))); ax.set_yticklabels([f"{100*f:.0f}%" for f in fr])
+    ax.set_xlabel("Normal vein-to-vein wait (days)")
+    ax.set_ylabel("Manufacturing failure rate")
+    for i in range(len(fr)):
+        for j in range(len(tv)):
+            ax.text(j, i, f"{M[i, j]:.0f}", ha="center", va="center",
+                    color="black" if 25 < M[i, j] < 75 else "white", fontsize=8)
+    cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    cb.set_label("% of high-urgency losses from the normal wait", fontsize=8)
+    ax.set_title("Waiting vs failure dominance", fontsize=9)
+    fig.tight_layout(); ps.save(fig, "F7_failure_vs_wait_heatmap", outdir)
+
+
 def make_all(P, main_dir, tech_dir):
     print("Main figures:")
     f1_decline_sweep(P, main_dir)
@@ -275,6 +303,7 @@ def make_all(P, main_dir, tech_dir):
     f5_robustness(P, main_dir)
     f6a_survival(P, main_dir)
     f6b_benefit(P, main_dir)
+    f7_failure_wait_heatmap(P, main_dir)
     print("Technical figures:")
     t1_planned_vs_sim(P, tech_dir)
     t2_gamma(P, tech_dir)

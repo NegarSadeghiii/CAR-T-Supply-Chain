@@ -45,13 +45,17 @@ from scaled_instance import scaled_case_study_instance        # noqa: E402
 from declineprob import calibrate_lambda, HR_TIER             # noqa: E402
 from clearing_function import DEFAULT_CLEARING                # noqa: E402
 from dynamic_sp import solve_dynamic_sp, solve_dynamic_sp_endogenous  # noqa: E402
-from patient_simulator import (simulate_patients, BASE_WAIT_DEATH_6WK,  # noqa: E402
-                               ELIGIBILITY_CUTOFF)
+from patient_simulator import (simulate_patients, WAIT_DEATH_REF,  # noqa: E402
+                               ELIGIBILITY_CUTOFF, T_V2V_DEFAULT, DELTA_REMAKE_DEFAULT)
 
 # ---- fixed experiment settings (seeded / reproducible) ----------------------
 CALIB_KAPPA = 1.0                # decline speed matched to Dulobdas 2025 PFS HR 1.64
 GAMMA = 1.0                      # central decline-curve shape
 S_MAX_REAL = 75                  # Wan et al. 2026 Maxcap
+T_V2V = T_V2V_DEFAULT            # base normal vein-to-vein wait (28 d)
+DELTA_REMAKE = DELTA_REMAKE_DEFAULT  # base re-make increment (12 d, observed)
+T_V2V_GRID = [21, 28, 35, 42]    # normal-wait sweep (3-6 weeks)
+FAILURE_GRID = [0.05, 0.10, 0.20, 0.28]  # target mean failure rate (Issue 6)
 SEED_TRAIN = 0
 SEED_OOS = 100
 KAPPA_SWEEP = [0.0, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 1.0, 1.5, 2.0]
@@ -86,10 +90,25 @@ def _draws(inst, n_train, n_oos):
 
 
 def _sim(inst, design, tiers, tidx, Yte, Bte, U, kappa, priority=False,
-         base_wait_death=None, hr_tier=None, gamma=GAMMA):
+         base_wait_death=None, hr_tier=None, gamma=GAMMA,
+         t_v2v=T_V2V, delta_remake=DELTA_REMAKE):
     return simulate_patients(inst, design, tiers, tidx, Yte, Bte, U,
                              kappa=kappa, gamma=gamma, priority=priority,
+                             t_v2v=t_v2v, delta_remake=delta_remake,
                              base_wait_death=base_wait_death, hr_tier=hr_tier)
+
+
+def _scaled_failure_instance(mult, s_max, target_fail):
+    """Copy the scaled instance and rescale per-facility failure so the mean
+    failure rate is `target_fail`, preserving the k1<k2<k3 ordering (Issue 6)."""
+    import copy
+    inst, tiers, tidx = scaled_case_study_instance(mult=mult, s_max=s_max)
+    if target_fail is not None:
+        inst = copy.deepcopy(inst)
+        u = 1.0 - np.asarray(inst.p, float)          # base failure per facility
+        scale = target_fail / u.mean()
+        inst.p = np.clip(1.0 - u * scale, 0.01, 0.999)
+    return inst, tiers, tidx
 
 
 def _plan_summary(s):
@@ -186,7 +205,7 @@ def e5_bwd_robustness(busy_ctx):
     inst, tiers, tidx, D, Yte, Bte, U = busy_ctx
     rows = []
     for mparam in BWD_MULTIPLIERS:
-        bwd = {t: BASE_WAIT_DEATH_6WK[t] * mparam for t in ("H", "M", "L")}
+        bwd = {t: WAIT_DEATH_REF[t] * mparam for t in ("H", "M", "L")}
         on = _sim(inst, D, tiers, tidx, Yte, Bte, U, CALIB_KAPPA, False, base_wait_death=bwd)
         pr = _sim(inst, D, tiers, tidx, Yte, Bte, U, CALIB_KAPPA, True, base_wait_death=bwd)
         a, b = on["cause_a_by_tier"]["H"], on["cause_b_by_tier"]["H"]
@@ -329,6 +348,88 @@ def validation(busy_ctx, s):
     return {"nesting": v1, "priority_off": v2, "planned_vs_simulated": pvs}
 
 
+def tv2v_sweep(s):
+    """Issue 1: normal vein-to-vein wait sweep {21,28,35,42} d (busy 150p). On-time
+    design solved once; simulate FIFO and best-threshold at each T_V2V."""
+    inst, tiers, tidx = scaled_case_study_instance(mult=3, s_max=S_MAX_REAL)
+    Ytr, Btr, Yte, Bte, U = _draws(inst, s["n_train"], s["n_oos"])
+    D = solve_on_time(inst, Ytr, Btr, tiers, s)
+    rows = []
+    for tv in T_V2V_GRID:
+        on = _sim(inst, D, tiers, tidx, Yte, Bte, U, CALIB_KAPPA, False, t_v2v=tv)
+        pr = _sim(inst, D, tiers, tidx, Yte, Bte, U, CALIB_KAPPA, True, t_v2v=tv)
+        a, b = on["cause_a_by_tier"]["H"], on["cause_b_by_tier"]["H"]
+        rows.append({"t_v2v": tv, "on_time_H_lost": on["high_urgency_lost"],
+                     "sickest_first_H_lost": pr["high_urgency_lost"],
+                     "share_from_normal_wait_H": a / (a + b) if (a + b) > 1e-9 else 0.0,
+                     "cost_per_treated": on["cost_per_treated"]})
+        print(f"    T_V2V={tv}d: on-time H-lost={on['high_urgency_lost']:.2f} "
+              f"wait-share={100*rows[-1]['share_from_normal_wait_H']:.0f}% sickest={pr['high_urgency_lost']:.2f}")
+    return {"grid": T_V2V_GRID, "rows": rows}
+
+
+def remake_delay_compare(s):
+    """Issue 4: DELTA_REMAKE = 12 d (observed increment) vs = T_V2V (full extra
+    cycle), busy 150p at the real rate. Report high-urgency lost & wait share."""
+    inst, tiers, tidx = scaled_case_study_instance(mult=3, s_max=S_MAX_REAL)
+    Ytr, Btr, Yte, Bte, U = _draws(inst, s["n_train"], s["n_oos"])
+    D = solve_on_time(inst, Ytr, Btr, tiers, s)
+    rows = []
+    for name, dr in (("observed_12d", DELTA_REMAKE), ("full_cycle_T_V2V", T_V2V)):
+        on = _sim(inst, D, tiers, tidx, Yte, Bte, U, CALIB_KAPPA, False, delta_remake=dr)
+        pr = _sim(inst, D, tiers, tidx, Yte, Bte, U, CALIB_KAPPA, True, delta_remake=dr)
+        a, b = on["cause_a_by_tier"]["H"], on["cause_b_by_tier"]["H"]
+        rows.append({"setting": name, "delta_remake": dr,
+                     "on_time_H_lost": on["high_urgency_lost"],
+                     "sickest_first_H_lost": pr["high_urgency_lost"],
+                     "H_normal_wait": a, "H_after_failure": b,
+                     "share_from_normal_wait_H": a / (a + b) if (a + b) > 1e-9 else 0.0,
+                     "cost_per_treated": on["cost_per_treated"]})
+        print(f"    remake={name} ({dr:.0f}d): on-time H-lost={on['high_urgency_lost']:.2f} "
+              f"(wait {a:.2f} / fail {b:.2f}) sickest={pr['high_urgency_lost']:.2f}")
+    return {"rows": rows}
+
+
+def failure_tv2v_heatmap(s):
+    """Issue 6: two-way sweep of manufacturing failure rate x normal wait T_V2V.
+    For each cell: share of high-urgency losses from the normal wait, high-urgency
+    lost FIFO vs best threshold rule, cost per patient. One design solved per
+    failure rate (T_V2V does not enter the design)."""
+    cells = []
+    for f in FAILURE_GRID:
+        inst, tiers, tidx = _scaled_failure_instance(3, S_MAX_REAL, f)
+        Ytr, Btr, Yte, Bte, U = _draws(inst, s["n_train"], s["n_oos"])
+        D = solve_on_time(inst, Ytr, Btr, tiers, s)
+        for tv in T_V2V_GRID:
+            fifo = _sim(inst, D, tiers, tidx, Yte, Bte, U, CALIB_KAPPA, False, t_v2v=tv)
+            # best threshold rule = pure lowest-survival-first (Threshold-100%).
+            best = _sim(inst, D, tiers, tidx, Yte, Bte, U, CALIB_KAPPA, True, t_v2v=tv)
+            a, b = fifo["cause_a_by_tier"]["H"], fifo["cause_b_by_tier"]["H"]
+            cells.append({"failure_rate": f, "t_v2v": tv,
+                          "share_from_normal_wait_H": a / (a + b) if (a + b) > 1e-9 else 0.0,
+                          "H_lost_fifo": fifo["high_urgency_lost"],
+                          "H_lost_best_rule": best["high_urgency_lost"],
+                          "cost_per_treated": fifo["cost_per_treated"]})
+        print(f"    failure={100*f:.0f}%: wait-share@T_V2V "
+              f"{[round(100*c['share_from_normal_wait_H']) for c in cells if c['failure_rate']==f]}%")
+    return {"failure_grid": FAILURE_GRID, "t_v2v_grid": T_V2V_GRID, "cells": cells}
+
+
+def implemented_table():
+    """Issue 5: explicit implemented / not-implemented statement."""
+    return {"items": [
+        {"feature": "Per-class clinical deadline tau_u", "implemented": False,
+         "note": "No explicit per-tier deadline; a loss is any patient not treated. "
+                 "'Treated within deadline' means simply treated (not lost)."},
+        {"feature": "Transport time t_im in the deterioration wait", "implemented": False,
+         "note": "Transport time enters only the shelf-life feasibility filter "
+                 "(case_study.py); it does not add to the deterioration wait."},
+        {"feature": "Subcontracting to m' != m", "implemented": True,
+         "note": "Recourse LP includes subcontracting at rho_sub[m,m'] = 1.15 c_m' "
+                 "(off-diagonal), solved for failed batches."},
+    ]}
+
+
 # ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
@@ -346,7 +447,9 @@ def run(quick=False):
                  "backend": "HiGHS", "quick": quick,
                  "lambda_by_gamma": {str(g): calibrate_lambda(g) for g in GAMMA_GRID},
                  "hr_tier": dict(HR_TIER),
-                 "base_wait_death_6wk": dict(BASE_WAIT_DEATH_6WK),
+                 "wait_death_ref": dict(WAIT_DEATH_REF), "t_ref": 42.0,
+                 "t_v2v": T_V2V, "delta_remake": DELTA_REMAKE,
+                 "t_v2v_grid": T_V2V_GRID, "failure_grid": FAILURE_GRID,
                  "clearing": {"tau_proc": DEFAULT_CLEARING.tau_proc,
                               "breakpoints": list(DEFAULT_CLEARING.breakpoints),
                               "inc_slopes": list(DEFAULT_CLEARING.inc_slopes)},
@@ -380,6 +483,13 @@ def run(quick=False):
     payload["hr_grid"] = hr_grid(busy_ctx)
     print("[E6 priority-rule comparison]")
     payload["e6"] = e6_priority_rules(s)
+    print("[Issue 1: T_V2V sweep]")
+    payload["tv2v_sweep"] = tv2v_sweep(s)
+    print("[Issue 4: re-make delay comparison]")
+    payload["remake_compare"] = remake_delay_compare(s)
+    print("[Issue 6: failure x T_V2V heatmap]")
+    payload["failure_tv2v"] = failure_tv2v_heatmap(s)
+    payload["implemented"] = implemented_table()
     print("[VALIDATION]")
     payload["validation"] = validation(busy_ctx, s)
 
@@ -387,7 +497,8 @@ def run(quick=False):
 
     # Raw dumps (per experiment) + a combined raw log.
     for name in ("busy", "low", "three_plans", "cap_sweep", "e5_bwd",
-                 "gamma_grid", "hr_grid", "e6", "validation"):
+                 "gamma_grid", "hr_grid", "e6", "tv2v_sweep", "remake_compare",
+                 "failure_tv2v", "implemented", "validation"):
         with open(_RAW / f"{name}.json", "w") as fh:
             json.dump(payload[name], fh, indent=2)
     with open(_RAW / "run_meta.json", "w") as fh:

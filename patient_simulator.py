@@ -20,22 +20,28 @@ Nesting. Both channels scale with the decline-speed knob and vanish at speed 0,
 so the model reduces exactly to the original (loss only from failed batches that
 cannot be re-collected).
 
-Calibration.
-  * Normal-wait (6-week) baseline mortality by urgency — FLAGGED CLINICAL
-    ASSUMPTION (BASE_WAIT_DEATH_6WK below): high-urgency r/r disease progresses
-    fastest during the manufacturing wait. Values are order-of-magnitude clinical
-    estimates, sensitivity-testable.
-  * Re-make decline uses the calibrated proportional-hazards kernel
-    (declineprob.py): Weibull scale fixed to the Dulobdas 2025 delayed-vs-control
-    PFS hazard ratio 1.64 at the Cohet 2023 +12-day re-make delay.
+Waiting-time model (corrected after model review — see TECHNICAL_APPENDIX.md).
+  * Normal vein-to-vein wait T_V2V (days) is an EXPLICIT parameter (base 28 d =
+    4 weeks; commercial CAR-T is generally 3-5 weeks). Normal-wait mortality is a
+    HAZARD RATE `h_norm_u = -ln(1 - WAIT_DEATH_REF_u) / T_REF` applied over the
+    modelled wait, so it scales with T_V2V. WAIT_DEATH_REF = {H:0.15,M:0.05,L:0.02}
+    over T_REF = 42 d recovers the earlier fixed probabilities at T_V2V = 42.
+  * The re-make decline kernel is applied to the EXTRA exposure only (delay ABOVE
+    the normal wait), matching how lambda was calibrated (Delta = 12 d -> PFS HR
+    1.64). extra_i = DELTA_REMAKE + congestion backlog.
+  * Compounding: every patient faces the normal-wait hazard over T_V2V; a FAILED
+    patient additionally faces the extra-delay hazard:
+        S_success_i = exp(-kappa * h_norm_u * T_V2V * e_i)
+        S_failed_i  = S_success_i * exp(-kappa * HR_u * (extra_i / lambda)^gamma)
+    (e_i is the priority exposure, mean 1; FIFO -> e_i = 1, which reproduces the
+    Issue-3 baseline formulas exactly.)
 
-Prioritization lever (`priority`). Each factory processes its patients in some
-order. With `priority=False` everyone waits the normal schedule (exposure 1) and
-shares any re-make backlog equally. With `priority=True` high-urgency patients go
-FIRST — their wait exposure drops toward 0 and the delay shifts onto
-lower-urgency patients (exposure up to ~2, average preserved): the same total
-waiting, reallocated to protect the sickest. `priority=False` reproduces the
-model without the lever exactly.
+Prioritization lever. Each factory serves patients in some order. Under FIFO
+`e_i = 1` for all (equal sharing) — reproduces the no-lever model. Under a
+survival-based rule the sickest are served first: their effective wait exposure
+`e_i` falls toward 0 (shorter effective vein-to-vein and less backlog), and
+lower-urgency patients absorb it (up to ~2, per-facility mean preserved at 1) —
+the same total waiting, reallocated to protect the sickest.
 """
 
 from __future__ import annotations
@@ -48,10 +54,16 @@ from value_of_endogeneity import _solve_recourse
 
 _URGENCY_RANK = {"H": 0, "M": 1, "L": 2}
 
-# Baseline probability a patient of each urgency is lost during the standard
-# ~6-week manufacturing wait (progression/deterioration before a *successful*
-# product is ready). FLAGGED CLINICAL ASSUMPTION — sensitivity-tested.
-BASE_WAIT_DEATH_6WK = {"H": 0.15, "M": 0.05, "L": 0.02}
+# Reference normal-wait mortality by urgency over T_REF days (duration-explicit).
+# Converted to a hazard rate so it scales with the modelled vein-to-vein time.
+# FLAGGED CLINICAL ASSUMPTION — sensitivity-tested (E5).
+WAIT_DEATH_REF = {"H": 0.15, "M": 0.05, "L": 0.02}
+T_REF = 42.0                 # days the reference probabilities correspond to (6 weeks)
+T_V2V_DEFAULT = 28.0         # base normal vein-to-vein wait (4 weeks)
+DELTA_REMAKE_DEFAULT = 12.0  # extra days a re-make adds (observed increment, Cohet 2023)
+
+# Backward-compatibility alias (previous name); values now interpreted at T_REF.
+BASE_WAIT_DEATH_6WK = WAIT_DEATH_REF
 
 # Survival-rate eligibility cutoff for the priority-rule family. A patient whose
 # survival rate at therapy falls below this is "ineligible" and, under a
@@ -104,48 +116,55 @@ def _rule_exposure(assign, signal, n_f, rule, threshold):
     return e
 
 
-def _fifo_survival_signal(assign, hr, h_norm, p_by_fac, Dbar, tau, lam, gamma, kappa):
+def _fifo_survival_signal(assign, hr, h_norm_rate, t_v2v, p_by_fac, extra_bar,
+                          lam, gamma, kappa):
     """
     Per-patient expected survival rate under FIFO (exposure 1), used as the
-    priority SIGNAL. Combines the normal-wait branch and the re-make branch at the
-    facility's mean backlog:
-        signal_i = p_m * exp(-kappa h_norm_i) + (1-p_m) * exp(-kappa hr_i ((tau+Dbar_m)/lam)^gamma).
+    priority SIGNAL. Compounds the normal-wait hazard (all patients) with the
+    extra-delay hazard (failed patients) at the facility's mean extra delay:
+        S_succ  = exp(-kappa h_norm_rate_i T_V2V)
+        S_fail  = S_succ * exp(-kappa hr_i (extra_bar_m / lam)^gamma)
+        signal  = p_m S_succ + (1-p_m) S_fail.
     Monotone-decreasing from tier L to H within a facility (kappa>0). At kappa=0
     it is 1 for everyone (no deterioration), so no patient is ever prioritized.
     """
-    wait_fail = tau + np.asarray(Dbar)[assign]           # mean total re-make wait per patient (e=1)
-    surv_norm1 = np.exp(-kappa * h_norm)
-    surv_fail1 = np.exp(-kappa * hr * (wait_fail / lam) ** gamma)
+    s_succ = np.exp(-kappa * h_norm_rate * t_v2v)
+    s_fail = s_succ * np.exp(-kappa * hr * (np.asarray(extra_bar)[assign] / lam) ** gamma)
     pm = np.asarray(p_by_fac)[assign]
-    return pm * surv_norm1 + (1.0 - pm) * surv_fail1
+    return pm * s_succ + (1.0 - pm) * s_fail
 
 
 def simulate_patients(inst, design, tiers, tier_idx, Y, B, U, *,
                       kappa, gamma, clearing=DEFAULT_CLEARING, priority=False,
                       rule=None, threshold=1.0, signal=None,
+                      t_v2v=T_V2V_DEFAULT, delta_remake=DELTA_REMAKE_DEFAULT,
                       base_wait_death=None, hr_tier=None):
     """
     Score a fixed design on out-of-sample scenarios, returning plain patient
     outcomes with each loss split into cause (a) / (b), by urgency tier.
+
+    Waiting-time model (see module docstring): normal vein-to-vein wait `t_v2v`
+    days with a hazard-rate normal-wait mortality; a failed patient additionally
+    faces the extra-delay kernel over `extra_i = delta_remake + congestion`, with
+    the kernel applied to the EXTRA exposure only (matching lambda's calibration).
 
     Priority rule (Tseng et al. 2024 framework):
       rule="FIFO"       — no survival-based prioritization (== no-lever model).
       rule="THRESHOLD"  — patients with survival rate < `threshold` are served
                           lowest-survival-first; `threshold=1.0` == sickest-first.
       signal            — per-patient survival rate (lower = sicker) used to order.
-                          If None it is computed internally as the FIFO expected
-                          survival rate (monotone in tier per facility).
     Backward compatibility: `priority=True`  -> rule="THRESHOLD", threshold=1.0;
     `priority=False` -> rule="FIFO". Passing `rule` overrides `priority`.
 
-    Optional overrides (default to the module constants, so results are
-    unchanged unless a sweep passes them):
-      base_wait_death : dict{H,M,L} 6-week normal-wait mortality (drives cause a).
-      hr_tier         : dict{H,M,L} delay hazard ratios (drives cause b).
+    Optional overrides (default to module constants; results unchanged unless set):
+      t_v2v         : normal vein-to-vein wait (days).
+      delta_remake  : extra days a re-make adds, before congestion (Issue 4).
+      base_wait_death : dict{H,M,L} reference normal-wait mortality (over T_REF).
+      hr_tier         : dict{H,M,L} delay hazard ratios.
     """
     if rule is None:
         rule = "THRESHOLD" if priority else "FIFO"
-    bwd = BASE_WAIT_DEATH_6WK if base_wait_death is None else base_wait_death
+    bwd = WAIT_DEATH_REF if base_wait_death is None else base_wait_death
     hrt = HR_TIER if hr_tier is None else hr_tier
     z = np.asarray(design["z"], float)
     C = np.asarray(design["C"], float)
@@ -153,7 +172,9 @@ def simulate_patients(inst, design, tiers, tier_idx, Y, B, U, *,
     N, n_p, n_f = Y.shape
     lam = calibrate_lambda(gamma)
     hr = np.array([hrt[t] for t in tiers])
-    h_norm = np.array([-np.log(1.0 - bwd[t]) for t in tiers])   # baseline hazard
+    # Normal-wait mortality as a HAZARD RATE (per day), from the reference
+    # probability over T_REF; cumulative hazard = h_norm_rate * (effective wait).
+    h_norm_rate = np.array([-np.log(1.0 - bwd[t]) / T_REF for t in tiers])
     rho_cancel = np.asarray(inst.rho_cancel, float)
     tau = clearing.tau_proc
 
@@ -163,31 +184,34 @@ def simulate_patients(inst, design, tiers, tier_idx, Y, B, U, *,
     Yass = Y[:, np.arange(n_p), assign]
     F = 1.0 - Yass                                             # 1 if batch failed
 
-    # Mean re-make backlog per facility (rule-independent) -> priority signal.
+    # Mean congestion backlog per facility (rule-independent) -> priority signal.
     surge_all = np.stack([np.bincount(assign[F[o] > 0.5], minlength=n_f).astype(float)
                           for o in range(N)])                 # (N, n_f)
     Dbar = np.maximum(0.0, clearing.remake_delay((a_m[None, :] + surge_all) / Csafe[None, :])
-                      - tau).mean(axis=0)                      # (n_f,)
+                      - tau).mean(axis=0)                      # (n_f,) congestion beyond tau
     if signal is None:
-        signal = _fifo_survival_signal(assign, hr, h_norm, np.asarray(inst.p, float),
-                                       Dbar, tau, lam, gamma, kappa)
+        signal = _fifo_survival_signal(assign, hr, h_norm_rate, t_v2v,
+                                       np.asarray(inst.p, float), delta_remake + Dbar,
+                                       lam, gamma, kappa)
     e = _rule_exposure(assign, np.asarray(signal, float), n_f, rule, threshold)
 
     still = np.zeros((N, n_p))                                 # re-collection eligibility (failed)
     cause_a = np.zeros((N, n_p))                               # lost on a successful batch
     surv_rate = np.zeros(n_p)                                  # expected survival at therapy
-    # Cause (a): normal-wait mortality (design-independent), reallocated by priority.
-    surv_norm = np.exp(-kappa * h_norm * e)                    # (n_p,)
+    # Normal-wait survival over the effective vein-to-vein wait T_V2V * e_i
+    # (priority shortens the effective wait for the sickest). Faces ALL patients.
+    surv_norm = np.exp(-kappa * h_norm_rate * t_v2v * e)       # (n_p,) = S_success
     for o in range(N):
         surge = np.zeros(n_f)
         for i in range(n_p):
             if F[o, i] > 0.5:
                 surge[assign[i]] += 1.0
         rho = (a_m + surge) / Csafe
-        D = np.maximum(0.0, clearing.remake_delay(rho) - tau)  # re-make backlog days per factory
-        # Cause (b): failed patient survives re-make (base + its share of backlog).
-        wait_b = tau + D[assign] * e                           # priority shortens backlog for sickest
-        surv_fail = np.exp(-kappa * hr * (wait_b / lam) ** gamma)
+        D = np.maximum(0.0, clearing.remake_delay(rho) - tau)  # congestion backlog per factory
+        # Extra exposure for a failed patient: base re-make increment + its share
+        # of congestion (priority shortens the backlog share). Kernel on extra only.
+        extra = delta_remake + D[assign] * e
+        surv_fail = surv_norm * np.exp(-kappa * hr * (extra / lam) ** gamma)  # compound
         for i in range(n_p):
             if F[o, i] > 0.5:
                 still[o, i] = B[o, i] * (1.0 if U[o, i] < surv_fail[i] else 0.0)
@@ -232,6 +256,8 @@ def simulate_patients(inst, design, tiers, tier_idx, Y, B, U, *,
         "capacity": C.tolist(),
         "rule": rule,
         "threshold": float(threshold),
+        "t_v2v": float(t_v2v),
+        "delta_remake": float(delta_remake),
         "survival_rate_by_patient": surv_rate.tolist(),   # expected survival at therapy
         "signal_by_patient": np.asarray(signal, float).tolist(),
     }

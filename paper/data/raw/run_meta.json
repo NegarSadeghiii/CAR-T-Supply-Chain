@@ -19,11 +19,26 @@
     "M": 1.5,
     "L": 1.4
   },
-  "base_wait_death_6wk": {
+  "wait_death_ref": {
     "H": 0.15,
     "M": 0.05,
     "L": 0.02
   },
+  "t_ref": 42.0,
+  "t_v2v": 28.0,
+  "delta_remake": 12.0,
+  "t_v2v_grid": [
+    21,
+    28,
+    35,
+    42
+  ],
+  "failure_grid": [
+    0.05,
+    0.1,
+    0.2,
+    0.28
+  ],
   "clearing": {
     "tau_proc": 19.0,
     "breakpoints": [
@@ -171,5 +186,5 @@
     "shelf_life": 24.0,
     "mnf": 3
   },
-  "compute_seconds": 634.4466594080001
+  "compute_seconds": 1050.907234462
 }
