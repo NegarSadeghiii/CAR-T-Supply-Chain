@@ -1,0 +1,27 @@
+{
+  "instance": "subset",
+  "n_patients": 6,
+  "n_scenarios": 10,
+  "seed": 0,
+  "total_cost": 5.179,
+  "stage1_cost": 3.9399999999999995,
+  "expected_stage2_cost": 1.2390000000000008,
+  "z": [
+    1.0,
+    1.0,
+    -0.0,
+    0.0
+  ],
+  "C": [
+    1,
+    5,
+    0,
+    0
+  ],
+  "exp_remfg": 0.2,
+  "exp_sub": 0.0,
+  "exp_cancel": 0.2,
+  "solve_time": 0.015732870999954685,
+  "gap": 0.0,
+  "solver": "gurobi"
+}
