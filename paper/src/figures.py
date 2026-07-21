@@ -91,7 +91,7 @@ def f3_three_plans(P, outdir):
     ax1.set_ylim(top=max(vals) * 1.2)
     ax1.set_xticks(xpos); ax1.set_xticklabels([n for n, _, _ in order], fontsize=7.5)
     ax1.set_ylabel("High-urgency patients lost\nper cohort")
-    ax1.set_title("(a) Protecting the sickest", fontsize=9)
+    ax1.set_title("(a) High-urgency patients lost, by plan", fontsize=9)
     # panel (b): treated within deadline by tier
     tiers = ["H", "M", "L"]; names = {"H": "High", "M": "Medium", "L": "Low"}
     width = 0.38
@@ -105,7 +105,7 @@ def f3_three_plans(P, outdir):
     ax2.set_xticks(xb); ax2.set_xticklabels([names[t] for t in tiers])
     ax2.set_ylabel("Treated within deadline (%)")
     ax2.set_ylim(70, 101)
-    ax2.set_title("(b) Who pays for it", fontsize=9)
+    ax2.set_title("(b) Share treated within deadline, by class", fontsize=9)
     ax2.legend(loc="upper center", ncol=2, columnspacing=1.2, handletextpad=0.5)
     fig.tight_layout(); ps.save(fig, "F3_three_plans", outdir)
 
@@ -140,12 +140,12 @@ def f5_robustness(P, outdir):
     ax1.set_xlabel("Assumed 6-week mortality,\nhigh-urgency (%)")
     ax1.set_ylabel("Share of high-urgency losses\nfrom the normal wait (%)")
     ax1.set_ylim(0, 100)
-    ax1.set_title("(a) Losses stay wait-dominated", fontsize=9)
+    ax1.set_title("(a) Share of high-urgency losses from the nominal wait", fontsize=9)
     ax2.plot(hH, red, "-s", color=ps.C["sickest"])
     ax2.set_xlabel("Assumed 6-week mortality,\nhigh-urgency (%)")
     ax2.set_ylabel("High-urgency patients saved by\nsickest-first, per cohort")
     ax2.set_ylim(bottom=0)
-    ax2.set_title("(b) Sickest-first keeps helping", fontsize=9)
+    ax2.set_title("(b) High-urgency patients saved by prioritization", fontsize=9)
     fig.tight_layout(); ps.save(fig, "F5_robustness", outdir)
 
 
@@ -247,7 +247,7 @@ def f6b_benefit(P, outdir):
     ax1.axhline(0, color=ps.C["grey"], lw=0.8)
     ax1.set_xticks(x); ax1.set_xticklabels(labels, fontsize=7.5)
     ax1.set_ylabel("Patients vs FIFO")
-    ax1.set_title("(a) Who benefits, who pays", fontsize=9)
+    ax1.set_title("(a) Patients with increased vs. decreased survival rate", fontsize=9)
     ax1.legend(loc="upper left")
     # (b) worst-off (minimum) survival rate across all rules incl. FIFO.
     allr = e6["rules"]
@@ -262,7 +262,7 @@ def f6b_benefit(P, outdir):
              transform=ax2.get_yaxis_transform(), fontsize=7, color=ps.C["ref"], va="bottom")
     ax2.set_xticks(xall); ax2.set_xticklabels(labels_all, fontsize=7)
     ax2.set_ylabel("Worst-off survival rate (%)")
-    ax2.set_title("(b) The floor rises", fontsize=9)
+    ax2.set_title("(b) Worst-off (minimum) survival rate", fontsize=9)
     fig.tight_layout(); ps.save(fig, "F6b_who_benefits", outdir)
 
 
@@ -290,7 +290,7 @@ def f7_failure_wait_heatmap(P, outdir):
                     color="black" if 25 < M[i, j] < 75 else "white", fontsize=8)
     cb = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cb.set_label("% of high-urgency losses from the normal wait", fontsize=8)
-    ax.set_title("Waiting vs failure dominance", fontsize=9)
+    ax.set_title("Share of high-urgency losses from the nominal wait", fontsize=9)
     fig.tight_layout(); ps.save(fig, "F7_failure_vs_wait_heatmap", outdir)
 
 
