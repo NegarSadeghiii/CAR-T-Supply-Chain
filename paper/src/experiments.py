@@ -459,8 +459,7 @@ def run(quick=False):
                               "c": inst0.c.tolist(), "p": inst0.p.tolist(),
                               "beta": inst0.beta.tolist(),
                               "rho_cancel": inst0.rho_cancel.tolist(),
-                              "rho_leuk": inst0.rho_leuk,
-                              "shelf_life": inst0.shelf_life, "mnf": inst0.mnf}},
+                              "rho_leuk": inst0.rho_leuk, "mnf": inst0.mnf}},
     }
 
     print("[busy 150-patient network]")

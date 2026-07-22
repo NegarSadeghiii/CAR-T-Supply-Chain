@@ -5,13 +5,12 @@ network WITHOUT modifying case_study.py.
 Two knobs:
   * mult   — tile the 50-patient cohort `mult` times (preserving the tier mix and
              geography) to raise demand until facilities run near full capacity.
-  * s_max  — installed capacity per facility. The base case_study.py uses 40, an
-             ARTIFICIAL value ("reduced to 40 to enforce two-facility coverage",
-             calibration_table.md). Wan et al. (2026) report the real Maxcap = 75.
-             Raising s_max lets the high-yield facility add spare capacity.
+  * s_max  — installed capacity per facility (default 75, the Wan et al. 2026
+             Maxcap, matching case_study.py). The tight, two-facility regime is
+             reached by scaling demand via `mult`, not by shrinking capacity.
 
-Everything else (costs, yields, transport, tier parameters, MNF) is inherited
-unchanged from build_case_study_instance().
+Everything else (costs, yields, tier parameters) is inherited unchanged from
+build_case_study_instance().
 """
 
 from __future__ import annotations
@@ -35,8 +34,6 @@ def scaled_case_study_instance(mult: int = 1, s_max: int = 75):
     inst.n_patients = base.n_patients * k
     inst.beta = np.tile(np.asarray(base.beta), k)
     inst.rho_cancel = np.tile(np.asarray(base.rho_cancel), k)
-    if base.t_trans is not None:
-        inst.t_trans = np.tile(np.asarray(base.t_trans), (k, 1))
     inst.s_max = np.full(base.n_facilities, int(s_max))
 
     tiers = list(TIERS) * k

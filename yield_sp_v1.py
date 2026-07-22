@@ -31,13 +31,7 @@ class Instance:
     rho_remfg: np.ndarray # [m] re-manufacturing cost
     rho_sub: np.ndarray   # [m, m'] subcontracting cost
     rho_cancel: np.ndarray  # [i] cancellation clinical loss (tier-dependent)
-    # Optional structural constraints (Yield_upgrade)
-    t_trans: Optional[np.ndarray] = None   # [i, m] transport time in hours (Haversine)
-    shelf_life: Optional[float] = None     # cryopreservation shelf life in hours
-    mnf: Optional[int] = None             # max number of facilities open (MNF)
-    # Optional resilience parameters (capacity-disruption channel)
-    q: Optional[np.ndarray] = None         # [m] facility disruption probability
-    delta_cap: Optional[np.ndarray] = None  # [m] capacity slots lost when facility m disrupted
+    mnf: Optional[int] = None  # max number of facilities open (MNF); None = no cap
 
     @property
     def I(self):
@@ -46,20 +40,6 @@ class Instance:
     @property
     def M(self):
         return range(self.n_facilities)
-
-    @property
-    def q_eff(self) -> np.ndarray:
-        """Effective facility disruption probabilities; zeros when q is unset."""
-        if self.q is None:
-            return np.zeros(self.n_facilities)
-        return np.asarray(self.q, dtype=float)
-
-    @property
-    def delta_cap_eff(self) -> np.ndarray:
-        """Effective capacity loss on disruption; full removal (s_max) when unset."""
-        if self.delta_cap is None:
-            return np.asarray(self.s_max, dtype=float)
-        return np.asarray(self.delta_cap, dtype=float)
 
 
 def toy_instance() -> Instance:
@@ -122,42 +102,6 @@ def sample_scenarios(instance: Instance, n: int, seed: int):
     return Y, B
 
 
-def sample_disruptions(instance: Instance, n: int, seed: int, mode: str = "independent"):
-    """
-    Draw n facility-level disruption scenarios Xi[o, m] ∈ {0, 1}.
-
-    Uses a fresh RNG kept separate from the (Y, B) stream, so seeded yield
-    results are unchanged whether or not disruptions are sampled.
-
-    Parameters
-    ----------
-    mode : {"independent", "common"}
-        "independent" : Xi[o, m] ~ Bernoulli(q_m), independent across
-                        facilities and scenarios.
-        "common"      : one Bernoulli per scenario at p = max_m q_m; when it
-                        fires, every facility in that scenario is disrupted
-                        (Xi[o, :] = 1) — a correlated common-mode shock.
-
-    Returns
-    -------
-    Xi : (n, n_facilities) float array of {0, 1} disruption indicators.
-    """
-    rng = np.random.default_rng(seed)
-    q = instance.q_eff
-    M = instance.n_facilities
-
-    if mode == "independent":
-        Xi = rng.binomial(1, q[np.newaxis, :], size=(n, M)).astype(float)
-    elif mode == "common":
-        p = float(q.max()) if M > 0 else 0.0
-        fired = rng.binomial(1, p, size=n).astype(float)
-        Xi = np.repeat(fired[:, np.newaxis], M, axis=1)
-    else:
-        raise ValueError(f"Unknown disruption mode {mode!r}; expected 'independent' or 'common'.")
-
-    return Xi
-
-
 # ---------------------------------------------------------------------------
 # Model construction
 # ---------------------------------------------------------------------------
@@ -169,7 +113,6 @@ def build_sp_model(
     *,
     fix_first_stage: Optional[dict] = None,
     relax_first_stage_constraints: bool = False,
-    Xi: Optional[np.ndarray] = None,
 ) -> tuple[gp.Model, dict]:
     """
     Construct the Gurobi model for the two-stage SP and return it with variable handles.
@@ -186,12 +129,6 @@ def build_sp_model(
         When True, omit constraints (1)–(4). Used by tests that pin Stage-1 to
         a configuration that would otherwise violate constraint (3), e.g. Test 2
         of the Tier 1 suite (C[0]=1 with 3 patients assigned to m0).
-    Xi : (N, M) facility disruption indicators per scenario, optional.
-        When None, treated as all-zeros so the effective yield Ỹ equals Y and
-        capacity is undisrupted — behavior identical to the pre-resilience model.
-        When provided, a disruption at facility m in scenario ω zeroes that
-        facility's primary yields (Ỹ = Y·(1−ξ), eq. 17) and removes delta_cap_eff
-        recourse-capacity slots there (eq. 19).
 
     Returns
     -------
@@ -206,12 +143,6 @@ def build_sp_model(
     M_set = list(instance.M)
     O_set = list(range(N))
     sub_pairs = [(m, mp) for m in M_set for mp in M_set if m != mp]
-
-    # Facility disruptions (capacity channel). None ⇒ all-zeros ⇒ Ỹ = Y and
-    # capacity undisrupted, i.e. identical to the pre-resilience model.
-    if Xi is None:
-        Xi = np.zeros((N, instance.n_facilities))
-    delta_cap_eff = instance.delta_cap_eff
 
     model = gp.Model("yield_sp")
     model.Params.OutputFlag = 0
@@ -250,12 +181,9 @@ def build_sp_model(
 
     # --- Second-stage constraints per scenario ---
     for o in O_set:
-        # Effective yield under disruption: Ỹ = Y·(1−ξ) (eq. 17). Precomputed
-        # per-scenario constant, so no bilinear terms enter the model.
-        Ytil = Y[o] * (1.0 - Xi[o])[None, :]
         for i in I_set:
-            # Failure indicator F_i(ω) inlined as LinExpr (eq. 18, uses Ỹ)
-            F_i = gp.quicksum(x[i, m] * (1.0 - Ytil[i, m]) for m in M_set)
+            # Failure indicator F_i(ω) inlined as LinExpr (eq. 18)
+            F_i = gp.quicksum(x[i, m] * (1.0 - Y[o, i, m]) for m in M_set)
             remfg_i = r_remfg.sum(i, "*", o)
             sub_i = gp.quicksum(r_sub[i, m, mp, o] for m, mp in sub_pairs)
 
@@ -280,22 +208,12 @@ def build_sp_model(
                 )
 
         for m in M_set:
-            # Recourse-capacity slack under disruption ξ_m(ω) (eq. 19):
-            #   slack = (C_m − Δ_m·ξ_m) − Σ_i x_im·Ỹ_im
-            # The capacity loss is floored so available recourse capacity never
-            # drops below zero — a facility cannot lose more recourse capacity
-            # than it contracted (Δ_m·ξ_m capped at C_m). Without this floor a
-            # disrupted closed/under-contracted facility (C_m < Δ_m) would make
-            # the row 0 ≤ negative and render the whole SP infeasible. For the
-            # default full removal (Δ_m = s_max ≥ C_m) a disrupted facility
-            # offers exactly zero recourse capacity, which is the stated intent.
-            if Xi[o, m] > 0.5 and delta_cap_eff[m] >= instance.s_max[m]:
-                slack = gp.LinExpr(0.0)   # Ỹ = 0 here, so slack floors to 0
-            else:
-                slack = (
-                    (C[m] - delta_cap_eff[m] * Xi[o, m])
-                    - gp.quicksum(x[i, m] * Ytil[i, m] for i in I_set)
-                )
+            # Recourse-capacity slack: unused contracted capacity at m after the
+            # successful primary batches have consumed their slots (eq. 19):
+            #   slack = C_m − Σ_i x_im·Y_im
+            slack = (
+                C[m] - gp.quicksum(x[i, m] * Y[o, i, m] for i in I_set)
+            )
             # Incoming subcontracts to m from any other facility mp
             incoming = gp.quicksum(
                 r_sub[i, mp, m, o] for i in I_set for mp in M_set if mp != m
@@ -429,7 +347,6 @@ def build_and_solve_sp(
     *,
     fix_first_stage: Optional[dict] = None,
     relax_first_stage_constraints: bool = False,
-    Xi: Optional[np.ndarray] = None,
     time_limit: float = 600.0,
     mip_gap: float = 1e-4,
     verbose: bool = False,
@@ -439,7 +356,6 @@ def build_and_solve_sp(
         instance, Y, B,
         fix_first_stage=fix_first_stage,
         relax_first_stage_constraints=relax_first_stage_constraints,
-        Xi=Xi,
     )
     return solve_and_extract(
         model, variables, instance, Y, B,

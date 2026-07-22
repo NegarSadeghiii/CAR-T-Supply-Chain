@@ -61,23 +61,11 @@ from clearing_function import ClearingFunction, DEFAULT_CLEARING
 
 def _nominal_assignment(inst: Instance) -> np.ndarray:
     """
-    Decision-independent reference facility per patient: nearest shelf-life-
-    feasible facility (min transport time); if no transport data, highest-yield
+    Decision-independent reference facility per patient: the highest-yield
     facility. Used only to precompute the scenario congestion/eligibility
     parameters — it does not constrain the optimizer's actual assignment x.
     """
-    n_p, n_f = inst.n_patients, inst.n_facilities
-    if inst.t_trans is not None:
-        t = np.asarray(inst.t_trans, float).copy()
-        if inst.shelf_life is not None:
-            t = np.where(t <= inst.shelf_life, t, np.inf)
-        # patients with no feasible facility fall back to global best-yield
-        assign = []
-        for i in range(n_p):
-            row = t[i]
-            assign.append(int(np.argmin(row)) if np.isfinite(row).any()
-                          else int(np.argmax(inst.p)))
-        return np.asarray(assign)
+    n_p = inst.n_patients
     return np.full(n_p, int(np.argmax(inst.p)))
 
 
@@ -269,13 +257,6 @@ def solve_dynamic_sp(
     fs_idx = np.arange(n_1st, dtype=np.int32)
     h.changeColsIntegrality(n_1st, fs_idx, np.array([int_t] * n_1st))
 
-    # Shelf-life prefilter (constraint 13), matching case_study.py.
-    if inst.t_trans is not None and inst.shelf_life is not None:
-        for i in range(n_p):
-            for m in range(n_f):
-                if inst.t_trans[i, m] > inst.shelf_life:
-                    h.changeColBounds(vx(i, m), 0.0, 0.0)
-
     # Pin the first stage exactly (nesting / evaluation).
     if fix_first_stage is not None:
         for m in range(n_f):
@@ -306,7 +287,7 @@ def solve_dynamic_sp(
     # (4) C[m] <= s_max[m] * z[m]
     for m in range(n_f):
         _row(-INF, 0.0, [vC(m), vz(m)], [1.0, -float(inst.s_max[m])])
-    # (15) MNF
+    # (15) MNF: sum_m z[m] <= mnf (non-binding at this scale)
     if inst.mnf is not None:
         _row(-INF, float(inst.mnf), [vz(m) for m in range(n_f)], [1.0] * n_f)
 

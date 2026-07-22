@@ -33,7 +33,6 @@ import numpy as np
 from case_study import (
     TIERS, TIER_IDX, RHOCANCEL_MAP,
     _highs_solve_sp, _solve_ev,
-    T_TRANS, SHELF_LIFE_HOURS, MAX_FACILITIES_OPEN,
 )
 from yield_sp_v1 import Instance, sample_scenarios
 
@@ -81,9 +80,6 @@ def build_sweep_instance(beta_H: float) -> Instance:
         rho_remfg=c.copy(),
         rho_sub=rho_sub,
         rho_cancel=rho_cancel,
-        t_trans=T_TRANS,
-        shelf_life=SHELF_LIFE_HOURS,
-        mnf=MAX_FACILITIES_OPEN,
     )
 
 
@@ -191,9 +187,6 @@ def main() -> None:
             beta=inst.beta.copy(), rho_leuk=inst.rho_leuk,
             rho_remfg=inst.rho_remfg.copy(), rho_sub=inst.rho_sub.copy(),
             rho_cancel=inst.rho_cancel.copy(),
-            t_trans=inst.t_trans,
-            shelf_life=inst.shelf_life,
-            mnf=inst.mnf,
         )
         t0 = time.perf_counter()
         ev_ecd = _solve_ev(inst_ecd)
