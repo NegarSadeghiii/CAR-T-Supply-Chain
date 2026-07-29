@@ -132,7 +132,7 @@ The finding does NOT invalidate our contribution claim; it characterizes the ope
 
 ### Structural constraint sensitivity (Yield_upgrade)
 
-A 2×2 sweep on the structural constraints added in the Yield_upgrade branch, testing whether tighter, biologically/operationally realistic values become binding. Infeasible-pair counts are over the full patient-facility grid (50 patients × 4 facilities = 200 pairs). Source: `sensitivity_constraints.py` → `results/sensitivity_constraints_results.json`.
+A 2×2 sweep on the structural constraints added in the Yield_upgrade branch, testing whether tighter, biologically/operationally realistic values become binding. Infeasible-pair counts are over the full patient-facility grid (50 patients × 4 facilities = 200 pairs). Source: `sensitivity_constraints.py` → `results/sensitivity_constraints_results.json`, both retired in the orphan-file cleanup (commit `a62f2e8`); the figures below are the archived record and are unchanged — recover the generator from git history (`git show a62f2e8^:sensitivity_constraints.py`) to re-run the sweep.
 
 | Configuration | Infeasible (i, m) pairs | SP facility set | VSS-vs-Naive | VSS-vs-ECD | Tier-H SP rate |
 |---|---|---|---|---|---|

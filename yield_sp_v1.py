@@ -1,6 +1,14 @@
 """
 yield_sp_v1.py — v1 two-stage stochastic program for CAR-T yield uncertainty.
-Reproduces §15 worked example from Yield_Model_Formulation.md.
+
+The worked example is self-contained here: `toy_instance()` / `toy_scenarios()`
+plus the verification block at the bottom. ("§15" tags below refer to the
+retired Yield_Model_Formulation.md note that this example originally came from;
+the numbers it asserts are reproduced in-file and are also the nesting gate in
+`test_nesting.py`.) The model as the paper states it lives in
+`dynamic_sp.py`; every published number is traceable in
+`paper/results/numbers.md`.
+
 Run: python yield_sp_v1.py
 """
 

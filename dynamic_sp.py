@@ -36,7 +36,7 @@ is optimized against the eligibility it will actually face. The nominal-proxy
 path (compute_still_eligible) is retained only for the kappa=0 nesting check,
 where it returns B exactly.
 
-Backend. HiGHS (as in disruption_experiment.py / case_study.py), because the
+Backend. HiGHS (as in case_study.py), because the
 full 50-patient instance exceeds the size-limited Gurobi license. Stage-2
 recourse vars are continuous [0,1]; the fixed-first-stage matrix is network-flow
 / totally-unimodular so the LP relaxation is integral at the optimum.

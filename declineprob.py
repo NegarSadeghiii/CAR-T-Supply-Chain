@@ -36,7 +36,8 @@ Calibration (sources match Phase5_Referenced_Calibration_Table / calibration_tab
     => lambda = DELAY_ANCHOR / ( ln(HR_PFS) / HR_anchor )^(1/gamma).
   - gamma (Weibull shape): NOT identified from two endpoints. Treated as a SWEPT
     sensitivity parameter (gamma=1 memoryless / constant hazard; gamma>1
-    accelerating). We do NOT claim gamma is fitted — see RESULTS.md.
+    accelerating). We do NOT claim gamma is fitted — see
+    TECHNICAL_APPENDIX.md §5 (flagged assumptions) for the sweep.
 
 All numeric constants below carry a source tag; every one is a
 sensitivity-tested assumption where flagged.

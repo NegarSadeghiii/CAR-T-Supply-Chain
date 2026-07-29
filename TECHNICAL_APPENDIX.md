@@ -1,23 +1,25 @@
 # Technical Appendix — validation and internal-model diagnostics
 
 Validation checks and internal-parameter curves for the dynamic
-deterioration model behind `RESULTS.md`. Technical parameter names are used here
-and in code comments only; the main report uses plain healthcare language.
+deterioration model behind the manuscript. Technical parameter names are used
+here and in code comments only; the paper uses plain healthcare language. Every
+published number is traceable to its source experiment in
+`paper/results/numbers.md`.
 
 Glossary (technical ↔ plain):
 
-| Technical | Plain (RESULTS.md) |
+| Technical | Plain (manuscript) |
 |---|---|
 | `kappa` (delay-sensitivity) | how fast patients decline while waiting |
 | `gamma` (Weibull shape) | internal decline-curve shape (swept, not fitted) |
-| `D_exo` (kappa=0 optimum) | on-time plan |
-| `D_endo` (endogenous optimum, fixed-point + delay-mortality surrogate) | decline-aware plan |
+| `D_exo` (kappa=0 optimum) | deterioration-blind design |
+| `D_endo` (endogenous optimum, fixed-point + delay-mortality surrogate) | deterioration-aware design |
 | tier-H / M / L cancellation | high- / medium- / low-urgency patients not treated in time |
 | VoE = cost(D_exo) − cost(D_endo) under true dynamics | cost saved by planning for decline |
 | calibrated `kappa = 1.0` | real decline rate (Dulobdas 2025 PFS HR 1.64) |
 | cause (a): baseline-hazard death on a successful batch | lost during the normal wait |
 | cause (b): post-failure re-make + congestion cancellation | lost after a manufacturing failure |
-| priority exposure reallocation `e_i` (sickest-first) | putting the sickest first |
+| priority exposure reallocation `e_i` (sickest-first) | sickest-first policy |
 
 Instances: case-study network tiled to 50 / 100 / 150 patients
 (`scaled_instance.py`), per-facility capacity `s_max ∈ {40, 55, 75}` (75 = Wan
@@ -94,8 +96,9 @@ setting with capacity headroom (50-patient network, `s_max = 75`):
 ## 4. Patient-level cause split and the sickest-first lever
 
 `patient_simulator.py` scores a fixed design on the out-of-sample scenarios and
-tags every tier-H/M/L cancellation by cause, and adds the priority lever behind
-RESULTS.md Steps 1–2 (`causes_priority_experiment.py`).
+tags every tier-H/M/L cancellation by cause, and adds the sickest-first priority
+lever. The manuscript runs both through `paper/src/experiments.py` (experiments
+E2 and E3); the resulting numbers are tabulated in `paper/results/numbers.md`.
 
 **Two death channels.**
 
@@ -213,15 +216,18 @@ All four validation checks (kappa = 0 nesting; priority OFF == no-lever;
 
 | File | Role |
 |---|---|
-| `patient_simulator.py` | patient-level cause split (a)/(b) + sickest-first lever (Steps 1–2) |
-| `causes_priority_experiment.py` | main experiment: cause split, three-plan comparison, cap sweep |
-| `results/causes_priority_results.json` | full numeric record for RESULTS.md |
+| `patient_simulator.py` | patient-level cause split (a)/(b) + sickest-first lever |
+| `paper/src/experiments.py` | seeded experiment set: cause split, three-design comparison, cap sweep, sensitivity |
+| `paper/results/numbers.md` | traceability ledger — every published number tagged with its source experiment |
 | `scaled_instance.py` | tiled, capacity-parameterized case-study instances |
 | `deterioration_experiment.py` | technical validation rerun (nesting, surrogate, benefit curve) |
 | `results/deterioration_results.json` | technical numeric record |
 | `dynamic_sp.py`, `declineprob.py`, `clearing_function.py`, `value_of_endogeneity.py` | model, kernels, planning simulator (unchanged core; see their own docstrings) |
-| `test_nesting.py`, `test_declineprob.py`, `test_clearing.py` | validation tests |
+| `test_nesting.py`, `test_waiting_model.py`, `test_declineprob.py`, `test_clearing.py` | validation tests |
 
-Reproduce everything (unit tests → nesting gate → causes+priority experiment →
-technical validation): `python run_all.py`. Publication figures are produced
-separately by the manuscript pipeline (`python paper/make_assets.py`).
+Reproduce the manuscript assets (experiments → CSVs → tables → ledger →
+figures): `python paper/make_assets.py`, or `--figures-only` to rebuild from the
+cached seeded run. The validation tests run standalone: `python
+test_waiting_model.py`, `python test_declineprob.py`, `python test_clearing.py`,
+`python test_nesting.py`. Technical diagnostics: `python
+deterioration_experiment.py`.

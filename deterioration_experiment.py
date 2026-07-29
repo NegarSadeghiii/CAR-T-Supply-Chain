@@ -10,14 +10,16 @@ what share of patients are treated within their clinical window, and what it
 costs — comparing a plan that ASSUMES manufacturing always succeeds on time with
 a plan that ACCOUNTS for patients getting sicker while they wait.
 
-Two output buckets (written by make_main_figures / make_technical_figures and by
-RESULTS.md vs TECHNICAL_APPENDIX.md):
-  * MAIN (figures/, RESULTS.md): plain healthcare language only.
-  * TECHNICAL (figures/technical/, TECHNICAL_APPENDIX.md): validation checks and
-    the internal model-parameter curves; technical names live only here / in code.
+Outputs. This script writes its numeric record to
+`results/deterioration_results.json` and backs the validation checks and
+internal model-parameter curves in TECHNICAL_APPENDIX.md; technical parameter
+names live only here and in code. It produces no figures of its own — all
+published figures come from the manuscript pipeline
+(`python paper/make_assets.py`), which also imports
+`planned_vs_simulated_deaths` from this module for figure T1.
 
 Reproducible: seeds fixed (design seed 0, patient-simulation seed 100). HiGHS
-backend. Run via run_all.py or `python deterioration_experiment.py [--quick]`.
+backend. Run with `python deterioration_experiment.py [--quick]`.
 
 --- technical <-> plain glossary (kept in code only) --------------------------
   kappa (delay-sensitivity)     -> "how fast patients decline while waiting"

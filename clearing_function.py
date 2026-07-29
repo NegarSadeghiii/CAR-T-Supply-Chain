@@ -19,7 +19,8 @@ Calibration / status
     calibration_table.md "Cross-references for cost parameters").
   - Breakpoints (b_s) and slopes (a_s): DECLARED STRUCTURAL ASSUMPTION. There is
     no public CDMO congestion-vs-delay dataset, so these are exposed as
-    parameters and are flagged as sensitivity-tested in RESULTS.md. The default
+    parameters and are flagged as sensitivity-tested in
+    TECHNICAL_APPENDIX.md §5 (flagged assumptions). The default
     is tuned so a fully utilized facility (rho=1) roughly doubles turnaround
     (~40 d) and an overloaded facility (rho>1) escalates steeply.
 """
