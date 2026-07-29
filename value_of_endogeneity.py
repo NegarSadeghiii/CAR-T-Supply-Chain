@@ -44,7 +44,6 @@ from clearing_function import ClearingFunction, DEFAULT_CLEARING
 from dynamic_sp import solve_dynamic_sp, solve_dynamic_sp_endogenous
 
 _HERE = Path(__file__).resolve().parent
-_FIG = _HERE / "figures"
 _RES = _HERE / "results"
 _RES.mkdir(exist_ok=True)
 
@@ -290,62 +289,12 @@ def _print_table(payload):
               f"{r['voe']:>9.3f}{r['tierH_mort_exo']:>12.3f}{r['tierH_mort_endo']:>13.3f}")
 
 
-def make_figures(payload):
-    sys.path.insert(0, str(_FIG))
-    from figure_style import COLORS, setup_style, double_column, save_figure
-    import matplotlib.pyplot as plt
-
-    gammas = payload["gamma_sweep"]
-    gcolors = {1.0: COLORS["sp"], 1.5: COLORS["subcontract"], 2.0: COLORS["cancel"]}
-
-    # Figure 1: VoE vs kappa (one line per gamma).
-    setup_style(); fig = double_column(); ax = fig.add_subplot(111)
-    for g in gammas:
-        rs = sorted([r for r in payload["results"] if r["gamma"] == g], key=lambda r: r["kappa"])
-        ax.plot([r["kappa"] for r in rs], [r["voe"] for r in rs], "-o",
-                color=gcolors.get(g, COLORS["sp"]), ms=4, label=f"gamma={g}")
-    ax.axhline(0, color="#999", lw=0.8, ls="--")
-    ax.set_xlabel("Delay-sensitivity  kappa")
-    ax.set_ylabel("Value of Endogeneity  (M USD)")
-    ax.set_title("Value of Endogeneity vs delay-sensitivity", fontweight="bold")
-    ax.legend()
-    fig.tight_layout(); save_figure(fig, "figureD1_voe_vs_kappa")
-
-    # Figure 2: TRUE tier-H mortality vs kappa (endo design under true dynamics),
-    # against the flat mortality the exogenous model assumes (its kappa=0 level).
-    # The endogenous and exogenous designs incur essentially the same tier-H
-    # mortality here (the high-yield facility serving tier-H is pinned at s_max),
-    # so the message is the large gap between TRUE mortality and what an
-    # exogenous (no-delay) model would predict.
-    setup_style(); fig = double_column(); ax = fig.add_subplot(111)
-    base = next(r["tierH_mort_endo"] for r in payload["results"]
-                if r["kappa"] == 0.0 and r["gamma"] == gammas[0])
-    for g in gammas:
-        rs = sorted([r for r in payload["results"] if r["gamma"] == g], key=lambda r: r["kappa"])
-        k = [r["kappa"] for r in rs]
-        ax.plot(k, [r["tierH_mort_endo"] for r in rs], "-o", color=gcolors.get(g, COLORS["sp"]),
-                ms=4, label=f"true tier-H mortality, gamma={g}")
-    ax.axhline(base, color="#555", ls="--", lw=1.2,
-               label="exogenous model's assumption (no delay)")
-    ax.annotate("mortality the exogenous\nmodel is blind to",
-                xy=(1.5, 0.47), xytext=(0.9, 0.30), fontsize=8,
-                arrowprops=dict(arrowstyle="->", color="#555"))
-    ax.set_xlabel("Delay-sensitivity  kappa")
-    ax.set_ylabel("Tier-H cancellations / scenario  (mortality proxy)")
-    ax.set_title("True tier-H mortality vs the exogenous assumption", fontweight="bold")
-    ax.legend(fontsize=8)
-    fig.tight_layout(); save_figure(fig, "figureD2_tierH_mortality_vs_kappa")
-
-
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true")
-    ap.add_argument("--no-figures", action="store_true")
     args = ap.parse_args()
     payload = run_experiment(quick=args.quick)
     _print_table(payload)
-    if not args.no_figures:
-        make_figures(payload)
     print("\nDone.")
 
 

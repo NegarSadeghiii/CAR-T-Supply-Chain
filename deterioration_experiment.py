@@ -265,7 +265,4 @@ if __name__ == "__main__":
     ap.add_argument("--no-figures", action="store_true")
     args = ap.parse_args()
     payload, out = run_experiment(quick=args.quick)
-    if not args.no_figures and not args.quick:
-        from deterioration_figures import make_all_figures
-        make_all_figures(payload)
     print("Done.")

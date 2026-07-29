@@ -9,11 +9,12 @@ Runs (all randomness seeded; see calibration_table.md):
                              STEP 1 (why high-urgency patients are lost: normal
                              wait vs after a failure) and STEP 2 (does putting the
                              sickest first protect them when factories are full).
-                             Plain-language figures -> figures/figureP1-P6,
                              numbers -> results/causes_priority_results.json.
   4. Technical validation  : deterioration_experiment.py — internal-model
-                             diagnostics behind TECHNICAL_APPENDIX.md
-                             (figures/technical/).
+                             diagnostics behind TECHNICAL_APPENDIX.md.
+
+Publication figures are produced separately by the manuscript pipeline
+(`python paper/make_assets.py`).
 
 Usage:
   python run_all.py            # full reproduction (minutes)
@@ -57,18 +58,17 @@ def main():
 
     # 3. Main deliverable (RESULTS.md): why high-urgency patients are lost
     #    (Step 1) and whether putting the sickest first protects them when
-    #    factories are full (Step 2). Writes figures/figureP1-P6 and
-    #    results/causes_priority_results.json.
-    cp_cmd = (["causes_priority_experiment.py", "--quick", "--no-figures"]
+    #    factories are full (Step 2). Writes results/causes_priority_results.json.
+    cp_cmd = (["causes_priority_experiment.py", "--quick"]
               if args.quick else ["causes_priority_experiment.py"])
     _run(cp_cmd, "3. Causes + sickest-first experiment (patient outcomes)")
 
-    # 4. Technical validation behind TECHNICAL_APPENDIX.md (figures/technical/).
-    det_cmd = (["deterioration_experiment.py", "--quick", "--no-figures"]
+    # 4. Technical validation behind TECHNICAL_APPENDIX.md.
+    det_cmd = (["deterioration_experiment.py", "--quick"]
                if args.quick else ["deterioration_experiment.py"])
     _run(det_cmd, "4. Technical validation (nesting, surrogate, benefit curve)")
 
-    print(f"\n{'='*70}\nAll stages completed. See RESULTS.md, figures/figureP1-P6, "
+    print(f"\n{'='*70}\nAll stages completed. See RESULTS.md and "
           f"results/causes_priority_results.json\n{'='*70}")
 
 

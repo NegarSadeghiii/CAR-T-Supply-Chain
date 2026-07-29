@@ -38,7 +38,7 @@ dynamic SP must reproduce v1 exactly.
 
 - **Toy instance** (`test_nesting.py`): total cost 2.7738 (target 2.774), VSS
   0.1538 (target 0.154), identical first-stage design, matches v1 to `<1e-6`.
-- **Scaled case study** (`figures/technical/figureT1_nesting_kappa0.png`): at
+- **Scaled case study:** at
   `kappa = 0`, `D_exo` and `D_endo` give identical total cost (49.703 M USD),
   identical high-urgency deaths (0.842), and identical spare capacity (0). The
   extension is a strict superset of v1.
@@ -54,7 +54,7 @@ utilization → shorter re-manufacture delay → higher post-delay eligibility).
 check confirms the surrogate tracks the detailed patient simulation.
 
 Taking the on-time design and progressively adding spare capacity at its busiest
-facility (`figures/technical/figureT2_planned_vs_simulated.png`), the planning
+facility, the planning
 model's internal estimate of delay-caused cancellation cost tracks the simulated
 value closely and monotonically:
 
@@ -75,8 +75,7 @@ the MILP rather than an intractable bilinear congestion term.
 ## 3. Internal benefit-vs-decline-speed curve (inverted-U)
 
 VoE = cost(`D_exo`) − cost(`D_endo`) under the true dynamics, vs `kappa`, in the
-setting with capacity headroom (50-patient network, `s_max = 75`)
-(`figures/technical/figureT3_value_of_endogeneity.png`):
+setting with capacity headroom (50-patient network, `s_max = 75`):
 
 - **Inverted-U in `kappa`.** At low `kappa` delay barely matters (VoE ≈ 0); at
   moderate `kappa` the endogenous design profitably buys spare capacity (peak VoE
@@ -96,7 +95,7 @@ setting with capacity headroom (50-patient network, `s_max = 75`)
 
 `patient_simulator.py` scores a fixed design on the out-of-sample scenarios and
 tags every tier-H/M/L cancellation by cause, and adds the priority lever behind
-RESULTS.md Steps 1–2 (`causes_priority_experiment.py`, `figureP1–P6`).
+RESULTS.md Steps 1–2 (`causes_priority_experiment.py`).
 
 **Two death channels.**
 
@@ -216,14 +215,13 @@ All four validation checks (kappa = 0 nesting; priority OFF == no-lever;
 |---|---|
 | `patient_simulator.py` | patient-level cause split (a)/(b) + sickest-first lever (Steps 1–2) |
 | `causes_priority_experiment.py` | main experiment: cause split, three-plan comparison, cap sweep |
-| `causes_priority_figures.py` | plain-language main figures `figureP1–P6` |
 | `results/causes_priority_results.json` | full numeric record for RESULTS.md |
 | `scaled_instance.py` | tiled, capacity-parameterized case-study instances |
-| `deterioration_experiment.py` | technical validation rerun (nesting, surrogate, benefit curve → `figures/technical/`) |
-| `deterioration_figures.py` | technical (`figures/technical/`) validation figures |
+| `deterioration_experiment.py` | technical validation rerun (nesting, surrogate, benefit curve) |
 | `results/deterioration_results.json` | technical numeric record |
 | `dynamic_sp.py`, `declineprob.py`, `clearing_function.py`, `value_of_endogeneity.py` | model, kernels, planning simulator (unchanged core; see their own docstrings) |
 | `test_nesting.py`, `test_declineprob.py`, `test_clearing.py` | validation tests |
 
 Reproduce everything (unit tests → nesting gate → causes+priority experiment →
-technical validation → figures): `python run_all.py`.
+technical validation): `python run_all.py`. Publication figures are produced
+separately by the manuscript pipeline (`python paper/make_assets.py`).
