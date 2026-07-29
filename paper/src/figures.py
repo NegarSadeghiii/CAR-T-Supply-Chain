@@ -3,12 +3,15 @@ paper/src/figures.py — publication figures (F1-F5) and technical/validation
 figures, built from the master results payload. All figures use paper_style.
 
 Main figures (paper/figures/): plain patient-and-cost axes only.
-  F1  high-urgency patients lost vs decline speed for the deterioration-blind
-      design under two queueing rules (first-come-first-served vs sickest-first),
-      with the real-decline-rate marker.
+  F1  high-urgency patients lost vs decline speed under the two allocation
+      rules — First-Come, First-Served vs Lowest-Survival-Probability-First —
+      with the real-decline-rate marker. Both curves use the same network,
+      designed ignoring patient decline; they differ only in the order patients
+      are served (state this in the manuscript caption).
   F2  why high-urgency patients are lost: normal wait vs after a failure,
       busy vs low-demand.
-  F3  three-plan comparison at the full network (high-urgency lost + equity).
+  F3  allocation-rule comparison at the full network (high-urgency lost +
+      equity).
   F4  capacity-cap sweep.
   F5  robustness of the two headline numbers to the normal-wait mortality anchor.
 
@@ -37,13 +40,16 @@ def _row_at(rows, k):
 # ---------------------------------------------------------------- main figures
 
 def f1_decline_sweep(P, outdir):
+    # Manuscript caption must carry this note (deliberately NOT in the legend):
+    #   "Both curves use the same network, which was designed ignoring patient
+    #    decline; they differ only in the order patients are served."
     rows = sorted(P["busy"]["rows"], key=lambda r: r["kappa"])
     k = [r["kappa"] for r in rows]
     fig = ps.fig("double", 0.5); ax = fig.add_subplot(111)
     ax.plot(k, [r["on_time"]["high_urgency_lost"] for r in rows], "-o",
-            color=ps.C["on_time"], label="deterioration-blind design, first-come-first-served")
+            color=ps.C["on_time"], label="First-Come, First-Served")
     ax.plot(k, [r["sickest_first"]["high_urgency_lost"] for r in rows], "-s",
-            color=ps.C["sickest"], label="deterioration-blind design, sickest-first")
+            color=ps.C["sickest"], label="Lowest-Survival-Probability-First")
     ax.axvline(CALIB, color=ps.C["ref"], ls="--", lw=1.0)
     ymax = ax.get_ylim()[1]
     ax.annotate("real decline rate\n(matched to survival data)", xy=(CALIB, 0.12 * ymax),
@@ -72,16 +78,15 @@ def f2_causes(P, outdir):
                     textcoords="offset points", xytext=(0, 4), ha="center", fontsize=7.5)
     ax.set_xticks(xpos); ax.set_xticklabels([s[0] for s in settings])
     ax.set_ylabel("High-urgency patients lost\nper cohort")
-    ax.set_title("Deterioration-blind design, evaluated at the calibrated decline rate", fontsize=9)
+    ax.set_title("First-come, first-served allocation, at the calibrated decline rate", fontsize=9)
     ax.legend(loc="upper right")
     fig.tight_layout(); ps.save(fig, "F2_why_high_urgency_lost", outdir)
 
 
 def f3_three_plans(P, outdir):
     plans = P["three_plans"]["plans"]
-    order = [("Deterioration-blind\ndesign", "on_time", ps.C["on_time"]),
-             ("Deterioration-aware\ndesign", "decline_aware", ps.C["decline_aware"]),
-             ("Deterioration-aware design\n+ sickest-first policy", "sickest_first", ps.C["sickest"])]
+    order = [("First-Come,\nFirst-Served", "on_time", ps.C["on_time"]),
+             ("Lowest-Survival-\nProbability-First", "sickest_first", ps.C["sickest"])]
     fig = ps.fig("double", 0.46, ncols=2)
     ax1 = fig.add_subplot(121); ax2 = fig.add_subplot(122)
     xpos = np.arange(len(order))
@@ -93,7 +98,7 @@ def f3_three_plans(P, outdir):
     ax1.set_ylim(top=max(vals) * 1.2)
     ax1.set_xticks(xpos); ax1.set_xticklabels([n for n, _, _ in order], fontsize=7.5)
     ax1.set_ylabel("High-urgency patients lost\nper cohort")
-    ax1.set_title("(a) High-urgency patients lost, by plan", fontsize=9)
+    ax1.set_title("(a) High-urgency patients lost, by allocation rule", fontsize=9)
     # panel (b): treated within deadline by tier
     tiers = ["H", "M", "L"]; names = {"H": "High", "M": "Medium", "L": "Low"}
     width = 0.38
@@ -101,14 +106,16 @@ def f3_three_plans(P, outdir):
     base = plans["on_time"]["treated_share_by_tier"]
     pri = plans["sickest_first"]["treated_share_by_tier"]
     ax2.bar(xb - width/2, [100*base[t] for t in tiers], width,
-            color=ps.C["on_time"], label="deterioration-blind")
+            color=ps.C["on_time"], label="First-Come, First-Served")
     ax2.bar(xb + width/2, [100*pri[t] for t in tiers], width,
-            color=ps.C["sickest"], label="sickest-first policy")
+            color=ps.C["sickest"], label="Lowest-Survival-Probability-First")
     ax2.set_xticks(xb); ax2.set_xticklabels([names[t] for t in tiers])
     ax2.set_ylabel("Treated within deadline (%)")
     ax2.set_ylim(70, 101)
     ax2.set_title("(b) Share treated within deadline, by class", fontsize=9)
-    ax2.legend(loc="upper center", ncol=2, columnspacing=1.2, handletextpad=0.5)
+    # one column: the allocation-rule names are too long to sit side by side
+    ax2.legend(loc="upper center", ncol=1, fontsize=6.5, handletextpad=0.5,
+               labelspacing=0.3, borderpad=0.3, framealpha=0.9)
     fig.tight_layout(); ps.save(fig, "F3_three_plans", outdir)
 
 
@@ -127,7 +134,7 @@ def f4_capacity(P, outdir):
     ax.set_xticks(xpos); ax.set_xticklabels([lbl.get(s, str(s)) for s in smax])
     ax.set_xlabel("Capacity limit per facility (slots)")
     ax.set_ylabel("High-urgency patients lost\nper cohort")
-    ax.set_title("Deterioration-blind design", fontsize=9)
+    ax.set_title("First-come, first-served allocation", fontsize=9)
     fig.tight_layout(); ps.save(fig, "F4_capacity_cap", outdir)
 
 
@@ -146,7 +153,7 @@ def f5_robustness(P, outdir):
     ax1.set_title("(a) Share of high-urgency losses from the nominal wait", fontsize=9)
     ax2.plot(hH, red, "-s", color=ps.C["sickest"])
     ax2.set_xlabel("Assumed 6-week mortality,\nhigh-urgency (%)")
-    ax2.set_ylabel("High-urgency patients saved by\nsickest-first, per cohort")
+    ax2.set_ylabel("High-urgency patients saved by lowest-\nsurvival-probability-first, per cohort")
     ax2.set_ylim(bottom=0)
     ax2.set_title("(b) High-urgency patients saved by prioritization", fontsize=9)
     fig.tight_layout(); ps.save(fig, "F5_robustness", outdir)
@@ -175,8 +182,10 @@ def t2_gamma(P, outdir):
     rows = sorted(P["gamma_grid"]["rows"], key=lambda r: r["gamma"])
     g = [r["gamma"] for r in rows]
     fig = ps.fig("single", 0.8); ax = fig.add_subplot(111)
-    ax.plot(g, [r["on_time_H_lost"] for r in rows], "-o", color=ps.C["on_time"], label="deterioration-blind")
-    ax.plot(g, [r["sickest_first_H_lost"] for r in rows], "-s", color=ps.C["sickest"], label="sickest-first policy")
+    ax.plot(g, [r["on_time_H_lost"] for r in rows], "-o", color=ps.C["on_time"],
+            label="First-Come, First-Served")
+    ax.plot(g, [r["sickest_first_H_lost"] for r in rows], "-s", color=ps.C["sickest"],
+            label="Lowest-Survival-Probability-First")
     ax.set_xlabel(r"Decline-curve shape $\gamma$ (swept)")
     ax.set_ylabel("High-urgency lost per cohort")
     ax.legend()
@@ -189,15 +198,17 @@ def t3_hr(P, outdir):
     fig = ps.fig("single", 0.8); ax = fig.add_subplot(111)
     xpos = np.arange(len(order)); w = 0.38
     ax.bar(xpos - w/2, [rows[s]["on_time_H_lost"] for s in order], w,
-           color=ps.C["on_time"], label="deterioration-blind")
+           color=ps.C["on_time"], label="First-Come, First-Served")
     ax.bar(xpos + w/2, [rows[s]["sickest_first_H_lost"] for s in order], w,
-           color=ps.C["sickest"], label="sickest-first policy")
+           color=ps.C["sickest"], label="Lowest-Survival-Probability-First")
     ax.set_xticks(xpos)
     ax.set_xticklabels([f"{s}\n{rows[s]['hr_tier']['H']}/{rows[s]['hr_tier']['M']}/{rows[s]['hr_tier']['L']}"
                         for s in order], fontsize=7.5)
     ax.set_xlabel("Tier hazard-ratio spread (H/M/L)")
     ax.set_ylabel("High-urgency lost per cohort")
-    ax.legend()
+    # headroom so the (long) allocation-rule legend clears the bars
+    ax.set_ylim(top=max(rows[s]["on_time_H_lost"] for s in order) * 1.34)
+    ax.legend(loc="upper center", fontsize=7.5, labelspacing=0.3, handletextpad=0.5)
     fig.tight_layout(); ps.save(fig, "T3_hazard_ratio_spread", outdir)
 
 
@@ -207,7 +218,7 @@ def f6a_survival(P, outdir):
     if not e6:
         return
     rules = e6["rules"]
-    labels = [r["rule"].replace("Threshold-", "Th-") for r in rules]
+    labels = [r["rule"].replace("Threshold-", "Th-").replace("FIFO", "FCFS") for r in rules]
     avg = [100 * r["avg_survival"] for r in rules]
     lo = [100 * r["min_survival"] for r in rules]
     hi = [100 * r["max_survival"] for r in rules]
@@ -249,13 +260,13 @@ def f6b_benefit(P, outdir):
             label="lower survival")
     ax1.axhline(0, color=ps.C["grey"], lw=0.8)
     ax1.set_xticks(x); ax1.set_xticklabels(labels, fontsize=7.5)
-    ax1.set_ylabel("Patients vs FIFO")
+    ax1.set_ylabel("Patients vs FCFS")
     ax1.set_title("(a) Patients with increased vs. decreased survival rate", fontsize=9)
     ax1.legend(loc="upper left")
     # (b) worst-off (minimum) survival rate across all rules incl. FIFO.
     allr = e6["rules"]
     xall = np.arange(len(allr))
-    labels_all = [r["rule"].replace("Threshold-", "Th-").replace("FIFO", "FIFO") for r in allr]
+    labels_all = [r["rule"].replace("Threshold-", "Th-").replace("FIFO", "FCFS") for r in allr]
     mins = [100 * r["min_survival"] for r in allr]
     cut = 100 * e6["eligibility_cutoff"]
     ax2.plot(xall, mins, "-o", color=ps.C["sickest"])
