@@ -1,0 +1,32 @@
+{
+ "n_patients": 12,
+ "reduced": {
+  "status": "optimal",
+  "objective": 3273512.9,
+  "opened": [
+   "m1"
+  ],
+  "TRT_distribution": {
+   "18": 12
+  },
+  "wall_s": 0.16396212577819824,
+  "solver": "highs",
+  "variables": 354,
+  "constraints": 841
+ },
+ "full_index_from_notebook": {
+  "status": "optimal",
+  "objective": 3273512.9,
+  "opened": [
+   "m1"
+  ],
+  "TRT_distribution": {
+   "18": 12
+  },
+  "wall_s": 543.0516619682312,
+  "solver": "highs",
+  "variables": 491516,
+  "constraints": 654963
+ },
+ "equivalent": true
+}
