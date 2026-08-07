@@ -32,3 +32,17 @@
     -> optimal obj=14908755.8 wall=579.1s
   [cache] extension_n200_alpha100000_fac2_nd42
   [solve] extension_n500_alpha0_fac2_nd42 (limit 5400s) ...
+    -> optimal obj=36071426.9 wall=592.2s
+  [cache] extension_n500_alpha100000_fac2_nd42
+  n   | design   | opened | total_cost | mean_TRT | mean_HOLD | mean_HOLD_H | mean_HOLD_M | mean_HOLD_L | expected_lost
+  ----+----------+--------+------------+----------+-----------+-------------+-------------+-------------+--------------
+  100 | cost     | m1+m4  | 8,184,851  | 25.100   | 6.110     | 6.500       | 7.100       | 4.400       | 4.395        
+  100 | survival | m1+m4  | 8,207,337  | 21.660   | 2.830     | 0.000       | 0.350       | 8.967       | 3.402        
+  200 | cost     | m1+m3  | 14,908,756 | 28.340   | 9.340     | 9.967       | 10.025      | 7.800       | 9.880        
+  200 | survival | m1+m3  | 14,953,837 | 24.290   | 5.455     | 0.033       | 3.150       | 13.950      | 7.238        
+  500 | cost     | m1+m2  | 36,071,427 | 25.770   | 6.770     | 8.527       | 6.830       | 4.933       | 22.998       
+  500 | survival | m1+m2  | 36,225,947 | 23.774   | 5.312     | 0.000       | 2.710       | 14.093      | 17.471       
+
+=== PHASE 4: cost-lives frontier at N=200 ===
+  [cache] extension_n200_alpha0_fac2_nd42
+  [solve] extension_n200_alpha0.5_fac2_nd42 (limit 1500s) ...
