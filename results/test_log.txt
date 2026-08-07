@@ -39,3 +39,10 @@
   PASS  objective == cost + ALPHA * sum rho*(1-S)  obj=3,898,381.6 vs 3,898,381.6
 
 [(32) row reduction is exact]
+  PASS  reduced (32) and full cumulative (32) give the same optimum  3720927.279787271 vs 3720927.279787271
+
+[emergent priority]
+  PASS  survival design: mean HOLD  H <= M <= L  H=0.00 M=0.35 L=8.97
+  PASS  survival design: mean TRT  H <= M <= L  H=18.47 M=19.32 L=27.97
+
+0 failure(s)
