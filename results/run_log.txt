@@ -1,14 +1,9 @@
 
 === PHASE 1: baseline i-SHIPMENT (no survival, no queue, ND=18) ===
-  [solve] baseline_n100_alpha0_fac2_nd18 (limit 900s) ...
-[solver] Gurobi refused the model (Model too large for size-limited license; visit https://gurobi.com/unrestricted for more information). This container only carries the pip size-limited Gurobi licence (2000 vars / 2000 constraints); every model in this study is far larger, so HiGHS (open-source MILP, same Pyomo interface) was used instead. Re-run with a full Gurobi licence to use Gurobi.
-    -> optimal obj=12813589.8 wall=21.6s
-  [solve] baseline_n200_alpha0_fac2_nd18 (limit 900s) ...
-    -> optimal obj=26964290.0 wall=16.1s
-  [solve] baseline_n500_alpha0_fac2_nd18 (limit 900s) ...
-    -> infeasible obj=None wall=96.7s
-  [solve] baseline_n500_alpha0_fac6_nd18 (limit 900s) ...
-    -> optimal obj=62242146.8 wall=282.0s
+  [cache] baseline_n100_alpha0_fac2_nd18
+  [cache] baseline_n200_alpha0_fac2_nd18
+  [cache] baseline_n500_alpha0_fac2_nd18
+  [cache] baseline_n500_alpha0_fac6_nd18
   n   | status     | opened | capacity_opened | total_cost | mean_TRT | expected_lost | diagnostic_CON1_relaxed | diagnostic_opened
   ----+------------+--------+-----------------+------------+----------+---------------+-------------------------+------------------
   100 | optimal    | m1+m3  | 14              | 12,813,590 | 18.000   | 3.147         |                         |                  
@@ -17,7 +12,4 @@
 
 === PHASE 2: queue + survival extension (eqs 32-35, ND=42) ===
   [solve] extension_n100_alpha100000_fac2_nd42 (limit 900s) ...
-    -> optimal obj=9054619.15 wall=76.7s
-  [solve] extension_n200_alpha100000_fac2_nd42 (limit 2400s) ...
-    -> optimal obj=16723412.63 wall=1137.7s
-  [solve] extension_n500_alpha100000_fac2_nd42 (limit 5400s) ...
+[solver] Gurobi is requested first for every solve, but refused the study-scale models: "Model too large for size-limited license; visit https://gurobi.com/unrestricted for more information". This container only carries the pip size-limited Gurobi licence (2000 variables / 2000 constraints) and every model here is far larger, so those solves fall back to HiGHS (open-source MILP, same Pyomo interface). Re-run with a full Gurobi licence to use Gurobi throughout.

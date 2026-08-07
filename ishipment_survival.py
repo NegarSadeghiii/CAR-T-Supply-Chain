@@ -419,6 +419,26 @@ def build_extension(net, inst, alpha, nd=ND_EXT, max_facilities=MAX_FACILITIES,
             if terms:
                 mdl.con.add(sum(terms) <= net.FCAP[m])
 
+    # Aggregate throughput cuts.  These are IMPLIED by (34) -- they do not
+    # change the feasible set or the optimum, they only tighten the root LP
+    # bound, which is what makes N = 500 provable.
+    #
+    # Derivation: (34) allows at most FCAP[m] starts at facility m in any 7
+    # consecutive days.  Chop the union of the per-patient start windows into
+    # K disjoint 7-day blocks; every start falls in exactly one block, so
+    #        (number of starts)  <=  K * sum_m FCAP[m] * E1[m].
+    # Applying the same argument to every prefix [t_lo, T] gives one cut per T,
+    # counting only the patients whose start window ENDS at or before T (those
+    # cannot be pushed past T).
+    t_lo = min(win[pid][0] for pid in P)
+    t_hi = max(win[pid][-1] for pid in P)
+    cap_expr = sum(net.FCAP[m] * mdl.E1[m] for m in net.m)
+    for T in list(range(t_lo + net.TMFE - 1, t_hi, net.TMFE)) + [t_hi]:
+        forced = sum(1 for pid in P if win[pid][-1] <= T)
+        if forced:
+            k = math.ceil((T - t_lo + 1) / net.TMFE)
+            mdl.con.add(k * cap_expr >= forced)
+
     # Symmetry breaking among fully interchangeable patients.  Two patients with
     # the same leukapheresis site, the same risk tier and the same arrival day
     # have identical costs, identical arrival dynamics and identical survival
