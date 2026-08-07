@@ -8,3 +8,12 @@
   [solve] baseline_n500_alpha0_fac2_nd18 (limit 900s) ...
     -> infeasible obj=None wall=96.7s
   [solve] baseline_n500_alpha0_fac6_nd18 (limit 900s) ...
+    -> optimal obj=62242146.8 wall=282.0s
+  n   | status     | opened | capacity_opened | total_cost | mean_TRT | expected_lost | diagnostic_CON1_relaxed | diagnostic_opened
+  ----+------------+--------+-----------------+------------+----------+---------------+-------------------------+------------------
+  100 | optimal    | m1+m3  | 14              | 12,813,590 | 18.000   | 3.147         |                         |                  
+  200 | optimal    | m2     | 31              | 26,964,290 | 18.000   | 6.294         |                         |                  
+  500 | infeasible |        |                 |            |          |               | optimal                 | m1+m2+m4+m5      
+
+=== PHASE 2: queue + survival extension (eqs 32-35, ND=42) ===
+  [solve] extension_n100_alpha100000_fac2_nd42 (limit 900s) ...

@@ -1,0 +1,4 @@
+n,arrivals_per_day,model,ND,max_facilities,status,solver,wall_s,variables,constraints,opened,n_opened,capacity_opened,facility_cost,transport_cost,total_cost,mean_TRT,max_TRT,mean_survival,expected_lost,weighted_loss,TRT_distribution
+100,1.136,baseline,18,2,optimal,highs,21.6,2554,4119,m1+m3,2,14,10526939.8,307850.0,12813589.8,18.0,18,0.96853,3.147,8.053,"{""18"": 100}"
+200,2.273,baseline,18,2,optimal,highs,16.1,5054,7619,m2,1,31,22557730.0,448960.0,26964290.0,18.0,18,0.96853,6.294,16.107,"{""18"": 200}"
+500,5.682,baseline,18,2,infeasible,highs,96.7,12554,18119,,,,,,,,,,,,
