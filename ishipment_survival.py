@@ -99,7 +99,7 @@ class SolveOutcome:
                 "note": self.note}
 
 
-_SOLVER_CACHE = {"name": None, "note": ""}
+_SOLVER_CACHE = {"name": None, "note": "", "used": set()}
 
 
 def _try_gurobi(model, time_limit, mip_gap):
@@ -118,25 +118,27 @@ def solve(model, time_limit=DEFAULT_TIME_LIMIT, mip_gap=DEFAULT_MIP_GAP,
     """Solve with Gurobi; fall back to HiGHS if the Gurobi licence is too small."""
     t0 = time.time()
 
-    if solver_pref == "gurobi" and _SOLVER_CACHE["name"] in (None, "gurobi"):
+    if solver_pref == "gurobi":
         try:
             res = _try_gurobi(model, time_limit, mip_gap)
-            _SOLVER_CACHE["name"] = "gurobi"
+            _SOLVER_CACHE["used"].add("gurobi")
+            _SOLVER_CACHE["name"] = _SOLVER_CACHE["name"] or "gurobi"
             return _interpret_pyomo(res, model, time.time() - t0, "gurobi")
         except Exception as exc:                       # noqa: BLE001
-            msg = str(exc)
-            if _SOLVER_CACHE["name"] is None:
-                _SOLVER_CACHE["name"] = "highs"
+            # Gurobi is always asked first.  The only expected failure here is
+            # the pip size-limited licence (2000 vars / 2000 constraints), which
+            # every study-scale model exceeds; fall back to HiGHS and say so.
+            msg = str(exc).strip().splitlines()[0][:160]
+            if not _SOLVER_CACHE["note"]:
                 _SOLVER_CACHE["note"] = (
-                    "Gurobi refused the model (%s). This container only carries "
-                    "the pip size-limited Gurobi licence (2000 vars / 2000 "
-                    "constraints); every model in this study is far larger, so "
-                    "HiGHS (open-source MILP, same Pyomo interface) was used "
-                    "instead. Re-run with a full Gurobi licence to use Gurobi."
-                    % msg.strip().splitlines()[0][:160])
+                    "Gurobi is requested first for every solve, but refused the "
+                    "study-scale models: \"%s\". This container only carries the "
+                    "pip size-limited Gurobi licence (2000 variables / 2000 "
+                    "constraints) and every model here is far larger, so those "
+                    "solves fall back to HiGHS (open-source MILP, same Pyomo "
+                    "interface). Re-run with a full Gurobi licence to use "
+                    "Gurobi throughout." % msg)
                 print("[solver] " + _SOLVER_CACHE["note"], file=sys.stderr)
-            else:
-                raise
 
     from pyomo.contrib.appsi.solvers import Highs
     opt = Highs()
@@ -159,6 +161,7 @@ def solve(model, time_limit=DEFAULT_TIME_LIMIT, mip_gap=DEFAULT_MIP_GAP,
                                     solver="highs", note=str(exc2)[:300])
         return SolveOutcome("error", wall=time.time() - t0, solver="highs",
                             note=msg[:300])
+    _SOLVER_CACHE["used"].add("highs")
     return _interpret_appsi(res, model, time.time() - t0, "highs")
 
 
@@ -586,7 +589,7 @@ def _cache_key(kind, n, alpha, max_fac, nd):
 
 def run_design(net, inst, kind, alpha=0.0, max_fac=MAX_FACILITIES, nd=None,
                time_limit=DEFAULT_TIME_LIMIT, mip_gap=DEFAULT_MIP_GAP,
-               use_cache=True, sigma=None):
+               use_cache=True, sigma=None, solver_pref="gurobi"):
     """Build + solve one design, with an on-disk cache of the outcome."""
     nd = nd or (ND_BASELINE if kind == "baseline" else ND_EXT)
     key = _cache_key(kind, inst.n, alpha, max_fac, nd)
@@ -605,7 +608,8 @@ def run_design(net, inst, kind, alpha=0.0, max_fac=MAX_FACILITIES, nd=None,
     from pyomo.environ import Var as _V, Constraint as _C
     size = {"variables": sum(len(v) for v in mdl.component_objects(_V)),
             "constraints": sum(len(c) for c in mdl.component_objects(_C))}
-    out = solve(mdl, time_limit=time_limit, mip_gap=mip_gap)
+    out = solve(mdl, time_limit=time_limit, mip_gap=mip_gap,
+                solver_pref=solver_pref)
     blob = {"key": key, "kind": kind, "n": inst.n, "alpha": alpha,
             "max_facilities": max_fac, "ND": nd, "size": size,
             "solve": out.as_dict()}
@@ -1008,8 +1012,8 @@ def main(argv=None):
     if args.phase in ("4", "all"):
         out["phase4"] = phase4(net, insts, args.frontier_scale,
                                args.frontier_time_limit, args)
-    out["solver_note"] = _SOLVER_CACHE["note"] or "Gurobi"
-    out["solver_used"] = _SOLVER_CACHE["name"] or "gurobi"
+    out["solver_note"] = _SOLVER_CACHE["note"] or "Gurobi throughout."
+    out["solver_used"] = sorted(_SOLVER_CACHE["used"]) or ["gurobi"]
     write_json(os.path.join(RESULTS, "study_summary.json"), out)
     print("\nWrote results to", RESULTS)
     return 0

@@ -74,6 +74,8 @@ def main():
     verif = read_json("verification_baseline_equivalence.json", {})
 
     solver_used = study.get("solver_used", "?")
+    if isinstance(solver_used, list):
+        solver_used = "+".join(solver_used)
     solver_note = study.get("solver_note", "")
 
     L = []
@@ -98,7 +100,7 @@ def main():
     A("```bash\npython ishipment_survival.py --phase all      # all four phases\n"
       "python verify_baseline.py                    # baseline equivalence check\n"
       "python make_readme.py                        # regenerate this file\n```\n")
-    if solver_used != "gurobi":
+    if "highs" in solver_used:
         A("\n> **Solver note.** The study is written for Gurobi and asks for it "
           "first on every solve. " + solver_note + "\n>\n> Every model, every "
           "constraint and every reported number is solver-independent; only the "

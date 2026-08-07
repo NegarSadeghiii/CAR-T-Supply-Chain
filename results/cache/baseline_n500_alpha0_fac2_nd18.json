@@ -1,0 +1,21 @@
+{
+ "key": "baseline_n500_alpha0_fac2_nd18",
+ "kind": "baseline",
+ "n": 500,
+ "alpha": 0.0,
+ "max_facilities": 2,
+ "ND": 18,
+ "size": {
+  "variables": 12554,
+  "constraints": 18119
+ },
+ "solve": {
+  "status": "infeasible",
+  "objective": null,
+  "bound": null,
+  "gap": null,
+  "wall_s": 96.66511678695679,
+  "solver": "highs",
+  "note": ""
+ }
+}

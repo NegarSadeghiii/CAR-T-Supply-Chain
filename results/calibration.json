@@ -1,0 +1,35 @@
+{
+ "gamma": 1.0,
+ "eta": 42,
+ "kappa": 1.0,
+ "tier_mix": {
+  "H": 0.3,
+  "M": 0.4,
+  "L": 0.3
+ },
+ "w_risk": {
+  "H": 0.15,
+  "M": 0.05,
+  "L": 0.02
+ },
+ "rho": {
+  "H": 3.0,
+  "M": 2.0,
+  "L": 1.0
+ },
+ "survival_formula": "S_u(t) = (1 - w_u) ** (t / 42)",
+ "TRT_support_days": [
+  17,
+  42
+ ],
+ "ND_baseline": 18,
+ "ND_extension": 42,
+ "seed": 0,
+ "arrival_window": [
+  1,
+  88
+ ],
+ "horizon": 130,
+ "max_facilities_default": 2,
+ "alpha_survival_design": 100000.0
+}

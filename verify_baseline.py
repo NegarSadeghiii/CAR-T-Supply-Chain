@@ -233,6 +233,9 @@ def main():
                     help="size of the equivalence instance (the full-index "
                          "model is only buildable at small N)")
     ap.add_argument("--time-limit", type=int, default=1800)
+    ap.add_argument("--solver", default="highs", choices=["gurobi", "highs"],
+                    help="both models must use the SAME engine for the "
+                         "comparison to be apples-to-apples")
     args = ap.parse_args()
 
     dat = "Data200_profileA.dat"
@@ -251,7 +254,7 @@ def main():
 
     print("[1/2] index-reduced baseline ...")
     red = ish.build_baseline(net, inst)
-    r1 = ish.solve(red, time_limit=args.time_limit)
+    r1 = ish.solve(red, time_limit=args.time_limit, solver_pref=args.solver)
     rows_r, sum_r = ish.extract(red, inst, net)
     trt_red = dict(sorted(Counter(r["TRT"] for r in rows_r).items()))
     print("     status=%s obj=%.2f opened=%s TRT=%s"
@@ -262,7 +265,7 @@ def main():
     nv = sum(len(v) for v in full.component_objects(Var))
     nc = sum(len(c) for c in full.component_objects(Constraint))
     print(f"     full-index size: {nv:,} variables / {nc:,} constraints")
-    r2 = ish.solve(full, time_limit=args.time_limit)
+    r2 = ish.solve(full, time_limit=args.time_limit, solver_pref=args.solver)
     trt_full = dict(sorted(Counter(int(round(value(full.TRT[p])))
                                    for p in full.p).items()))
     opened_full = [m for m in full.m if value(full.E1[m]) > 0.5]
