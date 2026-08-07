@@ -46,3 +46,43 @@
 === PHASE 4: cost-lives frontier at N=200 ===
   [cache] extension_n200_alpha0_fac2_nd42
   [solve] extension_n200_alpha0.5_fac2_nd42 (limit 1500s) ...
+    -> optimal obj=14910026.44 wall=266.8s
+  [solve] extension_n200_alpha1_fac2_nd42 (limit 1500s) ...
+    -> optimal obj=14908774.93 wall=201.3s
+  [solve] extension_n200_alpha2_fac2_nd42 (limit 1500s) ...
+    -> optimal obj=14910055.04 wall=199.0s
+  [solve] extension_n200_alpha5_fac2_nd42 (limit 1500s) ...
+    -> optimal obj=14908851.27 wall=143.3s
+  [solve] extension_n200_alpha10_fac2_nd42 (limit 1500s) ...
+    -> optimal obj=14908946.76 wall=146.4s
+  [solve] extension_n200_alpha50_fac2_nd42 (limit 1500s) ...
+    -> optimal obj=14910972.25 wall=165.1s
+  [solve] extension_n200_alpha100_fac2_nd42 (limit 1500s) ...
+    -> optimal obj=14910665.17 wall=128.4s
+  [solve] extension_n200_alpha1000_fac2_nd42 (limit 1500s) ...
+    -> optimal obj=14929225.66 wall=140.7s
+  [solve] extension_n200_alpha10000_fac2_nd42 (limit 1500s) ...
+    -> optimal obj=15094341.64 wall=120.7s
+  [cache] extension_n200_alpha100000_fac2_nd42
+  [solve] extension_n200_alpha1e+06_fac2_nd42 (limit 1500s) ...
+    -> optimal obj=31617739.34 wall=1062.9s
+  [solve] extension_n200_alpha1e+07_fac2_nd42 (limit 1500s) ...
+    -> optimal obj=173470340.12 wall=138.8s
+  [plot] /home/user/CAR-T-Supply-Chain/results/phase4_frontier_N200.png
+  alpha      | opened | total_cost | expected_lost | expected_lost_H | mean_HOLD_H | mean_HOLD_L
+  -----------+--------+------------+---------------+-----------------+-------------+------------
+  0          | m1+m3  | 14,908,756 | 9.880         | 6.331           | 9.967       | 7.800      
+  0.500      | m1+m3  | 14,910,017 | 7.819         | 4.613           | 1.733       | 14.733     
+  1          | m1+m3  | 14,908,756 | 7.738         | 4.598           | 1.667       | 13.917     
+  2          | m1+m3  | 14,910,017 | 7.738         | 4.581           | 1.583       | 13.717     
+  5          | m1+m3  | 14,908,756 | 7.728         | 4.584           | 1.600       | 14.017     
+  10         | m1+m3  | 14,908,756 | 7.729         | 4.584           | 1.600       | 14.050     
+  50         | m1+m3  | 14,910,017 | 7.736         | 4.581           | 1.583       | 13.983     
+  100.000    | m1+m3  | 14,908,756 | 7.727         | 4.584           | 1.600       | 13.983     
+  1,000.000  | m1+m3  | 14,910,017 | 7.791         | 4.588           | 1.617       | 14.567     
+  10,000     | m1+m3  | 14,911,420 | 7.495         | 4.260           | 0.033       | 14.483     
+  100,000    | m1+m3  | 14,953,837 | 7.238         | 4.170           | 0.033       | 13.950     
+  1,000,000  | m1+m3  | 15,256,058 | 6.735         | 3.838           | 0.000       | 14.467     
+  10,000,000 | m3+m6  | 20,120,878 | 6.038         | 3.820           | 0.000       | 2.217      
+
+Wrote results to /home/user/CAR-T-Supply-Chain/results

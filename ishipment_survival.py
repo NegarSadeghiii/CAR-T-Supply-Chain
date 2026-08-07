@@ -99,6 +99,14 @@ class SolveOutcome:
                 "note": self.note}
 
 
+GUROBI_FALLBACK_NOTE = (
+    "Gurobi is requested first on every solve, but refuses the study-scale "
+    "models: \"Model too large for size-limited license\". This container "
+    "carries only the pip size-limited Gurobi licence (2000 variables / 2000 "
+    "constraints) and every model here is far larger, so those solves fall back "
+    "to HiGHS (open-source MILP, driven through the same Pyomo interface). "
+    "Re-run with a full Gurobi licence to use Gurobi throughout.")
+
 _SOLVER_CACHE = {"name": None, "note": "", "used": set()}
 
 
@@ -130,15 +138,9 @@ def solve(model, time_limit=DEFAULT_TIME_LIMIT, mip_gap=DEFAULT_MIP_GAP,
             # every study-scale model exceeds; fall back to HiGHS and say so.
             msg = str(exc).strip().splitlines()[0][:160]
             if not _SOLVER_CACHE["note"]:
-                _SOLVER_CACHE["note"] = (
-                    "Gurobi is requested first for every solve, but refused the "
-                    "study-scale models: \"%s\". This container only carries the "
-                    "pip size-limited Gurobi licence (2000 variables / 2000 "
-                    "constraints) and every model here is far larger, so those "
-                    "solves fall back to HiGHS (open-source MILP, same Pyomo "
-                    "interface). Re-run with a full Gurobi licence to use "
-                    "Gurobi throughout." % msg)
-                print("[solver] " + _SOLVER_CACHE["note"], file=sys.stderr)
+                _SOLVER_CACHE["note"] = GUROBI_FALLBACK_NOTE
+                print("[solver] %s (first refusal: %s)"
+                      % (GUROBI_FALLBACK_NOTE, msg), file=sys.stderr)
 
     from pyomo.contrib.appsi.solvers import Highs
     opt = Highs()
@@ -582,7 +584,14 @@ def write_csv(path, rows, fieldnames=None):
     if not rows:
         open(path, "w").write("")
         return
-    fieldnames = fieldnames or list(rows[0].keys())
+    if fieldnames is None:
+        # union of every row's keys, first-seen order -- taking only rows[0]'s
+        # keys silently drops columns that appear on later rows
+        fieldnames = []
+        for r in rows:
+            for k in r:
+                if k not in fieldnames:
+                    fieldnames.append(k)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fieldnames)
@@ -616,6 +625,7 @@ def run_design(net, inst, kind, alpha=0.0, max_fac=MAX_FACILITIES, nd=None,
     path = os.path.join(CACHE, key + ".json")
     if use_cache and os.path.exists(path):
         blob = json.load(open(path))
+        _SOLVER_CACHE["used"].add(blob.get("solve", {}).get("solver", "?"))
         print(f"  [cache] {key}")
         return blob
 
@@ -910,29 +920,61 @@ def _plot_frontier(rows, scale):
     lostH = [r["expected_lost_H"] for r in pts]
     alph = [r["alpha"] for r in pts]
 
-    fig, ax = plt.subplots(1, 2, figsize=(13, 5.2))
+    fig, ax = plt.subplots(1, 2, figsize=(13.5, 5.4))
 
-    order = sorted(range(len(pts)), key=lambda i: lost[i])
+    # ---- left panel: the frontier itself --------------------------------
+    order = sorted(range(len(pts)), key=lambda i: (lost[i], cost[i]))
     ax[0].plot([lost[i] for i in order], [cost[i] for i in order],
-               "-o", color="#1f77b4", zorder=2)
-    ax[0].scatter(lostH, cost, marker="s", color="#d62728", zorder=3,
-                  label="high-risk tier only")
-    for i, r in enumerate(pts):
-        ax[0].annotate(f"α={r['alpha']:g}", (lost[i], cost[i]),
-                       textcoords="offset points", xytext=(6, 5), fontsize=8)
-    ax[0].set_xlabel("Expected patients lost  Σ(1 − S[p])")
-    ax[0].set_ylabel("Total supply-chain cost  [$M]")
-    ax[0].set_title(f"Cost–lives frontier, N = {scale}")
-    ax[0].grid(alpha=.3)
-    ax[0].legend(fontsize=8)
+               "-o", color="#1f77b4", zorder=2, label="all patients")
+    ax[0].plot(lostH, cost, "s", color="#d62728", zorder=3, ms=5,
+               label="high-risk tier only")
 
+    # annotate only points that are visually separated, plus the endpoints,
+    # and summarise the degenerate cluster with a single label
+    last = None
+    cluster = []
+    for i in sorted(range(len(pts)), key=lambda i: lost[i]):
+        far = last is None or abs(lost[i] - lost[last]) > 0.18 * (
+            max(lost) - min(lost) + 1e-9)
+        if far or i in (0, len(pts) - 1):
+            ax[0].annotate(f"$\\alpha$={alph[i]:g}", (lost[i], cost[i]),
+                           textcoords="offset points", xytext=(7, 6), fontsize=8)
+            last = i
+        else:
+            cluster.append(i)
+    if cluster:
+        i = cluster[len(cluster) // 2]
+        lo, hi = min(alph[k] for k in cluster), max(alph[k] for k in cluster)
+        ax[0].annotate(f"$\\alpha$ = {lo:g} ... {hi:g}",
+                       (lost[i], cost[i]), textcoords="offset points",
+                       xytext=(10, -26), fontsize=8, color="#555555",
+                       arrowprops=dict(arrowstyle="-", color="#999999", lw=.7))
+
+    ax[0].set_xlabel("Expected patients lost   $\\Sigma_p\\,(1 - S[p])$")
+    ax[0].set_ylabel("Total supply-chain cost  [$M]")
+    ax[0].set_title(f"Cost-lives frontier, N = {scale}")
+    ax[0].grid(alpha=.3)
+    ax[0].legend(fontsize=8, loc="center right")
+    ax[0].margins(x=.16, y=.12)
+
+    # ---- right panel: response to ALPHA ---------------------------------
     a_pos = [max(a, 1e-2) for a in alph]
-    ax[1].semilogx(a_pos, lost, "-o", label="all patients", color="#1f77b4")
-    ax[1].semilogx(a_pos, lostH, "-s", label="high-risk tier", color="#d62728")
+    ax[1].semilogx(a_pos, lost, "-o", label="E[lost], all patients",
+                   color="#1f77b4")
+    ax[1].semilogx(a_pos, lostH, "-s", label="E[lost], high-risk tier",
+                   color="#d62728")
     ax2 = ax[1].twinx()
     ax2.semilogx(a_pos, cost, "--^", color="#2ca02c", label="total cost [$M]")
     ax2.set_ylabel("Total cost [$M]", color="#2ca02c")
-    ax[1].set_xlabel("ALPHA  (α = 0 plotted at 1e-2)")
+    ax2.tick_params(axis="y", labelcolor="#2ca02c")
+    flips = [i for i in range(1, len(pts))
+             if pts[i]["opened"] != pts[i - 1]["opened"]]
+    for i in flips:
+        ax[1].axvline(a_pos[i], color="#888888", ls=":", lw=1)
+        ax[1].annotate(f"network flips\nto {pts[i]['opened']}", (a_pos[i], max(lost)),
+                       textcoords="offset points", xytext=(-78, -14), fontsize=8,
+                       color="#555555", ha="left")
+    ax[1].set_xlabel("ALPHA   ($\\alpha$ = 0 plotted at $10^{-2}$)")
     ax[1].set_ylabel("Expected patients lost")
     ax[1].set_title("Effect of the clinical-loss weight")
     ax[1].grid(alpha=.3)
@@ -963,7 +1005,8 @@ def _quantile(xs, q):
         return None
     k = (len(xs) - 1) * q
     lo, hi = math.floor(k), math.ceil(k)
-    return xs[lo] if lo == hi else xs[lo] + (xs[hi] - xs[lo]) * (k - lo)
+    return float(xs[lo]) if lo == hi else round(
+        xs[lo] + (xs[hi] - xs[lo]) * (k - lo), 2)
 
 
 def _print_table(rows, cols):
@@ -1032,8 +1075,11 @@ def main(argv=None):
     if args.phase in ("4", "all"):
         out["phase4"] = phase4(net, insts, args.frontier_scale,
                                args.frontier_time_limit, args)
+    used = sorted(x for x in _SOLVER_CACHE["used"] if x and x != "?")
+    if "highs" in used and not _SOLVER_CACHE["note"]:
+        _SOLVER_CACHE["note"] = GUROBI_FALLBACK_NOTE
     out["solver_note"] = _SOLVER_CACHE["note"] or "Gurobi throughout."
-    out["solver_used"] = sorted(_SOLVER_CACHE["used"]) or ["gurobi"]
+    out["solver_used"] = used or ["gurobi"]
     write_json(os.path.join(RESULTS, "study_summary.json"), out)
     print("\nWrote results to", RESULTS)
     return 0
