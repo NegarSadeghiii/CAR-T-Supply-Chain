@@ -1,4 +1,4 @@
 n,arrivals_per_day,model,ND,alpha,max_facilities,status,solver,mip_gap,wall_s,variables,constraints,opened,capacity_opened,total_cost,mean_TRT,mean_HOLD,max_HOLD,mean_survival,expected_lost
-100,1.136,extension,42,100000.0,2,optimal,highs,2.8e-05,76.7,21154,6071,m1+m4,8,8207336.8,21.66,2.83,23,0.96598,3.402
-200,2.273,extension,42,100000.0,2,optimal,highs,9.4e-05,1137.7,42254,11417,m1+m3,14,14952304.8,24.29,5.45,23,0.9638,7.24
-500,5.682,extension,42,100000.0,2,feasible,highs,0.36698,5406.6,105554,27526,m1+m2,35,36267976.9,23.828,5.422,24,0.96483,17.584
+100,1.136,extension,42,100000.0,2,optimal,highs,1e-06,27.4,21154,6085,m1+m4,8,8207336.8,21.66,2.83,23,0.96598,3.402
+200,2.273,extension,42,100000.0,2,optimal,highs,9.9e-05,276.5,42254,11431,m1+m3,14,14953836.8,24.29,5.455,23,0.96381,7.238
+500,5.682,extension,42,100000.0,2,optimal,highs,7.8e-05,1959.7,105554,27540,m1+m2,35,36225946.9,23.774,5.312,24,0.96506,17.471
