@@ -212,11 +212,15 @@ def build_figure(sweeps, util_panels, path):
                 else:
                     clusters.append([(x, y), [nd]])
             dx, dy, ha = (7, 8, "left") if key == "cost" else (-7, -15, "right")
-            for (x, y), nds_ in clusters:
+            clusters.sort(key=lambda c: c[0][0])
+            for i, ((x, y), nds_) in enumerate(clusters):
+                # stagger consecutive labels so neighbouring ND markers on the
+                # same near-horizontal stretch cannot run into each other
+                step = 11 if i % 2 else 0
                 ax.annotate("ND=" + ",".join(str(v) for v in sorted(nds_)),
                             (x, y), textcoords="offset points",
-                            xytext=(dx, dy), fontsize=6.5, ha=ha,
-                            color=SCEN_COLOR[key])
+                            xytext=(dx, dy + (step if dy > 0 else -step)),
+                            fontsize=6.5, ha=ha, color=SCEN_COLOR[key])
 
         ax.set_xlabel("Achieved mean return time  [days]")
         ax.set_ylabel("Average cost per therapy  [$]")
