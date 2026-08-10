@@ -20,7 +20,12 @@ A second, independent extension lives in this repository. It keeps
   `S_u(t) = (1 - w_u)**(t/42)`;
 * the objective `min Z = (original i-SHIPMENT cost) + ALPHA * Σ_p ρ_u(p)·(1 − S[p])`.
 
-The study runs at demand scales of 100 / 200 / 500 patients.
+The study runs at demand scales of 100 / 200 / 500 patients. CON1 follows
+i-SHIPMENT's own demand-dependent configuration - the centralised 2-facility
+network at N = 100/200, relaxed to 3 facilities at N = 500 - so the baseline is
+never compared against the extension on a tighter facility budget than the paper
+would give it. At N = 500 the headline result is **capacity substitution**: the
+baseline needs three plants, the extension serves the same 500 patients on two.
 
 | file | role |
 |---|---|

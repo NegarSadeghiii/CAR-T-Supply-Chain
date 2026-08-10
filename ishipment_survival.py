@@ -63,7 +63,29 @@ RESULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
 # ---------------------------------------------------------------------------
 ND_BASELINE = 18          # baseline maximum turnaround time
 ND_EXT = 42               # eq. (31): relaxed turnaround cap for the extension
-MAX_FACILITIES = 2        # CON1 (centralised network)
+MAX_FACILITIES = 2        # CON1, centralised network (the default)
+
+# i-SHIPMENT does not hold CON1 fixed across demand: it runs the centralised
+# 2-facility configuration at moderate demand and relaxes to 3 facilities at
+# high demand.  This study matches that configuration, so the baseline is given
+# the same budget the paper would give it before being compared with the
+# extension.  Overridable with --max-facilities.
+MAX_FACILITIES_BY_SCALE = {100: 2, 200: 2, 500: 3}
+
+
+def max_facilities_for(n, override=None):
+    """CON1 for demand scale n -- matches i-SHIPMENT's centralised vs
+    high-demand configuration (2 facilities at N = 100/200, 3 at N = 500)."""
+    if override:
+        return int(override)
+    return MAX_FACILITIES_BY_SCALE.get(n, MAX_FACILITIES)
+
+
+def caps_for(n, override=None):
+    """Facility caps to report at scale n: the configured one first, plus the
+    strict centralised cap when they differ (so both are on the record)."""
+    primary = max_facilities_for(n, override)
+    return [primary] if primary == MAX_FACILITIES else [primary, MAX_FACILITIES]
 
 # Cost-equivalence weight used for the "survival design" of Phase 3.
 # The objective is  Z = cost[$] + ALPHA * sum_p rho_u(p) * (1 - S[p]).
@@ -672,6 +694,10 @@ def phase0_setup(net, dat, scales):
         "ND_baseline": ND_BASELINE, "ND_extension": ND_EXT,
         "seed": cd.SEED, "arrival_window": list(cd.ARRIVAL_WINDOW),
         "horizon": cd.HORIZON, "max_facilities_default": MAX_FACILITIES,
+        "max_facilities_by_scale": MAX_FACILITIES_BY_SCALE,
+        "max_facilities_note": (
+            "matches i-SHIPMENT's centralized vs high-demand configuration: "
+            "2 facilities at N=100/200, relaxed to 3 at N=500"),
         "alpha_survival_design": ALPHA_SURVIVAL,
     })
     insts = {}
@@ -703,11 +729,12 @@ def phase1(net, insts, time_limit, args):
     print("\n=== PHASE 1: baseline i-SHIPMENT (no survival, no queue, ND=18) ===")
     table, tiers = [], []
     for n, inst in sorted(insts.items()):
-        blob = run_design(net, inst, "baseline", time_limit=time_limit,
-                          use_cache=not args.no_cache)
+        cap = max_facilities_for(n, args.max_facilities)
+        blob = run_design(net, inst, "baseline", max_fac=cap,
+                          time_limit=time_limit, use_cache=not args.no_cache)
         row = {"n": n, "arrivals_per_day": round(inst.density, 3),
                "model": "baseline", "ND": ND_BASELINE,
-               "max_facilities": MAX_FACILITIES,
+               "max_facilities": cap,
                "status": blob["solve"]["status"], "solver": blob["solve"]["solver"],
                "wall_s": round(blob["solve"]["wall_s"] or 0, 1),
                "variables": blob["size"]["variables"],
@@ -732,7 +759,7 @@ def phase1(net, insts, time_limit, args):
                 tr["n_patients_total"] = n
                 tiers.append(tr)
         else:
-            # Diagnostic: what does the no-queue model NEED to become feasible?
+            # The configured cap is itself infeasible: show what it would take.
             diag = run_design(net, inst, "baseline", max_fac=len(net.m),
                               time_limit=time_limit, use_cache=not args.no_cache)
             row["diagnostic_CON1_relaxed"] = diag["solve"]["status"]
@@ -741,13 +768,27 @@ def phase1(net, insts, time_limit, args):
                 row["diagnostic_opened"] = "+".join(d["opened"])
                 row["diagnostic_capacity"] = d["capacity_opened"]
                 row["diagnostic_total_cost"] = round(d["total_cost"], 2)
+
+        # Where the scale runs a relaxed CON1, also record what the strict
+        # centralised cap does -- documented as a diagnostic, not the headline.
+        if cap != MAX_FACILITIES:
+            strict = run_design(net, inst, "baseline", max_fac=MAX_FACILITIES,
+                                time_limit=time_limit,
+                                use_cache=not args.no_cache)
+            row[f"strict_CON1_{MAX_FACILITIES}_status"] = strict["solve"]["status"]
+            if "summary" in strict:
+                d = strict["summary"]
+                row[f"strict_CON1_{MAX_FACILITIES}_opened"] = "+".join(d["opened"])
+                row[f"strict_CON1_{MAX_FACILITIES}_total_cost"] = round(
+                    d["total_cost"], 2)
         table.append(row)
     write_csv(os.path.join(RESULTS, "phase1_baseline_by_scale.csv"), table)
     if tiers:
         write_csv(os.path.join(RESULTS, "phase1_baseline_by_tier.csv"), tiers)
-    _print_table(table, ["n", "status", "opened", "capacity_opened", "total_cost",
-                         "mean_TRT", "expected_lost", "diagnostic_CON1_relaxed",
-                         "diagnostic_opened"])
+    _print_table(table, ["n", "max_facilities", "status", "opened",
+                         "capacity_opened", "total_cost", "mean_TRT",
+                         "expected_lost", "strict_CON1_2_status",
+                         "diagnostic_CON1_relaxed", "diagnostic_opened"])
     return table
 
 
@@ -756,11 +797,14 @@ def phase2(net, insts, time_limits, args):
     print("\n=== PHASE 2: queue + survival extension (eqs 32-35, ND=42) ===")
     table = []
     for n, inst in sorted(insts.items()):
+      for cap in caps_for(n, args.max_facilities):
         blob = _extension_with_fallback(net, inst, ALPHA_SURVIVAL,
-                                        time_limits.get(n, DEFAULT_TIME_LIMIT), args)
+                                        time_limits.get(n, DEFAULT_TIME_LIMIT),
+                                        args, max_fac=cap)
         row = {"n": n, "arrivals_per_day": round(inst.density, 3),
                "model": "extension", "ND": ND_EXT, "alpha": ALPHA_SURVIVAL,
                "max_facilities": blob["max_facilities"],
+               "is_configured_cap": cap == max_facilities_for(n, args.max_facilities),
                "status": blob["solve"]["status"], "solver": blob["solve"]["solver"],
                "mip_gap": (None if blob["solve"]["gap"] is None
                            else round(blob["solve"]["gap"], 6)),
@@ -777,22 +821,27 @@ def phase2(net, insts, time_limits, args):
                         "max_HOLD": s["max_HOLD"],
                         "mean_survival": round(s["mean_survival"], 5),
                         "expected_lost": round(s["expected_lost"], 3)})
-            write_csv(os.path.join(RESULTS, f"phase2_patients_N{n}.csv"), blob["rows"])
+            suffix = "" if len(caps_for(n, args.max_facilities)) == 1 else f"_fac{cap}"
+            write_csv(os.path.join(RESULTS, f"phase2_patients_N{n}{suffix}.csv"),
+                      blob["rows"])
         table.append(row)
     write_csv(os.path.join(RESULTS, "phase2_extension_by_scale.csv"), table)
-    _print_table(table, ["n", "status", "opened", "capacity_opened", "total_cost",
-                         "mean_TRT", "mean_HOLD", "expected_lost"])
+    _print_table(table, ["n", "max_facilities", "status", "opened",
+                         "capacity_opened", "total_cost", "mean_TRT",
+                         "mean_HOLD", "expected_lost"])
     return table
 
 
-def _extension_with_fallback(net, inst, alpha, time_limit, args):
-    """Solve the extension; if CON1 <= 2 is infeasible, relax it and report."""
-    blob = run_design(net, inst, "extension", alpha=alpha,
+def _extension_with_fallback(net, inst, alpha, time_limit, args, max_fac=None):
+    """Solve the extension at the given CON1; if that is infeasible, relax and
+    report the relaxation."""
+    max_fac = max_fac or max_facilities_for(inst.n, args.max_facilities)
+    blob = run_design(net, inst, "extension", alpha=alpha, max_fac=max_fac,
                       time_limit=time_limit, mip_gap=args.mip_gap,
                       use_cache=not args.no_cache)
     if blob["solve"]["status"] in ("infeasible",):
-        print("    CON1<=2 infeasible at N=%d -> relaxing CON1 to <=%d"
-              % (inst.n, len(net.m)))
+        print("    CON1<=%d infeasible at N=%d -> relaxing CON1 to <=%d"
+              % (max_fac, inst.n, len(net.m)))
         blob = run_design(net, inst, "extension", alpha=alpha,
                           max_fac=len(net.m), time_limit=time_limit,
                           mip_gap=args.mip_gap, use_cache=not args.no_cache)
@@ -807,15 +856,23 @@ def phase3(net, insts, time_limits, args):
     for n, inst in sorted(insts.items()):
         tl = time_limits.get(n, DEFAULT_TIME_LIMIT)
         designs = [("cost", 0.0), ("survival", ALPHA_SURVIVAL)]
-        for label, alpha in designs:
-            blob = _extension_with_fallback(net, inst, alpha, tl, args)
+        caps = caps_for(n, args.max_facilities)
+        for cap in caps:
+          tagc = "" if len(caps) == 1 else f"_fac{cap}"
+          for label, alpha in designs:
+            blob = _extension_with_fallback(net, inst, alpha, tl, args,
+                                            max_fac=cap)
             if "summary" not in blob:
                 summary_rows.append({"n": n, "design": label, "alpha": alpha,
+                                     "max_facilities": cap,
                                      "status": blob["solve"]["status"]})
                 continue
             s = blob["summary"]
             summary_rows.append({
                 "n": n, "design": label, "alpha": alpha,
+                "max_facilities": cap,
+                "is_configured_cap": cap == max_facilities_for(
+                    n, args.max_facilities),
                 "status": blob["solve"]["status"],
                 "mip_gap": (None if blob["solve"]["gap"] is None
                             else round(blob["solve"]["gap"], 6)),
@@ -839,14 +896,17 @@ def phase3(net, insts, time_limits, args):
             })
             for tr in tier_table(blob["rows"], label):
                 tr["n_patients_total"] = n
+                tr["max_facilities"] = cap
                 tier_rows.append(tr)
-            write_csv(os.path.join(RESULTS, f"phase3_patients_N{n}_{label}.csv"),
+            write_csv(os.path.join(RESULTS,
+                                   f"phase3_patients_N{n}_{label}{tagc}.csv"),
                       blob["rows"])
             # hold distribution by tier
             for u in cd.TIER_ORDER:
                 holds = [r["hold"] for r in blob["rows"] if r["tier"] == u]
                 dist = _counter(holds)
-                hold_rows.append({"n": n, "design": label, "tier": u,
+                hold_rows.append({"n": n, "design": label,
+                                  "max_facilities": cap, "tier": u,
                                   "n_patients": len(holds),
                                   "mean_hold": round(statistics.fmean(holds), 3),
                                   "p50": statistics.median(holds),
@@ -859,9 +919,10 @@ def phase3(net, insts, time_limits, args):
     write_csv(os.path.join(RESULTS, "phase3_design_comparison.csv"), summary_rows)
     write_csv(os.path.join(RESULTS, "phase3_by_tier.csv"), tier_rows)
     write_csv(os.path.join(RESULTS, "phase3_hold_distribution.csv"), hold_rows)
-    _print_table(summary_rows, ["n", "design", "opened", "total_cost", "mean_TRT",
-                                "mean_HOLD", "mean_HOLD_H", "mean_HOLD_M",
-                                "mean_HOLD_L", "expected_lost"])
+    _print_table(summary_rows, ["n", "max_facilities", "design", "opened",
+                                "total_cost", "mean_TRT", "mean_HOLD",
+                                "mean_HOLD_H", "mean_HOLD_M", "mean_HOLD_L",
+                                "expected_lost"])
     return summary_rows, tier_rows, hold_rows
 
 
@@ -872,8 +933,10 @@ def phase4(net, insts, scale, time_limit, args):
     alphas = sorted(set(list(ALPHA_SWEEP_REQUESTED)
                         + (list(ALPHA_SWEEP_EXTENDED) if args.extended_sweep else [])))
     rows = []
+    cap4 = max_facilities_for(scale, args.max_facilities)
     for a in alphas:
-        blob = _extension_with_fallback(net, inst, float(a), time_limit, args)
+        blob = _extension_with_fallback(net, inst, float(a), time_limit, args,
+                                        max_fac=cap4)
         if "summary" not in blob:
             rows.append({"alpha": a, "status": blob["solve"]["status"]})
             continue
@@ -1044,6 +1107,10 @@ def main(argv=None):
                     help="0 = scale-dependent defaults")
     ap.add_argument("--frontier-time-limit", type=int, default=900)
     ap.add_argument("--mip-gap", type=float, default=DEFAULT_MIP_GAP)
+    ap.add_argument("--max-facilities", type=int, default=0,
+                    help="override CON1 for every scale; 0 (default) uses the "
+                         "demand-dependent i-SHIPMENT configuration "
+                         "(2 facilities at N=100/200, 3 at N=500)")
     ap.add_argument("--extended-sweep", action="store_true", default=True)
     ap.add_argument("--no-extended-sweep", dest="extended_sweep",
                     action="store_false")
