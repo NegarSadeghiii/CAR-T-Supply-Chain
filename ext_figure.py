@@ -131,10 +131,11 @@ def build_figure(sweeps, util_panels, path):
     plt.rcParams.update({"font.size": 9, "axes.titlesize": 10,
                          "axes.labelsize": 9, "hatch.linewidth": 0.6})
     fig, axes = plt.subplots(3, 2, figsize=(13.5, 13.0))
-    tags = iter("abcdef")
+    LETTER = [["a", "b"], ["c", "d"], ["e", "f"]]
 
-    def tag(ax, text):
-        ax.set_title(f"({next(tags)}) {text}", loc="left", fontweight="bold")
+    def tag(row, col, text):
+        axes[row][col].set_title(f"({LETTER[row][col]}) {text}", loc="left",
+                                 fontweight="bold")
 
     # ---- (a),(b) stacked cost-per-therapy bars ---------------------------
     for col, n in enumerate(sorted(sweeps)):
@@ -163,7 +164,7 @@ def build_figure(sweeps, util_panels, path):
         ax.set_ylabel("Cost per therapy  [$]")
         ax.grid(axis="y", alpha=.3, zorder=0)
         ax.set_axisbelow(True)
-        tag(ax, f"Cost breakdown per therapy, N = {n}")
+        tag(0, col, f"Cost breakdown per therapy, N = {n}")
         missing = [r for r in sweeps[n] if r.get("cost_per_therapy") is None]
         if missing:
             ax.text(.02, .96, "infeasible: " + ", ".join(
@@ -174,12 +175,15 @@ def build_figure(sweeps, util_panels, path):
                      label=c) for c in COMPONENTS]
     handles += [Patch(facecolor=SCEN_COLOR[k], label=f"{lab} ({k} design)")
                 for lab, k, _ in SCENARIOS]
-    axes[0][0].legend(handles=handles, fontsize=7.5, loc="lower right",
-                      ncol=2, framealpha=.95)
+    for col in range(min(2, len(sweeps))):
+        axes[0][col].legend(handles=handles, fontsize=7, loc="upper right",
+                            ncol=2, framealpha=.95)
+        axes[0][col].margins(y=.22)
 
     # ---- (c),(d) cost per therapy vs achieved mean return time -----------
     for col, n in enumerate(sorted(sweeps)):
         ax = axes[1][col]
+        all_pts = {}
         for label, key, _ in SCENARIOS:
             pts = sorted(((r["mean_return_time"], r["cost_per_therapy"], r["ND"])
                           for r in sweeps[n]
@@ -190,16 +194,36 @@ def build_figure(sweeps, util_panels, path):
             ax.plot([p[0] for p in pts], [p[1] for p in pts], "-o",
                     color=SCEN_COLOR[key], label=f"{label} ({key} design)",
                     ms=5, lw=1.8)
-            for x, y, nd in pts:
-                ax.annotate(f"ND={nd}", (x, y), textcoords="offset points",
-                            xytext=(5, 5), fontsize=6.5,
+            all_pts.setdefault(key, []).extend(pts)
+        # Several ND values often reach the identical schedule, so their points
+        # coincide. Cluster in normalised axis space and label each cluster once.
+        flat = [p for v in all_pts.values() for p in v]
+        if flat:
+            xr = max(p[0] for p in flat) - min(p[0] for p in flat) or 1
+            yr = max(p[1] for p in flat) - min(p[1] for p in flat) or 1
+        for key, pts in all_pts.items():
+            clusters = []
+            for x, y, nd in sorted(pts):
+                for cl in clusters:
+                    if (abs(x - cl[0][0]) / xr < .035
+                            and abs(y - cl[0][1]) / yr < .035):
+                        cl[1].append(nd)
+                        break
+                else:
+                    clusters.append([(x, y), [nd]])
+            dx, dy, ha = (7, 8, "left") if key == "cost" else (-7, -15, "right")
+            for (x, y), nds_ in clusters:
+                ax.annotate("ND=" + ",".join(str(v) for v in sorted(nds_)),
+                            (x, y), textcoords="offset points",
+                            xytext=(dx, dy), fontsize=6.5, ha=ha,
                             color=SCEN_COLOR[key])
+
         ax.set_xlabel("Achieved mean return time  [days]")
         ax.set_ylabel("Average cost per therapy  [$]")
         ax.grid(alpha=.3)
-        ax.legend(fontsize=7.5)
-        ax.margins(x=.12, y=.15)
-        tag(ax, f"Cost vs achieved return time, N = {n}")
+        ax.legend(fontsize=7.5, loc="upper right")
+        ax.margins(x=.14, y=.18)
+        tag(1, col, f"Cost vs achieved return time, N = {n}")
 
     # ---- (e),(f) facility utilisation over time --------------------------
     for col in range(2):
@@ -216,13 +240,21 @@ def build_figure(sweeps, util_panels, path):
                              edgecolor="white", linewidth=.3)
         for poly, m in zip(stack, opened):
             poly.set_hatch(FACILITY_HATCH[m])
+        for k in range(1, len(opened) + 1):
+            ax.axhline(100 * k, color="#666666", ls="--", lw=.7, alpha=.7,
+                       zorder=3)
         ax.set_xlabel("Time  [days]")
         ax.set_ylabel("Utilisation of opened facilities  [%, stacked]")
-        ax.set_xlim(1, max(days))
+        ax.set_xlim(1, max(p["days"][-1] for p in util_panels))
+        ax.set_ylim(0, 100 * max(len(p["opened"]) for p in util_panels) * 1.04)
         ax.grid(alpha=.3)
         ax.legend(fontsize=7.5, loc="upper right", title="facility",
                   title_fontsize=7.5)
-        tag(ax, title)
+        tag(2, col, title)
+
+    for row, col in [(0, 1), (1, 1)]:
+        if col >= len(sweeps):
+            axes[row][col].axis("off")
 
     fig.suptitle("Survival-aware i-SHIPMENT extension - "
                  "Scenario 1 (cost, ALPHA = 0) vs Scenario 2 "

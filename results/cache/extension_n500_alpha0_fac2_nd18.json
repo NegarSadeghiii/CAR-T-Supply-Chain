@@ -1,0 +1,21 @@
+{
+ "key": "extension_n500_alpha0_fac2_nd18",
+ "kind": "extension",
+ "n": 500,
+ "alpha": 0.0,
+ "max_facilities": 2,
+ "ND": 18,
+ "size": {
+  "variables": 33554,
+  "constraints": 27395
+ },
+ "solve": {
+  "status": "infeasible",
+  "objective": null,
+  "bound": null,
+  "gap": null,
+  "wall_s": 7.834567308425903,
+  "solver": "highs",
+  "note": ""
+ }
+}
