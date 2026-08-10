@@ -74,6 +74,13 @@ def alpha_fmt(v):
     return f"{a:g}"
 
 
+def max_facilities_primary(n, ext_by_n):
+    """The configured cap for scale n among the caps actually solved."""
+    caps = sorted(ext_by_n.get(n, {}))
+    want = ish.max_facilities_for(int(n))
+    return want if want in caps else (caps[0] if caps else None)
+
+
 def main():
     calib = read_json("calibration.json", {})
     study = read_json("study_summary.json", {})
@@ -115,22 +122,30 @@ def main():
     e1 = {r["n"]: r for r in p2}
     if b1 and e1:
         A("\n## Headline\n")
-        A("1. **The no-queue baseline needs more plant as demand rises.** It "
-          "opens a bigger, more expensive facility set at every step up in "
-          "demand, because the only lever it has against a burst of arrivals is "
-          "raw concurrent capacity - it cannot delay a single job. By N = 500 "
-          "the centralised 2-facility configuration no longer admits a "
-          "solution, which is why i-SHIPMENT itself relaxes CON1 to 3 at high "
-          "demand; given that third facility the baseline solves.\n"
+        A("1. **The no-queue baseline meets demand with plant.** It opens a "
+          "bigger, more expensive facility set at every step up in demand, "
+          "because the only lever it has against a burst of arrivals is raw "
+          "concurrent capacity - it cannot delay a single job. By N = 500 the "
+          "centralised 2-facility configuration no longer admits a solution, "
+          "which is why i-SHIPMENT itself relaxes CON1 to 3 at high demand; "
+          "given that third facility the baseline solves, opening three plants "
+          "and 72 concurrent slots for $63.79M.\n"
           "2. **The queue substitutes scheduling for plant.** Holding jobs "
-          "absorbs the same bursts, so the extension serves all 500 patients "
-          "on **two** facilities - the configuration the baseline cannot use - "
-          "and is cheaper at every scale.\n"
-          "3. **Survival-aware scheduling is nearly free and it self-prioritises.** "
+          "absorbs the same bursts, so the extension serves the same 500 "
+          "patients on **two** plants and 35 slots for $36.23M - 43% less - and "
+          "declines the third facility even when CON1 <= 3 allows it.\n"
+          "3. **That substitution is a cost-for-time trade, not a free lunch.** "
+          "The baseline is pinned to ND = 18 and so loses slightly fewer "
+          "patients (15.73 vs 17.44 expected at N = 500). The extension buys its "
+          "cheaper network with turnaround time; ALPHA decides whether the trade "
+          "is worth taking, and at N = 200 with ALPHA = 10^7 it flips the other "
+          "way - $20.12M and 6.04 expected losses against the baseline's $26.96M "
+          "and 6.29, cheaper *and* clinically better.\n"
+          "4. **Survival-aware scheduling is nearly free and it self-prioritises.** "
           "On the *same* network, weighting clinical loss drives high-risk mean "
           "hold to ~0 days while low-risk absorbs the queue, for a 0.3-0.4% cost "
           "premium - no priority rule is written anywhere in the model.\n"
-          "4. **The frontier is flat and then jumps.** Scheduling improvements "
+          "5. **The frontier is flat and then jumps.** Scheduling improvements "
           "are almost free; buying survival beyond that requires a network "
           "change, which only pays at very large ALPHA.\n")
 
@@ -247,7 +262,9 @@ def main():
       "delay a single job.\n")
 
     if p1t:
-        A("\nBaseline survival, by tier (only where the baseline is feasible):\n")
+        A("\nBaseline survival, by tier (ND = 18 pins every therapy to an "
+          "18-day turnaround, so survival differs across scales only through "
+          "the number of patients):\n")
         A(md_table([r for r in p1t if r["tier"] != "ALL"],
                    ["design", "tier", "n", "mean_TRT", "mean_survival",
                     "expected_lost"],
@@ -256,7 +273,7 @@ def main():
                         "expected_lost": num(3)}))
 
     # ----------------------------------------------------------------- phase 2
-    A("\n## 4. Phase 2 - the queue makes it feasible\n")
+    A("\n## 4. Phase 2 - the queue substitutes scheduling for plant\n")
     A(textwrap.dedent("""
     The fixed start (old MSB5) is replaced by a genuine start decision:
 
@@ -353,9 +370,59 @@ def main():
                          f"third facility earns nothing once jobs can be held.")
         A(line + "\n")
 
+    soft = [r for r in p2 if r.get("status") not in ("optimal", None, "")]
+    if soft:
+        A("\n" + " ".join(
+            f"(The N = {r['n']} CON1 <= {r['max_facilities']} run hit its time "
+            f"limit at `feasible` rather than proven optimal, gap "
+            f"{float(r['mip_gap']):.3g}. Because CON1 <= {r['max_facilities']} "
+            f"*relaxes* CON1 <= 2, its true optimum cannot exceed the "
+            f"proven-optimal 2-facility value, so the small positive difference "
+            f"between the two incumbents is unclosed gap, not a real penalty for "
+            f"the extra facility.)" for r in soft) + "\n")
+
     A("\nThe hold absorbs exactly the contention that the baseline had to buy "
       "concurrent capacity for, so at every scale the extension lands on a "
       "smaller, cheaper network than the baseline needs.\n")
+
+    # ---- the honest side of the trade -----------------------------------
+    trade = []
+    for n in sorted(b, key=int):
+        rb = b[n]
+        re_ = ext_by_n.get(n, {}).get(max_facilities_primary(n, ext_by_n))
+        if not (rb.get("total_cost") and re_ and re_.get("expected_lost")):
+            continue
+        trade.append({
+            "n": n,
+            "b_cost": rb["total_cost"], "b_trt": rb["mean_TRT"],
+            "b_lost": rb["expected_lost"],
+            "e_cost": re_["total_cost"], "e_trt": re_["mean_TRT"],
+            "e_lost": re_["expected_lost"],
+            "d_lost": f"+{float(re_['expected_lost']) - float(rb['expected_lost']):.2f}",
+            "saved": money(float(rb["total_cost"]) - float(re_["total_cost"])),
+        })
+    if trade:
+        A("\n### What the cheaper network costs clinically\n")
+        A("The extension is cheaper, but it is **not** uniformly better: the "
+          "baseline is pinned to ND = 18, so it delivers every therapy in 18 "
+          "days and loses fewer patients. The extension buys its cheaper "
+          "network with turnaround time, and therefore with some survival. "
+          "Stated plainly:\n")
+        A(md_table(trade, ["n", "b_cost", "b_trt", "b_lost", "e_cost", "e_trt",
+                           "e_lost", "d_lost", "saved"],
+                   ["N", "baseline cost", "baseline mean TRT", "baseline E[lost]",
+                    "extension cost", "extension mean TRT", "extension E[lost]",
+                    "extra expected losses", "cost saved"],
+                   fmt={"b_cost": money, "e_cost": money, "b_trt": num(2),
+                        "e_trt": num(2), "b_lost": num(2), "e_lost": num(2)}))
+        A("\nSo the queue is a **cost-for-time** trade, and the survival "
+          "objective's job is not to undo it but to decide *who* absorbs the "
+          "resulting delay - which is Phase 3. Whether the trade is worth taking "
+          "is exactly the question ALPHA answers, and Phase 4 shows it can be "
+          "pushed the other way: at N = 200 and ALPHA = 10^7 the extension "
+          "reaches $20.12M with 6.04 expected losses against the baseline's "
+          "$26.96M and 6.29 - **cheaper and clinically better at the same time**, "
+          "on a network the baseline never considers.\n")
 
     # ----------------------------------------------------------------- phase 3
     A("\n## 5. Phase 3 - cost design vs survival design, by tier\n")
@@ -548,7 +615,10 @@ def main():
        gap at the 5,400s limit and **proven optimality in 1,960s**.
 
     Beyond that, nothing was scaled back: all three demand levels ran at the full
-    130-day horizon with the full delta/queue binary sets.
+    130-day horizon with the full delta/queue binary sets. 47 of the 48 solves in
+    the study reached proven optimality at a relative MIP gap <= 1e-4; the sole
+    exception is the N = 500 CON1 <= 3 survival design, which hit its 5,400s
+    limit at a 5.6e-4 gap and is labelled `feasible` wherever it appears.
 
     One modelling choice is worth stating plainly. CON1 is **demand-dependent**,
     following i-SHIPMENT's own configuration - the centralised 2-facility

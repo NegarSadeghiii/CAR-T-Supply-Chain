@@ -24,7 +24,7 @@
   PASS  arrival density rises with N  0.57 -> 1.14 -> 2.27 -> 5.68
 
 [extension invariants  (alpha = 1e5, N = 30)]
-[solver] Gurobi is requested first for every solve, but refused the study-scale models: "Model too large for size-limited license; visit https://gurobi.com/unrestricted for more information". This container only carries the pip size-limited Gurobi licence (2000 variables / 2000 constraints) and every model here is far larger, so those solves fall back to HiGHS (open-source MILP, same Pyomo interface). Re-run with a full Gurobi licence to use Gurobi throughout.
+[solver] Gurobi is requested first on every solve, but refuses the study-scale models: "Model too large for size-limited license". This container carries only the pip size-limited Gurobi licence (2000 variables / 2000 constraints) and every model here is far larger, so those solves fall back to HiGHS (open-source MILP, driven through the same Pyomo interface). Re-run with a full Gurobi licence to use Gurobi throughout. (first refusal: Model too large for size-limited license; visit https://gurobi.com/unrestricted for more information)
   PASS  every patient is started exactly once
   PASS  (32) no start before the sample arrives: HOLD >= 0  min=0
   PASS  start == MS arrival + HOLD

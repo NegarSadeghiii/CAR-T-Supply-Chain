@@ -54,16 +54,25 @@
    "arrivals_per_day": 5.682,
    "model": "baseline",
    "ND": 18,
-   "max_facilities": 2,
-   "status": "infeasible",
+   "max_facilities": 3,
+   "status": "optimal",
    "solver": "highs",
-   "wall_s": 96.7,
+   "wall_s": 512.8,
    "variables": 12554,
    "constraints": 18119,
-   "diagnostic_CON1_relaxed": "optimal",
-   "diagnostic_opened": "m1+m2+m4+m5",
-   "diagnostic_capacity": 70,
-   "diagnostic_total_cost": 62242146.8
+   "opened": "m2+m3+m5",
+   "n_opened": 3,
+   "capacity_opened": 72,
+   "facility_cost": 52634702.9,
+   "transport_cost": 1264832.0,
+   "total_cost": 63793534.9,
+   "mean_TRT": 18.0,
+   "max_TRT": 18,
+   "mean_survival": 0.96853,
+   "expected_lost": 15.734,
+   "weighted_loss": 40.267,
+   "TRT_distribution": "{\"18\": 500}",
+   "strict_CON1_2_status": "infeasible"
   }
  ],
  "phase2": [
@@ -74,6 +83,7 @@
    "ND": 42,
    "alpha": 100000.0,
    "max_facilities": 2,
+   "is_configured_cap": true,
    "status": "optimal",
    "solver": "highs",
    "mip_gap": 1e-06,
@@ -96,6 +106,7 @@
    "ND": 42,
    "alpha": 100000.0,
    "max_facilities": 2,
+   "is_configured_cap": true,
    "status": "optimal",
    "solver": "highs",
    "mip_gap": 9.9e-05,
@@ -117,7 +128,31 @@
    "model": "extension",
    "ND": 42,
    "alpha": 100000.0,
+   "max_facilities": 3,
+   "is_configured_cap": true,
+   "status": "feasible",
+   "solver": "highs",
+   "mip_gap": 0.00056,
+   "wall_s": 5421.9,
+   "variables": 105554,
+   "constraints": 27540,
+   "opened": "m1+m2",
+   "capacity_opened": 35,
+   "total_cost": 36230566.9,
+   "mean_TRT": 23.736,
+   "mean_HOLD": 5.284,
+   "max_HOLD": 24,
+   "mean_survival": 0.96512,
+   "expected_lost": 17.442
+  },
+  {
+   "n": 500,
+   "arrivals_per_day": 5.682,
+   "model": "extension",
+   "ND": 42,
+   "alpha": 100000.0,
    "max_facilities": 2,
+   "is_configured_cap": false,
    "status": "optimal",
    "solver": "highs",
    "mip_gap": 7.8e-05,
@@ -140,6 +175,8 @@
     "n": 100,
     "design": "cost",
     "alpha": 0.0,
+    "max_facilities": 2,
+    "is_configured_cap": true,
     "status": "optimal",
     "mip_gap": 0.0,
     "opened": "m1+m4",
@@ -167,6 +204,8 @@
     "n": 100,
     "design": "survival",
     "alpha": 100000.0,
+    "max_facilities": 2,
+    "is_configured_cap": true,
     "status": "optimal",
     "mip_gap": 1e-06,
     "opened": "m1+m4",
@@ -194,6 +233,8 @@
     "n": 200,
     "design": "cost",
     "alpha": 0.0,
+    "max_facilities": 2,
+    "is_configured_cap": true,
     "status": "optimal",
     "mip_gap": 0.0,
     "opened": "m1+m3",
@@ -221,6 +262,8 @@
     "n": 200,
     "design": "survival",
     "alpha": 100000.0,
+    "max_facilities": 2,
+    "is_configured_cap": true,
     "status": "optimal",
     "mip_gap": 9.9e-05,
     "opened": "m1+m3",
@@ -248,6 +291,66 @@
     "n": 500,
     "design": "cost",
     "alpha": 0.0,
+    "max_facilities": 3,
+    "is_configured_cap": true,
+    "status": "optimal",
+    "mip_gap": 5.9e-05,
+    "opened": "m1+m2",
+    "capacity_opened": 35,
+    "facility_cost": 25565426.9,
+    "transport_cost": 614120.0,
+    "total_cost": 36073546.9,
+    "mean_TRT": 27.286,
+    "mean_HOLD": 8.29,
+    "max_HOLD": 23,
+    "mean_survival": 0.95185,
+    "expected_lost": 24.076,
+    "weighted_loss": 61.989,
+    "mean_HOLD_H": 9.747,
+    "mean_HOLD_M": 8.09,
+    "mean_HOLD_L": 7.1,
+    "mean_TRT_H": 28.733,
+    "mean_TRT_M": 27.09,
+    "mean_TRT_L": 26.1,
+    "expected_lost_H": 15.707,
+    "expected_lost_M": 6.498,
+    "expected_lost_L": 1.87
+   },
+   {
+    "n": 500,
+    "design": "survival",
+    "alpha": 100000.0,
+    "max_facilities": 3,
+    "is_configured_cap": true,
+    "status": "feasible",
+    "mip_gap": 0.00056,
+    "opened": "m1+m2",
+    "capacity_opened": 35,
+    "facility_cost": 25565426.9,
+    "transport_cost": 771140.0,
+    "total_cost": 36230566.9,
+    "mean_TRT": 23.736,
+    "mean_HOLD": 5.284,
+    "max_HOLD": 24,
+    "mean_survival": 0.96512,
+    "expected_lost": 17.442,
+    "weighted_loss": 42.485,
+    "mean_HOLD_H": 0.0,
+    "mean_HOLD_M": 2.62,
+    "mean_HOLD_L": 14.12,
+    "mean_TRT_H": 17.767,
+    "mean_TRT_M": 21.225,
+    "mean_TRT_L": 33.053,
+    "expected_lost_H": 9.965,
+    "expected_lost_M": 5.112,
+    "expected_lost_L": 2.364
+   },
+   {
+    "n": 500,
+    "design": "cost",
+    "alpha": 0.0,
+    "max_facilities": 2,
+    "is_configured_cap": false,
     "status": "optimal",
     "mip_gap": 0.0,
     "opened": "m1+m2",
@@ -275,6 +378,8 @@
     "n": 500,
     "design": "survival",
     "alpha": 100000.0,
+    "max_facilities": 2,
+    "is_configured_cap": false,
     "status": "optimal",
     "mip_gap": 7.8e-05,
     "opened": "m1+m2",
@@ -313,7 +418,8 @@
     "mean_survival": 0.9064129726365676,
     "expected_lost": 2.8076108209029744,
     "weighted_loss": 8.42283246270892,
-    "n_patients_total": 100
+    "n_patients_total": 100,
+    "max_facilities": 2
    },
    {
     "design": "cost",
@@ -328,7 +434,8 @@
     "mean_survival": 0.9687128711087075,
     "expected_lost": 1.2514851556517015,
     "weighted_loss": 2.502970311303403,
-    "n_patients_total": 100
+    "n_patients_total": 100,
+    "max_facilities": 2
    },
    {
     "design": "cost",
@@ -343,7 +450,8 @@
     "mean_survival": 0.9888126033916748,
     "expected_lost": 0.3356218982497584,
     "weighted_loss": 0.3356218982497584,
-    "n_patients_total": 100
+    "n_patients_total": 100,
+    "max_facilities": 2
    },
    {
     "design": "cost",
@@ -358,7 +466,8 @@
     "mean_survival": 0.9560528212519557,
     "expected_lost": 4.394717874804435,
     "weighted_loss": 11.261424672262082,
-    "n_patients_total": 100
+    "n_patients_total": 100,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -373,7 +482,8 @@
     "mean_survival": 0.9310406196647992,
     "expected_lost": 2.0687814100560216,
     "weighted_loss": 6.206344230168061,
-    "n_patients_total": 100
+    "n_patients_total": 100,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -388,7 +498,8 @@
     "mean_survival": 0.9766762998810871,
     "expected_lost": 0.9329480047565178,
     "weighted_loss": 1.8658960095130357,
-    "n_patients_total": 100
+    "n_patients_total": 100,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -403,7 +514,8 @@
     "mean_survival": 0.986647051386111,
     "expected_lost": 0.400588458416671,
     "weighted_loss": 0.400588458416671,
-    "n_patients_total": 100
+    "n_patients_total": 100,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -418,7 +530,8 @@
     "mean_survival": 0.9659768212677079,
     "expected_lost": 3.40231787322921,
     "weighted_loss": 8.472828698097768,
-    "n_patients_total": 100
+    "n_patients_total": 100,
+    "max_facilities": 2
    },
    {
     "design": "cost",
@@ -433,7 +546,8 @@
     "mean_survival": 0.8944862005343005,
     "expected_lost": 6.3308279679419694,
     "weighted_loss": 18.992483903825903,
-    "n_patients_total": 200
+    "n_patients_total": 200,
+    "max_facilities": 2
    },
    {
     "design": "cost",
@@ -448,7 +562,8 @@
     "mean_survival": 0.9652323072033591,
     "expected_lost": 2.781415423731274,
     "weighted_loss": 5.562830847462548,
-    "n_patients_total": 200
+    "n_patients_total": 200,
+    "max_facilities": 2
    },
    {
     "design": "cost",
@@ -463,7 +578,8 @@
     "mean_survival": 0.9871983581143382,
     "expected_lost": 0.768098513139705,
     "weighted_loss": 0.768098513139705,
-    "n_patients_total": 200
+    "n_patients_total": 200,
+    "max_facilities": 2
    },
    {
     "design": "cost",
@@ -478,7 +594,8 @@
     "mean_survival": 0.9505982904759352,
     "expected_lost": 9.880341904812953,
     "weighted_loss": 25.32341326442815,
-    "n_patients_total": 200
+    "n_patients_total": 200,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -493,7 +610,8 @@
     "mean_survival": 0.9304991267647743,
     "expected_lost": 4.170052394113541,
     "weighted_loss": 12.51015718234061,
-    "n_patients_total": 200
+    "n_patients_total": 200,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -508,7 +626,8 @@
     "mean_survival": 0.9734137752917562,
     "expected_lost": 2.1268979766595,
     "weighted_loss": 4.253795953319,
-    "n_patients_total": 200
+    "n_patients_total": 200,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -523,7 +642,8 @@
     "mean_survival": 0.9843100331044373,
     "expected_lost": 0.9413980137337594,
     "weighted_loss": 0.9413980137337594,
-    "n_patients_total": 200
+    "n_patients_total": 200,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -538,7 +658,136 @@
     "mean_survival": 0.9638082580774661,
     "expected_lost": 7.2383483845068,
     "weighted_loss": 17.705351149393362,
-    "n_patients_total": 200
+    "n_patients_total": 200,
+    "max_facilities": 2
+   },
+   {
+    "design": "cost",
+    "tier": "H",
+    "n": 150,
+    "rho": 3.0,
+    "w_risk": 0.15,
+    "mean_TRT": 28.733333333333334,
+    "mean_HOLD": 9.746666666666666,
+    "median_HOLD": 7.0,
+    "max_HOLD": 23,
+    "mean_survival": 0.8952846478051172,
+    "expected_lost": 15.707302829232408,
+    "weighted_loss": 47.12190848769723,
+    "n_patients_total": 500,
+    "max_facilities": 3
+   },
+   {
+    "design": "cost",
+    "tier": "M",
+    "n": 200,
+    "rho": 2.0,
+    "w_risk": 0.05,
+    "mean_TRT": 27.09,
+    "mean_HOLD": 8.09,
+    "median_HOLD": 4.0,
+    "max_HOLD": 23,
+    "mean_survival": 0.9675086463332021,
+    "expected_lost": 6.498270733359576,
+    "weighted_loss": 12.996541466719153,
+    "n_patients_total": 500,
+    "max_facilities": 3
+   },
+   {
+    "design": "cost",
+    "tier": "L",
+    "n": 150,
+    "rho": 1.0,
+    "w_risk": 0.02,
+    "mean_TRT": 26.1,
+    "mean_HOLD": 7.1,
+    "median_HOLD": 2.0,
+    "max_HOLD": 23,
+    "mean_survival": 0.9875322819269142,
+    "expected_lost": 1.8701577109628689,
+    "weighted_loss": 1.8701577109628689,
+    "n_patients_total": 500,
+    "max_facilities": 3
+   },
+   {
+    "design": "cost",
+    "tier": "ALL",
+    "n": 500,
+    "rho": "",
+    "w_risk": "",
+    "mean_TRT": 27.286,
+    "mean_HOLD": 8.29,
+    "median_HOLD": 4.0,
+    "max_HOLD": 23,
+    "mean_survival": 0.9518485374528902,
+    "expected_lost": 24.07573127355487,
+    "weighted_loss": 61.98860766537938,
+    "n_patients_total": 500,
+    "max_facilities": 3
+   },
+   {
+    "design": "survival",
+    "tier": "H",
+    "n": 150,
+    "rho": 3.0,
+    "w_risk": 0.15,
+    "mean_TRT": 17.766666666666666,
+    "mean_HOLD": 0.0,
+    "median_HOLD": 0.0,
+    "max_HOLD": 0,
+    "mean_survival": 0.9335635436234478,
+    "expected_lost": 9.965468456482828,
+    "weighted_loss": 29.896405369448544,
+    "n_patients_total": 500,
+    "max_facilities": 3
+   },
+   {
+    "design": "survival",
+    "tier": "M",
+    "n": 200,
+    "rho": 2.0,
+    "w_risk": 0.05,
+    "mean_TRT": 21.225,
+    "mean_HOLD": 2.62,
+    "median_HOLD": 0.0,
+    "max_HOLD": 24,
+    "mean_survival": 0.9744401599144565,
+    "expected_lost": 5.111968017108682,
+    "weighted_loss": 10.223936034217363,
+    "n_patients_total": 500,
+    "max_facilities": 3
+   },
+   {
+    "design": "survival",
+    "tier": "L",
+    "n": 150,
+    "rho": 1.0,
+    "w_risk": 0.02,
+    "mean_TRT": 33.053333333333335,
+    "mean_HOLD": 14.12,
+    "median_HOLD": 18.0,
+    "max_HOLD": 24,
+    "mean_survival": 0.9842373371970575,
+    "expected_lost": 2.3643994204413845,
+    "weighted_loss": 2.3643994204413845,
+    "n_patients_total": 500,
+    "max_facilities": 3
+   },
+   {
+    "design": "survival",
+    "tier": "ALL",
+    "n": 500,
+    "rho": "",
+    "w_risk": "",
+    "mean_TRT": 23.736,
+    "mean_HOLD": 5.284,
+    "median_HOLD": 0.0,
+    "max_HOLD": 24,
+    "mean_survival": 0.9651163282119342,
+    "expected_lost": 17.441835894032888,
+    "weighted_loss": 42.48474082410727,
+    "n_patients_total": 500,
+    "max_facilities": 3
    },
    {
     "design": "cost",
@@ -553,7 +802,8 @@
     "mean_survival": 0.8994576684848206,
     "expected_lost": 15.081349727276923,
     "weighted_loss": 45.24404918183074,
-    "n_patients_total": 500
+    "n_patients_total": 500,
+    "max_facilities": 2
    },
    {
     "design": "cost",
@@ -568,7 +818,8 @@
     "mean_survival": 0.9689962298095323,
     "expected_lost": 6.200754038093532,
     "weighted_loss": 12.401508076187064,
-    "n_patients_total": 500
+    "n_patients_total": 500,
+    "max_facilities": 2
    },
    {
     "design": "cost",
@@ -583,7 +834,8 @@
     "mean_survival": 0.9885592389502827,
     "expected_lost": 1.7161141574575778,
     "weighted_loss": 1.7161141574575778,
-    "n_patients_total": 500
+    "n_patients_total": 500,
+    "max_facilities": 2
    },
    {
     "design": "cost",
@@ -598,7 +850,8 @@
     "mean_survival": 0.954003564154344,
     "expected_lost": 22.998217922828083,
     "weighted_loss": 59.361671415475506,
-    "n_patients_total": 500
+    "n_patients_total": 500,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -613,7 +866,8 @@
     "mean_survival": 0.933515514530216,
     "expected_lost": 9.972672820467608,
     "weighted_loss": 29.91801846140288,
-    "n_patients_total": 500
+    "n_patients_total": 500,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -628,7 +882,8 @@
     "mean_survival": 0.9743217888892057,
     "expected_lost": 5.135642222158857,
     "weighted_loss": 10.271284444317715,
-    "n_patients_total": 500
+    "n_patients_total": 500,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -643,7 +898,8 @@
     "mean_survival": 0.984246531428814,
     "expected_lost": 2.3630202856779006,
     "weighted_loss": 2.3630202856779006,
-    "n_patients_total": 500
+    "n_patients_total": 500,
+    "max_facilities": 2
    },
    {
     "design": "survival",
@@ -658,13 +914,15 @@
     "mean_survival": 0.9650573293433913,
     "expected_lost": 17.471335328304363,
     "weighted_loss": 42.55232319139849,
-    "n_patients_total": 500
+    "n_patients_total": 500,
+    "max_facilities": 2
    }
   ],
   "holds": [
    {
     "n": 100,
     "design": "cost",
+    "max_facilities": 2,
     "tier": "H",
     "n_patients": 30,
     "mean_hold": 6.5,
@@ -677,6 +935,7 @@
    {
     "n": 100,
     "design": "cost",
+    "max_facilities": 2,
     "tier": "M",
     "n_patients": 40,
     "mean_hold": 7.1,
@@ -689,6 +948,7 @@
    {
     "n": 100,
     "design": "cost",
+    "max_facilities": 2,
     "tier": "L",
     "n_patients": 30,
     "mean_hold": 4.4,
@@ -701,6 +961,7 @@
    {
     "n": 100,
     "design": "survival",
+    "max_facilities": 2,
     "tier": "H",
     "n_patients": 30,
     "mean_hold": 0.0,
@@ -713,6 +974,7 @@
    {
     "n": 100,
     "design": "survival",
+    "max_facilities": 2,
     "tier": "M",
     "n_patients": 40,
     "mean_hold": 0.35,
@@ -725,6 +987,7 @@
    {
     "n": 100,
     "design": "survival",
+    "max_facilities": 2,
     "tier": "L",
     "n_patients": 30,
     "mean_hold": 8.967,
@@ -737,6 +1000,7 @@
    {
     "n": 200,
     "design": "cost",
+    "max_facilities": 2,
     "tier": "H",
     "n_patients": 60,
     "mean_hold": 9.967,
@@ -749,6 +1013,7 @@
    {
     "n": 200,
     "design": "cost",
+    "max_facilities": 2,
     "tier": "M",
     "n_patients": 80,
     "mean_hold": 10.025,
@@ -761,6 +1026,7 @@
    {
     "n": 200,
     "design": "cost",
+    "max_facilities": 2,
     "tier": "L",
     "n_patients": 60,
     "mean_hold": 7.8,
@@ -773,6 +1039,7 @@
    {
     "n": 200,
     "design": "survival",
+    "max_facilities": 2,
     "tier": "H",
     "n_patients": 60,
     "mean_hold": 0.033,
@@ -785,6 +1052,7 @@
    {
     "n": 200,
     "design": "survival",
+    "max_facilities": 2,
     "tier": "M",
     "n_patients": 80,
     "mean_hold": 3.15,
@@ -797,6 +1065,7 @@
    {
     "n": 200,
     "design": "survival",
+    "max_facilities": 2,
     "tier": "L",
     "n_patients": 60,
     "mean_hold": 13.95,
@@ -809,42 +1078,46 @@
    {
     "n": 500,
     "design": "cost",
+    "max_facilities": 3,
     "tier": "H",
     "n_patients": 150,
-    "mean_hold": 8.527,
-    "p50": 4.0,
+    "mean_hold": 9.747,
+    "p50": 7.0,
     "p90": 22.0,
     "max": 23,
     "share_hold_0": 0.16,
-    "distribution": "{\"0\": 24, \"1\": 28, \"2\": 18, \"3\": 3, \"4\": 5, \"5\": 1, \"6\": 3, \"7\": 4, \"8\": 1, \"9\": 2, \"10\": 5, \"11\": 1, \"12\": 1, \"13\": 3, \"14\": 4, \"15\": 3, \"16\": 6, \"17\": 3, \"18\": 5, \"20\": 1, \"21\": 9, \"22\": 10, \"23\": 10}"
+    "distribution": "{\"0\": 24, \"1\": 17, \"2\": 8, \"3\": 7, \"4\": 9, \"5\": 4, \"6\": 4, \"7\": 5, \"8\": 3, \"9\": 1, \"10\": 5, \"11\": 2, \"12\": 3, \"13\": 5, \"14\": 2, \"15\": 1, \"16\": 4, \"17\": 1, \"18\": 2, \"19\": 6, \"20\": 4, \"21\": 7, \"22\": 12, \"23\": 14}"
    },
    {
     "n": 500,
     "design": "cost",
+    "max_facilities": 3,
     "tier": "M",
     "n_patients": 200,
-    "mean_hold": 6.83,
-    "p50": 2.0,
-    "p90": 21.1,
+    "mean_hold": 8.09,
+    "p50": 4.0,
+    "p90": 22.0,
     "max": 23,
-    "share_hold_0": 0.235,
-    "distribution": "{\"0\": 47, \"1\": 41, \"2\": 17, \"3\": 13, \"4\": 4, \"5\": 5, \"6\": 5, \"7\": 6, \"8\": 1, \"9\": 2, \"10\": 1, \"11\": 2, \"12\": 2, \"13\": 4, \"14\": 3, \"15\": 2, \"16\": 4, \"17\": 1, \"18\": 3, \"19\": 2, \"20\": 4, \"21\": 11, \"22\": 11, \"23\": 9}"
+    "share_hold_0": 0.22,
+    "distribution": "{\"0\": 44, \"1\": 20, \"2\": 22, \"3\": 9, \"4\": 8, \"5\": 7, \"6\": 7, \"7\": 4, \"8\": 6, \"9\": 3, \"10\": 2, \"11\": 1, \"12\": 3, \"13\": 5, \"14\": 6, \"15\": 2, \"16\": 2, \"17\": 2, \"18\": 3, \"19\": 6, \"20\": 5, \"21\": 5, \"22\": 14, \"23\": 14}"
    },
    {
     "n": 500,
     "design": "cost",
+    "max_facilities": 3,
     "tier": "L",
     "n_patients": 150,
-    "mean_hold": 4.933,
-    "p50": 1.0,
-    "p90": 18.1,
+    "mean_hold": 7.1,
+    "p50": 2.0,
+    "p90": 22.0,
     "max": 23,
-    "share_hold_0": 0.3,
-    "distribution": "{\"0\": 45, \"1\": 36, \"2\": 7, \"3\": 7, \"4\": 9, \"5\": 5, \"6\": 6, \"7\": 3, \"8\": 1, \"9\": 1, \"10\": 1, \"11\": 2, \"13\": 5, \"14\": 2, \"16\": 1, \"17\": 3, \"18\": 1, \"19\": 2, \"20\": 2, \"21\": 1, \"22\": 5, \"23\": 5}"
+    "share_hold_0": 0.3333,
+    "distribution": "{\"0\": 50, \"1\": 19, \"2\": 8, \"3\": 6, \"4\": 3, \"5\": 5, \"6\": 4, \"7\": 2, \"8\": 3, \"9\": 3, \"10\": 4, \"11\": 1, \"12\": 2, \"13\": 2, \"15\": 3, \"16\": 1, \"18\": 2, \"19\": 3, \"20\": 6, \"21\": 3, \"22\": 12, \"23\": 8}"
    },
    {
     "n": 500,
     "design": "survival",
+    "max_facilities": 3,
     "tier": "H",
     "n_patients": 150,
     "mean_hold": 0.0,
@@ -857,6 +1130,85 @@
    {
     "n": 500,
     "design": "survival",
+    "max_facilities": 3,
+    "tier": "M",
+    "n_patients": 200,
+    "mean_hold": 2.62,
+    "p50": 0.0,
+    "p90": 10.0,
+    "max": 24,
+    "share_hold_0": 0.71,
+    "distribution": "{\"0\": 142, \"1\": 17, \"2\": 3, \"3\": 3, \"4\": 2, \"5\": 2, \"6\": 4, \"7\": 3, \"9\": 3, \"10\": 3, \"15\": 1, \"16\": 3, \"17\": 1, \"20\": 1, \"22\": 5, \"23\": 6, \"24\": 1}"
+   },
+   {
+    "n": 500,
+    "design": "survival",
+    "max_facilities": 3,
+    "tier": "L",
+    "n_patients": 150,
+    "mean_hold": 14.12,
+    "p50": 18.0,
+    "p90": 23.0,
+    "max": 24,
+    "share_hold_0": 0.2,
+    "distribution": "{\"0\": 30, \"1\": 6, \"2\": 7, \"3\": 3, \"4\": 1, \"7\": 2, \"8\": 2, \"11\": 1, \"12\": 2, \"13\": 3, \"14\": 7, \"15\": 2, \"16\": 3, \"17\": 2, \"18\": 7, \"19\": 1, \"20\": 1, \"21\": 4, \"22\": 5, \"23\": 52, \"24\": 9}"
+   },
+   {
+    "n": 500,
+    "design": "cost",
+    "max_facilities": 2,
+    "tier": "H",
+    "n_patients": 150,
+    "mean_hold": 8.527,
+    "p50": 4.0,
+    "p90": 22.0,
+    "max": 23,
+    "share_hold_0": 0.16,
+    "distribution": "{\"0\": 24, \"1\": 28, \"2\": 18, \"3\": 3, \"4\": 5, \"5\": 1, \"6\": 3, \"7\": 4, \"8\": 1, \"9\": 2, \"10\": 5, \"11\": 1, \"12\": 1, \"13\": 3, \"14\": 4, \"15\": 3, \"16\": 6, \"17\": 3, \"18\": 5, \"20\": 1, \"21\": 9, \"22\": 10, \"23\": 10}"
+   },
+   {
+    "n": 500,
+    "design": "cost",
+    "max_facilities": 2,
+    "tier": "M",
+    "n_patients": 200,
+    "mean_hold": 6.83,
+    "p50": 2.0,
+    "p90": 21.1,
+    "max": 23,
+    "share_hold_0": 0.235,
+    "distribution": "{\"0\": 47, \"1\": 41, \"2\": 17, \"3\": 13, \"4\": 4, \"5\": 5, \"6\": 5, \"7\": 6, \"8\": 1, \"9\": 2, \"10\": 1, \"11\": 2, \"12\": 2, \"13\": 4, \"14\": 3, \"15\": 2, \"16\": 4, \"17\": 1, \"18\": 3, \"19\": 2, \"20\": 4, \"21\": 11, \"22\": 11, \"23\": 9}"
+   },
+   {
+    "n": 500,
+    "design": "cost",
+    "max_facilities": 2,
+    "tier": "L",
+    "n_patients": 150,
+    "mean_hold": 4.933,
+    "p50": 1.0,
+    "p90": 18.1,
+    "max": 23,
+    "share_hold_0": 0.3,
+    "distribution": "{\"0\": 45, \"1\": 36, \"2\": 7, \"3\": 7, \"4\": 9, \"5\": 5, \"6\": 6, \"7\": 3, \"8\": 1, \"9\": 1, \"10\": 1, \"11\": 2, \"13\": 5, \"14\": 2, \"16\": 1, \"17\": 3, \"18\": 1, \"19\": 2, \"20\": 2, \"21\": 1, \"22\": 5, \"23\": 5}"
+   },
+   {
+    "n": 500,
+    "design": "survival",
+    "max_facilities": 2,
+    "tier": "H",
+    "n_patients": 150,
+    "mean_hold": 0.0,
+    "p50": 0.0,
+    "p90": 0.0,
+    "max": 0,
+    "share_hold_0": 1.0,
+    "distribution": "{\"0\": 150}"
+   },
+   {
+    "n": 500,
+    "design": "survival",
+    "max_facilities": 2,
     "tier": "M",
     "n_patients": 200,
     "mean_hold": 2.71,
@@ -869,6 +1221,7 @@
    {
     "n": 500,
     "design": "survival",
+    "max_facilities": 2,
     "tier": "L",
     "n_patients": 150,
     "mean_hold": 14.093,
