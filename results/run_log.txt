@@ -16,3 +16,21 @@
   [cache] extension_n100_alpha100000_fac2_nd42
   [cache] extension_n200_alpha100000_fac2_nd42
   [solve] extension_n500_alpha100000_fac3_nd42 (limit 5400s) ...
+WARNING: Loading a feasible but suboptimal solution. Please set
+load_solution=False and check results.termination_condition and
+results.found_feasible_solution() before loading a solution.
+    -> feasible obj=40479040.98 wall=5421.9s
+  [cache] extension_n500_alpha100000_fac2_nd42
+  n   | max_facilities | status   | opened | capacity_opened | total_cost | mean_TRT | mean_HOLD | expected_lost
+  ----+----------------+----------+--------+-----------------+------------+----------+-----------+--------------
+  100 | 2              | optimal  | m1+m4  | 8               | 8,207,337  | 21.660   | 2.830     | 3.402        
+  200 | 2              | optimal  | m1+m3  | 14              | 14,953,837 | 24.290   | 5.455     | 7.238        
+  500 | 3              | feasible | m1+m2  | 35              | 36,230,567 | 23.736   | 5.284     | 17.442       
+  500 | 2              | optimal  | m1+m2  | 35              | 36,225,947 | 23.774   | 5.312     | 17.471       
+
+=== PHASE 3: cost vs survival design, by tier ===
+  [cache] extension_n100_alpha0_fac2_nd42
+  [cache] extension_n100_alpha100000_fac2_nd42
+  [cache] extension_n200_alpha0_fac2_nd42
+  [cache] extension_n200_alpha100000_fac2_nd42
+  [solve] extension_n500_alpha0_fac3_nd42 (limit 5400s) ...
