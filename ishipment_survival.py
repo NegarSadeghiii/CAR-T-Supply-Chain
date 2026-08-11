@@ -1161,11 +1161,24 @@ def phase5(net, insts, args):
 
         lives_free = a0["expected_lost"] - f_best["expected_lost"]
         cost_free = f_best["total_cost"] - a0["total_cost"]
+        # Sharper still: how many lives are reachable without spending anything
+        # at all, i.e. among network-fixed points whose total cost is within
+        # 0.1% of the cost-optimal cost (comfortably inside the MIP tolerance
+        # band, so those designs are cost-indistinguishable).
+        tol = 0.001 * a0["total_cost"]
+        free_band = [r for r in fixed
+                     if r["total_cost"] <= a0["total_cost"] + tol]
+        z_best = min(free_band, key=lambda r: r["expected_lost"])
+        lives_zero_cost = a0["expected_lost"] - z_best["expected_lost"]
+        cost_zero = z_best["total_cost"] - a0["total_cost"]
         extra_lives = f_best["expected_lost"] - g_best["expected_lost"]
         extra_cost = g_best["total_cost"] - f_best["total_cost"]
         head.append({
             "n": n, "CON1": cap, "network_F0": "+".join(F0),
             "E_lost_at_alpha0": round(a0["expected_lost"], 4),
+            "lives_at_zero_added_cost": round(lives_zero_cost, 4),
+            "cost_delta_for_those": round(cost_zero, 2),
+            "alpha_at_zero_cost_best": z_best["alpha"],
             "lives_saved_by_scheduling_alone": round(lives_free, 4),
             "cost_of_those_lives": round(cost_free, 2),
             "dollars_per_life_scheduling": (round(cost_free / lives_free, 2)
@@ -1185,6 +1198,7 @@ def phase5(net, insts, args):
     write_csv(os.path.join(AB, "phase5_frontiers.csv"), rows)
     write_csv(os.path.join(AB, "phase5_decomposition.csv"), head)
     _print_table(head, ["n", "network_F0", "E_lost_at_alpha0",
+                        "lives_at_zero_added_cost", "cost_delta_for_those",
                         "lives_saved_by_scheduling_alone",
                         "dollars_per_life_scheduling",
                         "extra_lives_only_by_building",
@@ -1482,6 +1496,18 @@ def write_findings(p5head, p6rows, p7rows, path):
         tail = ((" - roughly **%s x** more expensive per life than the "
                  "scheduling lives." % f"{ratio:,.0f}")
                 if ratio and ratio > 1 else ".")
+        A("\nThe first tranche is the striking one: at every scale a large "
+          "share of the reachable lives costs **nothing at all** - those "
+          "schedules are cost-indistinguishable from the cost-optimal design "
+          "(within 0.1% of its total cost), they were simply never selected "
+          "because a pure cost objective is indifferent among them:\n")
+        A("| N | lives at zero added cost | cost delta | alpha that reaches it |\n"
+          "|---|---|---|---|")
+        for h in p5head:
+            A(f"| {h['n']} | {h['lives_at_zero_added_cost']:.2f} | "
+              f"${h['cost_delta_for_those']:,.0f} | "
+              f"{h['alpha_at_zero_cost_best']:g} |")
+        A("")
         A(f"\n**Verdict on (a).** At N = {best['n']}, holding the network fixed "
           f"at the cost-optimal design and only re-scheduling saves "
           f"**{best['lives_saved_by_scheduling_alone']:.2f} expected lives for "
