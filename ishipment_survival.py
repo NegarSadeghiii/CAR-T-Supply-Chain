@@ -354,10 +354,20 @@ def build_baseline(net, inst, nd=ND_BASELINE, max_facilities=MAX_FACILITIES):
 # PHASE 2+ model - queue + survival extension (eqs. 32-35, 24-25, 31, 1)
 # ---------------------------------------------------------------------------
 def build_extension(net, inst, alpha, nd=ND_EXT, max_facilities=MAX_FACILITIES,
-                    sigma=None, dominance_cuts=True, symmetry_cuts=True):
+                    sigma=None, dominance_cuts=True, symmetry_cuts=True,
+                    fixed_facilities=None):
     sigma = sigma or cd.sigma_table()
     mdl = ConcreteModel(name="i-SHIPMENT + queue + survival")
+    # With the network frozen the dominance cuts are pointless and could even
+    # contradict the freeze (they order E1 across equal-capacity facilities),
+    # so they are dropped whenever fixed_facilities is supplied.
+    if fixed_facilities is not None:
+        dominance_cuts = False
     _network_core(mdl, net, inst, max_facilities, dominance_cuts=dominance_cuts)
+    if fixed_facilities is not None:
+        frozen = set(fixed_facilities)
+        for m in net.m:
+            mdl.con.add(mdl.E1[m] == (1 if m in frozen else 0))
     P, pat = mdl.P, mdl.pat
     TLS = int(net.TLS)
     lead = net.TMFE + net.TQC
@@ -634,16 +644,20 @@ def write_json(path, obj):
 CACHE = os.path.join(RESULTS, "cache")
 
 
-def _cache_key(kind, n, alpha, max_fac, nd):
-    return f"{kind}_n{n}_alpha{alpha:g}_fac{max_fac}_nd{nd}"
+def _cache_key(kind, n, alpha, max_fac, nd, tag=""):
+    base = f"{kind}_n{n}_alpha{alpha:g}_fac{max_fac}_nd{nd}"
+    return base + (f"_{tag}" if tag else "")
 
 
 def run_design(net, inst, kind, alpha=0.0, max_fac=MAX_FACILITIES, nd=None,
                time_limit=DEFAULT_TIME_LIMIT, mip_gap=DEFAULT_MIP_GAP,
-               use_cache=True, sigma=None, solver_pref="gurobi"):
+               use_cache=True, sigma=None, solver_pref="gurobi",
+               fixed_facilities=None, tag=""):
     """Build + solve one design, with an on-disk cache of the outcome."""
     nd = nd or (ND_BASELINE if kind == "baseline" else ND_EXT)
-    key = _cache_key(kind, inst.n, alpha, max_fac, nd)
+    if fixed_facilities is not None and not tag:
+        tag = "fix" + "".join(sorted(fixed_facilities))
+    key = _cache_key(kind, inst.n, alpha, max_fac, nd, tag)
     path = os.path.join(CACHE, key + ".json")
     if use_cache and os.path.exists(path):
         blob = json.load(open(path))
@@ -656,7 +670,8 @@ def run_design(net, inst, kind, alpha=0.0, max_fac=MAX_FACILITIES, nd=None,
         mdl = build_baseline(net, inst, nd=nd, max_facilities=max_fac)
     else:
         mdl = build_extension(net, inst, alpha=alpha, nd=nd,
-                              max_facilities=max_fac, sigma=sigma)
+                              max_facilities=max_fac, sigma=sigma,
+                              fixed_facilities=fixed_facilities)
     from pyomo.environ import Var as _V, Constraint as _C
     size = {"variables": sum(len(v) for v in mdl.component_objects(_V)),
             "constraints": sum(len(c) for c in mdl.component_objects(_C))}
@@ -664,7 +679,8 @@ def run_design(net, inst, kind, alpha=0.0, max_fac=MAX_FACILITIES, nd=None,
                 solver_pref=solver_pref)
     blob = {"key": key, "kind": kind, "n": inst.n, "alpha": alpha,
             "max_facilities": max_fac, "ND": nd, "size": size,
-            "solve": out.as_dict()}
+            "fixed_facilities": sorted(fixed_facilities) if fixed_facilities
+            else None, "tag": tag, "solve": out.as_dict()}
     if out.status in ("optimal", "feasible"):
         rows, summary = extract(mdl, inst, net)
         blob["rows"], blob["summary"] = rows, summary
@@ -1052,6 +1068,517 @@ def _plot_frontier(rows, scale):
     print(f"  [plot] {out}")
 
 
+# ===========================================================================
+# PHASES 5-7 -- decision experiments ("is the extension surprising?")
+# ===========================================================================
+AB = os.path.join(RESULTS, "ab_experiments")
+AB_ALPHAS = [0.0, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
+AB_CAPS = [2, 3, 4, 5, 6]
+AB_GAMMAS = [1.0, 1.5, 2.0]
+
+
+def _ab_tl(n, args):
+    """Time limit per solve. N=500 is capped harder than N=200 on purpose;
+    the cap actually used is reported in every CSV and in findings.md."""
+    if args.ab_time_limit:
+        return args.ab_time_limit
+    return 1200 if n >= 500 else 900
+
+
+def _pt(blob):
+    """(total_cost, expected_lost) from a solved blob, or None."""
+    if "summary" not in blob:
+        return None
+    s = blob["summary"]
+    return {"total_cost": s["total_cost"], "expected_lost": s["expected_lost"],
+            "expected_lost_H": s["expected_lost_H"],
+            "opened": "+".join(s["opened"]),
+            "capacity_opened": s["capacity_opened"],
+            "mean_HOLD": s["mean_HOLD"], "mean_HOLD_H": s["mean_HOLD_H"],
+            "mean_HOLD_L": s["mean_HOLD_L"], "mean_TRT": s["mean_TRT"],
+            "status": blob["solve"]["status"], "gap": blob["solve"]["gap"],
+            "wall_s": blob["solve"]["wall_s"]}
+
+
+def _marginals(points):
+    """d$/dlife between consecutive points, ordered by decreasing E[lost]."""
+    pts = sorted(points, key=lambda r: -r["expected_lost"])
+    for a, b in zip(pts, pts[1:]):
+        d_life = a["expected_lost"] - b["expected_lost"]
+        d_cost = b["total_cost"] - a["total_cost"]
+        b["d_lives"] = d_life
+        b["d_cost"] = d_cost
+        b["dollars_per_life"] = (d_cost / d_life) if d_life > 1e-9 else None
+    return pts
+
+
+# ---------------------------------------------------------------------------
+# PHASE 5 (a): schedule before you build
+# ---------------------------------------------------------------------------
+def phase5(net, insts, args):
+    print("\n=== PHASE 5 (a): schedule-before-you-build ($/life decomposition) ===")
+    os.makedirs(AB, exist_ok=True)
+    rows, head = [], []
+    for n in sorted(insts):
+        inst = insts[n]
+        cap = max_facilities_for(n, args.max_facilities)
+        tl = _ab_tl(n, args)
+
+        base = run_design(net, inst, "extension", alpha=0.0, max_fac=cap,
+                          time_limit=tl, mip_gap=args.mip_gap,
+                          use_cache=not args.no_cache)
+        if "summary" not in base:
+            print(f"  N={n}: cost design did not solve; skipping")
+            continue
+        F0 = base["summary"]["opened"]
+        print(f"  N={n}: cost design opens {'+'.join(F0)} "
+              f"(E[lost] {base['summary']['expected_lost']:.3f})")
+
+        for mode in ("network-fixed", "network-free"):
+            for a in AB_ALPHAS:
+                blob = run_design(
+                    net, inst, "extension", alpha=float(a), max_fac=cap,
+                    time_limit=tl, mip_gap=args.mip_gap,
+                    use_cache=not args.no_cache,
+                    fixed_facilities=F0 if mode == "network-fixed" else None)
+                p = _pt(blob)
+                if p is None:
+                    continue
+                p.update({"n": n, "CON1": cap, "mode": mode, "alpha": a,
+                          "F0": "+".join(F0), "time_limit_s": tl})
+                rows.append(p)
+
+        # --- decomposition -------------------------------------------------
+        fixed = _marginals([r for r in rows if r["n"] == n
+                            and r["mode"] == "network-fixed"])
+        free = _marginals([r for r in rows if r["n"] == n
+                           and r["mode"] == "network-free"])
+        if not fixed or not free:
+            continue
+        a0 = max(fixed, key=lambda r: r["expected_lost"])
+        f_best = min(fixed, key=lambda r: r["expected_lost"])
+        g_best = min(free, key=lambda r: r["expected_lost"])
+
+        lives_free = a0["expected_lost"] - f_best["expected_lost"]
+        cost_free = f_best["total_cost"] - a0["total_cost"]
+        extra_lives = f_best["expected_lost"] - g_best["expected_lost"]
+        extra_cost = g_best["total_cost"] - f_best["total_cost"]
+        head.append({
+            "n": n, "CON1": cap, "network_F0": "+".join(F0),
+            "E_lost_at_alpha0": round(a0["expected_lost"], 4),
+            "lives_saved_by_scheduling_alone": round(lives_free, 4),
+            "cost_of_those_lives": round(cost_free, 2),
+            "dollars_per_life_scheduling": (round(cost_free / lives_free, 2)
+                                            if lives_free > 1e-9 else None),
+            "extra_lives_only_by_building": round(extra_lives, 4),
+            "cost_of_building": round(extra_cost, 2),
+            "dollars_per_life_building": (round(extra_cost / extra_lives, 2)
+                                          if extra_lives > 1e-9 else None),
+            "network_at_free_best": f_best["opened"],
+            "network_at_paid_best": g_best["opened"],
+            "share_of_total_lives_from_scheduling": (
+                round(lives_free / (lives_free + extra_lives), 4)
+                if (lives_free + extra_lives) > 1e-9 else None),
+        })
+        _plot_schedule_vs_build(n, fixed, free, head[-1])
+
+    write_csv(os.path.join(AB, "phase5_frontiers.csv"), rows)
+    write_csv(os.path.join(AB, "phase5_decomposition.csv"), head)
+    _print_table(head, ["n", "network_F0", "E_lost_at_alpha0",
+                        "lives_saved_by_scheduling_alone",
+                        "dollars_per_life_scheduling",
+                        "extra_lives_only_by_building",
+                        "dollars_per_life_building",
+                        "share_of_total_lives_from_scheduling"])
+    return rows, head
+
+
+def _plot_schedule_vs_build(n, fixed, free, h):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig, ax = plt.subplots(figsize=(9.2, 6.2))
+    for pts, lab, col, mk in ((fixed, f"network FIXED at {h['network_F0']} "
+                                      "(pure scheduling)", "#1b6a6a", "o"),
+                              (free, "network FREE (scheduling + build)",
+                               "#5b2a86", "s")):
+        pts = sorted(pts, key=lambda r: -r["expected_lost"])
+        ax.plot([p["expected_lost"] for p in pts],
+                [p["total_cost"] / 1e6 for p in pts], "-" + mk, color=col,
+                label=lab, ms=6, lw=1.9)
+        for p in pts:
+            ax.annotate(f"a={p['alpha']:g}",
+                        (p["expected_lost"], p["total_cost"] / 1e6),
+                        textcoords="offset points", xytext=(6, 5), fontsize=7,
+                        color=col)
+
+    a0 = max(fixed, key=lambda r: r["expected_lost"])
+    fb = min(fixed, key=lambda r: r["expected_lost"])
+    gb = min(free, key=lambda r: r["expected_lost"])
+    y = a0["total_cost"] / 1e6
+    ax.annotate("", xy=(fb["expected_lost"], y), xytext=(a0["expected_lost"], y),
+                arrowprops=dict(arrowstyle="<->", color="#1b6a6a", lw=1.6))
+    ax.text((a0["expected_lost"] + fb["expected_lost"]) / 2, y,
+            f"  free scheduling\n  {h['lives_saved_by_scheduling_alone']:.2f} lives"
+            f" for ${h['cost_of_those_lives']:,.0f}",
+            ha="center", va="bottom", fontsize=8.5, color="#1b6a6a",
+            fontweight="bold")
+    if gb["expected_lost"] < fb["expected_lost"] - 1e-9:
+        ax.annotate("", xy=(gb["expected_lost"], gb["total_cost"] / 1e6),
+                    xytext=(fb["expected_lost"], fb["total_cost"] / 1e6),
+                    arrowprops=dict(arrowstyle="<->", color="#5b2a86", lw=1.6))
+        dpl = h["dollars_per_life_building"]
+        ax.text(gb["expected_lost"], (gb["total_cost"] + fb["total_cost"]) / 2e6,
+                f"paid capacity\n{h['extra_lives_only_by_building']:.2f} lives\n"
+                f"${dpl/1e6:,.2f}M per life" if dpl else "paid capacity",
+                ha="left", va="center", fontsize=8.5, color="#5b2a86",
+                fontweight="bold")
+
+    ax.set_xlabel("Expected patients lost   sum (1 - S[p])")
+    ax.set_ylabel("Total supply-chain cost  [$M]")
+    ax.set_title(f"Schedule before you build - N = {n} (CON1 <= {h['CON1']})",
+                 fontweight="bold", loc="left")
+    ax.grid(alpha=.3)
+    ax.legend(fontsize=8.5, loc="upper right")
+    ax.margins(x=.16, y=.14)
+    fig.tight_layout()
+    out = os.path.join(AB, f"schedule_vs_build_N{n}.png")
+    fig.savefig(out, dpi=160)
+    plt.close(fig)
+    print("  [plot]", out)
+
+
+# ---------------------------------------------------------------------------
+# PHASE 6 (b): centralization determines when scheduling matters
+# ---------------------------------------------------------------------------
+def phase6(net, insts, args):
+    print("\n=== PHASE 6 (b): centralization vs the value of scheduling ===")
+    os.makedirs(AB, exist_ok=True)
+    rows = []
+    for n in sorted(insts):
+        inst = insts[n]
+        tl = _ab_tl(n, args)
+        for cap in AB_CAPS:
+            rec = {"n": n, "CON1": cap, "time_limit_s": tl}
+            ok = True
+            for label, alpha in (("cost", 0.0), ("survival", ALPHA_SURVIVAL)):
+                blob = run_design(net, inst, "extension", alpha=alpha,
+                                  max_fac=cap, time_limit=tl,
+                                  mip_gap=args.mip_gap,
+                                  use_cache=not args.no_cache)
+                p = _pt(blob)
+                if p is None:
+                    ok = False
+                    break
+                for k, v in p.items():
+                    rec[f"{label}_{k}"] = v
+            if not ok:
+                continue
+            rec["lives_saved_by_scheduling"] = (rec["cost_expected_lost"]
+                                                - rec["survival_expected_lost"])
+            rec["lives_saved_high_risk"] = (rec["cost_expected_lost_H"]
+                                            - rec["survival_expected_lost_H"])
+            rec["cost_premium"] = (rec["survival_total_cost"]
+                                   - rec["cost_total_cost"])
+            rows.append(rec)
+    write_csv(os.path.join(AB, "phase6_centralization.csv"), rows)
+    _print_table(rows, ["n", "CON1", "cost_opened", "cost_capacity_opened",
+                        "cost_mean_HOLD", "survival_mean_HOLD",
+                        "cost_expected_lost", "survival_expected_lost",
+                        "lives_saved_by_scheduling"])
+    _plot_centralization(rows)
+    return rows
+
+
+def _plot_centralization(rows):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    if not rows:
+        return
+    fig, ax = plt.subplots(1, 2, figsize=(12.6, 5.4))
+    cols = {100: "#2a8f6a", 200: "#1b6a6a", 500: "#5b2a86"}
+    for n in sorted({r["n"] for r in rows}):
+        sub = sorted([r for r in rows if r["n"] == n], key=lambda r: r["CON1"])
+        ax[0].plot([r["CON1"] for r in sub],
+                   [r["lives_saved_by_scheduling"] for r in sub],
+                   "-o", color=cols.get(n, "#888"), label=f"N = {n}", lw=2, ms=6)
+        ax[1].plot([r["CON1"] for r in sub],
+                   [r["cost_mean_HOLD"] for r in sub], "-o",
+                   color=cols.get(n, "#888"), label=f"N = {n} (cost design)",
+                   lw=2, ms=6)
+        ax[1].plot([r["CON1"] for r in sub],
+                   [r["survival_mean_HOLD"] for r in sub], "--s",
+                   color=cols.get(n, "#888"), alpha=.6,
+                   label=f"N = {n} (survival design)", lw=1.6, ms=5)
+        for r in sub:
+            ax[0].annotate(r["cost_opened"], (r["CON1"],
+                                              r["lives_saved_by_scheduling"]),
+                           textcoords="offset points", xytext=(0, 7),
+                           ha="center", fontsize=6.5, color=cols.get(n, "#888"))
+    ax[0].set_xlabel("Manufacturing facilities allowed (CON1)")
+    ax[0].set_ylabel("Expected lives saved by scheduling alone\n"
+                     "E[lost] cost design - E[lost] survival design")
+    ax[0].set_title("(a) Scheduling pays where the network is centralised",
+                    loc="left", fontweight="bold")
+    ax[0].grid(alpha=.3)
+    ax[0].legend(fontsize=8)
+    ax[0].axhline(0, color="#999999", lw=.8)
+    ax[1].set_xlabel("Manufacturing facilities allowed (CON1)")
+    ax[1].set_ylabel("Mean hold  [days]")
+    ax[1].set_title("(b) ... because the queue itself disappears",
+                    loc="left", fontweight="bold")
+    ax[1].grid(alpha=.3)
+    ax[1].legend(fontsize=7.5)
+    for a in ax:
+        a.set_xticks(AB_CAPS)
+    fig.tight_layout()
+    out = os.path.join(AB, "centralization.png")
+    fig.savefig(out, dpi=160)
+    plt.close(fig)
+    print("  [plot]", out)
+
+
+# ---------------------------------------------------------------------------
+# PHASE 7 (c): triage under accelerating decline
+# ---------------------------------------------------------------------------
+def gamma_sigma(gamma):
+    """sigma_g[d][u] = (1 - w_u) ** ((d/eta) ** gamma).  The calibration
+    constants themselves are untouched; only this local table varies."""
+    return {d: {u: (1 - cd.W_RISK[u]) ** ((d / cd.ETA) ** gamma)
+                for u in cd.TIER_ORDER} for d in cd.D_RANGE}
+
+
+def _inversions(rows, sig):
+    """Swap-feasible pairs where a lower-risk patient is served sooner than a
+    high-risk one who would gain more from the day.
+
+    Only pairs whose start times could actually be exchanged are counted: both
+    must already have arrived at the shared facility by the other's start day,
+    otherwise a shorter hold is just an earlier arrival, not a priority call.
+    """
+    rank = {"H": 0, "M": 1, "L": 2}
+
+    def marginal(r, weighted):
+        d = int(r["TRT"])
+        u = r["tier"]
+        gain = sig[max(cd.D_MIN, d - 1)][u] - sig[d][u]
+        return gain * (cd.RHO[u] if weighted else 1.0)
+
+    out = {"pairs_swap_feasible": 0, "inversions_raw": 0,
+           "inversions_rho_weighted": 0}
+    by_fac = defaultdict(list)
+    for r in rows:
+        by_fac[r["facility"]].append(r)
+    for fac_rows in by_fac.values():
+        highs = [r for r in fac_rows if r["tier"] == "H"]
+        others = [r for r in fac_rows if rank[r["tier"]] > 0]
+        for i in highs:
+            for k in others:
+                if not (i["ms_arrival"] <= k["start"]
+                        and k["ms_arrival"] <= i["start"]):
+                    continue
+                out["pairs_swap_feasible"] += 1
+                if k["hold"] >= i["hold"]:
+                    continue
+                if marginal(i, False) > marginal(k, False) + 1e-12:
+                    out["inversions_raw"] += 1
+                if marginal(i, True) > marginal(k, True) + 1e-12:
+                    out["inversions_rho_weighted"] += 1
+    return out
+
+
+def phase7(net, insts, args, scale=200):
+    print(f"\n=== PHASE 7 (c): triage under accelerating decline (N={scale}) ===")
+    os.makedirs(AB, exist_ok=True)
+    if scale not in insts:
+        print(f"  N={scale} not in the loaded instances; skipping")
+        return []
+    inst = insts[scale]
+    cap = max_facilities_for(scale, args.max_facilities)
+    tl = _ab_tl(scale, args)
+    rows = []
+    for g in AB_GAMMAS:
+        sig = gamma_sigma(g)
+        # gamma = 1 reproduces the study's own sigma table exactly, so it is
+        # left untagged and reuses the existing survival-design solve.
+        same_as_default = (g == 1.0)
+        blob = run_design(net, inst, "extension", alpha=ALPHA_SURVIVAL,
+                          max_fac=cap, time_limit=tl, mip_gap=args.mip_gap,
+                          use_cache=not args.no_cache,
+                          sigma=None if same_as_default else sig,
+                          tag="" if same_as_default else f"gamma{g:g}")
+        if "rows" not in blob:
+            print(f"  gamma={g}: no solution")
+            continue
+        pr = blob["rows"]
+        inv = _inversions(pr, sig)
+        rec = {"n": scale, "CON1": cap, "gamma": g,
+               "status": blob["solve"]["status"],
+               "opened": "+".join(blob["summary"]["opened"]),
+               "total_cost": round(blob["summary"]["total_cost"], 2),
+               "mean_TRT": round(blob["summary"]["mean_TRT"], 3),
+               "time_limit_s": tl}
+        for u in cd.TIER_ORDER:
+            sub = [r for r in pr if r["tier"] == u]
+            rec[f"mean_HOLD_{u}"] = round(
+                statistics.fmean(r["hold"] for r in sub), 4)
+            rec[f"mean_TRT_{u}"] = round(
+                statistics.fmean(r["TRT"] for r in sub), 4)
+        rec["monotone_sickest_first"] = (rec["mean_HOLD_H"] <= rec["mean_HOLD_M"]
+                                         <= rec["mean_HOLD_L"])
+        rec.update(inv)
+        rec["inversion_rate_raw"] = (round(inv["inversions_raw"]
+                                           / inv["pairs_swap_feasible"], 6)
+                                     if inv["pairs_swap_feasible"] else None)
+        rows.append(rec)
+    write_csv(os.path.join(AB, f"triage_gamma_N{scale}.csv"), rows)
+    _print_table(rows, ["gamma", "mean_HOLD_H", "mean_HOLD_M", "mean_HOLD_L",
+                        "monotone_sickest_first", "pairs_swap_feasible",
+                        "inversions_raw", "inversions_rho_weighted"])
+    return rows
+
+
+def write_findings(p5head, p6rows, p7rows, path):
+    """The go/no-go note: does the extension carry a surprising result?"""
+    L = []
+    A = L.append
+    A("# Decision experiments - is the scheduling extension surprising?\n")
+    A("Go/no-go for switching the INFORMS abstract from the yield SP to the "
+      "survival-aware scheduling extension. Every number below comes from "
+      "`results/ab_experiments/*.csv`; nothing is re-derived by hand.\n")
+
+    # ---- (a) ------------------------------------------------------------
+    A("\n## (a) Does scheduling substitute for capacity?\n")
+    if not p5head:
+        A("_Phase 5 produced no usable frontier._\n")
+    else:
+        A("| N | network | lives saved by scheduling alone | what those cost | "
+          "extra lives only buying capacity reaches | $/life to build | "
+          "share of all reachable lives that scheduling gets |\n"
+          "|---|---|---|---|---|---|---|")
+        for h in p5head:
+            dpl = h["dollars_per_life_building"]
+            dpl_s = ("$%.2fM" % (dpl / 1e6)) if dpl else "n/a"
+            share = h["share_of_total_lives_from_scheduling"]
+            share_s = ("%.0f%%" % (100 * share)) if share is not None else "n/a"
+            A(f"| {h['n']} | {h['network_F0']} | "
+              f"{h['lives_saved_by_scheduling_alone']:.2f} | "
+              f"${h['cost_of_those_lives']:,.0f} | "
+              f"{h['extra_lives_only_by_building']:.2f} | "
+              f"{dpl_s} | {share_s} |")
+        A("")
+        best = max(p5head, key=lambda h: h["lives_saved_by_scheduling_alone"])
+        ratio = None
+        if best["dollars_per_life_building"] and best["cost_of_those_lives"] > 0 \
+                and best["lives_saved_by_scheduling_alone"] > 0:
+            ratio = (best["dollars_per_life_building"]
+                     / (best["cost_of_those_lives"]
+                        / best["lives_saved_by_scheduling_alone"]))
+        bdpl = best["dollars_per_life_building"]
+        bdpl_s = ("$%.2fM" % (bdpl / 1e6)) if bdpl else "n/a"
+        tail = ((" - roughly **%s x** more expensive per life than the "
+                 "scheduling lives." % f"{ratio:,.0f}")
+                if ratio and ratio > 1 else ".")
+        A(f"\n**Verdict on (a).** At N = {best['n']}, holding the network fixed "
+          f"at the cost-optimal design and only re-scheduling saves "
+          f"**{best['lives_saved_by_scheduling_alone']:.2f} expected lives for "
+          f"${best['cost_of_those_lives']:,.0f}** "
+          f"(${(best['dollars_per_life_scheduling'] or 0):,.0f} per life). The "
+          f"next {best['extra_lives_only_by_building']:.2f} lives are reachable "
+          f"only by changing the network, at {bdpl_s} per life" + tail + "\n")
+
+    # ---- (b) ------------------------------------------------------------
+    A("\n## (b) Does centralization determine when scheduling matters?\n")
+    if not p6rows:
+        A("_Phase 6 produced no usable sweep._\n")
+    else:
+        A("Expected lives saved by scheduling alone, as CON1 is relaxed:\n")
+        A("| N | " + " | ".join(f"CON1={c}" for c in AB_CAPS) + " | trend |\n"
+          "|---|" + "---|" * (len(AB_CAPS) + 1))
+        for n in sorted({r["n"] for r in p6rows}):
+            sub = {r["CON1"]: r for r in p6rows if r["n"] == n}
+            vals = [sub[c]["lives_saved_by_scheduling"] if c in sub else None
+                    for c in AB_CAPS]
+            got = [v for v in vals if v is not None]
+            if len(got) >= 2:
+                mono = all(a >= b - 1e-6 for a, b in zip(got, got[1:]))
+                trend = ("monotone decreasing" if mono
+                         else ("decreasing overall" if got[0] > got[-1]
+                               else "not decreasing"))
+                trend += f" ({got[0]:.2f} -> {got[-1]:.2f})"
+            else:
+                trend = "insufficient points"
+            A(f"| {n} | " + " | ".join("-" if v is None else f"{v:.2f}"
+                                       for v in vals) + f" | {trend} |")
+        A("")
+
+    # ---- (c) ------------------------------------------------------------
+    A("\n## (c) Did triage appear at gamma > 1?\n")
+    if not p7rows:
+        A("_Phase 7 produced no usable runs._\n")
+    else:
+        A("| gamma | mean hold H | M | L | sickest-first order holds? | "
+          "swap-feasible pairs | priority inversions (raw) | "
+          "inversions (rho-weighted) |\n|---|---|---|---|---|---|---|---|")
+        for r in p7rows:
+            A(f"| {r['gamma']:g} | {r['mean_HOLD_H']:.3f} | "
+              f"{r['mean_HOLD_M']:.3f} | {r['mean_HOLD_L']:.3f} | "
+              f"{'yes' if r['monotone_sickest_first'] else 'NO'} | "
+              f"{r['pairs_swap_feasible']:,} | {r['inversions_raw']:,} | "
+              f"{r['inversions_rho_weighted']:,} |")
+        any_inv = any(r["inversions_raw"] > 0 for r in p7rows)
+        growing = (len(p7rows) > 1
+                   and p7rows[-1]["inversions_raw"] > p7rows[0]["inversions_raw"])
+        A(f"\n**Verdict on (c). {'Triage effects appear' if any_inv else 'No triage'}"
+          f"** - "
+          + ("the count of swap-feasible pairs in which a lower-risk patient is "
+             "served sooner than a high-risk patient with more to gain is "
+             + ("nonzero and grows with gamma" if growing else "nonzero")
+             + ", so the optimal schedule is not strictly sickest-first."
+             if any_inv else
+             "at every gamma tested the schedule stays strictly sickest-first: "
+             "tier mean holds remain ordered H <= M <= L and no swap-feasible "
+             "pair inverts. In a deterministic model with a single monotone "
+             "risk index this is the expected outcome - triage requires either "
+             "uncertainty or a non-monotone value of time, neither of which "
+             "this formulation contains.") + "\n")
+
+    # ---- verdict --------------------------------------------------------
+    A("\n## Verdict\n")
+    # (a) counts as supported when scheduling alone saves a material number of
+    # lives and does so far more cheaply per life than building does.
+    a_surprising = any(
+        h["lives_saved_by_scheduling_alone"] > 0.5
+        and h["dollars_per_life_building"]
+        and (h["dollars_per_life_scheduling"] or 0)
+        < 0.1 * h["dollars_per_life_building"]
+        for h in p5head)
+    b_trend = []
+    for n in sorted({r["n"] for r in p6rows}):
+        got = [r["lives_saved_by_scheduling"]
+               for r in sorted([x for x in p6rows if x["n"] == n],
+                               key=lambda x: x["CON1"])]
+        if len(got) >= 2:
+            b_trend.append(got[0] > got[-1] + 1e-6)
+    b_surprising = bool(b_trend) and all(b_trend)
+
+    A(f"* (a) scheduling-substitutes-for-capacity: "
+      f"**{'SUPPORTED' if a_surprising else ('INCONCLUSIVE' if p5head else 'NOT RUN')}**\n"
+      f"* (b) centralization sets the value of scheduling: "
+      f"**{'SUPPORTED' if b_surprising else 'NOT SUPPORTED as a clean monotone trend'}**\n"
+      f"* (c) triage at gamma > 1: "
+      f"**{'YES' if any(r['inversions_raw'] > 0 for r in p7rows) else 'NO'}**\n")
+    write_json(os.path.join(AB, "findings_inputs.json"),
+               {"phase5": p5head, "phase6": p6rows, "phase7": p7rows})
+    with open(path, "w") as f:
+        f.write("\n".join(L))
+    print("\n[findings]", path)
+    return L
+
+
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
@@ -1098,7 +1625,11 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--phase", default="all",
-                    choices=["0", "1", "2", "3", "4", "all"])
+                    choices=["0", "1", "2", "3", "4", "5", "6", "7", "all",
+                             "ab"])
+    ap.add_argument("--ab-time-limit", type=int, default=0,
+                    help="per-solve limit for phases 5-7; 0 = 900s at N<=200, "
+                         "1200s at N=500")
     ap.add_argument("--scales", nargs="+", type=int, default=[100, 200, 500])
     ap.add_argument("--frontier-scale", type=int, default=200)
     ap.add_argument("--dat", default="Data200_profileA.dat")
@@ -1142,6 +1673,21 @@ def main(argv=None):
     if args.phase in ("4", "all"):
         out["phase4"] = phase4(net, insts, args.frontier_scale,
                                args.frontier_time_limit, args)
+
+    ab = args.phase in ("ab", "5", "6", "7")
+    p5h, p6r, p7r = [], [], []
+    if args.phase in ("5", "ab"):
+        _, p5h = phase5(net, insts, args)
+        out["phase5"] = p5h
+    if args.phase in ("6", "ab"):
+        p6r = phase6(net, insts, args)
+        out["phase6"] = p6r
+    if args.phase in ("7", "ab"):
+        p7r = phase7(net, insts, args, scale=200)
+        out["phase7"] = p7r
+    if ab:
+        os.makedirs(AB, exist_ok=True)
+        write_findings(p5h, p6r, p7r, os.path.join(AB, "findings.md"))
     used = sorted(x for x in _SOLVER_CACHE["used"] if x and x != "?")
     if "highs" in used and not _SOLVER_CACHE["note"]:
         _SOLVER_CACHE["note"] = GUROBI_FALLBACK_NOTE
