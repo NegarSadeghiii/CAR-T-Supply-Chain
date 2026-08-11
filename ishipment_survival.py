@@ -1370,14 +1370,39 @@ def _plot_centralization(rows):
 # the optimiser open more plants -- it just permits it.  To test whether
 # scheduling matters less on a decentralised network the network has to be
 # imposed, which is what fixed_facilities does.
-FORCED_NETWORKS = [
-    ["m2"],
-    ["m1", "m2"],
-    ["m1", "m2", "m3"],
-    ["m1", "m2", "m3", "m4"],
-    ["m1", "m2", "m3", "m4", "m6"],
-    ["m1", "m2", "m3", "m4", "m5", "m6"],
-]
+def forced_networks(net, n, k=6):
+    """A capacity-ordered family of imposed networks for scale n, spanning from
+    the tightest network that can plausibly serve the cohort up to all plants.
+
+    The family has to be scale-aware: a set that is painfully tight at N = 500
+    is over-provisioned at N = 200, and an over-provisioned family never samples
+    the congested region where scheduling could matter at all.
+    """
+    span = cd.HORIZON - cd.D_MIN                      # usable start-day span
+    min_cap = math.ceil(n * net.TMFE / span)          # throughput lower bound
+    subsets = []
+    ms = list(net.m)
+    for mask in range(1, 1 << len(ms)):
+        sub = [ms[i] for i in range(len(ms)) if mask >> i & 1]
+        cap = sum(net.FCAP[m] for m in sub)
+        if cap < min_cap:
+            continue
+        cost = sum(net.CIM[m] + net.CVM[m] for m in sub)
+        subsets.append((cap, cost, sub))
+    if not subsets:
+        return []
+    # cheapest representative at each distinct capacity, then spread over the range
+    best = {}
+    for cap, cost, sub in subsets:
+        if cap not in best or cost < best[cap][0]:
+            best[cap] = (cost, sub)
+    caps = sorted(best)
+    if len(caps) <= k:
+        picks = caps
+    else:
+        step = (len(caps) - 1) / (k - 1)
+        picks = sorted({caps[round(i * step)] for i in range(k)})
+    return [best[c][1] for c in picks]
 
 
 def phase6b(net, insts, args):
@@ -1389,7 +1414,13 @@ def phase6b(net, insts, args):
     for n in sorted(insts):
         inst = insts[n]
         tl = _ab_tl(n, args)
-        for fset in FORCED_NETWORKS:
+        fam = forced_networks(net, n)
+        if not fam:
+            print(f"  N={n}: no feasible forced network family; skipping")
+            continue
+        print(f"  N={n}: forcing {len(fam)} networks, capacity "
+              + " -> ".join(str(sum(net.FCAP[m] for m in f)) for f in fam))
+        for fset in fam:
             rec = {"n": n, "k_facilities": len(fset), "network": "+".join(fset),
                    "capacity": sum(net.FCAP[m] for m in fset),
                    "time_limit_s": tl}
@@ -1571,6 +1602,49 @@ def phase7(net, insts, args, scale=200):
                         "monotone_sickest_first", "pairs_swap_feasible",
                         "inversions_raw", "inversions_rho_weighted"])
     return rows
+
+
+def _read_csv(path, numeric=()):
+    import csv as _csv
+    if not os.path.exists(path):
+        return []
+    out = []
+    with open(path) as f:
+        for r in _csv.DictReader(f):
+            for k in list(r):
+                if k in numeric or numeric == "*":
+                    try:
+                        r[k] = float(r[k])
+                    except (TypeError, ValueError):
+                        pass
+                elif r[k] in ("True", "False"):
+                    r[k] = r[k] == "True"
+            out.append(r)
+    return out
+
+
+def findings_from_disk(path):
+    """Rebuild findings.md from whatever phase CSVs exist. Solves nothing, so it
+    is safe to run after a partial sweep."""
+    p5 = _read_csv(os.path.join(AB, "phase5_decomposition.csv"), numeric="*")
+    p6 = _read_csv(os.path.join(AB, "phase6_centralization.csv"), numeric="*")
+    p6b = _read_csv(os.path.join(AB, "phase6b_forced_networks.csv"), numeric="*")
+    p7 = _read_csv(os.path.join(AB, "triage_gamma_N200.csv"), numeric="*")
+    for r in p5 + p6 + p6b + p7:
+        if "n" in r:
+            r["n"] = int(r["n"])
+    for r in p6:
+        r["CON1"] = int(r["CON1"])
+    for r in p6b:
+        r["k_facilities"] = int(r["k_facilities"])
+        r["capacity"] = int(r["capacity"])
+    for r in p7:
+        for k in ("pairs_swap_feasible", "inversions_raw",
+                  "inversions_rho_weighted"):
+            r[k] = int(r[k])
+    print(f"  phase5 {len(p5)} rows | phase6 {len(p6)} | phase6b {len(p6b)} "
+          f"| phase7 {len(p7)}")
+    return write_findings(p5, p6, p7, path, p6b=p6b)
 
 
 def write_findings(p5head, p6rows, p7rows, path, p6b=None):
@@ -1808,7 +1882,7 @@ def main(argv=None):
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--phase", default="all",
                     choices=["0", "1", "2", "3", "4", "5", "6", "6b", "7",
-                             "all", "ab"])
+                             "all", "ab", "findings"])
     ap.add_argument("--ab-time-limit", type=int, default=0,
                     help="per-solve limit for phases 5-7; 0 = 900s at N<=200, "
                          "1200s at N=500")
@@ -1832,6 +1906,10 @@ def main(argv=None):
 
     os.makedirs(RESULTS, exist_ok=True)
     os.makedirs(CACHE, exist_ok=True)
+    if args.phase == "findings":
+        os.makedirs(AB, exist_ok=True)
+        findings_from_disk(os.path.join(AB, "findings.md"))
+        return 0
     dat = os.path.join(os.path.dirname(os.path.abspath(__file__)), args.dat)
     net = cd.load_network(dat)
 

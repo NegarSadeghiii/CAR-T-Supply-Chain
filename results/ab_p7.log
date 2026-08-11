@@ -5,3 +5,13 @@
 [solver] Gurobi is requested first on every solve, but refuses the study-scale models: "Model too large for size-limited license". This container carries only the pip size-limited Gurobi licence (2000 variables / 2000 constraints) and every model here is far larger, so those solves fall back to HiGHS (open-source MILP, driven through the same Pyomo interface). Re-run with a full Gurobi licence to use Gurobi throughout. (first refusal: Model too large for size-limited license; visit https://gurobi.com/unrestricted for more information)
     -> optimal obj=16197060.05 wall=165.4s
   [solve] extension_n200_alpha100000_fac2_nd42_gamma2 (limit 900s) ...
+    -> optimal obj=15832960.7 wall=534.5s
+  gamma | mean_HOLD_H | mean_HOLD_M | mean_HOLD_L | monotone_sickest_first | pairs_swap_feasible | inversions_raw | inversions_rho_weighted
+  ------+-------------+-------------+-------------+------------------------+---------------------+----------------+------------------------
+  1.000 | 0.033       | 3.150       | 13.950      | True                   | 406                 | 0              | 0                      
+  1.500 | 0.033       | 3.100       | 13.833      | True                   | 399                 | 0              | 0                      
+  2.000 | 0.033       | 3.163       | 13.617      | True                   | 429                 | 0              | 0                      
+
+[findings] /home/user/CAR-T-Supply-Chain/results/ab_experiments/findings.md
+
+Wrote results to /home/user/CAR-T-Supply-Chain/results
