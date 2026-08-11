@@ -1,0 +1,21 @@
+
+=== PHASE 6b (b, forced): scheduling value vs imposed capacity ===
+  N=200: forcing 6 networks, capacity 14 -> 28 -> 45 -> 59 -> 76 -> 90
+  [cache] extension_n200_alpha0_fac6_nd42_fixm1m3
+  [cache] extension_n200_alpha100000_fac6_nd42_fixm1m3
+  [cache] extension_n200_alpha0_fac6_nd42_fixm1m3m4m6
+  [cache] extension_n200_alpha100000_fac6_nd42_fixm1m3m4m6
+  [cache] extension_n200_alpha0_fac6_nd42_fixm1m2m3
+  [cache] extension_n200_alpha100000_fac6_nd42_fixm1m2m3
+  [cache] extension_n200_alpha0_fac6_nd42_fixm1m2m3m4m6
+  [cache] extension_n200_alpha100000_fac6_nd42_fixm1m2m3m4m6
+  [cache] extension_n200_alpha0_fac6_nd42_fixm1m2m3m5
+  [cache] extension_n200_alpha100000_fac6_nd42_fixm1m2m3m5
+  [cache] extension_n200_alpha0_fac6_nd42_fixm1m2m3m4m5m6
+  [cache] extension_n200_alpha100000_fac6_nd42_fixm1m2m3m4m5m6
+  N=500: forcing 6 networks, capacity 31 -> 41 -> 55 -> 66 -> 80 -> 90
+  [solve] extension_n500_alpha0_fac6_nd42_fixm2 (limit 900s) ...
+[solver] Gurobi is requested first on every solve, but refuses the study-scale models: "Model too large for size-limited license". This container carries only the pip size-limited Gurobi licence (2000 variables / 2000 constraints) and every model here is far larger, so those solves fall back to HiGHS (open-source MILP, driven through the same Pyomo interface). Re-run with a full Gurobi licence to use Gurobi throughout. (first refusal: Model too large for size-limited license; visit https://gurobi.com/unrestricted for more information)
+    -> infeasible obj=None wall=9.3s
+  N=500 m2 cost: infeasible
+  [solve] extension_n500_alpha0_fac6_nd42_fixm2m3 (limit 900s) ...

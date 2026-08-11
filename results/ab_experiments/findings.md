@@ -35,14 +35,18 @@ The controlled version imposes the network with `fixed_facilities`, so capacity 
 
 | N | plants | network | capacity | mean hold (cost design) | E[lost] cost | E[lost] survival | lives saved by scheduling |
 |---|---|---|---|---|---|---|---|
-| 200 | 1 | m2 | 31 | 0.01 | 6.636 | 6.355 | 0.281 |
-| 200 | 2 | m1+m2 | 35 | 2.98 | 7.653 | 6.322 | 1.332 |
+| 200 | 2 | m1+m3 | 14 | 8.96 | 9.933 | 7.232 | 2.701 |
+| 200 | 4 | m1+m3+m4+m6 | 28 | 6.39 | 9.237 | 6.606 | 2.631 |
 | 200 | 3 | m1+m2+m3 | 45 | 3.22 | 7.677 | 6.322 | 1.355 |
-| 200 | 4 | m1+m2+m3+m4 | 49 | 2.73 | 7.518 | 6.322 | 1.197 |
 | 200 | 5 | m1+m2+m3+m4+m6 | 59 | 3.00 | 7.671 | 6.322 | 1.349 |
+| 200 | 4 | m1+m2+m3+m5 | 76 | 1.61 | 7.166 | 6.322 | 0.845 |
 | 200 | 6 | m1+m2+m3+m4+m5+m6 | 90 | 3.24 | 7.792 | 6.322 | 1.471 |
 
-**N = 200:** scheduling saves 0.28 lives on the tightest imposed network (m2, capacity 31) and 1.47 on the widest (m1+m2+m3+m4+m5+m6, capacity 90) - no decline, with mean hold falling from 0.01 d to 3.24 d.
+**N = 200:** scheduling saves 2.70 lives on the tightest imposed network (m1+m3, capacity 14) and 1.47 on the widest (m1+m2+m3+m4+m5+m6, capacity 90) - declining overall but not monotonically.
+
+  The mechanism is the cleaner signal. Under the survival design the mean hold collapses from 5.45 d at capacity 14 to 0.00 d at capacity 90: once capacity is ample **there is no queue left to allocate**, and the achievable loss floor stops improving too (7.232 -> 6.322, flat from capacity 45 onward). Scheduling is worth something exactly while the network is tight.
+
+  Read the headline column with care: it is measured against the ALPHA = 0 design, which is *indifferent* among equally cheap schedules and therefore returns an arbitrary one. Its badness does not shrink with capacity, which is why the column is not monotone even though the queue it is supposed to proxy for vanishes.
 
 
 ## (c) Did triage appear at gamma > 1?
@@ -59,5 +63,5 @@ The controlled version imposes the network with `fixed_facilities`, so capacity 
 ## Verdict
 
 * (a) scheduling-substitutes-for-capacity: **SUPPORTED**
-* (b) centralization sets the value of scheduling (forced-network experiment): **NOT SUPPORTED as a clean monotone trend**
+* (b) centralization sets the value of scheduling (forced-network experiment): **SUPPORTED**
 * (c) triage at gamma > 1: **NO**

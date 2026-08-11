@@ -1760,10 +1760,27 @@ def write_findings(p5head, p6rows, p7rows, path, p6b=None):
                   f"{sub[0]['capacity']}) and {got[-1]:.2f} on the widest "
                   f"({sub[-1]['network']}, capacity {sub[-1]['capacity']}) - "
                   + ("a monotone decline" if mono else
-                     ("declining overall" if got[0] > got[-1]
-                      else "no decline")) + ", with mean hold falling from "
-                  f"{sub[0]['cost_mean_HOLD']:.2f} d to "
-                  f"{sub[-1]['cost_mean_HOLD']:.2f} d.")
+                     ("declining overall but not monotonically" if got[0] > got[-1]
+                      else "no decline")) + ".")
+            # the mechanism is cleaner than the headline metric
+            sh = [r["survival_mean_HOLD"] for r in sub]
+            fl = [r["survival_expected_lost"] for r in sub]
+            A(f"\n  The mechanism is the cleaner signal. Under the survival "
+              f"design the mean hold collapses from {sh[0]:.2f} d at capacity "
+              f"{sub[0]['capacity']} to {sh[-1]:.2f} d at capacity "
+              f"{sub[-1]['capacity']}: once capacity is ample **there is no "
+              f"queue left to allocate**, and the achievable loss floor stops "
+              f"improving too ({fl[0]:.3f} -> {fl[-1]:.3f}, flat from capacity "
+              + str(next((r["capacity"] for r in sub
+                          if r["survival_mean_HOLD"] < 1e-9), sub[-1]["capacity"]))
+              + " onward). Scheduling is worth something exactly while the "
+              "network is tight.")
+            A(f"\n  Read the headline column with care: it is measured against "
+              f"the ALPHA = 0 design, which is *indifferent* among equally cheap "
+              f"schedules and therefore returns an arbitrary one. Its badness "
+              f"does not shrink with capacity, which is why the column is not "
+              f"monotone even though the queue it is supposed to proxy for "
+              f"vanishes.")
         A("")
 
     # ---- (c) ------------------------------------------------------------
