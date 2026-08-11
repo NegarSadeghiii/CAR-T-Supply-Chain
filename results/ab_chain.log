@@ -1,0 +1,2 @@
++ python -u ishipment_survival.py --phase 6 --scales 200
++ python -u ishipment_survival.py --phase 7 --scales 200
