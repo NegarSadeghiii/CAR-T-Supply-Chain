@@ -727,8 +727,16 @@ def phase0_setup(net, dat, scales):
                   [{"pid": p.pid, "tier": p.tier, "c": p.c, "h": p.h,
                     "t0": p.t0, "rho": cd.RHO[p.tier], "w_risk": cd.W_RISK[p.tier]}
                    for p in inst.patients])
-    write_csv(os.path.join(RESULTS, "instances_overview.csv"),
-              [{"n": n, "mult": n // 50, "seed": cd.SEED,
+    # merge with any scales already on record, so running a subset of scales
+    # never silently truncates this study-level file
+    ov_path = os.path.join(RESULTS, "instances_overview.csv")
+    prior = {}
+    if os.path.exists(ov_path):
+        import csv as _csv
+        with open(ov_path) as f:
+            for r in _csv.DictReader(f):
+                prior[str(r.get("n"))] = r
+    fresh = [{"n": n, "mult": n // 50, "seed": cd.SEED,
                 "arrival_window": f"{cd.ARRIVAL_WINDOW[0]}-{cd.ARRIVAL_WINDOW[1]}",
                 "arrivals_per_day": round(insts[n].density, 3),
                 "n_H": sum(1 for p in insts[n].patients if p.tier == "H"),
@@ -736,7 +744,9 @@ def phase0_setup(net, dat, scales):
                 "n_L": sum(1 for p in insts[n].patients if p.tier == "L"),
                 **{f"n_{c}": sum(1 for p in insts[n].patients if p.c == c)
                    for c in net.c}}
-               for n in scales])
+             for n in scales]
+    merged = {**prior, **{str(r["n"]): r for r in fresh}}
+    write_csv(ov_path, [merged[k] for k in sorted(merged, key=int)])
     return insts
 
 
