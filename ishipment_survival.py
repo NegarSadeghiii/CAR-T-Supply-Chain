@@ -1365,6 +1365,114 @@ def _plot_centralization(rows):
     print("  [plot]", out)
 
 
+# A nested family of networks of increasing capacity, used to FORCE
+# decentralisation.  CON1 is only an upper bound, so relaxing it does not make
+# the optimiser open more plants -- it just permits it.  To test whether
+# scheduling matters less on a decentralised network the network has to be
+# imposed, which is what fixed_facilities does.
+FORCED_NETWORKS = [
+    ["m2"],
+    ["m1", "m2"],
+    ["m1", "m2", "m3"],
+    ["m1", "m2", "m3", "m4"],
+    ["m1", "m2", "m3", "m4", "m6"],
+    ["m1", "m2", "m3", "m4", "m5", "m6"],
+]
+
+
+def phase6b(net, insts, args):
+    """(b) done properly: hold the network FIXED at k plants and ask what
+    scheduling is still worth."""
+    print("\n=== PHASE 6b (b, forced): scheduling value vs imposed capacity ===")
+    os.makedirs(AB, exist_ok=True)
+    rows = []
+    for n in sorted(insts):
+        inst = insts[n]
+        tl = _ab_tl(n, args)
+        for fset in FORCED_NETWORKS:
+            rec = {"n": n, "k_facilities": len(fset), "network": "+".join(fset),
+                   "capacity": sum(net.FCAP[m] for m in fset),
+                   "time_limit_s": tl}
+            ok = True
+            for label, alpha in (("cost", 0.0), ("survival", ALPHA_SURVIVAL)):
+                blob = run_design(net, inst, "extension", alpha=alpha,
+                                  max_fac=len(net.m), time_limit=tl,
+                                  mip_gap=args.mip_gap,
+                                  use_cache=not args.no_cache,
+                                  fixed_facilities=fset)
+                p = _pt(blob)
+                if p is None:
+                    print(f"  N={n} {'+'.join(fset)} {label}: "
+                          f"{blob['solve']['status']}")
+                    ok = False
+                    break
+                for k, v in p.items():
+                    rec[f"{label}_{k}"] = v
+            if not ok:
+                continue
+            rec["lives_saved_by_scheduling"] = (rec["cost_expected_lost"]
+                                                - rec["survival_expected_lost"])
+            rec["lives_saved_high_risk"] = (rec["cost_expected_lost_H"]
+                                            - rec["survival_expected_lost_H"])
+            rows.append(rec)
+    write_csv(os.path.join(AB, "phase6b_forced_networks.csv"), rows)
+    _print_table(rows, ["n", "k_facilities", "network", "capacity",
+                        "cost_mean_HOLD", "survival_mean_HOLD",
+                        "cost_expected_lost", "survival_expected_lost",
+                        "lives_saved_by_scheduling"])
+    _plot_forced(rows)
+    return rows
+
+
+def _plot_forced(rows):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    if not rows:
+        return
+    fig, ax = plt.subplots(1, 2, figsize=(12.6, 5.4))
+    cols = {100: "#2a8f6a", 200: "#1b6a6a", 500: "#5b2a86"}
+    for n in sorted({r["n"] for r in rows}):
+        sub = sorted([r for r in rows if r["n"] == n],
+                     key=lambda r: r["capacity"])
+        ax[0].plot([r["capacity"] for r in sub],
+                   [r["lives_saved_by_scheduling"] for r in sub], "-o",
+                   color=cols.get(n, "#888"), label=f"N = {n}", lw=2, ms=6)
+        for r in sub:
+            ax[0].annotate(f"{r['k_facilities']}", (r["capacity"],
+                           r["lives_saved_by_scheduling"]),
+                           textcoords="offset points", xytext=(0, 7),
+                           ha="center", fontsize=7, color=cols.get(n, "#888"))
+        ax[1].plot([r["capacity"] for r in sub],
+                   [r["cost_mean_HOLD"] for r in sub], "-o",
+                   color=cols.get(n, "#888"), label=f"N = {n} (cost design)",
+                   lw=2, ms=6)
+        ax[1].plot([r["capacity"] for r in sub],
+                   [r["survival_mean_HOLD"] for r in sub], "--s",
+                   color=cols.get(n, "#888"), alpha=.6, lw=1.6, ms=5,
+                   label=f"N = {n} (survival design)")
+    ax[0].set_xlabel("Installed concurrent capacity (imposed network)")
+    ax[0].set_ylabel("Expected lives saved by scheduling alone")
+    ax[0].set_title("(a) Scheduling pays only while capacity is scarce",
+                    loc="left", fontweight="bold")
+    ax[0].axhline(0, color="#999999", lw=.8)
+    ax[1].set_xlabel("Installed concurrent capacity (imposed network)")
+    ax[1].set_ylabel("Mean hold  [days]")
+    ax[1].set_title("(b) ... because the queue itself disappears",
+                    loc="left", fontweight="bold")
+    for a in ax:
+        a.grid(alpha=.3)
+        a.legend(fontsize=8)
+    fig.suptitle("Forced decentralisation: number of plants is imposed, "
+                 "not merely permitted", fontweight="bold", y=.99)
+    fig.tight_layout(rect=(0, 0, 1, .95))
+    out = os.path.join(AB, "centralization_forced.png")
+    fig.savefig(out, dpi=160)
+    plt.close(fig)
+    print("  [plot]", out)
+
+
 # ---------------------------------------------------------------------------
 # PHASE 7 (c): triage under accelerating decline
 # ---------------------------------------------------------------------------
@@ -1465,7 +1573,7 @@ def phase7(net, insts, args, scale=200):
     return rows
 
 
-def write_findings(p5head, p6rows, p7rows, path):
+def write_findings(p5head, p6rows, p7rows, path, p6b=None):
     """The go/no-go note: does the extension carry a surprising result?"""
     L = []
     A = L.append
@@ -1549,6 +1657,39 @@ def write_findings(p5head, p6rows, p7rows, path):
                 trend = "insufficient points"
             A(f"| {n} | " + " | ".join("-" if v is None else f"{v:.2f}"
                                        for v in vals) + f" | {trend} |")
+        A("\nCON1 is only an *upper bound*, so this table answers \"what happens "
+          "if more plants are permitted\", not \"what happens if more plants "
+          "exist\". Where the bound is not binding the optimiser simply keeps "
+          "the network it already preferred and the row is flat by "
+          "construction.\n")
+
+    if p6b:
+        A("\nThe controlled version imposes the network with "
+          "`fixed_facilities`, so capacity really does grow:\n")
+        A("| N | plants | network | capacity | mean hold (cost design) | "
+          "E[lost] cost | E[lost] survival | lives saved by scheduling |\n"
+          "|---|---|---|---|---|---|---|---|")
+        for r in sorted(p6b, key=lambda r: (r["n"], r["capacity"])):
+            A(f"| {r['n']} | {r['k_facilities']} | {r['network']} | "
+              f"{r['capacity']} | {r['cost_mean_HOLD']:.2f} | "
+              f"{r['cost_expected_lost']:.3f} | "
+              f"{r['survival_expected_lost']:.3f} | "
+              f"{r['lives_saved_by_scheduling']:.3f} |")
+        for n in sorted({r["n"] for r in p6b}):
+            sub = sorted([r for r in p6b if r["n"] == n],
+                         key=lambda r: r["capacity"])
+            got = [r["lives_saved_by_scheduling"] for r in sub]
+            if len(got) >= 2:
+                mono = all(a >= b - 1e-6 for a, b in zip(got, got[1:]))
+                A(f"\n**N = {n}:** scheduling saves {got[0]:.2f} lives on the "
+                  f"tightest imposed network ({sub[0]['network']}, capacity "
+                  f"{sub[0]['capacity']}) and {got[-1]:.2f} on the widest "
+                  f"({sub[-1]['network']}, capacity {sub[-1]['capacity']}) - "
+                  + ("a monotone decline" if mono else
+                     ("declining overall" if got[0] > got[-1]
+                      else "no decline")) + ", with mean hold falling from "
+                  f"{sub[0]['cost_mean_HOLD']:.2f} d to "
+                  f"{sub[-1]['cost_mean_HOLD']:.2f} d.")
         A("")
 
     # ---- (c) ------------------------------------------------------------
@@ -1592,18 +1733,23 @@ def write_findings(p5head, p6rows, p7rows, path):
         and (h["dollars_per_life_scheduling"] or 0)
         < 0.1 * h["dollars_per_life_building"]
         for h in p5head)
+    # judge (b) on the controlled (forced-network) experiment when we have it,
+    # since the CON1 sweep only relaxes a bound that may not be binding
+    b_src = p6b if p6b else p6rows
+    b_key = "capacity" if p6b else "CON1"
     b_trend = []
-    for n in sorted({r["n"] for r in p6rows}):
+    for n in sorted({r["n"] for r in b_src}):
         got = [r["lives_saved_by_scheduling"]
-               for r in sorted([x for x in p6rows if x["n"] == n],
-                               key=lambda x: x["CON1"])]
+               for r in sorted([x for x in b_src if x["n"] == n],
+                               key=lambda x: x[b_key])]
         if len(got) >= 2:
             b_trend.append(got[0] > got[-1] + 1e-6)
     b_surprising = bool(b_trend) and all(b_trend)
 
     A(f"* (a) scheduling-substitutes-for-capacity: "
       f"**{'SUPPORTED' if a_surprising else ('INCONCLUSIVE' if p5head else 'NOT RUN')}**\n"
-      f"* (b) centralization sets the value of scheduling: "
+      f"* (b) centralization sets the value of scheduling "
+      f"({'forced-network experiment' if p6b else 'CON1 sweep only'}): "
       f"**{'SUPPORTED' if b_surprising else 'NOT SUPPORTED as a clean monotone trend'}**\n"
       f"* (c) triage at gamma > 1: "
       f"**{'YES' if any(r['inversions_raw'] > 0 for r in p7rows) else 'NO'}**\n")
@@ -1661,8 +1807,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--phase", default="all",
-                    choices=["0", "1", "2", "3", "4", "5", "6", "7", "all",
-                             "ab"])
+                    choices=["0", "1", "2", "3", "4", "5", "6", "6b", "7",
+                             "all", "ab"])
     ap.add_argument("--ab-time-limit", type=int, default=0,
                     help="per-solve limit for phases 5-7; 0 = 900s at N<=200, "
                          "1200s at N=500")
@@ -1710,20 +1856,24 @@ def main(argv=None):
         out["phase4"] = phase4(net, insts, args.frontier_scale,
                                args.frontier_time_limit, args)
 
-    ab = args.phase in ("ab", "5", "6", "7")
-    p5h, p6r, p7r = [], [], []
+    ab = args.phase in ("ab", "5", "6", "6b", "7")
+    p5h, p6r, p6b, p7r = [], [], [], []
     if args.phase in ("5", "ab"):
         _, p5h = phase5(net, insts, args)
         out["phase5"] = p5h
     if args.phase in ("6", "ab"):
         p6r = phase6(net, insts, args)
         out["phase6"] = p6r
+    if args.phase in ("6b", "ab"):
+        p6b = phase6b(net, insts, args)
+        out["phase6b"] = p6b
     if args.phase in ("7", "ab"):
         p7r = phase7(net, insts, args, scale=200)
         out["phase7"] = p7r
     if ab:
         os.makedirs(AB, exist_ok=True)
-        write_findings(p5h, p6r, p7r, os.path.join(AB, "findings.md"))
+        write_findings(p5h, p6r, p7r, os.path.join(AB, "findings.md"),
+                       p6b=p6b)
     used = sorted(x for x in _SOLVER_CACHE["used"] if x and x != "?")
     if "highs" in used and not _SOLVER_CACHE["note"]:
         _SOLVER_CACHE["note"] = GUROBI_FALLBACK_NOTE
