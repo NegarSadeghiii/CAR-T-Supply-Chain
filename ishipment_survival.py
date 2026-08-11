@@ -1222,50 +1222,73 @@ def _plot_schedule_vs_build(n, fixed, free, h):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplots(figsize=(9.2, 6.2))
-    for pts, lab, col, mk in ((fixed, f"network FIXED at {h['network_F0']} "
-                                      "(pure scheduling)", "#1b6a6a", "o"),
-                              (free, "network FREE (scheduling + build)",
-                               "#5b2a86", "s")):
+    fig, ax = plt.subplots(figsize=(9.8, 6.4))
+    series = ((fixed, f"network FIXED at {h['network_F0']} (pure scheduling)",
+               "#1b6a6a", "o"),
+              (free, "network FREE (scheduling + build)", "#5b2a86", "s"))
+    for pts, lab, col, mk in series:
         pts = sorted(pts, key=lambda r: -r["expected_lost"])
         ax.plot([p["expected_lost"] for p in pts],
                 [p["total_cost"] / 1e6 for p in pts], "-" + mk, color=col,
-                label=lab, ms=6, lw=1.9)
-        for p in pts:
-            ax.annotate(f"a={p['alpha']:g}",
-                        (p["expected_lost"], p["total_cost"] / 1e6),
-                        textcoords="offset points", xytext=(6, 5), fontsize=7,
-                        color=col)
+                label=lab, ms=6, lw=1.9, zorder=3)
+
+    xs = [p["expected_lost"] for pts, _, _, _ in series for p in pts]
+    ys = [p["total_cost"] / 1e6 for pts, _, _, _ in series for p in pts]
+    xr, yr = max(xs) - min(xs), max(ys) - min(ys)
+    # label only visually separated points, alternating above/below
+    for pts, _, col, _ in series:
+        seen = []
+        for i, p in enumerate(sorted(pts, key=lambda r: r["expected_lost"])):
+            xy = (p["expected_lost"], p["total_cost"] / 1e6)
+            if any(abs(xy[0] - q[0]) < .05 * xr and abs(xy[1] - q[1]) < .05 * yr
+                   for q in seen):
+                continue
+            seen.append(xy)
+            ax.annotate(f"$\\alpha$={p['alpha']:g}", xy,
+                        textcoords="offset points",
+                        xytext=(6, 7 if len(seen) % 2 else -13),
+                        fontsize=7, color=col, zorder=4)
 
     a0 = max(fixed, key=lambda r: r["expected_lost"])
     fb = min(fixed, key=lambda r: r["expected_lost"])
     gb = min(free, key=lambda r: r["expected_lost"])
-    y = a0["total_cost"] / 1e6
-    ax.annotate("", xy=(fb["expected_lost"], y), xytext=(a0["expected_lost"], y),
-                arrowprops=dict(arrowstyle="<->", color="#1b6a6a", lw=1.6))
-    ax.text((a0["expected_lost"] + fb["expected_lost"]) / 2, y,
-            f"  free scheduling\n  {h['lives_saved_by_scheduling_alone']:.2f} lives"
-            f" for ${h['cost_of_those_lives']:,.0f}",
-            ha="center", va="bottom", fontsize=8.5, color="#1b6a6a",
+
+    # "free scheduling" band, drawn below the data so the text has clear air
+    y_arrow = min(ys) - .10 * yr
+    ax.annotate("", xy=(fb["expected_lost"], y_arrow),
+                xytext=(a0["expected_lost"], y_arrow),
+                arrowprops=dict(arrowstyle="<->", color="#1b6a6a", lw=2))
+    ax.text((a0["expected_lost"] + fb["expected_lost"]) / 2,
+            y_arrow - .045 * yr,
+            f"free scheduling: {h['lives_saved_by_scheduling_alone']:.2f} lives "
+            f"for ${h['cost_of_those_lives']:,.0f}\n"
+            f"({h['lives_at_zero_added_cost']:.2f} of them for "
+            f"${h['cost_delta_for_those']:,.0f})",
+            ha="center", va="top", fontsize=9, color="#1b6a6a",
             fontweight="bold")
+
     if gb["expected_lost"] < fb["expected_lost"] - 1e-9:
         ax.annotate("", xy=(gb["expected_lost"], gb["total_cost"] / 1e6),
                     xytext=(fb["expected_lost"], fb["total_cost"] / 1e6),
-                    arrowprops=dict(arrowstyle="<->", color="#5b2a86", lw=1.6))
+                    arrowprops=dict(arrowstyle="<->", color="#5b2a86", lw=2))
         dpl = h["dollars_per_life_building"]
-        ax.text(gb["expected_lost"], (gb["total_cost"] + fb["total_cost"]) / 2e6,
-                f"paid capacity\n{h['extra_lives_only_by_building']:.2f} lives\n"
-                f"${dpl/1e6:,.2f}M per life" if dpl else "paid capacity",
-                ha="left", va="center", fontsize=8.5, color="#5b2a86",
-                fontweight="bold")
+        ax.text(gb["expected_lost"] + .04 * xr,
+                (gb["total_cost"] + fb["total_cost"]) / 2e6,
+                f"paid capacity:\n{h['extra_lives_only_by_building']:.2f} lives\n"
+                + (f"${dpl/1e6:,.2f}M per life" if dpl else ""),
+                ha="left", va="center", fontsize=9, color="#5b2a86",
+                fontweight="bold",
+                bbox=dict(boxstyle="round,pad=0.35", fc="white",
+                          ec="#5b2a86", alpha=.9))
 
-    ax.set_xlabel("Expected patients lost   sum (1 - S[p])")
+    ax.set_ylim(y_arrow - .22 * yr, max(ys) + .08 * yr)
+    ax.set_xlabel("Expected patients lost   $\\Sigma_p\\,(1 - S[p])$")
     ax.set_ylabel("Total supply-chain cost  [$M]")
     ax.set_title(f"Schedule before you build - N = {n} (CON1 <= {h['CON1']})",
                  fontweight="bold", loc="left")
     ax.grid(alpha=.3)
     ax.legend(fontsize=8.5, loc="upper right")
-    ax.margins(x=.16, y=.14)
+    ax.margins(x=.14)
     fig.tight_layout()
     out = os.path.join(AB, f"schedule_vs_build_N{n}.png")
     fig.savefig(out, dpi=160)
@@ -1303,6 +1326,11 @@ def phase6(net, insts, args):
                                                 - rec["survival_expected_lost"])
             rec["lives_saved_high_risk"] = (rec["cost_expected_lost_H"]
                                             - rec["survival_expected_lost_H"])
+            # The metric compares against the ALPHA=0 design. If that solve did
+            # not converge, its incumbent is not the cost optimum and the
+            # comparison is meaningless -- flag it rather than trend through it.
+            rec["both_optimal"] = (rec["cost_status"] == "optimal"
+                                   and rec["survival_status"] == "optimal")
             rec["cost_premium"] = (rec["survival_total_cost"]
                                    - rec["cost_total_cost"])
             rows.append(rec)
@@ -1445,12 +1473,17 @@ def phase6b(net, insts, args):
                                                 - rec["survival_expected_lost"])
             rec["lives_saved_high_risk"] = (rec["cost_expected_lost_H"]
                                             - rec["survival_expected_lost_H"])
+            # The metric compares against the ALPHA=0 design. If that solve did
+            # not converge, its incumbent is not the cost optimum and the
+            # comparison is meaningless -- flag it rather than trend through it.
+            rec["both_optimal"] = (rec["cost_status"] == "optimal"
+                                   and rec["survival_status"] == "optimal")
             rows.append(rec)
     write_csv(os.path.join(AB, "phase6b_forced_networks.csv"), rows)
     _print_table(rows, ["n", "k_facilities", "network", "capacity",
                         "cost_mean_HOLD", "survival_mean_HOLD",
                         "cost_expected_lost", "survival_expected_lost",
-                        "lives_saved_by_scheduling"])
+                        "lives_saved_by_scheduling", "both_optimal"])
     _plot_forced(rows)
     return rows
 
@@ -1612,13 +1645,15 @@ def _read_csv(path, numeric=()):
     with open(path) as f:
         for r in _csv.DictReader(f):
             for k in list(r):
-                if k in numeric or numeric == "*":
+                # booleans first: "False" is a truthy string, and reading a
+                # both_optimal flag as one silently disables the exclusion
+                if r[k] in ("True", "False"):
+                    r[k] = r[k] == "True"
+                elif k in numeric or numeric == "*":
                     try:
                         r[k] = float(r[k])
                     except (TypeError, ValueError):
                         pass
-                elif r[k] in ("True", "False"):
-                    r[k] = r[k] == "True"
             out.append(r)
     return out
 
@@ -1744,14 +1779,27 @@ def write_findings(p5head, p6rows, p7rows, path, p6b=None):
           "E[lost] cost | E[lost] survival | lives saved by scheduling |\n"
           "|---|---|---|---|---|---|---|---|")
         for r in sorted(p6b, key=lambda r: (r["n"], r["capacity"])):
+            mark = "" if r.get("both_optimal", True) else " *"
             A(f"| {r['n']} | {r['k_facilities']} | {r['network']} | "
               f"{r['capacity']} | {r['cost_mean_HOLD']:.2f} | "
               f"{r['cost_expected_lost']:.3f} | "
               f"{r['survival_expected_lost']:.3f} | "
-              f"{r['lives_saved_by_scheduling']:.3f} |")
+              f"{r['lives_saved_by_scheduling']:.3f}{mark} |")
+        skipped = [r for r in p6b if not r.get("both_optimal", True)]
+        if skipped:
+            A("\nRows whose ALPHA = 0 comparator did not converge inside the "
+              "time limit are excluded from the trend below - their incumbent "
+              "is not the cost optimum, so the difference against it is not a "
+              "measure of anything: "
+              + "; ".join(f"N={r['n']} {r['network']} "
+                          f"(cost-design gap {float(r['cost_gap']):.1%})"
+                          for r in skipped) + ".\n")
         for n in sorted({r["n"] for r in p6b}):
-            sub = sorted([r for r in p6b if r["n"] == n],
+            sub = sorted([r for r in p6b if r["n"] == n
+                          and r.get("both_optimal", True)],
                          key=lambda r: r["capacity"])
+            if len(sub) < 2:
+                continue
             got = [r["lives_saved_by_scheduling"] for r in sub]
             if len(got) >= 2:
                 mono = all(a >= b - 1e-6 for a, b in zip(got, got[1:]))
@@ -1765,16 +1813,20 @@ def write_findings(p5head, p6rows, p7rows, path, p6b=None):
             # the mechanism is cleaner than the headline metric
             sh = [r["survival_mean_HOLD"] for r in sub]
             fl = [r["survival_expected_lost"] for r in sub]
+            drained = next((r["capacity"] for r in sub
+                            if r["survival_mean_HOLD"] < 1e-9), None)
+            tail = (f"once capacity reaches {drained} the queue is gone "
+                    f"entirely (mean hold 0.00 d) and the achievable loss floor "
+                    f"stops improving with it ({fl[0]:.3f} -> {fl[-1]:.3f})"
+                    if drained is not None else
+                    f"the queue shrinks but never fully drains over the "
+                    f"capacities tested, and the achievable loss floor moves "
+                    f"only from {fl[0]:.3f} to {fl[-1]:.3f}")
             A(f"\n  The mechanism is the cleaner signal. Under the survival "
-              f"design the mean hold collapses from {sh[0]:.2f} d at capacity "
+              f"design the mean hold falls from {sh[0]:.2f} d at capacity "
               f"{sub[0]['capacity']} to {sh[-1]:.2f} d at capacity "
-              f"{sub[-1]['capacity']}: once capacity is ample **there is no "
-              f"queue left to allocate**, and the achievable loss floor stops "
-              f"improving too ({fl[0]:.3f} -> {fl[-1]:.3f}, flat from capacity "
-              + str(next((r["capacity"] for r in sub
-                          if r["survival_mean_HOLD"] < 1e-9), sub[-1]["capacity"]))
-              + " onward). Scheduling is worth something exactly while the "
-              "network is tight.")
+              f"{sub[-1]['capacity']}: " + tail + ". Scheduling is worth "
+              "something exactly while the network is tight.")
             A(f"\n  Read the headline column with care: it is measured against "
               f"the ALPHA = 0 design, which is *indifferent* among equally cheap "
               f"schedules and therefore returns an arbitrary one. Its badness "
@@ -1831,7 +1883,8 @@ def write_findings(p5head, p6rows, p7rows, path, p6b=None):
     b_trend = []
     for n in sorted({r["n"] for r in b_src}):
         got = [r["lives_saved_by_scheduling"]
-               for r in sorted([x for x in b_src if x["n"] == n],
+               for r in sorted([x for x in b_src if x["n"] == n
+                                and x.get("both_optimal", True)],
                                key=lambda x: x[b_key])]
         if len(got) >= 2:
             b_trend.append(got[0] > got[-1] + 1e-6)

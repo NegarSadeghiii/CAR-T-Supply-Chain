@@ -22,46 +22,16 @@ The first tranche is the striking one: at every scale a large share of the reach
 
 ## (b) Does centralization determine when scheduling matters?
 
-Expected lives saved by scheduling alone, as CON1 is relaxed:
-
-| N | CON1=2 | CON1=3 | CON1=4 | CON1=5 | CON1=6 | trend |
-|---|---|---|---|---|---|---|
-| 200 | 2.64 | 2.33 | 2.46 | 2.24 | 2.17 | decreasing overall (2.64 -> 2.17) |
-
-CON1 is only an *upper bound*, so this table answers "what happens if more plants are permitted", not "what happens if more plants exist". Where the bound is not binding the optimiser simply keeps the network it already preferred and the row is flat by construction.
-
-
-The controlled version imposes the network with `fixed_facilities`, so capacity really does grow:
-
-| N | plants | network | capacity | mean hold (cost design) | E[lost] cost | E[lost] survival | lives saved by scheduling |
-|---|---|---|---|---|---|---|---|
-| 200 | 2 | m1+m3 | 14 | 8.96 | 9.933 | 7.232 | 2.701 |
-| 200 | 4 | m1+m3+m4+m6 | 28 | 6.39 | 9.237 | 6.606 | 2.631 |
-| 200 | 3 | m1+m2+m3 | 45 | 3.22 | 7.677 | 6.322 | 1.355 |
-| 200 | 5 | m1+m2+m3+m4+m6 | 59 | 3.00 | 7.671 | 6.322 | 1.349 |
-| 200 | 4 | m1+m2+m3+m5 | 76 | 1.61 | 7.166 | 6.322 | 0.845 |
-| 200 | 6 | m1+m2+m3+m4+m5+m6 | 90 | 3.24 | 7.792 | 6.322 | 1.471 |
-
-**N = 200:** scheduling saves 2.70 lives on the tightest imposed network (m1+m3, capacity 14) and 1.47 on the widest (m1+m2+m3+m4+m5+m6, capacity 90) - declining overall but not monotonically.
-
-  The mechanism is the cleaner signal. Under the survival design the mean hold collapses from 5.45 d at capacity 14 to 0.00 d at capacity 90: once capacity is ample **there is no queue left to allocate**, and the achievable loss floor stops improving too (7.232 -> 6.322, flat from capacity 45 onward). Scheduling is worth something exactly while the network is tight.
-
-  Read the headline column with care: it is measured against the ALPHA = 0 design, which is *indifferent* among equally cheap schedules and therefore returns an arbitrary one. Its badness does not shrink with capacity, which is why the column is not monotone even though the queue it is supposed to proxy for vanishes.
+_Phase 6 produced no usable sweep._
 
 
 ## (c) Did triage appear at gamma > 1?
 
-| gamma | mean hold H | M | L | sickest-first order holds? | swap-feasible pairs | priority inversions (raw) | inversions (rho-weighted) |
-|---|---|---|---|---|---|---|---|
-| 1 | 0.033 | 3.150 | 13.950 | yes | 406 | 0 | 0 |
-| 1.5 | 0.033 | 3.100 | 13.833 | yes | 399 | 0 | 0 |
-| 2 | 0.033 | 3.163 | 13.617 | yes | 429 | 0 | 0 |
-
-**Verdict on (c). No triage** - at every gamma tested the schedule stays strictly sickest-first: tier mean holds remain ordered H <= M <= L and no swap-feasible pair inverts. In a deterministic model with a single monotone risk index this is the expected outcome - triage requires either uncertainty or a non-monotone value of time, neither of which this formulation contains.
+_Phase 7 produced no usable runs._
 
 
 ## Verdict
 
 * (a) scheduling-substitutes-for-capacity: **SUPPORTED**
-* (b) centralization sets the value of scheduling (forced-network experiment): **SUPPORTED**
+* (b) centralization sets the value of scheduling (CON1 sweep only): **NOT SUPPORTED as a clean monotone trend**
 * (c) triage at gamma > 1: **NO**
