@@ -1,4 +1,0 @@
-+ python -u ishipment_survival.py --phase 6 --scales 200
-+ python -u ishipment_survival.py --phase 7 --scales 200
-+ python -u ishipment_survival.py --phase 6b --scales 200
-+ python -u ishipment_survival.py --phase 6 --scales 500 --ab-time-limit 900

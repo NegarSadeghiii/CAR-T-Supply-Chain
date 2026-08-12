@@ -105,11 +105,52 @@ def summarise(rows, cost, label, status="constructed", gap=None, wall=None):
     return rec
 
 
+def freeze(mdl, net, inst, fixed_facilities=None, fixed_assignment=None,
+           allow_expedite=True):
+    """Apply the ladder's freezes to an already-built model.
+
+    These live here rather than inside build_extension so the study model stays
+    exactly as the four published phases use it.  Each is a plain constraint
+    appended to the model's own ConstraintList:
+
+      fixed_facilities  E1[m] == 1 for the given plants, 0 for the rest
+      fixed_assignment  {patient: plant} -- that patient is manufactured there
+      allow_expedite    False restricts both legs to the cheapest transport mode
+    """
+    if fixed_facilities is not None:
+        frozen = set(fixed_facilities)
+        for m in net.m:
+            mdl.con.add(mdl.E1[m] == (1 if m in frozen else 0))
+    if fixed_assignment is not None:
+        for pid, m_fixed in fixed_assignment.items():
+            mdl.con.add(sum(mdl.y1[pid, m_fixed, j] for j in net.j) == 1)
+    if not allow_expedite:
+        cheap = cheapest_mode(net)
+        for pid in [q.pid for q in inst.patients]:
+            for m in net.m:
+                for j in net.j:
+                    if j != cheap:
+                        mdl.con.add(mdl.y1[pid, m, j] == 0)
+                        mdl.con.add(mdl.y2[pid, m, j] == 0)
+    return mdl
+
+
+def cheapest_mode(net):
+    """j2 (ground) is strictly cheaper than j1 (air) on every (c,m) and (m,h)
+    pair in this data set, and correspondingly slower."""
+    return min(net.j, key=lambda j: max(
+        [net.U1[(c, m, j)] for c in net.c for m in net.m]
+        + [net.U3[(m, h, j)] for m in net.m for h in net.h]))
+
+
 def solve_rung(net, inst, label, cap, time_limit, **kw):
     """Fresh solve -- run_design/cache are deliberately bypassed."""
     print(f"  [solve] {label} ...", flush=True)
-    mdl = ish.build_extension(net, inst, alpha=ALPHA_BIG,
-                              max_facilities=cap, **kw)
+    # freezing the network makes the dominance cuts pointless, and they could
+    # contradict a freeze that opens a dominated plant, so they are dropped
+    mdl = ish.build_extension(net, inst, alpha=ALPHA_BIG, max_facilities=cap,
+                              dominance_cuts=kw.get("fixed_facilities") is None)
+    freeze(mdl, net, inst, **kw)
     out = ish.solve(mdl, time_limit=time_limit, mip_gap=MIP_GAP)
     if out.status not in ("optimal", "feasible"):
         print(f"    -> {out.status}")
@@ -151,9 +192,7 @@ def main():
         return 1
     F0 = s0["opened"]
     assign = {r["pid"]: r["facility"] for r in rows0}
-    cheap = min(net.j, key=lambda j: max(
-        [net.U1[(c, m, j)] for c in net.c for m in net.m]
-        + [net.U3[(m, h, j)] for m in net.m for h in net.h]))
+    cheap = cheapest_mode(net)
     print(f"    cheapest transport mode = {cheap} "
           f"(TT1={net.TT1[cheap]}d, TT3={net.TT3[cheap]}d)")
 

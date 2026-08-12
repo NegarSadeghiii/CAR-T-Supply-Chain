@@ -1,8 +1,0 @@
-
-=== PHASE 6 (b): centralization vs the value of scheduling ===
-  [cache] extension_n500_alpha0_fac2_nd42
-  [cache] extension_n500_alpha100000_fac2_nd42
-  [cache] extension_n500_alpha0_fac3_nd42
-  [cache] extension_n500_alpha100000_fac3_nd42
-  [solve] extension_n500_alpha0_fac4_nd42 (limit 900s) ...
-[solver] Gurobi is requested first on every solve, but refuses the study-scale models: "Model too large for size-limited license". This container carries only the pip size-limited Gurobi licence (2000 variables / 2000 constraints) and every model here is far larger, so those solves fall back to HiGHS (open-source MILP, driven through the same Pyomo interface). Re-run with a full Gurobi licence to use Gurobi throughout. (first refusal: Model too large for size-limited license; visit https://gurobi.com/unrestricted for more information)

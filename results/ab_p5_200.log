@@ -1,6 +1,0 @@
-
-=== PHASE 5 (a): schedule-before-you-build ($/life decomposition) ===
-  [cache] extension_n200_alpha0_fac2_nd42
-  N=200: cost design opens m1+m3 (E[lost] 9.880)
-  [solve] extension_n200_alpha0_fac2_nd42_fixm1m3 (limit 900s) ...
-[solver] Gurobi is requested first on every solve, but refuses the study-scale models: "Model too large for size-limited license". This container carries only the pip size-limited Gurobi licence (2000 variables / 2000 constraints) and every model here is far larger, so those solves fall back to HiGHS (open-source MILP, driven through the same Pyomo interface). Re-run with a full Gurobi licence to use Gurobi throughout. (first refusal: Model too large for size-limited license; visit https://gurobi.com/unrestricted for more information)

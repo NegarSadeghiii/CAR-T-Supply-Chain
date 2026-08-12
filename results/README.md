@@ -58,7 +58,6 @@ Each scale tiles the 50-patient cohort (mult = 2 / 4 / 10). Tier labels and leuk
 
 | N | mult | arrivals/day | H | M | L | c1 | c2 | c3 | c4 |
 |---|---|---|---|---|---|---|---|---|---|
-| 100 | 2 | 1.136 | 30 | 40 | 30 | 20 | 20 | 28 | 32 |
 | 200 | 4 | 2.273 | 60 | 80 | 60 | 40 | 40 | 56 | 64 |
 | 500 | 10 | 5.682 | 150 | 200 | 150 | 100 | 100 | 140 | 160 |
 
@@ -81,19 +80,7 @@ The baseline has no queue: manufacturing starts on the day the sample reaches th
 
 | N | CON1 | status | facilities opened | concurrent capacity | total cost | mean TRT | E[lost] | wall s |
 |---|---|---|---|---|---|---|---|---|
-| 100 | 2 | optimal | m1+m3 | 14 | $12.81M | 18.00 | 3.15 | 21.6 |
 | 200 | 2 | optimal | m2 | 31 | $26.96M | 18.00 | 6.29 | 16.1 |
-| 500 | 3 | optimal | m2+m3+m5 | 72 | $63.79M | 18.00 | 15.73 | 512.8 |
-
-
-**Why the third facility.** At N = 500 the strict centralised cap is what forces the relaxation, and this is a documented diagnostic rather than the headline result:
-
-| N | configured CON1 | opened at configured CON1 | cost at configured CON1 | status at CON1 <= 2 | opened at CON1 <= 2 | cost at CON1 <= 2 |
-|---|---|---|---|---|---|---|
-| 500 | 3 | m2+m3+m5 | $63.79M | infeasible |  |  |
-
-
-So the no-queue model cannot serve N = 500 from two plants: the peak 7-day rolling arrival load reaches 80 jobs against the 62 concurrent slots the best two-facility pair can offer, and starts are pinned to arrival. Three facilities resolve it. Note that this is a statement about the *centralised* configuration only - with the third facility that i-SHIPMENT itself allows at high demand, the baseline is feasible and is the comparison used throughout.
 
 
 The pattern is monotone: every step up in demand pushes the baseline onto a larger and more expensive facility set, because the only lever it has against a burst of arrivals is raw concurrent capacity. It cannot delay a single job.
@@ -103,15 +90,9 @@ Baseline survival, by tier (ND = 18 pins every therapy to an 18-day turnaround, 
 
 | instance | tier | n | mean TRT | mean S | E[lost] |
 |---|---|---|---|---|---|
-| baseline_N100 | H | 30 | 18.00 | 0.9327 | 2.018 |
-| baseline_N100 | M | 40 | 18.00 | 0.9783 | 0.870 |
-| baseline_N100 | L | 30 | 18.00 | 0.9914 | 0.259 |
 | baseline_N200 | H | 60 | 18.00 | 0.9327 | 4.037 |
 | baseline_N200 | M | 80 | 18.00 | 0.9783 | 1.739 |
 | baseline_N200 | L | 60 | 18.00 | 0.9914 | 0.517 |
-| baseline_N500 | H | 150 | 18.00 | 0.9327 | 10.092 |
-| baseline_N500 | M | 200 | 18.00 | 0.9783 | 4.349 |
-| baseline_N500 | L | 150 | 18.00 | 0.9914 | 1.293 |
 
 
 ## 4. Phase 2 - the queue substitutes scheduling for plant
@@ -137,29 +118,14 @@ min Z = (original i-SHIPMENT cost) + ALPHA * sum_p rho_u(p) * (1 - S[p])
 
 | N | CON1 | status | facilities opened | capacity | total cost | mean TRT | mean HOLD | max HOLD | E[lost] | wall s |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 100 | 2 | optimal | m1+m4 | 8 | $8.21M | 21.66 | 2.83 | 23 | 3.40 | 27.4 |
 | 200 | 2 | optimal | m1+m3 | 14 | $14.95M | 24.29 | 5.46 | 23 | 7.24 | 276.5 |
-| 500 | 3 | feasible | m1+m2 | 35 | $36.23M | 23.74 | 5.28 | 24 | 17.44 | 5421.9 |
-| 500 | 2 | optimal | m1+m2 | 35 | $36.23M | 23.77 | 5.31 | 24 | 17.47 | 1959.7 |
 
 
 **Baseline vs. extension, head to head** - the baseline at the CON1 its scale is configured for, the extension at every facility budget solved:
 
-| N | baseline CON1 | baseline network | baseline cost | extension on 2 | cost | vs baseline | extension on 3 | cost | vs baseline |
-|---|---|---|---|---|---|---|---|---|---|
-| 100 | 2 | m1+m3 | $12.81M | m1+m4 | $8.21M | 35.9% |  |  |  |
-| 200 | 2 | m2 | $26.96M | m1+m3 | $14.95M | 44.5% |  |  |  |
-| 500 | 3 | m2+m3+m5 | $63.79M | m1+m2 | $36.23M | 43.2% | m1+m2 | $36.23M | 43.2% |
-
-
-### N = 500: capacity substitution
-
-This is the sharpest result in the study, and it is about **substitution, not feasibility rescue**. Given the third facility that i-SHIPMENT allows at high demand, the baseline is perfectly feasible: it opens m2+m3+m5 (capacity 72) for $63.79M. The extension serves the same 500 patients on **two** facilities - m1+m2, capacity 35 - for $36.23M, 43.2% less.
-
-The queue is buying the third plant back. Where the baseline must hold enough concurrent capacity to absorb the worst arrival burst instantly, the extension spreads that burst across a hold and needs only enough capacity for the sustained rate. Given the same 3-facility budget as the baseline, the extension does not spend it: the optimum at CON1 <= 3 is m1+m2 at $36.23M, so the third facility earns nothing once jobs can be held.
-
-
-(The N = 500 CON1 <= 3 run hit its time limit at `feasible` rather than proven optimal, gap 0.00056. Because CON1 <= 3 *relaxes* CON1 <= 2, its true optimum cannot exceed the proven-optimal 2-facility value, so the small positive difference between the two incumbents is unclosed gap, not a real penalty for the extra facility.)
+| N | baseline CON1 | baseline network | baseline cost | extension on 2 | cost | vs baseline |
+|---|---|---|---|---|---|---|
+| 200 | 2 | m2 | $26.96M | m1+m3 | $14.95M | 44.5% |
 
 
 The hold absorbs exactly the contention that the baseline had to buy concurrent capacity for, so at every scale the extension lands on a smaller, cheaper network than the baseline needs.
@@ -171,9 +137,7 @@ The extension is cheaper, but it is **not** uniformly better: the baseline is pi
 
 | N | baseline cost | baseline mean TRT | baseline E[lost] | extension cost | extension mean TRT | extension E[lost] | extra expected losses | cost saved |
 |---|---|---|---|---|---|---|---|---|
-| 100 | $12.81M | 18.00 | 3.15 | $8.21M | 21.66 | 3.40 | +0.26 | $4.61M |
 | 200 | $26.96M | 18.00 | 6.29 | $14.95M | 24.29 | 7.24 | +0.94 | $12.01M |
-| 500 | $63.79M | 18.00 | 15.73 | $36.23M | 23.74 | 17.44 | +1.71 | $27.56M |
 
 
 So the queue is a **cost-for-time** trade, and the survival objective's job is not to undo it but to decide *who* absorbs the resulting delay - which is Phase 3. Whether the trade is worth taking is exactly the question ALPHA answers, and Phase 4 shows it can be pushed the other way: at N = 200 and ALPHA = 10^7 the extension reaches $20.12M with 6.04 expected losses against the baseline's $26.96M and 6.29 - **cheaper and clinically better at the same time**, on a network the baseline never considers.
@@ -185,28 +149,14 @@ Both designs are solved on the **same** frozen tier assignment at each scale. (a
 
 | N | CON1 | design | facilities | total cost | mean TRT | mean HOLD | mean S | E[lost] |
 |---|---|---|---|---|---|---|---|---|
-| 100 | 2 | cost | m1+m4 | $8.18M | 25.10 | 6.11 | 0.9560 | 4.39 |
-| 100 | 2 | survival | m1+m4 | $8.21M | 21.66 | 2.83 | 0.9660 | 3.40 |
 | 200 | 2 | cost | m1+m3 | $14.91M | 28.34 | 9.34 | 0.9506 | 9.88 |
 | 200 | 2 | survival | m1+m3 | $14.95M | 24.29 | 5.46 | 0.9638 | 7.24 |
-| 500 | 3 | cost | m1+m2 | $36.07M | 27.29 | 8.29 | 0.9518 | 24.08 |
-| 500 | 3 | survival | m1+m2 | $36.23M | 23.74 | 5.28 | 0.9651 | 17.44 |
-| 500 | 2 | cost | m1+m2 | $36.07M | 25.77 | 6.77 | 0.9540 | 23.00 |
-| 500 | 2 | survival | m1+m2 | $36.23M | 23.77 | 5.31 | 0.9651 | 17.47 |
 
 
 ### Emergent priority: holds by tier
 
 | N | CON1 | design | tier | n | mean TRT | mean HOLD | median HOLD | max HOLD | mean S | E[lost] |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 100 | 2 | cost | H | 30 | 25.50 | 6.50 | 4.0 | 23 | 0.9064 | 2.808 |
-| 100 | 2 | cost | M | 40 | 26.07 | 7.10 | 1.5 | 24 | 0.9687 | 1.251 |
-| 100 | 2 | cost | L | 30 | 23.40 | 4.40 | 2.0 | 22 | 0.9888 | 0.336 |
-| 100 | 2 | cost | ALL | 100 | 25.10 | 6.11 | 2.0 | 24 | 0.9561 | 4.395 |
-| 100 | 2 | survival | H | 30 | 18.47 | 0.00 | 0.0 | 0 | 0.9310 | 2.069 |
-| 100 | 2 | survival | M | 40 | 19.32 | 0.35 | 0.0 | 6 | 0.9767 | 0.933 |
-| 100 | 2 | survival | L | 30 | 27.97 | 8.97 | 4.0 | 23 | 0.9866 | 0.401 |
-| 100 | 2 | survival | ALL | 100 | 21.66 | 2.83 | 0.0 | 23 | 0.9660 | 3.402 |
 | 200 | 2 | cost | H | 60 | 28.97 | 9.97 | 6.5 | 23 | 0.8945 | 6.331 |
 | 200 | 2 | cost | M | 80 | 29.02 | 10.03 | 6.5 | 23 | 0.9652 | 2.781 |
 | 200 | 2 | cost | L | 60 | 26.80 | 7.80 | 5.0 | 23 | 0.9872 | 0.768 |
@@ -215,63 +165,27 @@ Both designs are solved on the **same** frozen tier assignment at each scale. (a
 | 200 | 2 | survival | M | 80 | 22.09 | 3.15 | 0.0 | 23 | 0.9734 | 2.127 |
 | 200 | 2 | survival | L | 60 | 32.90 | 13.95 | 19.0 | 23 | 0.9843 | 0.941 |
 | 200 | 2 | survival | ALL | 200 | 24.29 | 5.46 | 0.0 | 23 | 0.9638 | 7.238 |
-| 500 | 3 | cost | H | 150 | 28.73 | 9.75 | 7.0 | 23 | 0.8953 | 15.707 |
-| 500 | 3 | cost | M | 200 | 27.09 | 8.09 | 4.0 | 23 | 0.9675 | 6.498 |
-| 500 | 3 | cost | L | 150 | 26.10 | 7.10 | 2.0 | 23 | 0.9875 | 1.870 |
-| 500 | 3 | cost | ALL | 500 | 27.29 | 8.29 | 4.0 | 23 | 0.9518 | 24.076 |
-| 500 | 3 | survival | H | 150 | 17.77 | 0.00 | 0.0 | 0 | 0.9336 | 9.965 |
-| 500 | 3 | survival | M | 200 | 21.23 | 2.62 | 0.0 | 24 | 0.9744 | 5.112 |
-| 500 | 3 | survival | L | 150 | 33.05 | 14.12 | 18.0 | 24 | 0.9842 | 2.364 |
-| 500 | 3 | survival | ALL | 500 | 23.74 | 5.28 | 0.0 | 24 | 0.9651 | 17.442 |
-| 500 | 2 | cost | H | 150 | 27.53 | 8.53 | 4.0 | 23 | 0.8995 | 15.081 |
-| 500 | 2 | cost | M | 200 | 25.83 | 6.83 | 2.0 | 23 | 0.9690 | 6.201 |
-| 500 | 2 | cost | L | 150 | 23.93 | 4.93 | 1.0 | 23 | 0.9886 | 1.716 |
-| 500 | 2 | cost | ALL | 500 | 25.77 | 6.77 | 2.0 | 23 | 0.9540 | 22.998 |
-| 500 | 2 | survival | H | 150 | 17.78 | 0.00 | 0.0 | 0 | 0.9335 | 9.973 |
-| 500 | 2 | survival | M | 200 | 21.32 | 2.71 | 0.0 | 23 | 0.9743 | 5.136 |
-| 500 | 2 | survival | L | 150 | 33.03 | 14.09 | 17.5 | 24 | 0.9842 | 2.363 |
-| 500 | 2 | survival | ALL | 500 | 23.77 | 5.31 | 0.0 | 24 | 0.9651 | 17.471 |
 
 
 Hold distribution (share of each tier that is never held, and the upper tail):
 
 | N | CON1 | design | tier | mean hold | p50 | p90 | max | share with hold = 0 |
 |---|---|---|---|---|---|---|---|---|
-| 100 | 2 | cost | H | 6.50 | 4.0 | 19.4 | 23 | 23% |
-| 100 | 2 | cost | M | 7.10 | 1.5 | 22.0 | 24 | 35% |
-| 100 | 2 | cost | L | 4.40 | 2.0 | 18.0 | 22 | 40% |
-| 100 | 2 | survival | H | 0.00 | 0.0 | 0.0 | 0 | 100% |
-| 100 | 2 | survival | M | 0.35 | 0.0 | 1.0 | 6 | 88% |
-| 100 | 2 | survival | L | 8.97 | 4.0 | 23.0 | 23 | 20% |
 | 200 | 2 | cost | H | 9.97 | 6.5 | 23.0 | 23 | 12% |
 | 200 | 2 | cost | M | 10.03 | 6.5 | 23.0 | 23 | 16% |
 | 200 | 2 | cost | L | 7.80 | 5.0 | 20.0 | 23 | 22% |
 | 200 | 2 | survival | H | 0.03 | 0.0 | 0.0 | 1 | 97% |
 | 200 | 2 | survival | M | 3.15 | 0.0 | 13.1 | 23 | 61% |
 | 200 | 2 | survival | L | 13.95 | 19.0 | 23.0 | 23 | 17% |
-| 500 | 3 | cost | H | 9.75 | 7.0 | 22.0 | 23 | 16% |
-| 500 | 3 | cost | M | 8.09 | 4.0 | 22.0 | 23 | 22% |
-| 500 | 3 | cost | L | 7.10 | 2.0 | 22.0 | 23 | 33% |
-| 500 | 3 | survival | H | 0.00 | 0.0 | 0.0 | 0 | 100% |
-| 500 | 3 | survival | M | 2.62 | 0.0 | 10.0 | 24 | 71% |
-| 500 | 3 | survival | L | 14.12 | 18.0 | 23.0 | 24 | 20% |
-| 500 | 2 | cost | H | 8.53 | 4.0 | 22.0 | 23 | 16% |
-| 500 | 2 | cost | M | 6.83 | 2.0 | 21.1 | 23 | 24% |
-| 500 | 2 | cost | L | 4.93 | 1.0 | 18.1 | 23 | 30% |
-| 500 | 2 | survival | H | 0.00 | 0.0 | 0.0 | 0 | 100% |
-| 500 | 2 | survival | M | 2.71 | 0.0 | 9.4 | 23 | 71% |
-| 500 | 2 | survival | L | 14.09 | 17.5 | 23.0 | 24 | 18% |
 
 
 ### Contention vs demand
 
 | N | CON1 | network | capacity | arrivals/day | starts/day available | offered load | mean HOLD (all) | H | M | L |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 100 | 2 | m1+m4 | 8 | 1.14 | 1.14 | 0.994 | 2.83 | 0.00 | 0.35 | 8.97 |
 | 200 | 2 | m1+m3 | 14 | 2.27 | 2.00 | 1.136 | 5.46 | 0.03 | 3.15 | 13.95 |
-| 500 | 3 | m1+m2 | 35 | 5.68 | 5.00 | 1.136 | 5.28 | 0.00 | 2.62 | 14.12 |
 
-Mean hold does not simply track N (2.83 d at N = 100, 5.46 d at N = 200, 5.28 d at N = 500), and it is not supposed to:
+Mean hold does not simply track N (5.46 d at N = 200), and it is not supposed to:
 what drives hold is the *offered load*, the ratio the last three columns
 build,
 
@@ -280,7 +194,7 @@ offered load  =  (arrival rate)  /  (start rate the network can sustain)
               =  (N / 88)     /  (FCAP_opened / TMFE)
 ```
 
-which comes out at 0.99 at N = 100, 1.14 at N = 200, 1.14 at N = 500. The optimiser answers rising demand with
+which comes out at 1.14 at N = 200. The optimiser answers rising demand with
 capacity *as well as* queueing, so the backlog each scale has to absorb
 is set by how far its chosen network falls short of its arrival rate,
 not by N. Where the load is close to 1 the network keeps up and the hold
