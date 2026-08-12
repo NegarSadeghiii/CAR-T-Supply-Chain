@@ -355,7 +355,8 @@ def build_baseline(net, inst, nd=ND_BASELINE, max_facilities=MAX_FACILITIES):
 # ---------------------------------------------------------------------------
 def build_extension(net, inst, alpha, nd=ND_EXT, max_facilities=MAX_FACILITIES,
                     sigma=None, dominance_cuts=True, symmetry_cuts=True,
-                    fixed_facilities=None):
+                    fixed_facilities=None, fixed_assignment=None,
+                    allow_expedite=True):
     sigma = sigma or cd.sigma_table()
     mdl = ConcreteModel(name="i-SHIPMENT + queue + survival")
     # With the network frozen the dominance cuts are pointless and could even
@@ -368,6 +369,23 @@ def build_extension(net, inst, alpha, nd=ND_EXT, max_facilities=MAX_FACILITIES,
         frozen = set(fixed_facilities)
         for m in net.m:
             mdl.con.add(mdl.E1[m] == (1 if m in frozen else 0))
+    if fixed_assignment is not None:
+        # freeze which plant each patient is manufactured at; the transport
+        # mode stays free unless allow_expedite says otherwise
+        for pid, m_fixed in fixed_assignment.items():
+            mdl.con.add(sum(mdl.y1[pid, m_fixed, j] for j in net.j) == 1)
+    if not allow_expedite:
+        # j2 (ground) is strictly cheaper than j1 (air) on every (c,m) and
+        # (m,h) pair in this data set, and correspondingly slower.
+        cheap = min(net.j, key=lambda j: max(
+            [net.U1[(c, m, j)] for c in net.c for m in net.m]
+            + [net.U3[(m, h, j)] for m in net.m for h in net.h]))
+        for pid in [q.pid for q in inst.patients]:
+            for m in net.m:
+                for j in net.j:
+                    if j != cheap:
+                        mdl.con.add(mdl.y1[pid, m, j] == 0)
+                        mdl.con.add(mdl.y2[pid, m, j] == 0)
     P, pat = mdl.P, mdl.pat
     TLS = int(net.TLS)
     lead = net.TMFE + net.TQC
@@ -652,7 +670,8 @@ def _cache_key(kind, n, alpha, max_fac, nd, tag=""):
 def run_design(net, inst, kind, alpha=0.0, max_fac=MAX_FACILITIES, nd=None,
                time_limit=DEFAULT_TIME_LIMIT, mip_gap=DEFAULT_MIP_GAP,
                use_cache=True, sigma=None, solver_pref="gurobi",
-               fixed_facilities=None, tag=""):
+               fixed_facilities=None, tag="", fixed_assignment=None,
+               allow_expedite=True):
     """Build + solve one design, with an on-disk cache of the outcome."""
     nd = nd or (ND_BASELINE if kind == "baseline" else ND_EXT)
     if fixed_facilities is not None and not tag:
@@ -671,7 +690,9 @@ def run_design(net, inst, kind, alpha=0.0, max_fac=MAX_FACILITIES, nd=None,
     else:
         mdl = build_extension(net, inst, alpha=alpha, nd=nd,
                               max_facilities=max_fac, sigma=sigma,
-                              fixed_facilities=fixed_facilities)
+                              fixed_facilities=fixed_facilities,
+                              fixed_assignment=fixed_assignment,
+                              allow_expedite=allow_expedite)
     from pyomo.environ import Var as _V, Constraint as _C
     size = {"variables": sum(len(v) for v in mdl.component_objects(_V)),
             "constraints": sum(len(c) for c in mdl.component_objects(_C))}
