@@ -457,15 +457,18 @@ def exp_c(net, inst, seeds=SEEDS, alphas=VALUE_OF_LIFE, cfg=None,
     xs = [r["expected_lost"] for r in rows]
     ys = [r["total_cost"] / 1e6 for r in rows]
     ax[0].plot(xs, ys, "-", color=MUTED, lw=1, zorder=1)
-    for r, x, y in zip(rows, xs, ys):
+    # alpha rises right-to-left along the frontier and the high-alpha points
+    # bunch up, so the labels are fanned out instead of all sitting up-right
+    for i, (r, x, y) in enumerate(zip(rows, xs, ys)):
         op = abs(r["alpha"] - OPERATING_ALPHA) < 1e-9
         ax[0].plot([x], [y], marker="o" if not op else "*",
                    ms=7 if not op else 16,
                    color=POLICY_COLOR["adaptive_mpc"] if op else BOUND_COLOR,
                    zorder=3)
+        dx, dy = [(7, 6), (7, -13), (-34, 6), (-34, -13)][i % 4]
         ax[0].annotate(_money(r["alpha"]), (x, y), fontsize=8,
-                       color=INK if op else MUTED,
-                       xytext=(6, 5), textcoords="offset points")
+                       color=INK if op else MUTED, fontweight="bold" if op else None,
+                       xytext=(dx, dy), textcoords="offset points")
     ax[0].set_xlabel("Expected patients lost  $\\Sigma_p (1 - S_p)$")
     ax[0].set_ylabel("Total realised cost [$M]")
     ax[0].set_title("Cost-lives frontier (simulated, adaptive_mpc)",
@@ -488,7 +491,8 @@ def exp_c(net, inst, seeds=SEEDS, alphas=VALUE_OF_LIFE, cfg=None,
                    (OPERATING_ALPHA, ax[1].get_ylim()[0]),
                    fontsize=8.5, color=POLICY_COLOR["adaptive_mpc"], rotation=90,
                    va="bottom", xytext=(4, 4), textcoords="offset points")
-    ax[1].set_xlabel("Value of a life $\\alpha$  [$ per life; $\\alpha=0$ at $2\\times10^{4}$]")
+    ax[1].set_xlabel("Value of a life $\\alpha$  [\\$ per life; "
+                     "$\\alpha=0$ plotted at $2{\\times}10^{4}$]")
     ax[1].set_ylabel("Expected patients lost")
     ax[1].set_title("Where the strategic design changes", fontsize=10, loc="left")
     ax[1].legend(fontsize=8.5, frameon=False)
@@ -509,53 +513,73 @@ def exp_c(net, inst, seeds=SEEDS, alphas=VALUE_OF_LIFE, cfg=None,
 # ---------------------------------------------------------------------------
 def exp_d(plan, runs, stem="figD1_policy_cost_vs_loss",
           stem2="figD2_gap_to_best_achievable"):
-    """Total cost vs expected clinical loss for every policy, plus the bound."""
+    """Total cost vs expected clinical loss for every policy, plus the bound.
+
+    The left panel uses the CLINICAL LOSS of objective (1), sum_p rho_u(p)
+    (1 - S_p) -- the quantity best_achievable actually minimises, so its line
+    is a genuine lower bound there.  The right panel repeats the exercise on
+    the study's primary metric, expected high-risk patients lost; the
+    perfect-information solve is drawn there as a reference, since it optimises
+    the rho-weighted total rather than the high-risk tier alone.
+    """
     means = {name: mean_metrics(res) for name, res in runs.items()}
     online = [n for n in pol.POLICY_NAMES if n in means and n != "best_achievable"]
 
-    fig, ax = plt.subplots(figsize=(8.8, 5.2))
-    for name in online:
-        m = means[name]
-        ax.errorbar([m["expected_lost"]], [m["total_cost"] / 1e6],
-                    xerr=[m["expected_lost_se"]], yerr=[m["total_cost_se"] / 1e6],
-                    marker="o", ms=9, capsize=3, lw=1.4, color=POLICY_COLOR[name],
-                    label=name)
-        ax.annotate(name, (m["expected_lost"], m["total_cost"] / 1e6), fontsize=9,
-                    color=POLICY_COLOR[name], xytext=(8, 5),
-                    textcoords="offset points")
-    if "best_achievable" in means:
-        b = means["best_achievable"]
-        ax.axvline(b["expected_lost"], color=BOUND_COLOR, ls="--", lw=1.4)
-        ax.annotate(f"best_achievable\n{_bound_label(runs)}",
-                    (b["expected_lost"], ax.get_ylim()[1]), fontsize=8.5,
-                    color=BOUND_COLOR, ha="left", va="top",
-                    xytext=(5, -6), textcoords="offset points")
-    ax.set_xlabel("Expected patients lost  $\\Sigma_p (1 - S_p)$")
-    ax.set_ylabel("Total realised cost [$M]")
-    ax.set_title(f"Survival awareness buys lives at essentially no cost\n"
-                 f"N = {plan.n}, {N_REP} yield seeds, common random numbers, "
-                 f"frozen {'+'.join(plan.opened)} network", fontsize=10.5, loc="left")
-    ax.grid(alpha=.5)
-    ax.set_axisbelow(True)
-    ax.margins(x=.20, y=.16)
-    fig.tight_layout()
+    panels = [("weighted_loss",
+               "Expected clinical loss  $\\Sigma_p\\,\\rho_{u(p)}(1 - S_p)$",
+               "lower bound"),
+              ("expected_lost_H", "Expected high-risk patients lost",
+               "reference")]
+    fig, axes = plt.subplots(1, 2, figsize=(12.8, 5.2))
+    for ax, (key, xlabel, role) in zip(axes, panels):
+        for name in online:
+            m = means[name]
+            ax.errorbar([m[key]], [m["total_cost"] / 1e6],
+                        xerr=[m[key + "_se"]], yerr=[m["total_cost_se"] / 1e6],
+                        marker="o", ms=9, capsize=3, lw=1.4,
+                        color=POLICY_COLOR[name], label=name)
+            ax.annotate(name, (m[key], m["total_cost"] / 1e6), fontsize=9,
+                        color=POLICY_COLOR[name], xytext=(8, 5),
+                        textcoords="offset points")
+        if "best_achievable" in means:
+            b = means["best_achievable"]
+            ax.axvline(b[key], color=BOUND_COLOR, ls="--", lw=1.4)
+            ax.annotate(f"best_achievable\n({role}, {_bound_label(runs)})",
+                        (b[key], ax.get_ylim()[1]), fontsize=8.5,
+                        color=BOUND_COLOR, ha="left", va="top",
+                        xytext=(5, -6), textcoords="offset points")
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel("Total realised cost [$M]")
+        ax.grid(alpha=.5)
+        ax.set_axisbelow(True)
+        ax.margins(x=.22, y=.16)
+    axes[0].set_title("Clinical loss -- the objective's own metric",
+                      fontsize=10, loc="left")
+    axes[1].set_title("High-risk patients lost -- the primary metric",
+                      fontsize=10, loc="left")
+    fig.suptitle(f"Policy benchmark, N = {plan.n}: survival awareness buys "
+                 f"high-risk lives for slightly less money\n"
+                 f"{N_REP} yield seeds, common random numbers, frozen "
+                 f"{'+'.join(plan.opened)} network",
+                 fontsize=11, color=INK, x=0.008, ha="left")
+    fig.tight_layout(rect=(0, 0, 1, 0.92))
     out1 = _save(fig, stem)
 
     out2 = None
     if "best_achievable" in means:
-        share_all = gap_closed(means, "expected_lost")
+        share_w = gap_closed(means, "weighted_loss")
         share_h = gap_closed(means, "expected_lost_H")
-        fig, ax = plt.subplots(figsize=(8.0, 4.4))
+        fig, ax = plt.subplots(figsize=(8.4, 4.4))
         bars = [n for n in online if n != "fifo"]
         y = range(len(bars))
         ax.barh([i - .19 for i in y], [share_h[n] for n in bars], height=.36,
-                color=TIER_COLOR["H"], label="high-risk patients")
-        ax.barh([i + .19 for i in y], [share_all[n] for n in bars], height=.36,
-                color=MUTED, label="all patients")
+                color=TIER_COLOR["H"], label="high-risk patients lost")
+        ax.barh([i + .19 for i in y], [share_w[n] for n in bars], height=.36,
+                color=MUTED, label=r"clinical loss $\Sigma\rho(1-S)$")
         for i, n in enumerate(bars):
             ax.annotate(f"{share_h[n]:.0%}", (share_h[n], i - .19), fontsize=8.5,
                         va="center", xytext=(4, 0), textcoords="offset points")
-            ax.annotate(f"{share_all[n]:.0%}", (share_all[n], i + .19), fontsize=8.5,
+            ax.annotate(f"{share_w[n]:.0%}", (share_w[n], i + .19), fontsize=8.5,
                         va="center", xytext=(4, 0), textcoords="offset points")
         ax.set_yticks(list(y))
         ax.set_yticklabels(bars)
@@ -639,6 +663,8 @@ def exp_e(plan, names=("fifo", "static_survival", "adaptive_mpc"), seeds=SEEDS,
 REPORT_KEYS = [
     # the only metrics the doc reports
     "expected_lost_H", "expected_lost_H_se", "expected_lost", "expected_lost_se",
+    # the clinical-loss term of objective (1) -- what best_achievable bounds
+    "weighted_loss", "weighted_loss_se",
     "total_cost", "total_cost_se", "cost_per_therapy", "cost_per_therapy_se",
     "mean_hold_H", "mean_hold_M", "mean_hold_L",
     # provenance / diagnostics
@@ -790,8 +816,11 @@ def main(argv=None):
                             stem2=f"figD2_gap_to_best_achievable{suffix}")
         share_h = (gap_closed(means, "expected_lost_H")
                    if "best_achievable" in means else {})
+        share_w = (gap_closed(means, "weighted_loss")
+                   if "best_achievable" in means else {})
         save_csv(os.path.join(OUTDIR, f"expD_policies{suffix}.csv"),
                  [{"policy": n, "gap_closed_high_risk": share_h.get(n),
+                   "gap_closed_clinical_loss": share_w.get(n),
                    **{k: m[k] for k in REPORT_KEYS if k in m}}
                   for n, m in means.items()])
         save_json(os.path.join(OUTDIR, f"expD_provenance{suffix}.json"), provenance)
