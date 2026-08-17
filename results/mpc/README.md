@@ -89,30 +89,40 @@ On **total** patients lost the survival-aware policies are *worse* than fifo
 asked: it buys high-risk survival with low-risk delay. Both metrics are
 reported everywhere; neither is hidden.
 
-## Exp A / B / C / E — *backstop-on baseline*
+## Exp A / B / C / E
 
-> A and C are current (they were not re-run and are unaffected). **B and E have
-> been re-run** — see the backstop-off section for the numbers that stand.
+**All six experiments now run on one configuration** (backstop off, K_remake = 2
+remakes). Exp 0 is calibration only and config-independent; A, B, C, D and E were
+all re-run. The B and E numbers that stand are in the backstop-off section above;
+A and C are current as written here.
 
-**A** — `fifo` holds the high-risk tier 9.2 d and low-risk 7.8 d; `adaptive_mpc`
-holds high-risk **0.4 d** and low-risk 19.8 d. Priority is an *output* of the
-objective, not an input rule.
+**A** — `fifo` holds the high-risk tier 9.46 d, medium 7.53 d and low-risk
+8.06 d — essentially flat, because arrival order ignores risk. `adaptive_mpc`
+holds high-risk **0.40 d** and medium 2.78 d, pushing the wait onto low-risk
+at 23.64 d. Priority is an *output* of the objective, not an input rule. The
+spread matches Exp D exactly (same config, same seeds, same CRN). N = 100:
+fifo 7.09 / 5.47 / 5.79, adaptive_mpc 0.89 / 2.21 / 16.60.
 
-**B** — high-risk loss is flat near 4.8–5.0 for the survival-aware policies
-across offered load 0.7 → 1.5, while fifo climbs 5.1 → 8.9 and
-`static_survival` 4.9 → 7.5. The lever matters most when the system is loaded.
-Load is varied by compressing/expanding the arrival window on the fixed
-network; at load 0.7 the window runs past day 130 and spillover reaches ~23 %.
+**B** — high-risk loss is flat near 4.26–4.43 for `adaptive_mpc` across offered
+load 0.7 → 1.5, while fifo climbs 4.52 → 8.81 and `static_survival` 4.38 → 7.38.
+The lever matters most when the system is loaded, and the gap over fifo widens
+16× (0.27 → 4.37). Full table in the backstop-off section above. Load is varied
+by compressing/expanding the arrival window on the fixed network; at load 0.7 the
+window runs past day 130 and spillover reaches ~23 %.
 
 **C** — the network holds at m1+m3 from α = 0 through $2M and **flips to m3+m6
-at $5M** (20 slots, load 0.80, +$4.7M, high-risk loss 4.81 → 4.11). The $500K
-operating point sits well inside the stable region: at $500K the design is not
-yet the binding lever, prioritisation is.
+at $5M** (20 slots, load 0.80, +$4.7M, high-risk loss 4.24 → 4.01). The design
+threshold is unchanged by the backstop-off re-run — it is a property of the
+strategic solve, and those were re-used from cache. The $500K operating point
+sits well inside the stable region: at $500K the design is not yet the binding
+lever, prioritisation is. At N = 100 the design never flips across the whole
+sweep (m1+m4 throughout).
 
 **E** — `adaptive_mpc` pulls away from `static_survival` as batches fail more
-often: high-risk loss 3.85 vs 3.85 at a 0 % failure rate, 4.89 vs 6.24 at 10 %,
-**9.58 vs 12.89 at 30 %**. Re-optimising on the observed state is what the
-dynamic layer buys, and its value grows with the failure rate.
+often: high-risk loss 3.85 vs 3.85 at a 0 % failure rate (identical — nothing to
+react to), 4.32 vs 5.44 at 10 %, **6.51 vs 11.59 at 30 %**. Re-optimising on the
+observed state is what the dynamic layer buys, and its value grows with the
+failure rate. Full table in the backstop-off section above.
 
 ## Backstop-off re-run
 
@@ -130,7 +140,8 @@ from cache — only simulation outcomes move.
   first two draws are unchanged and CRN stays nested against the old runs.
 
 Everything below is the new state; the old (backstop-on) numbers are kept beside
-it. Exp 0, A and C are unchanged and were not re-run.
+it. Exp A and C were re-run on this configuration afterwards (their numbers are
+in the section above); Exp 0 is calibration only and is config-independent.
 
 ### 1. Exp D — where the non-high excess went
 
