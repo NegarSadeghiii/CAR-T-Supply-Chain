@@ -511,8 +511,8 @@ def exp_c(net, inst, seeds=SEEDS, alphas=VALUE_OF_LIFE, cfg=None,
 # ---------------------------------------------------------------------------
 # Exp D -- policy benchmark against the best-achievable bound
 # ---------------------------------------------------------------------------
-def exp_d(plan, runs, stem="figD1_policy_cost_vs_loss",
-          stem2="figD2_gap_to_best_achievable"):
+def exp_d(plan, runs=None, stem="figD1_policy_cost_vs_loss",
+          stem2="figD2_gap_to_best_achievable", means=None, bound_label=None):
     """Total cost vs expected clinical loss for every policy, plus the bound.
 
     The left panel uses the CLINICAL LOSS of objective (1), sum_p rho_u(p)
@@ -522,7 +522,10 @@ def exp_d(plan, runs, stem="figD1_policy_cost_vs_loss",
     perfect-information solve is drawn there as a reference, since it optimises
     the rho-weighted total rather than the high-risk tier alone.
     """
-    means = {name: mean_metrics(res) for name, res in runs.items()}
+    # ``means`` lets the figures be re-rendered from the saved aggregates
+    # without re-solving 30 perfect-information MILPs
+    means = means or {name: mean_metrics(res) for name, res in runs.items()}
+    label = bound_label or _bound_label(runs or {})
     online = [n for n in pol.POLICY_NAMES if n in means and n != "best_achievable"]
 
     panels = [("weighted_loss",
@@ -548,7 +551,7 @@ def exp_d(plan, runs, stem="figD1_policy_cost_vs_loss",
         if "best_achievable" in means:
             b = means["best_achievable"]
             ax.axvline(b[key], color=BOUND_COLOR, ls="--", lw=1.4)
-            ax.annotate(f"best_achievable\n({role}, {_bound_label(runs)})",
+            ax.annotate(f"best_achievable\n({role}, {label})",
                         (b[key], ax.get_ylim()[1]), fontsize=8.5,
                         color=BOUND_COLOR, ha="left", va="top",
                         xytext=(5, -6), textcoords="offset points")
@@ -590,9 +593,10 @@ def exp_d(plan, runs, stem="figD1_policy_cost_vs_loss",
         ax.invert_yaxis()
         ax.set_xlabel("Share of the fifo -> best_achievable gap closed")
         ax.axvline(1.0, color=BOUND_COLOR, ls="--", lw=1.2)
-        ax.annotate("best_achievable", (1.0, len(bars) - 0.62), fontsize=8.5,
-                    color=BOUND_COLOR, rotation=90, va="bottom", ha="right",
-                    xytext=(-3, 0), textcoords="offset points")
+        ax.annotate("best_achievable", xy=(1.0, 1.0),
+                    xycoords=("data", "axes fraction"), fontsize=8.5,
+                    color=BOUND_COLOR, ha="right", va="bottom",
+                    xytext=(0, 4), textcoords="offset points")
         ax.grid(axis="x", alpha=.5)
         ax.set_axisbelow(True)
         ax.margins(x=.10)
@@ -746,6 +750,9 @@ def main(argv=None):
                          "labelled failures-revealed proxy, or skip")
     ap.add_argument("--bound-time-limit", type=int, default=900)
     ap.add_argument("--dat", default="Data200_profileA.dat")
+    ap.add_argument("--render-only", action="store_true",
+                    help="Exp D: redraw the figures from the cached aggregates "
+                         "instead of re-running the replications")
     args = ap.parse_args(argv)
 
     seeds = list(range(args.n_rep))
@@ -805,6 +812,13 @@ def main(argv=None):
 
     if args.exp in ("D", "all"):
         print("\n=== Exp D -- policy benchmark ===", flush=True)
+        cache = os.path.join(OUTDIR, f"expD_aggregates{suffix}.json")
+        if args.render_only:
+            blob = json.load(open(cache))
+            exp_d(plan, means=blob["means"], bound_label=blob["bound_label"],
+                  stem=f"figD1_policy_cost_vs_loss{suffix}",
+                  stem2=f"figD2_gap_to_best_achievable{suffix}")
+            return 0
         names = ["fifo", "survival_index", "static_survival", "adaptive_mpc"]
         runs = run_all(plan, names, seeds=seeds)
         if args.bound != "off":
@@ -819,6 +833,11 @@ def main(argv=None):
         _, _, means = exp_d(plan, runs,
                             stem=f"figD1_policy_cost_vs_loss{suffix}",
                             stem2=f"figD2_gap_to_best_achievable{suffix}")
+        # cache the aggregates so the figures can be re-rendered later without
+        # re-solving 30 perfect-information MILPs
+        save_json(os.path.join(OUTDIR, f"expD_aggregates{suffix}.json"),
+                  {"means": means, "bound_label": _bound_label(runs),
+                   "plan": provenance})
         share_h = (gap_closed(means, "expected_lost_H")
                    if "best_achievable" in means else {})
         share_w = (gap_closed(means, "weighted_loss")
