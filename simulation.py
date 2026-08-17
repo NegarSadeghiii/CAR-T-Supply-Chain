@@ -29,7 +29,9 @@ Daily event sequence (the doc's order, one day at a time)
    policy chooses who starts; the slot is occupied for T_MFE days.
 5. **Losses.**  A patient is lost (S = 0) only when a required (re-)collection
    fails the projected-survival gate or when K_remake is exhausted.  There is
-   no raw-wait eligibility cutoff -- only a loose backstop.
+   NO calendar-based removal at all -- no raw-wait cutoff and no backstop.
+   Anyone still queueing keeps queueing and is credited with whatever survival
+   their eventual delivery earns, even past the 130-day reporting horizon.
 6. Advance to t+1.
 
 Failure recourse (supersedes assumption 3).  A remake needs a FRESH
@@ -75,12 +77,17 @@ class SimConfig:
     tqc: int = 7                         # QC -- a delay, NOT a capacity resource
     lookahead: int = pe.LOOKAHEAD_H      # MPC window H
     s_min: float = pe.S_MIN              # futility gate
-    k_remake: int = pe.K_REMAKE          # max manufacturing attempts, then cancel
+    k_remake: int = pe.K_REMAKE          # max REMAKES, then cancel (attempts = k+1)
     rho_leuk: float = pe.RHO_LEUK        # $ per re-collection
-    backstop_wait: int = pe.BACKSTOP_WAIT
+    backstop_wait: int = pe.BACKSTOP_WAIT    # None = no calendar-based removal
     fail_rate: float = None              # Exp E: common (1 - p) at every facility
     epoch_solver: str = "gurobi"
     drain_cap: int = 3 * cd.HORIZON      # run past the horizon until the queue drains
+
+    @property
+    def max_attempts(self) -> int:
+        """Manufacturing attempts allowed per patient: the first plus k_remake."""
+        return self.k_remake + 1
 
 
 def yield_draw(seed, pid, attempt):
@@ -199,6 +206,7 @@ class Simulator:
     # -- the daily loop ---------------------------------------------------
     def run(self, policy) -> SimResult:
         cfg = self.cfg
+        self.policy = policy
         if hasattr(policy, "prepare"):
             policy.prepare(self)
 
@@ -218,6 +226,9 @@ class Simulator:
             if not self.gate(pid, t):
                 self.n_gate_initial += 1
                 self.lose(pid, "gate_initial", t)
+                continue
+            if self._policy_cancels(pid):
+                self.lose(pid, "policy_cancel", t)
                 continue
             r.status = "waiting"
             ready = t + self.cfg.tls + p.tt1
@@ -246,12 +257,15 @@ class Simulator:
                 self.deliver_on.setdefault(t + p.tt3, []).append(pid)
                 continue
             r.failures += 1
-            if r.attempts >= self.cfg.k_remake:
+            if r.attempts >= self.cfg.max_attempts:
                 self.lose(pid, "k_remake", t)
                 continue
             if not self.gate(pid, t):
                 self.n_gate_recollect += 1
                 self.lose(pid, "gate_recollection", t)
+                continue
+            if self._policy_cancels(pid):
+                self.lose(pid, "policy_cancel", t)
                 continue
             r.status = "waiting"                       # phi_i = 1, larger a_i
             r.recollections += 1
@@ -261,8 +275,29 @@ class Simulator:
             self.costs["releuk"] += self.cfg.rho_leuk
             self.costs["transport_in"] += p.u1
 
+    def _policy_cancels(self, pid) -> bool:
+        """Whether the policy declines this patient's next attempt outright.
+
+        Only ``best_achievable`` uses it: its perfect-information solve may
+        judge an attempt not worth the capacity, which is a decision it is
+        entitled to make.  Every online policy starts everyone eventually, so
+        the hook is absent and this is False.
+        """
+        policy = getattr(self, "policy", None)
+        return bool(policy is not None and hasattr(policy, "will_never_start")
+                    and policy.will_never_start(self, pid))
+
     def _backstop(self, t):
-        """Step 3/5 -- the loose raw-wait backstop (T_elig itself is dropped)."""
+        """Step 3/5 -- optional calendar backstop, DISABLED by default.
+
+        With ``backstop_wait = None`` there is no calendar-based removal at
+        all: a patient leaves the system only by failing the S_min gate on a
+        required (re-)collection, by exhausting K_remake, or by being treated.
+        Everyone else keeps waiting and is credited with the survival their
+        realised delivery earns them.
+        """
+        if self.cfg.backstop_wait is None:
+            return
         for pid in [pid for pid in self.ready_at
                     if t - self.plan.patients[pid].t0 > self.cfg.backstop_wait]:
             self.n_backstop += 1
@@ -338,6 +373,8 @@ class Simulator:
             "lost_gate_recollection": self.n_gate_recollect,
             "lost_k_remake": sum(1 for r in recs if r.lost_reason == "k_remake"),
             "lost_backstop": self.n_backstop,
+            "lost_policy_cancel": sum(1 for r in recs
+                                      if r.lost_reason == "policy_cancel"),
             "spillover": sum(1 for r in recs if r.spilled),
             "idle_slot_days": self.idle_slot_days,
             "total_cost": costs["total"],

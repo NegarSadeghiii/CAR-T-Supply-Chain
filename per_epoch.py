@@ -57,9 +57,10 @@ import cart_data as cd
 # ---------------------------------------------------------------------------
 LOOKAHEAD_H = 7          # MPC look-ahead window [t, t+H], days
 S_MIN = 0.75             # futility gate on PROJECTED survival at delivery
-K_REMAKE = 2             # max manufacturing attempts per patient, then cancel
+K_REMAKE = 2             # max REMAKES per patient (3 attempts), then cancel
 RHO_LEUK = 5000.0        # $ per re-leukapheresis (re-collection) attempt
-BACKSTOP_WAIT = 90       # loose raw-wait backstop (the T_elig cutoff is dropped)
+BACKSTOP_WAIT = None     # no calendar-based removal; the S_min gate is the
+                         # only futility rule (T_elig was dropped)
 
 # Gurobi's size-limited licence caps a model at 2000 columns; above that the
 # epoch model is sent to HiGHS instead.

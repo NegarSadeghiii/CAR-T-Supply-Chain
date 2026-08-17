@@ -135,6 +135,18 @@ class BestAchievable:
                if self.schedule.get((c.pid, sim.rec[c.pid].attempts + 1)) == t]
         return due[:n_start]           # may idle a slot -- see the module docstring
 
+    def will_never_start(self, sim, pid):
+        """True if the perfect-information solve chose not to run this attempt.
+
+        Declining an attempt IS one of the decisions perfect information gets to
+        make -- capacity spent on a batch it knows will fail is capacity taken
+        from someone else -- so the patient is cancelled rather than left
+        queueing forever.  This is the policy's own choice, not a calendar rule.
+        """
+        if self._proxy is not None:
+            return False
+        return (pid, sim.rec[pid].attempts + 1) not in self.schedule
+
 
 def build(name, **kw):
     """Instantiate a policy by its identifier."""
@@ -160,7 +172,7 @@ def failure_realisation(plan, seed, cfg):
     for pid, p in plan.patients.items():
         p_pass = (1.0 - cfg.fail_rate) if cfg.fail_rate is not None else p.p_pass
         fails[pid] = [yield_draw(seed, pid, k) > p_pass
-                      for k in range(1, cfg.k_remake + 1)]
+                      for k in range(1, cfg.max_attempts + 1)]
     return fails
 
 
@@ -193,7 +205,7 @@ def solve_perfect_information(plan, seed, cfg, time_limit=600, mip_gap=1e-4):
     for pid, p in plan.patients.items():
         deadline = _futility_deadline(p.tier, cfg.s_min)       # elapsed-at-delivery
         earliest = p.t0 + cfg.tls + p.tt1
-        for k in range(1, cfg.k_remake + 1):
+        for k in range(1, cfg.max_attempts + 1):
             latest = min(p.t0 + deadline - lead - p.tt3, horizon - lead - p.tt3)
             if earliest > latest:
                 break
