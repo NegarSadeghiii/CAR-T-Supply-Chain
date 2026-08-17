@@ -532,15 +532,19 @@ def exp_d(plan, runs, stem="figD1_policy_cost_vs_loss",
                "reference")]
     fig, axes = plt.subplots(1, 2, figsize=(12.8, 5.2))
     for ax, (key, xlabel, role) in zip(axes, panels):
-        for name in online:
+        # survival_index and adaptive_mpc land on top of each other whenever
+        # (P1)-(P6) collapses to (P8), so their labels are stacked vertically
+        for i, name in enumerate(online):
             m = means[name]
             ax.errorbar([m[key]], [m["total_cost"] / 1e6],
                         xerr=[m[key + "_se"]], yerr=[m["total_cost_se"] / 1e6],
                         marker="o", ms=9, capsize=3, lw=1.4,
-                        color=POLICY_COLOR[name], label=name)
+                        color=POLICY_COLOR[name], label=name,
+                        zorder=2 + i)
             ax.annotate(name, (m[key], m["total_cost"] / 1e6), fontsize=9,
-                        color=POLICY_COLOR[name], xytext=(8, 5),
-                        textcoords="offset points")
+                        color=POLICY_COLOR[name],
+                        xytext=(11, 6 if i % 2 == 0 else -12),
+                        textcoords="offset points", va="center")
         if "best_achievable" in means:
             b = means["best_achievable"]
             ax.axvline(b[key], color=BOUND_COLOR, ls="--", lw=1.4)
@@ -586,16 +590,17 @@ def exp_d(plan, runs, stem="figD1_policy_cost_vs_loss",
         ax.invert_yaxis()
         ax.set_xlabel("Share of the fifo -> best_achievable gap closed")
         ax.axvline(1.0, color=BOUND_COLOR, ls="--", lw=1.2)
-        ax.annotate("best_achievable", (1.0, -.5), fontsize=8.5, color=BOUND_COLOR,
-                    rotation=90, va="bottom", xytext=(3, 0),
-                    textcoords="offset points")
+        ax.annotate("best_achievable", (1.0, len(bars) - 0.62), fontsize=8.5,
+                    color=BOUND_COLOR, rotation=90, va="bottom", ha="right",
+                    xytext=(-3, 0), textcoords="offset points")
         ax.grid(axis="x", alpha=.5)
         ax.set_axisbelow(True)
         ax.margins(x=.10)
-        ax.legend(fontsize=8.5, frameon=False, loc="lower right")
         ax.set_title(f"How much of the achievable gain each policy captures\n"
                      f"N = {plan.n}, {N_REP} yield seeds", fontsize=10.5, loc="left")
-        fig.tight_layout()
+        fig.legend(fontsize=8.5, frameon=False, loc="lower center", ncol=2,
+                   bbox_to_anchor=(0.5, 0.0))
+        fig.tight_layout(rect=(0, 0.07, 1, 1))
         out2 = _save(fig, stem2)
     return out1, out2, means
 
