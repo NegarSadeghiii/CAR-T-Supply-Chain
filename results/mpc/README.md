@@ -24,7 +24,8 @@ python run_experiments.py --exp all --scale 100    # confirmation
 
 α = $500K/life (strategic objective and Exp C only — **not** in P3);
 ρ = 3/2/1; w = 0.15/0.05/0.02; η = 42, γ = 1, κ = 1; H = 7 d;
-S_min = 0.75 on **projected survival at delivery**; K_remake = 2 attempts;
+S_min = 0.75 on **projected survival at delivery**; K_remake = 2 remakes
+(3 attempts); no calendar backstop;
 ρ_leuk = $5,000; T_horizon = 130 d; TLS/T_MFE/T_QC = 1/7/7;
 p_m = 0.85 (m1/m4), 0.92 (m2/m5), 0.95 (m3/m6); N_rep = 30 seeds (0–29).
 
@@ -52,7 +53,11 @@ between policies are scheduling, never luck.
 All within the < 5 % spillover target; spilled patients are credited with their
 realised survival, never zeroed.
 
-## Exp D — policy benchmark (30 seeds, CRN)
+## Exp D — policy benchmark (30 seeds, CRN) — *backstop-on baseline*
+
+> Superseded by the **Backstop-off re-run** below, which is the current state.
+> Kept for comparison: this is the run with the 90-day calendar backstop ON and
+> K_remake read as 2 *attempts*.
 
 N = 200, frozen m1+m3. `best_achievable` is a **proven-optimal**
 perfect-information solve on every replication (23 s each, gap 0) — not a proxy.
@@ -71,7 +76,12 @@ N = 100 confirms the ordering: fifo 3.62 → static 3.40 (32 %) → index/mpc 3.
 `adaptive_mpc` cuts high-risk loss by **27 %** against fifo and closes 97 % of
 the gap to perfect information, for slightly *less* money.
 
-## The trade, stated plainly
+## The trade, stated plainly — *as it stood with the backstop ON*
+
+> **This no longer holds.** With the calendar backstop removed the total-lost
+> penalty disappears entirely (non-high −0.012 at N = 200), so the paragraph
+> below describes the old configuration, not the current one. See the
+> backstop-off re-run.
 
 On **total** patients lost the survival-aware policies are *worse* than fifo
 (11.10 vs 10.76 at N = 200), and the gap widens with load and failure rate
@@ -79,7 +89,10 @@ On **total** patients lost the survival-aware policies are *worse* than fifo
 asked: it buys high-risk survival with low-risk delay. Both metrics are
 reported everywhere; neither is hidden.
 
-## Exp A / B / C / E
+## Exp A / B / C / E — *backstop-on baseline*
+
+> A and C are current (they were not re-run and are unaffected). **B and E have
+> been re-run** — see the backstop-off section for the numbers that stand.
 
 **A** — `fifo` holds the high-risk tier 9.2 d and low-risk 7.8 d; `adaptive_mpc`
 holds high-risk **0.4 d** and low-risk 19.8 d. Priority is an *output* of the
@@ -101,7 +114,103 @@ often: high-risk loss 3.85 vs 3.85 at a 0 % failure rate, 4.89 vs 6.24 at 10 %,
 **9.58 vs 12.89 at 30 %**. Re-optimising on the observed state is what the
 dynamic layer buys, and its value grows with the failure rate.
 
-## Open issue — the S_min gate never fires
+## Backstop-off re-run
+
+Two changes, then Exp D, B and E re-run at both scales (30 seeds, CRN,
+failures on). The network is unchanged, so the strategic solves were re-used
+from cache — only simulation outcomes move.
+
+* the **loose 90-day backstop is switched off entirely**: no calendar-based
+  removal of any kind. A patient leaves only by failing the S_min gate on a
+  required (re-)collection, by exhausting K_remake, or by being treated;
+  everyone else keeps queueing and is credited with the survival their eventual
+  delivery earns, horizon spillover included.
+* **K_remake now means max REMAKES = 2** (three attempts), matching the
+  parameter table. The yield draw is keyed on `(seed, patient, attempt)`, so the
+  first two draws are unchanged and CRN stays nested against the old runs.
+
+Everything below is the new state; the old (backstop-on) numbers are kept beside
+it. Exp 0, A and C are unchanged and were not re-run.
+
+### 1. Exp D — where the non-high excess went
+
+N = 200, adaptive_mpc vs fifo, expected patients lost:
+
+| | high-risk | non-high | total |
+|---|---|---|---|
+| **backstop ON** (old) | −1.822 | **+2.155** | **+0.332** |
+| **backstop OFF** (new) | −1.917 | **−0.012** | **−1.929** |
+
+The +2.16 non-high excess is gone — not traded elsewhere, gone. It was the
+tier-blind backstop executing the low-risk patients `adaptive_mpc` deprioritises,
+not a clinical cost of the ρ-weighted objective. N = 100 agrees: non-high
++0.404 → −0.003, total −0.184 → −0.671.
+
+| policy | high-risk | non-high | all | removals | clinical loss |
+|---|---|---|---|---|---|
+| fifo | 6.161 | 3.422 | 9.582 | 0.10 | 24.52 |
+| static_survival | 5.165 | 3.475 | 8.640 | 0.60 | 21.39 |
+| survival_index | 4.244 | 3.411 | 7.655 | 0.07 | 18.31 |
+| adaptive_mpc | **4.244** | 3.409 | **7.653** | 0.07 | 18.31 |
+| best_achievable | 4.183 | 3.360 | 7.544 | 0.07 | 18.02 |
+
+N = 100: fifo 3.068 / 1.664 / 4.733 · adaptive 2.400 / 1.662 / 4.062 · bound
+2.318 / 1.671 / 3.989.
+
+**adaptive_mpc now beats fifo on both metrics at both scales.** Removals are
+near-zero throughout, so expected loss is now almost entirely survival decay
+from waiting rather than death-by-rule. Two side effects worth knowing: the
+S_min gate now does fire, but only under `static_survival` (0.53 per replication
+at N = 200) — its rigid order lets a few patients decay far enough that a remake
+fails the projected-delivery test, which is the gate biting exactly as intended;
+and `best_achievable` records zero K_remake losses, because with foresight it
+never spends a third attempt it knows will fail.
+
+### 2. Exp B — high-risk lost vs offered load
+
+N = 200 (new; old fifo/adaptive in brackets):
+
+| load | fifo | static_survival | adaptive_mpc | fifo − adaptive |
+|---|---|---|---|---|
+| 0.70 | 4.523 [5.08] | 4.376 | 4.256 [4.83] | 0.267 |
+| 0.85 | 4.796 [5.34] | 4.499 | 4.271 [4.84] | 0.525 |
+| 1.00 | 5.303 [5.81] | 4.832 | 4.307 [4.87] | 0.996 |
+| 1.15 | 6.304 [6.75] | 5.216 | 4.230 [4.80] | 2.073 |
+| 1.30 | 7.420 [7.71] | 6.312 | 4.300 [4.87] | 3.119 |
+| 1.50 | 8.806 [8.94] | 7.377 | 4.433 [4.98] | 4.372 |
+
+N = 100 gap: 0.184 → 0.351 → 0.668 → 1.254 → 1.575 → 2.259.
+
+**The gap widens monotonically with load — 16× at N = 200** (0.27 → 4.37) and
+12× at N = 100. `adaptive_mpc` holds high-risk loss essentially flat (4.26 →
+4.43) while fifo nearly doubles. `static_survival` degrades almost as badly as
+fifo once load passes 1.0, so this is a case for the *adaptive* layer, not for
+survival-awareness alone.
+
+### 3. Exp E — high-risk lost vs failure rate
+
+N = 200 (new; old in brackets):
+
+| 1 − p | fifo | static_survival | adaptive_mpc | static − adaptive |
+|---|---|---|---|---|
+| 0.00 | 5.086 | 3.849 [3.85] | 3.849 [3.85] | **0.000** |
+| 0.05 | 5.637 | 4.434 [4.61] | 4.060 [4.17] | 0.374 |
+| 0.10 | 6.383 | 5.435 [6.24] | 4.319 [4.89] | 1.117 |
+| 0.15 | 7.147 | 6.504 [7.48] | 4.611 [5.62] | 1.892 |
+| 0.20 | 8.323 | 7.785 [8.95] | 4.995 [6.60] | 2.790 |
+| 0.30 | 12.564 | 11.589 [12.89] | 6.510 [9.58] | **5.079** |
+
+N = 100 static − adaptive: 0.000 → 0.106 → 0.260 → 0.620 → 0.853 → 1.700.
+
+**Adaptive pulls further ahead of static as failures rise, monotonically, to
+5.08 patients at a 30 % failure rate** — 14× the 0.37 gap at 5 %. At zero
+failures the two are *identical* (3.849 both): with nothing to react to,
+re-optimising buys nothing, exactly as theory predicts. Meanwhile
+`static_survival`'s own advantage over fifo collapses (1.24 → 0.98) while
+adaptive's grows (1.24 → 6.05). This is the sharpest evidence in the study for
+the dynamic layer.
+
+## Open issue — the S_min gate never fires (backstop-on runs)
 
 `S_min = 0.75` is evaluated on projected survival at delivery, where the wait
 for a slot is read from `busy_m(τ)` (in-progress jobs only), exactly as
@@ -117,9 +226,16 @@ low-risk**, vs 0 under fifo). That is a large part of why `adaptive_mpc`'s total
 expected loss exceeds fifo's.
 
 The doc's intent — "sicker/later patients cross the floor first, so they are
-precisely the ones who cannot re-collect" — therefore does not bite as written.
-Making it bite would mean letting `wait_for_slot` reflect **queue position**, not
-just in-progress occupancy. Left as specified pending a decision.
+precisely the ones who cannot re-collect" — therefore did not bite as written.
+Making it bite more broadly would mean letting `wait_for_slot` reflect **queue
+position**, not just in-progress occupancy; `wait_for_slot` is unchanged.
+
+**Superseded in part by the backstop-off re-run above.** With the backstop gone
+and three attempts allowed, the gate does now fire — but only under
+`static_survival`, whose rigid order lets patients decay far enough for a remake
+to fail the projected-delivery test. Under the adaptive policies it still never
+fires, and removals are near-zero, so expected loss is now almost entirely
+survival decay rather than removal.
 
 ## Solver notes
 
