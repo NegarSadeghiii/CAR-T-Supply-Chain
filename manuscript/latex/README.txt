@@ -34,17 +34,20 @@ EQUATION NUMBERING
   eq:index, ...), so inserting or removing an equation renumbers the whole
   section consistently with no hand-editing.
 
-  Table 2 in the section maps these numbers back to the block-structured
-  numbering used in Survival_Aware_iSHIPMENT_Formulation.docx and in the code
-  repository, so the manuscript, the specification and the implementation stay
-  cross-referenceable.
+REFERENCES
+  main.tex carries a one-entry thebibliography so the wrapper compiles with
+  pdflatex alone. references.bib holds the same entry for BibTeX/biblatex use
+  in a host manuscript. The entry is INCOMPLETE by design: title, first author,
+  journal and year are verified, but the full author list, volume, article
+  number and DOI are left blank rather than guessed. Paste the complete record
+  from Zotero before submission.
 
 NOTES
   - lmodern and microtype are loaded only if present (\IfFileExists), so the
     source compiles on minimal installations. On a full installation they load
     and improve typography.
-  - The framework figure is labelled P1-P8 in the artwork while the manuscript
-    numbers those equations (37)-(44). The caption names both. If you re-export
-    the figure, consider relabelling it to match the manuscript.
+  - The framework figure's equation labels should be edited to match the
+    manuscript numbering: the per-epoch problem is (37)-(44) and the
+    re-collection gate is (45).
   - The prose is identical to manuscript/methods.md in the repository; that
     file is the Markdown source of record for review, this is the typeset form.

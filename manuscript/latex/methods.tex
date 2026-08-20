@@ -24,8 +24,9 @@ optimisation rather than an input rule.
 The framework has two layers, solved in sequence (Figure~\ref{fig:framework}).
 
 The \textbf{strategic layer} (\S\ref{sec:strategic}) is a mixed-integer linear
-program that extends the i-SHIPMENT CAR-T network model of Triantafyllou
-et~al.\ (2022) in two ways. First, it introduces a genuine manufacturing
+program that extends the patient-centric supply-chain design platform of
+Triantafyllou et~al.\ \cite{triantafyllou2022} in two ways. First, it
+introduces a genuine manufacturing
 queue: the start of manufacturing becomes a decision variable constrained by
 material arrival and by concurrent facility capacity, so a job may be
 \emph{held}. Second, it prices that hold clinically, through a patient-level
@@ -57,33 +58,16 @@ draw.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{figures/Framework.png}
-  \caption{\textbf{Two-layer survival-aware CAR-T manufacturing decision
-  framework.} \textbf{Layer 1 (strategic, offline, solved once)} combines
-  patient demand and tier composition, facility and transport data, and the
-  tier-specific survival model $S_u(t)$ in a survival-augmented
-  network-design MILP extending i-SHIPMENT,
-  Equations~\eqref{eq:obj}--\eqref{eq:nd}. Its solution fixes four
-  quantities---open facilities, capacity, patient-to-facility assignment and
-  transport modes---which pass to Layer~2 as a frozen network and are never
-  re-decided there. \textbf{Layer 2 (operational, online, over simulated
-  time)} advances a daily discrete-event clock (1) on which patients arrive
-  and material is staged. A decision epoch (2) is triggered whenever a
-  manufacturing slot frees; the per-epoch rolling-horizon
-  problem---Equations~\eqref{eq:elapsed}--\eqref{eq:index}, labelled P1--P8 in
-  the figure---then reads the current state (waiting patients, accrued
-  survival, failures realised so far) and re-optimises over a look-ahead
-  window $H$, implementing only the immediate start. The started job proceeds
-  through manufacturing, QC and release testing (4), passing with probability
-  $p_m$---in which case it ships and the patient is treated, with survival
-  recorded at delivery---or failing with probability $1-p_m$, in which case
-  the re-collection recourse applies: feasible if projected survival at the
-  remake's delivery is at least $\Smin$, Equation~\eqref{eq:gate}, returning
-  the patient to the queue with a larger accrued wait, and otherwise
-  cancelled. The clock then advances one day. The five policies evaluated
-  (FIFO, survival-index, static survival, adaptive MPC, and the
-  perfect-information bound) enter at the per-epoch decision point (3) and
-  differ only there: each is executed on the identical frozen network and,
-  through common random numbers, the identical realised failures.}
+  \caption{\textbf{Two-layer survival-aware scheduling framework.} The
+  strategic layer is solved once and fixes the network---open facilities,
+  capacity, patient--facility assignment and transport modes. The operational
+  layer executes on that frozen network: a daily discrete-event simulation
+  realises manufacturing yield, and at each epoch at which a slot frees the
+  per-epoch problem re-optimises on the observed state over a look-ahead
+  window $H$, implementing only the immediate start. A failed batch returns
+  its patient to the queue subject to the re-collection gate, or is
+  cancelled. All five policies enter at the per-epoch decision point and
+  differ only there.}
   \label{fig:framework}
 \end{figure}
 
@@ -95,7 +79,7 @@ sites $m \in M$; leukapheresis sites $c \in C$; hospitals $h \in H$; transport
 modes $j \in J$; periods $t \in T = \{1, \dots, 130\}$; and $\Theta \subset C
 \times H$ the set of co-located leukapheresis--hospital pairs.
 
-Parameters retained from i-SHIPMENT: capital and variable facility cost
+Parameters retained from the base model: capital and variable facility cost
 $\CIM_m$, $\CVM_m$; concurrent capacity $\FCAP_m$; unit transport costs
 $\Uone_{cmj}$, $\Uthree_{mhj}$; transport times $\TTone_j$, $\TTthree_j$;
 stage durations $\TLS$, $\TMFE$, $\TQC$; per-therapy material and
@@ -120,6 +104,38 @@ material arrival $A_{pmt}$; and the survival indicators $\delta_{p,d} \in
 
 \subsection{Strategic layer: survival-aware network and queue design}
 \label{sec:strategic}
+
+\subsubsection{Relationship to the base model}
+\label{sec:provenance}
+
+The strategic layer is built on the supply-chain design platform of
+Triantafyllou et~al.\ \cite{triantafyllou2022}, and it is worth stating
+precisely which components are theirs and which are introduced here.
+
+\emph{Retained without modification.} The network and material-flow structure
+is theirs: facility siting and link activation, the patient-routing variables,
+the time-indexed material balances that carry each patient's material through
+leukapheresis, inbound transport, manufacturing, release testing and outbound
+transport, the facility-capacity accounting, the co-location requirement
+between collection site and treating hospital, and the cost structure
+comprising amortised facility cost, transport cost and per-therapy material and
+release-testing cost. In the formulation that follows this is
+Equations~\eqref{eq:ctm}--\eqref{eq:atrt}, together with the first three terms
+of the objective~\eqref{eq:obj}. The instance data---candidate sites,
+capacities, transport times and unit costs---is likewise theirs.
+
+\emph{Introduced in this work.} Four things are new. First, manufacturing start
+becomes a decision rather than being identified with material arrival, which
+creates the queue and with it the possibility of a deliberate hold,
+Equations~\eqref{eq:q1}--\eqref{eq:hold}. Second, patient survival enters the
+model explicitly, as the final term of~\eqref{eq:obj} and its exact
+linearisation \eqref{eq:surv}--\eqref{eq:lin3}. Third, the maximum-turnaround
+constraint is relaxed from the binding timeliness mechanism to a slack outer
+bound~\eqref{eq:nd}, for the reason given in \S\ref{sec:linearisation}.
+Fourth, the entire operational layer---the per-epoch decision problem, the
+execution environment, the policies and the perfect-information
+benchmark---has no counterpart in the base model, which is deterministic and
+solved once.
 
 \subsubsection{Objective}
 
@@ -149,7 +165,7 @@ higher-hazard tiers, which is a property of the calibration in
 \subsubsection{Material balance, capacity and network structure}
 
 Equations~\eqref{eq:bal1}--\eqref{eq:durv} are the time-indexed material
-balances of i-SHIPMENT, propagating each patient's material from collection
+balances of the base model, propagating each patient's material from collection
 through leukapheresis, inbound transport, manufacturing, release testing and
 outbound transport:
 \begin{align}
@@ -166,7 +182,7 @@ outbound transport:
 \end{align}
 
 Equation~\eqref{eq:arrival} is where this model departs from its predecessor.
-In i-SHIPMENT the manufacturing start is \emph{identified} with material
+In the base model the manufacturing start is \emph{identified} with material
 arrival: a job begins the day its material reaches the site. Here $A_{pmt}$
 records only the arrival, and the start $\INM$ is released as a decision,
 governed by the queue \eqref{eq:q1}--\eqref{eq:hold} below.
@@ -597,7 +613,7 @@ identically and remain comparable.
 \subsection{Experimental design}
 \label{sec:design}
 
-\paragraph{Instances.} All experiments use the i-SHIPMENT network data---four
+\paragraph{Instances.} All experiments use the published network data of the base model---four
 collection sites, six candidate manufacturing sites with $\FCAP \in \{4, 31,
 10, 4, 31, 10\}$, two transport modes---with cohorts built by tiling the
 50-patient base cohort. Tier mix (30/40/30 H/M/L) and the collection-site
@@ -671,44 +687,13 @@ configuration; at the lowest offered load, where the arrival window is
 deliberately stretched beyond the horizon, it is substantially larger and is
 reported as such.
 
-\paragraph{Implementation.} The strategic and perfect-information models are
-built in Pyomo and solved with Gurobi where the licence admits the model size
-and with HiGHS otherwise. The per-epoch models are small---the largest queue
-observed at any single facility at $N = 200$ contains 33 patients, giving at
-most 264 binary columns per epoch---and solve under Gurobi throughout. Solver
-identity, wall time, MIP gap and model size are recorded for every solve. Every
-replication records the seed that produced it, the strategic solution it was
-frozen against, and the resulting per-experiment metrics, so that any reported
-number can be traced to a specific solve and a specific draw. Code, instance
-data, cached strategic solutions and all per-experiment outputs accompany the
-manuscript.
-
-\paragraph{Equation numbering.} Equations are numbered sequentially in this
-manuscript. For readers cross-referencing the model specification and the
-accompanying code, which use a block-structured scheme, the correspondence is
-given in Table~\ref{tab:numbering}.
-
-\begin{table}[htbp]
-  \centering
-  \caption{Correspondence between manuscript equation numbers and the
-  block-structured numbering used in the model specification and code.}
-  \label{tab:numbering}
-  \begin{tabularx}{0.92\textwidth}{lX}
-    \toprule
-    This manuscript & Specification / code \\
-    \midrule
-    \eqref{eq:obj}--\eqref{eq:atrt} & (1)--(26), unchanged \\
-    \eqref{eq:q1}--\eqref{eq:hold} & (32)--(35), manufacturing queue \\
-    \eqref{eq:surv} & (27), nonlinear survival \\
-    \eqref{eq:lin1}--\eqref{eq:lin3} & (28)--(30), linearisation
-      ($\lambda$/SOS2 in the specification, $\delta$-binary as implemented) \\
-    \eqref{eq:nd} & (31), turnaround cap \\
-    \eqref{eq:closedform} & survival closed form \\
-    \eqref{eq:elapsed}--\eqref{eq:noearly} & (P1)--(P6), per-epoch problem \\
-    \eqref{eq:index} & (P8), index rule \\
-    \eqref{eq:gate} & re-collection gate \\
-    \eqref{eq:nonidle} & non-idling condition \\
-    \eqref{eq:pi1}--\eqref{eq:piobj} & perfect-information benchmark \\
-    \bottomrule
-  \end{tabularx}
-\end{table}
+\paragraph{Computational implementation.} All programs are implemented in
+Pyomo and solved with a commercial branch-and-cut solver, falling back to an
+open-source solver where licence limits preclude it. The strategic and
+perfect-information programs are solved to proven optimality at every scale
+reported. The per-epoch programs are small---at most a few hundred binary
+columns, since the ready queue at a single facility never exceeded 33
+patients---which is what makes re-optimisation at every epoch practical rather
+than merely conceivable. Every replication records the random seed that
+generated it and the strategic solution it was executed against, so each
+reported quantity is reproducible from a stated draw.
