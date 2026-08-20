@@ -1,0 +1,72 @@
+% ---------------------------------------------------------------------------
+% Shared preamble: packages and notation macros.
+% Kept separate so that methods.tex can be \input into a host manuscript
+% by copying these macro definitions rather than the whole wrapper.
+% ---------------------------------------------------------------------------
+% lmodern and microtype are cosmetic. They are guarded so that this compiles
+% on a minimal TeX installation as well as a full one.
+\IfFileExists{lmodern.sty}{\usepackage{lmodern}}{}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{caption}
+\IfFileExists{lmodern.sty}{\IfFileExists{microtype.sty}{\usepackage{microtype}}{}}{}
+\usepackage[hidelinks]{hyperref}
+
+% --- notation macros -------------------------------------------------------
+% Multi-letter model quantities are set upright so they do not read as
+% products of single-letter variables.
+\newcommand{\CTM}{\mathrm{CTM}}
+\newcommand{\TTC}{\mathrm{TTC}}
+\newcommand{\CIM}{\mathrm{CIM}}
+\newcommand{\CVM}{\mathrm{CVM}}
+\newcommand{\FCAP}{\mathrm{FCAP}}
+\newcommand{\INC}{\mathrm{INC}}
+\newcommand{\OUTC}{\mathrm{OUTC}}
+\newcommand{\LSR}{\mathrm{LSR}}
+\newcommand{\LSA}{\mathrm{LSA}}
+\newcommand{\INM}{\mathrm{INM}}
+\newcommand{\OUTM}{\mathrm{OUTM}}
+\newcommand{\MSO}{\mathrm{MSO}}
+\newcommand{\FTD}{\mathrm{FTD}}
+\newcommand{\INH}{\mathrm{INH}}
+\newcommand{\DURV}{\mathrm{DURV}}
+\newcommand{\RATIO}{\mathrm{RATIO}}
+\newcommand{\CAPv}{\mathrm{CAP}}
+\newcommand{\TRT}{\mathrm{TRT}}
+\newcommand{\STT}{\mathrm{STT}}
+\newcommand{\CTT}{\mathrm{CTT}}
+\newcommand{\ATRT}{\mathrm{ATRT}}
+\newcommand{\HOLD}{\mathrm{HOLD}}
+\newcommand{\ND}{\mathrm{ND}}
+\newcommand{\FMIN}{\mathrm{FMIN}}
+\newcommand{\FMAX}{\mathrm{FMAX}}
+\newcommand{\Eone}{\mathit{E}1}
+\newcommand{\Xone}{\mathit{X}1}
+\newcommand{\Xtwo}{\mathit{X}2}
+\newcommand{\Yone}{\mathit{Y}1}
+\newcommand{\Ytwo}{\mathit{Y}2}
+\newcommand{\Uone}{\mathit{U}1}
+\newcommand{\Uthree}{\mathit{U}3}
+\newcommand{\TTone}{\mathrm{TT1}}
+\newcommand{\TTthree}{\mathrm{TT3}}
+\newcommand{\TLS}{T_{\mathrm{LS}}}
+\newcommand{\TMFE}{T_{\mathrm{MFE}}}
+\newcommand{\TQC}{T_{\mathrm{QC}}}
+\newcommand{\Cmat}{C_{\mathrm{mat}}}
+\newcommand{\CQC}{C_{\mathrm{QC}}}
+\newcommand{\Smin}{S_{\min}}
+\newcommand{\Krem}{K_{\mathrm{remake}}}
+\newcommand{\rholeuk}{\rho_{\mathrm{leuk}}}
+\newcommand{\cop}{c^{\mathrm{op}}}
+\newcommand{\busy}{\mathrm{busy}}
+\newcommand{\elapsed}{\mathrm{elapsed}}
+\newcommand{\Thor}{T_{\mathrm{horizon}}}
+\newcommand{\Tref}{T_{\mathrm{ref}}}
+\newcommand{\Tmin}{T_{\min}}
+\newcommand{\Tmax}{T_{\max}}
+\newcommand{\HR}{\mathrm{HR}}

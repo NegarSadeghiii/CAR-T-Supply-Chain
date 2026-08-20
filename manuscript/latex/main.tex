@@ -1,0 +1,29 @@
+% ===========================================================================
+% Standalone wrapper so that methods.tex compiles on its own.
+%
+%   pdflatex main            (run twice, so that \eqref and \ref resolve)
+%
+% To drop the Methods section into a host manuscript instead, copy the macro
+% definitions from preamble.tex into that manuscript's preamble and
+% \input{methods} at the point the section belongs. Nothing in methods.tex
+% depends on this wrapper.
+% ===========================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\input{preamble}
+
+\setcounter{section}{2}   % the Methods section is numbered 3
+
+\title{Survival-Aware Scheduling for Autologous CAR-T Supply Chains\\
+       \large Methods}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\input{methods}
+
+\end{document}

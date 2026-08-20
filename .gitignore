@@ -1,2 +1,8 @@
 __pycache__/
 *.pyc
+
+# LaTeX build artefacts
+*.aux
+*.log
+*.out
+*.toc
