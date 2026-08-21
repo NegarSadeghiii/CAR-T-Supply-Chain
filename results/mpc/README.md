@@ -118,6 +118,32 @@ sits well inside the stable region: at $500K the design is not yet the binding
 lever, prioritisation is. At N = 100 the design never flips across the whole
 sweep (m1+m4 throughout).
 
+### What actually drives the network
+
+α is design-inert over the operationally relevant range, but that does not mean
+the survival extension is inert. Solving the strategic model in four
+configurations separates the causes:
+
+| variant | N = 200 | N = 100 |
+|---|---|---|
+| cost objective, no queue, ND = 18 | m2 (31 slots) | m1+m3 (14 slots) |
+| cost objective, no queue, ND = 42 | m2 (31 slots) | m1+m3 (14 slots) |
+| full model, α = 0 | m1+m3 (14 slots) | m1+m4 (8 slots) |
+| full model, α = $500K | m1+m3 (14 slots) | m1+m4 (8 slots) |
+
+Three readings. **Survival is design-inert**: α = 0 and α = $500K open the same
+facilities at both scales. **The deadline is irrelevant**: ND = 18 and ND = 42
+agree. **The manufacturing queue is what moves the design**: it is the only
+remaining difference, and it moves it a long way. Denied the ability to hold
+material, the cost model cannot smooth the arrival peak and must buy raw
+capacity instead — $22.6M on m2 rather than $10.5M on m1+m3 at N = 200, at an
+offered load of 0.51 rather than 1.14.
+
+This is a result about the queue, not about survival, and it is why the survival
+term is kept in the strategic objective rather than being split out: removing it
+changes nothing about the design, while removing the queue changes the design,
+the capacity and the congestion the whole operational study is defined against.
+
 **E** — `adaptive_mpc` pulls away from `static_survival` as batches fail more
 often: high-risk loss 3.85 vs 3.85 at a 0 % failure rate (identical — nothing to
 react to), 4.32 vs 5.44 at 10 %, **6.51 vs 11.59 at 30 %**. Re-optimising on the
