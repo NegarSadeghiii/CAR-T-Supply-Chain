@@ -70,8 +70,10 @@ class FrozenPlan:
     opened: list
     facility_cost: float
     fcap: dict
-    c_material: float                                # $/attempt, i-SHIPMENT data
-    c_qc: float                                      # $/attempt, i-SHIPMENT data
+    c_material: float                                # $/attempt, base-model data
+    c_qc: float                                      # $/attempt, base-model data
+    variant: str = "cost_design"                     # cost_design | survival_probe
+    nd: int = 18
     patients: dict = field(default_factory=dict)     # pid -> PatientPlan
     static_order: list = field(default_factory=list)  # pids by strategic start
     source: str = ""
@@ -96,18 +98,23 @@ class FrozenPlan:
         return (len(self.patients) / span) / cap
 
 
-def frozen_plan(net, inst, alpha=ALPHA_STRATEGIC, max_fac=None, time_limit=None,
-                use_cache=True, mip_gap=1e-4):
-    """Solve (or re-use) the strategic extension and freeze it.
+def build_frozen_plan(net, inst, kind, alpha=0.0, nd=None, max_fac=None,
+                      time_limit=None, use_cache=True, mip_gap=1e-4,
+                      variant="cost_design"):
+    """Solve one strategic variant and freeze its solution.
 
-    Re-uses the on-disk solution cache in ``results/cache`` that the phase 1-4
-    scripts already write, so a plan that has been solved before is free.
+    ``kind`` selects the MILP: "baseline" is the cost design (2)-(26);
+    "extension" is the survival probe, which adds (27)-(35). ``variant`` is
+    recorded on the plan so the operational layer can refuse a probe solve.
+
+    The on-disk cache is keyed by kind, scale, alpha, facility cap and ND, so a
+    probe solve and a design solve can never collide.
     """
     import ishipment_survival as ish
 
     max_fac = max_fac or ish.max_facilities_for(inst.n)
     time_limit = time_limit or {50: 900, 100: 1800, 200: 3600}.get(inst.n, 3600)
-    blob = ish.run_design(net, inst, "extension", alpha=float(alpha),
+    blob = ish.run_design(net, inst, kind, alpha=float(alpha), nd=nd,
                           max_fac=max_fac, time_limit=time_limit,
                           mip_gap=mip_gap, use_cache=use_cache)
     if "summary" not in blob:
@@ -119,6 +126,7 @@ def frozen_plan(net, inst, alpha=ALPHA_STRATEGIC, max_fac=None, time_limit=None,
         facility_cost=float(blob["summary"]["facility_cost"]),
         fcap={m: int(net.FCAP[m]) for m in net.m},
         c_material=float(net.C_material), c_qc=float(net.CQC),
+        variant=variant, nd=int(blob["ND"]),
         source=blob["key"], solve=blob["solve"],
     )
     for r in blob["rows"]:
@@ -136,6 +144,17 @@ def frozen_plan(net, inst, alpha=ALPHA_STRATEGIC, max_fac=None, time_limit=None,
                                                key=lambda p: (p.strategic_start,
                                                               p.pid))]
     return plan
+
+
+def frozen_plan(net, inst, alpha=ALPHA_STRATEGIC, **kw):
+    """Backwards-compatible alias for the survival-probe plan.
+
+    Retained so that existing callers keep working; new code should use
+    ``strategic_cost_design.frozen_plan`` or
+    ``strategic_survival_probe.frozen_plan`` explicitly.
+    """
+    return build_frozen_plan(net, inst, kind="extension", alpha=alpha,
+                             variant="survival_probe", **kw)
 
 
 def load_scale(n, dat=None, **kw):
