@@ -22,6 +22,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt                                   # noqa: E402
 from matplotlib.patches import Patch                              # noqa: E402
 
+import cart_data as cd                                            # noqa: E402
+
 RESULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
 FIGDIR = os.path.join(RESULTS, "figures")
 
@@ -179,7 +181,7 @@ def value_summary(data, path):
                          ec="#8fb8b8"))
 
     b.set_xticks(list(xs))
-    b.set_xticklabels([f"{TIER_NAME[u]}\n(rho={t['cost'][u]['rho']})"
+    b.set_xticklabels([f"{TIER_NAME[u]}\n(\\${cd.ALPHA_TIER[u]/1e6:g}M)"
                        for u in TIERS])
     b.set_ylabel("Expected patients lost   sum (1 - S[p])")
     b.set_title("(b) Same cost, fewer high-risk losses",

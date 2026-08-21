@@ -70,9 +70,9 @@ the flow bounds FMIN, FMAX; and the maximum turnaround ND.
 
 Parameters introduced here: the tier reference mortality w_u and the induced
 hazard HR_u; the survival scale η and shape γ, and sensitivity κ; the clinical
-weight ρ_u; the cost–survival exchange rate α; the manufacturing yield p_m; the
-look-ahead horizon H; the re-collection floor S_min; the maximum number of
-remakes K_remake; and the re-leukapheresis cost ρ_leuk.
+per-tier value of life α_u; the manufacturing yield p_m; the look-ahead
+horizon H; the re-collection floor S_min; the maximum number of remakes
+K_remake; and the re-leukapheresis cost c_releuk.
 
 Decision variables retained: facility opening E1_m ∈ {0,1}; link activation
 X1_cm, X2_mh ∈ {0,1}; patient routing Y1_pcmjt, Y2_pmhjt ∈ {0,1}; the material
@@ -115,7 +115,7 @@ no counterpart in the base model, which is deterministic and solved once.
 
 The planner minimises supply-chain cost plus a monetised clinical loss,
 
-  min Z = Σ_p CTM_p + Σ_p TTC_p + (C_mat + C_QC)|P| + α Σ_p ρ_u(p) (1 − S_p),   (1)
+  min Z = Σ_p CTM_p + Σ_p TTC_p + (C_mat + C_QC)|P| + Σ_p α_u(p) (1 − S_p),   (1)
 
 where CTM_p is the amortised facility cost and TTC_p the transport cost of
 patient p,
@@ -124,12 +124,27 @@ patient p,
   TTC_p = Σ_cmjt Y1_pcmjt U1_cmj + Σ_mhjt Y2_pmhjt U3_mhj,       ∀p.   (3)
 
 The final term of (1) is the contribution of this work. It carries units of
-dollars: α is an explicit value of a statistical life and ρ_u a dimensionless
-triage weight, so α ρ_u is the per-tier dollar valuation of an avoided death.
+dollars: α_u is the value of one life lost in risk tier u, and it is the only
+life-value parameter in the model. There is no dimensionless triage weight
+multiplying it. This matters for identification: a formulation written as a
+scalar value of life times a priority weight identifies only the product of
+the two, so the priority weight would be an unfalsifiable modelling choice
+dressed as a parameter. Written as α_u, the objective carries exactly three
+numbers, each of which is a dollar valuation that can be quoted, sourced and
+argued with on its own terms (§3.4).
+
 We stress that (1) contains **no priority rule, no tier ordering and no
 reserved capacity**. Any prioritisation that emerges does so because S_p falls
 faster for higher-hazard tiers, which is a property of the calibration in §3.4,
-not of the constraint set.
+not of the constraint set. The distinction is testable rather than rhetorical.
+Under the index rule (44), patient i is served before patient j whenever
+α_u(i) ΔS_i > α_u(j) ΔS_j, where ΔS is the one-day survival decrement; over the
+admissible turnaround range the calibration of §3.4 gives ΔS_H : ΔS_M : ΔS_L =
+7.3 : 2.5 : 1. High-risk patients are therefore served ahead of low-risk ones
+for **any** life-value vector with α_L / α_H < 7.3, and ahead of medium-risk
+ones for any vector with α_M / α_H < 2.9. The ordering we report is a
+consequence of the hazard calibration and survives inversions of α_u far larger
+than any defensible valuation would produce.
 
 ### 3.3.3 Material balance, capacity and network structure
 
@@ -307,6 +322,38 @@ S_H = 0.936 against S_L = 0.992 — a 5.6-point gap that widens to 13.0 points a
 42 days. That gap is the entire room the objective has to work with, and it is
 absent from the base model, in which turnaround is pinned to 17–18 days.
 
+### 3.4.1 Life-value calibration
+
+The three numbers α_u are the only place where a clinical outcome is converted
+into dollars, so we state their provenance explicitly. Because the decision at
+issue is the allocation of a manufacturing slot — a reimbursement question —
+the appropriate yardstick is a health-technology-assessment threshold rather
+than a regulatory value of a statistical life. We therefore take
+
+  α_u = Q_u × λ,
+
+with Q_u the quality-adjusted life-years a successfully treated tier-u patient
+gains over salvage therapy and λ a willingness-to-pay threshold per QALY. At
+λ = $125,000/QALY, the midpoint of the range in standard use for US value
+assessment, and Q = {H: 12, M: 8, L: 4}, this gives
+
+  α = {H: $1.5M, M: $1.0M, L: $0.5M},
+
+which is the vector used throughout. Its level is credible in the sense
+that matters for a reimbursement decision: the total valuation per avoided death
+is of the same order as the acquisition cost of the therapy itself.
+
+Two caveats belong in the open. First, this is a calibration, not an estimate;
+Q_u in particular is not separately identified by the data used here, and a
+reader who prefers a different vector can substitute one directly, which is
+precisely the advantage of carrying α_u rather than a product of a value of life
+and an unfalsifiable priority weight. Second, the ordering of α_u is not what
+drives the results: as shown in §3.3.2, tier prioritisation under (44) is
+unchanged for any α_u with α_L/α_H < 7.3, so it would survive even a vector that
+valued low-risk patients several times above high-risk ones. Experiment C varies
+the level of α_u by a common multiplier and reports the multiplier at which the
+strategic network design itself changes.
+
 ## 3.5 Operational layer: the per-epoch decision problem
 
 With the strategic layer frozen, a decision epoch occurs whenever a
@@ -331,7 +378,7 @@ rather than merely expensive.
 
 The epoch problem is
 
-  min Σ_{i∈W_t} ρ_{u(i)} (1 − Ŝ_i),                                           (39)
+  min Σ_{i∈W_t} α_{u(i)} (1 − Ŝ_i),                                           (39)
 
 with effective survival
 
@@ -350,7 +397,11 @@ deferral would cost, so the model weighs serving a patient now against the damag
 of not serving them at all within the horizon. The frozen operational cost c^op_i
 is inert on a frozen network — it is a per-patient constant and every started
 patient is started exactly once — so it does not enter the argmin and is not
-monetised into (39); α appears only in the strategic objective (1).
+monetised into (39). Because (39) carries no cost term, only the *shape* of
+the life-value vector reaches the operational layer: scaling every α_u by a
+common factor rescales the epoch objective without altering its argmin. The
+level of α_u is therefore a strategic parameter alone, and the operational
+results reported below are invariant to it.
 
 Two structural properties are worth stating. First, because m(i) is frozen, the
 patient set partitions across facilities and (42) never couples two of them: the
@@ -364,9 +415,9 @@ the look-ahead plan is discarded, in the standard receding-horizon manner.
 In the special case of a single free slot, H = 0 and no operational cost,
 (39)–(43) collapse to a closed form:
 
-  i* = argmax_{i∈W_t} ρ_{u(i)} [ S_i(t) − S_i(t+1) ].                         (44)
+  i* = argmax_{i∈W_t} α_{u(i)} [ S_i(t) − S_i(t+1) ].                         (44)
 
-Serve whoever's ρ-weighted survival falls most from one further day of waiting.
+Serve whoever loses the most life value from one further day of waiting.
 This is a Whittle-type index: it requires no solver, is inspectable by a
 clinician, and is the natural rule to deploy. We evaluate it as a policy in its
 own right, and its relationship to the full look-ahead model is an empirical
@@ -417,7 +468,7 @@ recourse is deterministic, consistent with deterministic health evolution:
   introducing a second stochastic primitive.
 - **If feasible**, the remake restarts from collection: T_LS + TT1 days are
   added before manufacturing can resume, the accrued wait grows accordingly, and
-  ρ_leuk is charged. The patient re-enters W as a φ = 1, lower-survival
+  c_releuk is charged. The patient re-enters W as a φ = 1, lower-survival
   competitor.
 - **If infeasible**, or once K_remake remakes are exhausted, the patient is
   cancelled and carries the full clinical loss.
@@ -476,10 +527,10 @@ These are imposed subject to the same rolling-window capacity the simulation
 enforces and the same S_min admissibility (45). The objective maximises realised
 weighted survival, in which only a successful attempt delivers anything:
 
-  max Σ_i Σ_{k: f_{i,k}=0} Σ_τ ρ_{u(i)} S_{u(i)}(τ + T_MFE + T_QC + TT3_i − t⁰_i) x_{i,k,τ}.  (49)
+  max Σ_i Σ_{k: f_{i,k}=0} Σ_τ α_{u(i)} S_{u(i)}(τ + T_MFE + T_QC + TT3_i − t⁰_i) x_{i,k,τ}.  (49)
 
 Three points of interpretation are essential. First, the resulting value is a
-valid lower bound on the **ρ-weighted clinical loss Σ_p ρ_{u(p)}(1 − S_p)** —
+valid lower bound on the **monetised clinical loss Σ_p α_{u(p)}(1 − S_p)** —
 the clinical-loss term of objective (1) — and *not* on unweighted patient
 counts; a policy can and does fall below it on unweighted totals without
 contradiction, and we report it only against the quantity it bounds. Second,

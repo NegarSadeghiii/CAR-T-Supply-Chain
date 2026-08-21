@@ -33,9 +33,28 @@ KAPPA = 1.0          # survival-model scale
 
 TIER_MIX = {"H": 0.30, "M": 0.40, "L": 0.30}     # 30% high / 40% med / 30% low
 W_RISK = {"H": 0.15, "M": 0.05, "L": 0.02}       # per-eta deterioration rate
-RHO = {"H": 3.0, "M": 2.0, "L": 1.0}             # clinical-loss weights
 
 TIER_ORDER = ("H", "M", "L")
+
+# --------------------------------------------------------------------------
+# Life value
+# --------------------------------------------------------------------------
+# ALPHA_TIER[u] is the value, in dollars, of one life lost in risk tier u.
+# It is the model's ONLY life-value parameter: there is no separate triage
+# priority weight multiplying it, so the objective carries exactly three
+# life-value numbers and each is quoted on its own.
+#
+# The vector's LEVEL is what the sensitivity sweep varies (see
+# ``ishipment_survival.run_design(alpha=...)``, which passes the scaled value
+# of the reference tier); its SHAPE is fixed here.
+ALPHA_TIER = {"H": 1_500_000.0, "M": 1_000_000.0, "L": 500_000.0}
+
+# Reference tier for reporting and for the sweep's scale.  Expected losses are
+# quoted in reference-tier-equivalent lives -- ALPHA_W[u] = alpha_u / alpha_ref
+# -- so tables stay dimensionless while the objective stays in dollars.
+ALPHA_REF_TIER = "L"
+ALPHA_REF = ALPHA_TIER[ALPHA_REF_TIER]
+ALPHA_W = {u: ALPHA_TIER[u] / ALPHA_REF for u in TIER_ORDER}
 
 # Turnaround-time support.  TRT = TLS + TT1 + TMFE + TQC + TT3 + HOLD
 #   min = 1 + 1 + 7 + 7 + 1 + 0 = 17 days   (all-air, no hold)

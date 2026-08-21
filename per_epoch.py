@@ -17,8 +17,8 @@ Contents
 ``solve_epoch``   (P1)-(P6): the look-ahead MILP over [t, t+H], used by the
                   ``adaptive_mpc`` policy.
 ``index_choice``  (P8): the closed-form survival index -- serve whoever's
-                  rho-weighted survival falls most from one more day of waiting
-                  -- used by the ``survival_index`` policy.
+                  life-value-weighted survival falls most from one more day of
+                  waiting -- used by the ``survival_index`` policy.
 ``futility_ok``   the S_min gate on (re-)collection: feasible iff the PROJECTED
                   survival at delivery is still >= S_min, where the wait for a
                   slot is read from the live occupancy the capacity constraint
@@ -58,7 +58,7 @@ import cart_data as cd
 LOOKAHEAD_H = 7          # MPC look-ahead window [t, t+H], days
 S_MIN = 0.75             # futility gate on PROJECTED survival at delivery
 K_REMAKE = 2             # max REMAKES per patient (3 attempts), then cancel
-RHO_LEUK = 5000.0        # $ per re-leukapheresis (re-collection) attempt
+C_RELEUK = 5000.0        # $ per re-leukapheresis (re-collection) attempt
 BACKSTOP_WAIT = None     # no calendar-based removal; the S_min gate is the
                          # only futility rule (T_elig was dropped)
 
@@ -143,9 +143,14 @@ def futility_ok(tier, t0, now, pre_days, slot_wait, tmfe, tqc, tt3,
 # (P8) the interpretable survival index
 # ---------------------------------------------------------------------------
 def index_score(c: Candidate, t: int, tmfe: int, tqc: int) -> float:
-    """rho_u(i) * [ S_i(t) - S_i(t+1) ] -- the one-day weighted survival loss."""
-    return cd.RHO[c.tier] * (c.survival_if_started(t, tmfe, tqc)
-                             - c.survival_if_started(t + 1, tmfe, tqc))
+    """alpha_u(i) * [ S_i(t) - S_i(t+1) ] -- the one-day loss of life value.
+
+    Weights are the reference-tier-normalised life values ALPHA_W, so the score
+    is in reference-tier-equivalent lives per day; the argmax is unchanged by
+    that normalisation because it is a single positive scale factor.
+    """
+    return cd.ALPHA_W[c.tier] * (c.survival_if_started(t, tmfe, tqc)
+                                 - c.survival_if_started(t + 1, tmfe, tqc))
 
 
 def index_choice(cands, t: int, n_start: int, tmfe: int, tqc: int):
@@ -169,14 +174,18 @@ def _epoch_data(cands, t, busy, fcap, tmfe, tqc, horizon_H):
     on tau instead of being deferred past the window, and the free capacity
     profile.  (P3)'s objective
 
-        min  sum_i rho_i (1 - S_hat_i),
+        min  sum_i alpha_i (1 - S_hat_i),
         S_hat_i = sum_tau S_i(tau) x_i,tau + d_i (1 - sum_tau x_i,tau),
         d_i     = S_i(t + H)                       (deferral charged at the
                                                     survival it would lose)
 
-    is, dropping the constant sum_i rho_i (1 - d_i), equivalent to
+    is, dropping the constant sum_i alpha_i (1 - d_i), equivalent to
 
-        max  sum_i,tau rho_i [S_i(tau) - d_i] x_i,tau.
+        max  sum_i,tau alpha_i [S_i(tau) - d_i] x_i,tau.
+
+    alpha_i is carried in reference-tier-equivalent lives (ALPHA_W); the epoch
+    problem has no cost term, so the common factor alpha_ref scales the whole
+    objective and leaves the argmax untouched.
 
     The frozen operational cost c^op_i is inert on the frozen network -- it is
     a per-patient constant and every started patient is started exactly once --
@@ -186,8 +195,8 @@ def _epoch_data(cands, t, busy, fcap, tmfe, tqc, horizon_H):
     gain = {}
     for c in cands:
         d_i = c.survival_if_started(taus[-1], tmfe, tqc)      # continuation
-        rho = cd.RHO[c.tier]
-        gain[c.pid] = {tau: rho * (c.survival_if_started(tau, tmfe, tqc) - d_i)
+        a_i = cd.ALPHA_W[c.tier]
+        gain[c.pid] = {tau: a_i * (c.survival_if_started(tau, tmfe, tqc) - d_i)
                        for tau in taus}
     free = {tau: fcap - (busy[tau] if tau < len(busy) else 0) for tau in taus}
     return taus, gain, free

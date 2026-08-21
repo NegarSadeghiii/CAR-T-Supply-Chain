@@ -87,9 +87,20 @@ def caps_for(n, override=None):
     primary = max_facilities_for(n, override)
     return [primary] if primary == MAX_FACILITIES else [primary, MAX_FACILITIES]
 
-# Cost-equivalence weight used for the "survival design" of Phase 3.
-# The objective is  Z = cost[$] + ALPHA * sum_p rho_u(p) * (1 - S[p]).
-# ALPHA therefore has units of $ per unit of rho-weighted expected loss.
+# Life value used for the "survival design" of Phase 3.
+#
+# The objective is
+#
+#     Z = cost[$] + sum_p alpha_u(p) * (1 - S[p]),
+#
+# with alpha_u the dollar value of one life lost in tier u (cart_data.
+# ALPHA_TIER).  The sweep varies the LEVEL of that vector and holds its shape
+# fixed, so a single scalar suffices: the ``alpha`` argument below is the
+# scaled value of the REFERENCE tier, and
+#
+#     alpha_u = alpha * ALPHA_W[u],     ALPHA_W = alpha_u / alpha_ref.
+#
+# alpha = cd.ALPHA_REF therefore reproduces cd.ALPHA_TIER exactly.
 ALPHA_SURVIVAL = 1.0e5
 
 # Phase-4 sweep: the values requested in the brief, plus a log-extension that
@@ -480,10 +491,12 @@ def build_extension(net, inst, alpha, nd=ND_EXT, max_facilities=MAX_FACILITIES,
             for a, b in zip(g, g[1:]):
                 mdl.con.add(start_of[a] <= start_of[b])
 
-    # (35)/(1) objective: original cost + ALPHA * clinical loss
+    # (35)/(1) objective: original cost + the monetised clinical loss
+    #   sum_p alpha_u(p) (1 - S_p) = alpha * sum_p ALPHA_W[u(p)] (1 - S_p),
+    # with ``alpha`` the reference tier's life value at the sweep's level.
     cost = (_facility_cost_expr(mdl) + _transport_cost_expr(mdl)
             + (net.C_material + net.CQC) * len(P))
-    loss = sum(cd.RHO[pat[pid].tier] * (1 - mdl.S[pid]) for pid in P)
+    loss = sum(cd.ALPHA_W[pat[pid].tier] * (1 - mdl.S[pid]) for pid in P)
     mdl.COSTEXPR, mdl.LOSSEXPR = cost, loss
     mdl.OBJ = Objective(expr=cost + alpha * loss, sense=minimize)
     mdl.kind = "extension"
@@ -530,7 +543,7 @@ def extract(mdl, inst, net):
             "ms_arrival": ms_arrival, "start": start, "hold": hold,
             "delivery": start + lead + net.TT3[j_out], "TRT": trt,
             "survival": s, "expected_loss": 1 - s,
-            "weighted_loss": cd.RHO[p.tier] * (1 - s),
+            "weighted_loss": cd.ALPHA_W[p.tier] * (1 - s),
         })
 
     fc = _facility_cost(net)
@@ -574,8 +587,8 @@ def tier_table(rows, label):
         if not sub:
             continue
         out.append({
-            "design": label, "tier": u, "n": len(sub), "rho": cd.RHO[u],
-            "w_risk": cd.W_RISK[u],
+            "design": label, "tier": u, "n": len(sub),
+            "alpha_tier": cd.ALPHA_TIER[u], "w_risk": cd.W_RISK[u],
             "mean_TRT": statistics.fmean(r["TRT"] for r in sub),
             "mean_HOLD": statistics.fmean(r["hold"] for r in sub),
             "median_HOLD": statistics.median(r["hold"] for r in sub),
@@ -585,7 +598,7 @@ def tier_table(rows, label):
             "weighted_loss": sum(r["weighted_loss"] for r in sub),
         })
     out.append({
-        "design": label, "tier": "ALL", "n": len(rows), "rho": "",
+        "design": label, "tier": "ALL", "n": len(rows), "alpha_tier": "",
         "w_risk": "",
         "mean_TRT": statistics.fmean(r["TRT"] for r in rows),
         "mean_HOLD": statistics.fmean(r["hold"] for r in rows),
@@ -690,7 +703,8 @@ def phase0_setup(net, dat, scales):
                for d in cd.D_RANGE])
     write_json(os.path.join(RESULTS, "calibration.json"), {
         "gamma": cd.GAMMA, "eta": cd.ETA, "kappa": cd.KAPPA,
-        "tier_mix": cd.TIER_MIX, "w_risk": cd.W_RISK, "rho": cd.RHO,
+        "tier_mix": cd.TIER_MIX, "w_risk": cd.W_RISK,
+        "alpha_tier": cd.ALPHA_TIER, "alpha_ref_tier": cd.ALPHA_REF_TIER,
         "survival_formula": "S_u(t) = (1 - w_u) ** (t / 42)",
         "TRT_support_days": [cd.D_MIN, cd.D_MAX],
         "ND_baseline": ND_BASELINE, "ND_extension": ND_EXT,
@@ -711,7 +725,8 @@ def phase0_setup(net, dat, scales):
         cd.save_instance(inst, os.path.join(RESULTS, f"instance_N{n}.json"))
         write_csv(os.path.join(RESULTS, f"tiers_N{n}.csv"),
                   [{"pid": p.pid, "tier": p.tier, "c": p.c, "h": p.h,
-                    "t0": p.t0, "rho": cd.RHO[p.tier], "w_risk": cd.W_RISK[p.tier]}
+                    "t0": p.t0, "alpha_tier": cd.ALPHA_TIER[p.tier],
+                    "w_risk": cd.W_RISK[p.tier]}
                    for p in inst.patients])
     # merge with any scales already on record, so running a subset of scales
     # never silently truncates this study-level file

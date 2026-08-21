@@ -37,7 +37,7 @@ Daily event sequence (the doc's order, one day at a time)
 Failure recourse (supersedes assumption 3).  A remake needs a FRESH
 leukapheresis: feasible iff the PROJECTED survival at the remake's delivery is
 still >= S_min, where the wait for a slot is read from the live occupancy; if
-feasible it adds TLS + TT1 days and rho_leuk dollars, if not the patient is
+feasible it adds TLS + TT1 days and c_releuk dollars, if not the patient is
 cancelled and carries the full clinical loss.
 
 Uncertainty and common random numbers
@@ -78,7 +78,7 @@ class SimConfig:
     lookahead: int = pe.LOOKAHEAD_H      # MPC window H
     s_min: float = pe.S_MIN              # futility gate
     k_remake: int = pe.K_REMAKE          # max REMAKES, then cancel (attempts = k+1)
-    rho_leuk: float = pe.RHO_LEUK        # $ per re-collection
+    c_releuk: float = pe.C_RELEUK        # $ per re-collection
     backstop_wait: int = pe.BACKSTOP_WAIT    # None = no calendar-based removal
     fail_rate: float = None              # Exp E: common (1 - p) at every facility
     epoch_solver: str = "gurobi"
@@ -126,7 +126,8 @@ class PatientRecord:
 
     @property
     def weighted_loss(self) -> float:
-        return cd.RHO[self.tier] * self.loss
+        """Clinical loss in reference-tier-equivalent lives, alpha_u/alpha_ref."""
+        return cd.ALPHA_W[self.tier] * self.loss
 
 
 @dataclass
@@ -272,7 +273,7 @@ class Simulator:
             ready = t + self.cfg.tls + p.tt1           # fresh leukapheresis
             self.ready_at[pid] = ready
             r.ready_days.append(ready)
-            self.costs["releuk"] += self.cfg.rho_leuk
+            self.costs["releuk"] += self.cfg.c_releuk
             self.costs["transport_in"] += p.u1
 
     def _policy_cancels(self, pid) -> bool:

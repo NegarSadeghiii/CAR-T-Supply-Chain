@@ -170,7 +170,7 @@ def main():
 | risk tiers | H {cd.TIER_MIX['H']:.0%} / M {cd.TIER_MIX['M']:.0%} / L {cd.TIER_MIX['L']:.0%}, assigned once on the 50-patient base cohort (seed {cd.SEED}) and inherited by every replica |
 | survival | `S_u(t) = (1 - w_u) ** (t/42)` with gamma=1, eta=42, kappa=1 |
 | deterioration `w_u` | H {cd.W_RISK['H']}, M {cd.W_RISK['M']}, L {cd.W_RISK['L']} |
-| clinical-loss weight `rho_u` | H {cd.RHO['H']:.0f}, M {cd.RHO['M']:.0f}, L {cd.RHO['L']:.0f} |
+| life value `alpha_u` (\\$ per life lost) | H {cd.ALPHA_TIER['H']:,.0f}, M {cd.ALPHA_TIER['M']:,.0f}, L {cd.ALPHA_TIER['L']:,.0f} |
 | `sigma[d,u]` lookup | precomputed for integer days d = {cd.D_MIN}..{cd.D_MAX} (`sigma_lookup.csv`) |
 | ND | {ish.ND_BASELINE} days (baseline) -> {ish.ND_EXT} days (extension, eq. 31) |
 | CON1 | demand-dependent, matching i-SHIPMENT's centralized vs high-demand configuration: {", ".join(f"{k} patients -> {v} facilities" for k, v in sorted(ish.MAX_FACILITIES_BY_SCALE.items()))} (override with `--max-facilities`) |
@@ -290,7 +290,7 @@ def main():
     linked to eqs. (24)-(25), and the objective of eq. (1)
 
     ```
-    min Z = (original i-SHIPMENT cost) + ALPHA * sum_p rho_u(p) * (1 - S[p])
+    min Z = (original i-SHIPMENT cost) + sum_p alpha_u(p) * (1 - S[p])
     ```
     """).strip() + "\n")
     A("\n" + md_table(p2, ["n", "max_facilities", "status", "opened",
@@ -429,7 +429,8 @@ def main():
     A(f"Both designs are solved on the **same** frozen tier assignment at each "
       f"scale. (a) COST design: ALPHA = 0, survival evaluated afterwards. "
       f"(b) SURVIVAL design: ALPHA = {ish.ALPHA_SURVIVAL:g} "
-      f"($ per unit of rho-weighted expected loss).\n")
+      f"($ per life lost in the reference tier; the vector's shape is "
+      f"fixed by cart_data.ALPHA_W).\n")
     A(md_table(p3, ["n", "max_facilities", "design", "opened", "total_cost",
                     "mean_TRT", "mean_HOLD", "mean_survival", "expected_lost"],
                ["N", "CON1", "design", "facilities", "total cost", "mean TRT",
@@ -505,8 +506,9 @@ def main():
 
     # ----------------------------------------------------------------- phase 4
     A(f"\n## 6. Phase 4 - the cost-lives frontier (N = {frontier_scale})\n")
-    A("`ALPHA` is the price, in dollars, of one unit of rho-weighted expected "
-      "clinical loss. Rows marked * are the values named in the brief; the "
+    A("`ALPHA` is the LEVEL of the life-value vector: the price, in dollars, "
+      "of one life lost in the reference tier, with alpha_u = ALPHA * "
+      "ALPHA_W[u]. Rows marked * are the values named in the brief; the "
       "remainder extend the sweep logarithmically, which is what it takes to "
       "reach the region where the network design itself changes.\n")
     for r in p4:
@@ -636,7 +638,7 @@ def main():
     A(textwrap.dedent("""
     | file | contents |
     |---|---|
-    | `calibration.json` | the frozen tiers / survival / rho set-up |
+    | `calibration.json` | the frozen tiers / survival / life-value set-up |
     | `sigma_lookup.csv` | `sigma[d,u]` for d = 17..42 |
     | `instances_overview.csv`, `instance_N*.json`, `tiers_N*.csv` | the generated cohorts and their frozen tier labels |
     | `phase1_baseline_by_scale.csv`, `phase1_baseline_by_tier.csv`, `phase1_patients_N*.csv` | Phase 1 |

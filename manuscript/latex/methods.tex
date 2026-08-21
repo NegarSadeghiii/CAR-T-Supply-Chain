@@ -88,10 +88,9 @@ flow bounds $\FMIN$, $\FMAX$; and the maximum turnaround $\ND$.
 
 Parameters introduced here: the tier reference mortality $w_u$ and the induced
 hazard $\HR_u$; the survival scale $\eta$ and shape $\gamma$, and sensitivity
-$\kappa$; the clinical weight $\rho_u$; the cost--survival exchange rate
-$\alpha$; the manufacturing yield $p_m$; the look-ahead horizon $H$; the
-re-collection floor $\Smin$; the maximum number of remakes $\Krem$; and the
-re-leukapheresis cost $\rholeuk$.
+$\kappa$; the per-tier value of life $\alphau$; the manufacturing yield
+$p_m$; the look-ahead horizon $H$; the re-collection floor $\Smin$; the
+maximum number of remakes $\Krem$; and the re-leukapheresis cost $\creleuk$.
 
 Decision variables retained: facility opening $\Eone_m \in \{0,1\}$; link
 activation $\Xone_{cm}, \Xtwo_{mh} \in \{0,1\}$; patient routing
@@ -138,11 +137,12 @@ benchmark---has no counterpart in the base model, which is deterministic and
 solved once.
 
 \subsubsection{Objective}
+\label{sec:objective}
 
 The planner minimises supply-chain cost plus a monetised clinical loss,
 \begin{equation}
   \min\; Z \;=\; \sum_{p} \CTM_p \;+\; \sum_{p} \TTC_p
-  \;+\; (\Cmat + \CQC)\,|P| \;+\; \alpha \sum_{p} \rho_{u(p)} \bigl(1 - S_p\bigr),
+  \;+\; (\Cmat + \CQC)\,|P| \;+\; \sum_{p} \alpha_{u(p)} \bigl(1 - S_p\bigr),
   \label{eq:obj}
 \end{equation}
 where $\CTM_p$ is the amortised facility cost and $\TTC_p$ the transport cost
@@ -154,13 +154,31 @@ of patient $p$,
 \end{align}
 
 The final term of \eqref{eq:obj} is the contribution of this work. It carries
-units of dollars: $\alpha$ is an explicit value of a statistical life and
-$\rho_u$ a dimensionless triage weight, so $\alpha \rho_u$ is the per-tier
-dollar valuation of an avoided death. We stress that \eqref{eq:obj} contains
-\textbf{no priority rule, no tier ordering and no reserved capacity}. Any
-prioritisation that emerges does so because $S_p$ falls faster for
-higher-hazard tiers, which is a property of the calibration in
-\S\ref{sec:calibration}, not of the constraint set.
+units of dollars: $\alphau$ is the value of one life lost in risk tier $u$, and
+it is the only life-value parameter in the model. There is no dimensionless
+triage weight multiplying it. This matters for identification: a formulation
+written as a scalar value of life times a priority weight identifies only the
+\emph{product} of the two, so the priority weight would be an unfalsifiable
+modelling choice dressed as a parameter. Written as $\alphau$, the objective
+carries exactly three numbers, each of which is a dollar valuation that can be
+quoted, sourced and argued with on its own terms
+(\S\ref{sec:calibration}).
+
+We stress that \eqref{eq:obj} contains \textbf{no priority rule, no tier
+ordering and no reserved capacity}. Any prioritisation that emerges does so
+because $S_p$ falls faster for higher-hazard tiers, which is a property of the
+calibration in \S\ref{sec:calibration}, not of the constraint set. The
+distinction is testable rather than rhetorical. Under the index
+rule~\eqref{eq:index}, patient $i$ is served before patient $j$ whenever
+$\alpha_{u(i)} \Delta S_i > \alpha_{u(j)} \Delta S_j$, where $\Delta S$ is the
+one-day survival decrement; over the admissible turnaround range the
+calibration of \S\ref{sec:calibration} gives $\Delta S_H : \Delta S_M : \Delta
+S_L = 7.3 : 2.5 : 1$. High-risk patients are therefore served ahead of low-risk
+ones for \emph{any} life-value vector with $\alpha_L / \alpha_H < 7.3$, and
+ahead of medium-risk ones for any vector with $\alpha_M / \alpha_H < 2.9$. The
+ordering we report is a consequence of the hazard calibration and survives
+inversions of $\alphau$ far larger than any defensible valuation would
+produce.
 
 \subsubsection{Material balance, capacity and network structure}
 
@@ -372,6 +390,41 @@ At the minimum turnaround of 17 days the high-risk tier already sits at $S_H =
 days. That gap is the entire room the objective has to work with, and it is
 absent from the base model, in which turnaround is pinned to 17--18 days.
 
+\subsubsection{Life-value calibration}
+
+The three numbers $\alphau$ are the only place where a clinical outcome is
+converted into dollars, so we state their provenance explicitly. Because the
+decision at issue is the allocation of a manufacturing slot---a reimbursement
+question---the appropriate yardstick is a health-technology-assessment
+threshold rather than a regulatory value of a statistical life. We therefore
+take
+\[
+  \alphau = Q_u \times \lambda,
+\]
+with $Q_u$ the quality-adjusted life-years a successfully treated tier-$u$
+patient gains over salvage therapy and $\lambda$ a willingness-to-pay threshold
+per QALY. At $\lambda = \$125{,}000$/QALY, the midpoint of the range in
+standard use for US value assessment, and $Q = \{H\!: 12,\, M\!: 8,\, L\!:
+4\}$, this gives
+\[
+  \alpha = \{H\!: \$1.5\text{M},\; M\!: \$1.0\text{M},\; L\!: \$0.5\text{M}\},
+\]
+which is the vector used throughout. Its level is credible in the sense that
+matters for a reimbursement decision: the total valuation per avoided death is
+of the same order as the acquisition cost of the therapy itself.
+
+Two caveats belong in the open. First, this is a calibration, not an estimate;
+$Q_u$ in particular is not separately identified by the data used here, and a
+reader who prefers a different vector can substitute one directly, which is
+precisely the advantage of carrying $\alphau$ rather than a product of a value
+of life and an unfalsifiable priority weight. Second, the ordering of $\alphau$
+is not what drives the results: as shown in \S\ref{sec:objective}, tier
+prioritisation under \eqref{eq:index} is unchanged for any $\alphau$ with
+$\alpha_L/\alpha_H < 7.3$, so it would survive even a vector that valued
+low-risk patients several times above high-risk ones. Experiment~C varies the
+level of $\alphau$ by a common multiplier and reports the multiplier at which
+the strategic network design itself changes.
+
 \subsection{Operational layer: the per-epoch decision problem}
 \label{sec:epoch}
 
@@ -402,7 +455,7 @@ makes repeated failure clinically costly rather than merely expensive.
 
 The epoch problem is
 \begin{equation}
-  \min \sum_{i \in W_t} \rho_{u(i)} \bigl(1 - \hat{S}_i\bigr), \label{eq:epochobj}
+  \min \sum_{i \in W_t} \alpha_{u(i)} \bigl(1 - \hat{S}_i\bigr), \label{eq:epochobj}
 \end{equation}
 with effective survival
 \begin{equation}
@@ -426,8 +479,11 @@ model weighs serving a patient now against the damage of not serving them at
 all within the horizon. The frozen operational cost $\cop_i$ is inert on a
 frozen network---it is a per-patient constant and every started patient is
 started exactly once---so it does not enter the argmin and is not monetised
-into \eqref{eq:epochobj}; $\alpha$ appears only in the strategic
-objective~\eqref{eq:obj}.
+into \eqref{eq:epochobj}. Because \eqref{eq:epochobj} carries no cost term,
+only the \emph{shape} of the life-value vector reaches the operational layer:
+scaling every $\alphau$ by a common factor rescales the epoch objective without
+altering its argmin. The level of $\alphau$ is therefore a strategic parameter
+alone, and the operational results reported below are invariant to it.
 
 Two structural properties are worth stating. First, because $m(i)$ is frozen,
 the patient set partitions across facilities and \eqref{eq:epochcap} never
@@ -442,11 +498,11 @@ receding-horizon manner.
 In the special case of a single free slot, $H = 0$ and no operational cost,
 \eqref{eq:epochobj}--\eqref{eq:noearly} collapse to a closed form:
 \begin{equation}
-  i^{*} = \arg\max_{i \in W_t}\ \rho_{u(i)}\bigl[\,S_i(t) - S_i(t+1)\,\bigr].
+  i^{*} = \arg\max_{i \in W_t}\ \alpha_{u(i)}\bigl[\,S_i(t) - S_i(t+1)\,\bigr].
   \label{eq:index}
 \end{equation}
 
-Serve whoever's $\rho$-weighted survival falls most from one further day of
+Serve whoever loses the most life value from one further day of
 waiting. This is a Whittle-type index: it requires no solver, is inspectable by
 a clinician, and is the natural rule to deploy. We evaluate it as a policy in
 its own right, and its relationship to the full look-ahead model is an
@@ -505,7 +561,7 @@ eligibility without introducing a second stochastic primitive.
 
 \paragraph{If feasible,} the remake restarts from collection: $\TLS + \TTone$
 days are added before manufacturing can resume, the accrued wait grows
-accordingly, and $\rholeuk$ is charged. The patient re-enters $W$ as a
+accordingly, and $\creleuk$ is charged. The patient re-enters $W$ as a
 $\varphi = 1$, lower-survival competitor.
 
 \paragraph{If infeasible,} or once $\Krem$ remakes are exhausted, the patient is
@@ -589,13 +645,13 @@ maximises realised weighted survival, in which only a successful attempt
 delivers anything:
 \begin{equation}
   \max \sum_{i} \sum_{k:\, f_{i,k}=0} \sum_{\tau}
-    \rho_{u(i)}\, S_{u(i)}\bigl(\tau + \TMFE + \TQC + \TTthree_i - t^{0}_{i}\bigr)
+    \alpha_{u(i)}\, S_{u(i)}\bigl(\tau + \TMFE + \TQC + \TTthree_i - t^{0}_{i}\bigr)
     \, x_{i,k,\tau}. \label{eq:piobj}
 \end{equation}
 
 Three points of interpretation are essential. First, the resulting value is a
-valid lower bound on the \textbf{$\rho$-weighted clinical loss} $\sum_p
-\rho_{u(p)}(1 - S_p)$---the clinical-loss term of objective~\eqref{eq:obj}---and
+valid lower bound on the \textbf{monetised clinical loss} $\sum_p
+\alpha_{u(p)}(1 - S_p)$---the clinical-loss term of objective~\eqref{eq:obj}---and
 \emph{not} on unweighted patient counts; a policy can and does fall below it on
 unweighted totals without contradiction, and we report it only against the
 quantity it bounds. Second, this benchmark is deliberately exempt from the
@@ -637,7 +693,8 @@ differently?); the prioritisation mechanism (who is served first, and where
 does the waiting go?); congestion (when does survival awareness matter?),
 varied by compressing or expanding the arrival window on a fixed network so
 that offered load moves without confounding the network; the value of life (at
-what $\alpha$ does the network \emph{design} change?), the only experiment that
+what level of $\alphau$ does the network \emph{design} change?), the only
+experiment that
 re-solves the strategic layer; the policy benchmark against the bound; and
 manufacturing failure rate, swept as a common $(1 - p)$ across all sites so the
 abscissa is interpretable.

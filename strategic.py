@@ -4,9 +4,10 @@ strategic.py
 
 The frozen strategic layer for the survival-aware MPC study.
 
-The strategic MILP (1)-(35) is solved ONCE per demand scale, at
-``ALPHA_STRATEGIC = $500K per life``, and its solution freezes -- for every
-policy alike --
+The strategic MILP (1)-(35) is solved ONCE per demand scale, at the calibrated
+life-value vector ``cart_data.ALPHA_TIER`` ($1.5M / $1.0M / $0.5M per life lost
+for the high / medium / low tier), and its solution freezes -- for every policy
+alike --
 
   * which facilities are open (and therefore the facility cost),
   * the link structure and the assignment m(i),
@@ -31,11 +32,13 @@ from dataclasses import dataclass, field
 
 import cart_data as cd
 
-# The confirmed operating point: alpha is MONETISED at $500K per life and
-# enters the STRATEGIC objective only (doc, "Finalized experimental design").
-# rho_u stays a triage priority weight, not a life-value multiplier, and the
-# per-epoch problem (P3) is never monetised.
-ALPHA_STRATEGIC = 500_000.0
+# The confirmed operating point.  Life value enters the STRATEGIC objective
+# only (doc, "Finalized experimental design"); the per-epoch problem (P3) is
+# never monetised.  There is no separate priority weight: alpha_u IS the
+# weight, so this scalar is only the sweep's LEVEL -- the value of the
+# reference tier -- and cart_data.ALPHA_W fixes the vector's shape.  At
+# ALPHA_STRATEGIC = cd.ALPHA_REF the objective uses cd.ALPHA_TIER verbatim.
+ALPHA_STRATEGIC = cd.ALPHA_REF
 
 # Manufacturing yield by facility (doc, parameter table: "by mode").
 YIELD_P = {"m1": 0.85, "m4": 0.85,

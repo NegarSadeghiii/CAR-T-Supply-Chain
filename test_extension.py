@@ -125,7 +125,7 @@ def test_extension_invariants():
 
     cost = summary["total_cost"]
     loss = summary["weighted_loss"]
-    check("objective == cost + ALPHA * sum rho*(1-S)",
+    check("objective == cost + sum alpha_u*(1-S)",
           abs(out.obj - (cost + 1e5 * loss)) < 1.0,
           f"obj={out.obj:,.1f} vs {cost + 1e5*loss:,.1f}")
 

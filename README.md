@@ -24,7 +24,9 @@ Keeps the baseline and adds, in a copy:
   job can be **held**;
 * an **exact integer-day survival model** — `delta[p,d]`, `d = 17..42`, with
   `S_u(t) = (1 - w_u)**(t/42)`;
-* the objective `min Z = (original i-SHIPMENT cost) + ALPHA * Σ_p ρ_u(p)·(1 − S[p])`.
+* the objective `min Z = (original i-SHIPMENT cost) + Σ_p α_u(p)·(1 − S[p])`,
+  with `α_u` the dollar value of one life lost in tier u -- the model's only
+  life-value parameter (there is no separate priority weight).
 
 The study runs at demand scales of 100 / 200 / 500 patients. CON1 follows
 i-SHIPMENT's own demand-dependent configuration - the centralised 2-facility
@@ -68,7 +70,7 @@ remade patient carries the deterioration of every earlier attempt.
 | policy | what it does |
 |---|---|
 | `fifo` | serve in arrival order — no objective |
-| `survival_index` | greedy (P8): serve the largest ρ-weighted one-day survival loss |
+| `survival_index` | greedy (P8): serve the largest one-day loss of life value α_u·ΔS |
 | `static_survival` | the survival schedule optimised ONCE up front, dispatched greedily, never re-solved |
 | `adaptive_mpc` | the survival schedule re-optimised at EVERY decision epoch on the observed state, via (P1)–(P6) |
 | `best_achievable` | the loss if all manufacturing outcomes were known in advance — a perfect-information MILP per replication, the lower-bound reference |

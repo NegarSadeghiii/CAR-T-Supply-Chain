@@ -275,8 +275,9 @@ def fig_a1_gantt(plan, seed=0, cfg=None, stem="figA1_schedule_gantt_fifo_vs_mpc"
 def fig0_tier_survival(stem="fig0_tier_survival_curves"):
     """Survival vs turnaround by tier, and the marginal one-day survival loss.
 
-    The right panel is the rho-weighted signal the index rule (P8) actually
-    ranks on; the unweighted decline is drawn faintly behind it for reference.
+    The right panel is the life-value-weighted signal the index rule (P8)
+    actually ranks on; the unweighted decline is drawn faintly behind it for
+    reference.
     """
     days = list(cd.D_RANGE)
     fig, ax = plt.subplots(1, 2, figsize=(11.4, 4.5))
@@ -290,8 +291,9 @@ def fig0_tier_survival(stem="fig0_tier_survival_curves"):
                        textcoords="offset points")
         raw = [cd.survival(u, d) - cd.survival(u, d + 1) for d in days]
         ax[1].plot(days, raw, color=TIER_COLOR[u], lw=1.1, alpha=.32, ls=":")
-        ax[1].plot(days, [cd.RHO[u] * r for r in raw], color=TIER_COLOR[u], lw=2,
-                   label=f"{TIER_LABEL[u]}  (rho={cd.RHO[u]:g})")
+        ax[1].plot(days, [cd.ALPHA_W[u] * r for r in raw], color=TIER_COLOR[u],
+                   lw=2,
+                   label=f"{TIER_LABEL[u]}  ($\\alpha_u$=\\${cd.ALPHA_TIER[u]/1e6:g}M)")
 
     ax[0].set_xlabel("Turnaround time TRT [days]")
     ax[0].set_ylabel("Survival probability $S_u$(TRT)")
@@ -299,7 +301,8 @@ def fig0_tier_survival(stem="fig0_tier_survival_curves"):
                     fontsize=10, loc="left")
     ax[0].legend(fontsize=8.5, frameon=False, loc="lower left")
     ax[1].set_xlabel("Turnaround time TRT [days]")
-    ax[1].set_ylabel(r"$\rho_u\,[\,S_u(t) - S_u(t{+}1)\,]$")
+    ax[1].set_ylabel(r"$(\alpha_u/\alpha_{\mathrm{ref}})\,"
+                     r"[\,S_u(t) - S_u(t{+}1)\,]$")
     ax[1].set_title("Marginal cost of one more day of waiting\n"
                     "(solid: weighted, the P8 priority signal; dotted: unweighted)",
                     fontsize=10, loc="left")
@@ -515,12 +518,12 @@ def exp_d(plan, runs=None, stem="figD1_policy_cost_vs_loss",
           stem2="figD2_gap_to_best_achievable", means=None, bound_label=None):
     """Total cost vs expected clinical loss for every policy, plus the bound.
 
-    The left panel uses the CLINICAL LOSS of objective (1), sum_p rho_u(p)
+    The left panel uses the CLINICAL LOSS of objective (1), sum_p alpha_u(p)
     (1 - S_p) -- the quantity best_achievable actually minimises, so its line
     is a genuine lower bound there.  The right panel repeats the exercise on
     the study's primary metric, expected high-risk patients lost; the
     perfect-information solve is drawn there as a reference, since it optimises
-    the rho-weighted total rather than the high-risk tier alone.
+    the life-value-weighted total rather than the high-risk tier alone.
     """
     # ``means`` lets the figures be re-rendered from the saved aggregates
     # without re-solving 30 perfect-information MILPs
@@ -529,7 +532,8 @@ def exp_d(plan, runs=None, stem="figD1_policy_cost_vs_loss",
     online = [n for n in pol.POLICY_NAMES if n in means and n != "best_achievable"]
 
     panels = [("weighted_loss",
-               "Expected clinical loss  $\\Sigma_p\\,\\rho_{u(p)}(1 - S_p)$",
+               "Expected clinical loss  "
+               "$\\Sigma_p\\,(\\alpha_{u(p)}/\\alpha_{\\mathrm{ref}})(1 - S_p)$",
                "lower bound"),
               ("expected_lost_H", "Expected high-risk patients lost",
                "reference")]
@@ -582,7 +586,8 @@ def exp_d(plan, runs=None, stem="figD1_policy_cost_vs_loss",
         ax.barh([i - .19 for i in y], [share_h[n] for n in bars], height=.36,
                 color=TIER_COLOR["H"], label="high-risk patients lost")
         ax.barh([i + .19 for i in y], [share_w[n] for n in bars], height=.36,
-                color=MUTED, label=r"clinical loss $\Sigma\rho(1-S)$")
+                color=MUTED,
+                label=r"clinical loss $\Sigma(\alpha_u/\alpha_{\mathrm{ref}})(1-S)$")
         for i, n in enumerate(bars):
             ax.annotate(f"{share_h[n]:.0%}", (share_h[n], i - .19), fontsize=8.5,
                         va="center", xytext=(4, 0), textcoords="offset points")

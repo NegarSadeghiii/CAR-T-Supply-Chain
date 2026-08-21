@@ -23,10 +23,10 @@ python run_experiments.py --exp all --scale 100    # confirmation
 ## Configuration (all values as confirmed)
 
 α = $500K/life (strategic objective and Exp C only — **not** in P3);
-ρ = 3/2/1; w = 0.15/0.05/0.02; η = 42, γ = 1, κ = 1; H = 7 d;
+α_u = $1.5M/$1.0M/$0.5M; w = 0.15/0.05/0.02; η = 42, γ = 1, κ = 1; H = 7 d;
 S_min = 0.75 on **projected survival at delivery**; K_remake = 2 remakes
 (3 attempts); no calendar backstop;
-ρ_leuk = $5,000; T_horizon = 130 d; TLS/T_MFE/T_QC = 1/7/7;
+c_releuk = $5,000; T_horizon = 130 d; TLS/T_MFE/T_QC = 1/7/7;
 p_m = 0.85 (m1/m4), 0.92 (m2/m5), 0.95 (m3/m6); N_rep = 30 seeds (0–29).
 
 Survival runs on **one continuous clock from the first collection**:
@@ -34,7 +34,7 @@ Survival runs on **one continuous clock from the first collection**:
 `Σ(1 − S)` on each realised timeline, with S = 0 for a lost patient.
 
 Cost = facility (strategic) + transport (U1 per attempt, U3 on delivery)
-+ (C_material + C_QC) per attempt + ρ_leuk per re-collection. Wasted attempts
++ (C_material + C_QC) per attempt + c_releuk per re-collection. Wasted attempts
 are sunk — paid and reported. Cost per therapy divides by treated patients.
 
 **Common random numbers.** The yield draw for attempt k of patient i is a pure
@@ -62,7 +62,7 @@ realised survival, never zeroed.
 N = 200, frozen m1+m3. `best_achievable` is a **proven-optimal**
 perfect-information solve on every replication (23 s each, gap 0) — not a proxy.
 
-| policy | clinical loss Σρ(1−S) | high-risk lost *(primary)* | all lost | cost | $/therapy | hold H/M/L | gap closed (H) |
+| policy | clinical loss Σ(α_u/α_ref)(1−S) | high-risk lost *(primary)* | all lost | cost | $/therapy | hold H/M/L | gap closed (H) |
 |---|---|---|---|---|---|---|---|
 | fifo | 26.98 | 6.63 | 10.76 | $15.608M | $78,645 | 9.2 / 7.4 / 7.8 | 0 % |
 | static_survival | 25.03 | 5.43 | 10.70 | $15.572M | $79,049 | 2.9 / 4.6 / 16.1 | 64 % |
@@ -85,7 +85,7 @@ the gap to perfect information, for slightly *less* money.
 
 On **total** patients lost the survival-aware policies are *worse* than fifo
 (11.10 vs 10.76 at N = 200), and the gap widens with load and failure rate
-(18.1 vs 14.2 at load 1.5). This is the ρ-weighted objective doing what it was
+(18.1 vs 14.2 at load 1.5). This is the life-value-weighted objective doing what it was
 asked: it buys high-risk survival with low-risk delay. Both metrics are
 reported everywhere; neither is hidden.
 
@@ -180,7 +180,7 @@ N = 200, adaptive_mpc vs fifo, expected patients lost:
 
 The +2.16 non-high excess is gone — not traded elsewhere, gone. It was the
 tier-blind backstop executing the low-risk patients `adaptive_mpc` deprioritises,
-not a clinical cost of the ρ-weighted objective. N = 100 agrees: non-high
+not a clinical cost of the life-value-weighted objective. N = 100 agrees: non-high
 +0.404 → −0.003, total −0.184 → −0.671.
 
 | policy | high-risk | non-high | all | removals | clinical loss |

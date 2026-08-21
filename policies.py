@@ -52,7 +52,7 @@ class Fifo:
 
 
 class SurvivalIndex:
-    """(P8): start whoever's rho-weighted survival falls most from one more day."""
+    """(P8): start whoever loses the most life value from one more day's wait."""
     name = "survival_index"
 
     def select(self, sim, m, t, n_start, cands):
@@ -265,13 +265,13 @@ def solve_perfect_information(plan, seed, cfg, time_limit=600, mip_gap=1e-4):
     const, obj = 0.0, []
     for pid, ks in by_patient.items():
         p = plan.patients[pid]
-        const += cd.RHO[p.tier]
+        const += cd.ALPHA_W[p.tier]
         for k in ks:
             if fails[pid][k - 1]:
                 continue                           # a failed batch delivers nothing
             for tau in days[(pid, k)]:
                 trt = tau + lead + p.tt3 - p.t0
-                obj.append(cd.RHO[p.tier] * cd.survival(p.tier, trt)
+                obj.append(cd.ALPHA_W[p.tier] * cd.survival(p.tier, trt)
                            * mdl.x[pid, k, tau])
     mdl.OBJ = Objective(expr=sum(obj), sense=maximize)
 
