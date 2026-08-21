@@ -12,11 +12,12 @@
   "M": 0.05,
   "L": 0.02
  },
- "rho": {
-  "H": 3.0,
-  "M": 2.0,
-  "L": 1.0
+ "alpha_tier": {
+  "H": 1500000.0,
+  "M": 1000000.0,
+  "L": 500000.0
  },
+ "alpha_ref_tier": "L",
  "survival_formula": "S_u(t) = (1 - w_u) ** (t / 42)",
  "TRT_support_days": [
   17,
