@@ -111,6 +111,15 @@ ALPHA_SWEEP_EXTENDED = [1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
 DEFAULT_TIME_LIMIT = 600
 DEFAULT_MIP_GAP = 1e-4
 
+# Valid inequalities.  The dominance, symmetry and aggregate-throughput cuts are
+# all argued to be objective-preserving; ``--no-cuts`` switches all three off so
+# that claim can be checked empirically rather than taken on trust.  A no-cuts
+# run is cached under a separate key ("_nocuts") so it can never overwrite the
+# reported results.  The index reduction is NOT covered by this switch: it is
+# the formulation itself, not an added inequality, and its equivalence is
+# checked separately by ``verify_baseline.py``.
+CUTS = {"enabled": True}
+
 
 # ---------------------------------------------------------------------------
 # Solver plumbing (Gurobi first, documented fallback)
@@ -365,7 +374,12 @@ def build_baseline(net, inst, nd=ND_BASELINE, max_facilities=MAX_FACILITIES):
 # PHASE 2+ model - queue + survival extension (eqs. 32-35, 24-25, 31, 1)
 # ---------------------------------------------------------------------------
 def build_extension(net, inst, alpha, nd=ND_EXT, max_facilities=MAX_FACILITIES,
-                    sigma=None, dominance_cuts=True, symmetry_cuts=True):
+                    sigma=None, dominance_cuts=None, symmetry_cuts=None):
+    # None means "follow the global switch"; an explicit True/False overrides it.
+    if dominance_cuts is None:
+        dominance_cuts = CUTS["enabled"]
+    if symmetry_cuts is None:
+        symmetry_cuts = CUTS["enabled"]
     sigma = sigma or cd.sigma_table()
     mdl = ConcreteModel(name="i-SHIPMENT + queue + survival")
     _network_core(mdl, net, inst, max_facilities, dominance_cuts=dominance_cuts)
@@ -465,14 +479,15 @@ def build_extension(net, inst, alpha, nd=ND_EXT, max_facilities=MAX_FACILITIES,
     # Applying the same argument to every prefix [t_lo, T] gives one cut per T,
     # counting only the patients whose start window ENDS at or before T (those
     # cannot be pushed past T).
-    t_lo = min(win[pid][0] for pid in P)
-    t_hi = max(win[pid][-1] for pid in P)
-    cap_expr = sum(net.FCAP[m] * mdl.E1[m] for m in net.m)
-    for T in list(range(t_lo + net.TMFE - 1, t_hi, net.TMFE)) + [t_hi]:
-        forced = sum(1 for pid in P if win[pid][-1] <= T)
-        if forced:
-            k = math.ceil((T - t_lo + 1) / net.TMFE)
-            mdl.con.add(k * cap_expr >= forced)
+    if CUTS["enabled"]:
+        t_lo = min(win[pid][0] for pid in P)
+        t_hi = max(win[pid][-1] for pid in P)
+        cap_expr = sum(net.FCAP[m] * mdl.E1[m] for m in net.m)
+        for T in list(range(t_lo + net.TMFE - 1, t_hi, net.TMFE)) + [t_hi]:
+            forced = sum(1 for pid in P if win[pid][-1] <= T)
+            if forced:
+                k = math.ceil((T - t_lo + 1) / net.TMFE)
+                mdl.con.add(k * cap_expr >= forced)
 
     # Symmetry breaking among fully interchangeable patients.  Two patients with
     # the same leukapheresis site, the same risk tier and the same arrival day
@@ -658,6 +673,10 @@ def run_design(net, inst, kind, alpha=0.0, max_fac=MAX_FACILITIES, nd=None,
                tag=""):
     """Build + solve one design, with an on-disk cache of the outcome."""
     nd = nd or (ND_BASELINE if kind == "baseline" else ND_EXT)
+    # Only the extension carries the cuts, so only its key is disambiguated;
+    # baselines stay on their existing keys and keep re-using the cache.
+    if not CUTS["enabled"] and kind == "extension":
+        tag = f"{tag}_nocuts" if tag else "nocuts"
     key = _cache_key(kind, inst.n, alpha, max_fac, nd, tag)
     path = os.path.join(CACHE, key + ".json")
     if use_cache and os.path.exists(path):
@@ -1142,7 +1161,18 @@ def main(argv=None):
     ap.add_argument("--no-extended-sweep", dest="extended_sweep",
                     action="store_false")
     ap.add_argument("--no-cache", action="store_true")
+    ap.add_argument("--no-cuts", action="store_true",
+                    help="disable the dominance, symmetry and aggregate-"
+                         "throughput cuts. All three are objective-preserving, "
+                         "so the optimum must be unchanged -- this is how you "
+                         "check that. Results cache under a separate "
+                         "'_nocuts' key and never overwrite the reported ones. "
+                         "Expect it to be much slower; the index reduction is "
+                         "not affected (see verify_baseline.py).")
     args = ap.parse_args(argv)
+    CUTS["enabled"] = not args.no_cuts
+    if args.no_cuts:
+        print("!! cuts DISABLED -- caching under '*_nocuts' keys\n")
 
     os.makedirs(RESULTS, exist_ok=True)
     os.makedirs(CACHE, exist_ok=True)
