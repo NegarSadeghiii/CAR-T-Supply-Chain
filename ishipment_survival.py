@@ -780,7 +780,7 @@ def phase1(net, insts, time_limit, args):
     table, tiers = [], []
     for n, inst in sorted(insts.items()):
         cap = max_facilities_for(n, args.max_facilities)
-        blob = run_design(net, inst, "baseline", max_fac=cap,
+        blob = run_design(net, inst, "baseline", max_fac=cap, mip_gap=args.mip_gap,
                           time_limit=time_limit, use_cache=not args.no_cache)
         row = {"n": n, "arrivals_per_day": round(inst.density, 3),
                "model": "baseline", "ND": ND_BASELINE,
@@ -810,7 +810,7 @@ def phase1(net, insts, time_limit, args):
                 tiers.append(tr)
         else:
             # The configured cap is itself infeasible: show what it would take.
-            diag = run_design(net, inst, "baseline", max_fac=len(net.m),
+            diag = run_design(net, inst, "baseline", max_fac=len(net.m), mip_gap=args.mip_gap,
                               time_limit=time_limit, use_cache=not args.no_cache)
             row["diagnostic_CON1_relaxed"] = diag["solve"]["status"]
             if "summary" in diag:
@@ -822,7 +822,7 @@ def phase1(net, insts, time_limit, args):
         # Where the scale runs a relaxed CON1, also record what the strict
         # centralised cap does -- documented as a diagnostic, not the headline.
         if cap != MAX_FACILITIES:
-            strict = run_design(net, inst, "baseline", max_fac=MAX_FACILITIES,
+            strict = run_design(net, inst, "baseline", max_fac=MAX_FACILITIES, mip_gap=args.mip_gap,
                                 time_limit=time_limit,
                                 use_cache=not args.no_cache)
             row[f"strict_CON1_{MAX_FACILITIES}_status"] = strict["solve"]["status"]

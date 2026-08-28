@@ -99,8 +99,14 @@ class FrozenPlan:
         return (len(self.patients) / span) / cap
 
 
+# The MPC study is frozen on this solve, so it is solved to the study's
+# tolerance rather than the looser default: at 1e-4 the frozen plan can sit
+# ~$1,100 above the true optimum, and every operational result inherits it.
+FROZEN_MIP_GAP = 1e-6
+
+
 def frozen_plan(net, inst, alpha=ALPHA_STRATEGIC, max_fac=None, time_limit=None,
-                use_cache=True, mip_gap=1e-4):
+                use_cache=True, mip_gap=FROZEN_MIP_GAP):
     """Solve (or re-use) the strategic extension and freeze it.
 
     Re-uses the on-disk solution cache in ``results/cache`` that the phase 1-4
