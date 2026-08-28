@@ -290,8 +290,52 @@ T_MFE consecutive days. Partitioning the start-window union into disjoint
 T_MFE-day blocks and applying the argument to every prefix yields a family of
 cuts of the form k · Σ_m FCAP_m E1_m ≥ (number of patients whose start window
 ends by T). These are implied by (29) and therefore change neither the feasible
-set nor the optimum; they tighten the root relaxation, which is what makes the
-largest instances provable.
+set nor the optimum; they tighten the root relaxation.
+
+*Verification.* The three families above are objective-preserving by
+construction, but the claim was also checked empirically rather than left as an
+argument: every design was re-solved with all three disabled. The optimum was
+unchanged in all six cases — exactly in three, and within the 10^-6 optimality
+tolerance in the other three — while solution times fell by 2.2x to 9.6x on the
+cost designs. On the two hardest instances, N = 500 with survival priced, the
+cuts are the difference between proving optimality in roughly 130 s and failing
+to prove it within a 7200 s limit. The index reduction is not covered by that
+test, since it is the formulation rather than an added inequality; its
+equivalence is checked separately against the full-index program, which is only
+constructible at small N (491,516 columns at twelve patients, against 354
+reduced).
+
+### 3.3.7 The cost-only comparator
+
+Several experiments contrast the survival-aware design against a planner who
+minimises cost alone. Setting α_u = 0 does not express that planner, and using
+it would make the comparison meaningless. At α_u = 0 the manufacturing start day
+INM carries no objective coefficient — it appears in neither the facility nor
+the transport cost — so *every* feasible schedule is exactly optimal and the
+resulting survival statistics are whichever member of that set the solver
+happened to return. At N = 200 we measured 528 pairwise swaps that improve
+expected losses at zero objective cost; greedy swapping alone moves expected
+losses from 9.880 to 8.521 with the total cost unchanged to the cent. Six
+independent solves of the same program returned expected losses ranging from
+9.156 to 9.880, which places a 28% swing on any benefit measured against it.
+
+The comparator is therefore solved at a small positive reference value,
+α_ref = $1, which renders the objective lexicographic. Cost still decides every
+choice that costs money — the survival term can move the objective by at most
+about $30, against a smallest inter-design cost difference of $1,261, a margin
+of roughly forty — and survival only ranks schedules of *equal* cost. The
+cost-minimising planner thus takes every survival gain available at no cost,
+which is what a rational cost minimiser would do, and the benefit attributed to
+survival-aware design becomes a lower bound rather than an artefact of an
+unlucky tie. At N = 200 the tie-break leaves the optimal cost identical
+($14,908,756) while expected losses fall from 9.880 to 7.738 and high-risk mean
+hold from 9.97 to 1.60 days.
+
+This has a substantive consequence we report rather than conceal: once the
+cost-only planner is credited with those free gains, it already serves high-risk
+patients first, and the residual benefit of *pricing* survival in the strategic
+objective is small (0.49 expected patients at N = 200). The gains that require
+survival awareness are operational, not architectural.
 
 ## 3.4 Survival calibration
 
@@ -422,6 +466,23 @@ This is a Whittle-type index: it requires no solver, is inspectable by a
 clinician, and is the natural rule to deploy. We evaluate it as a policy in its
 own right, and its relationship to the full look-ahead model is an empirical
 question we report rather than assume.
+
+One structural property of (44) under γ = 1 should be stated, because it is not
+obvious and it is not something we designed. Since
+
+  S_u(t) − S_u(t+1) = S_u(t) · [1 − (1 − w_u)^{1/42}],
+
+the one-day decrement is *proportional to S_u(t) itself*. Within a tier,
+therefore, a patient who has waited longer has a lower survival and hence a
+smaller index, so (44) ranks the least-waited patient first. Between tiers the
+rule prioritises the sickest, which is the behaviour the study is about; within
+a tier it is anti-FIFO and, in principle, starvation-prone. The marginal-loss
+logic is correct on its own terms — a patient already deteriorated does have
+less left to lose per additional day — but the consequence is that low-risk
+patients absorb long and unequal waits. Where a deployment requires bounded
+individual waiting rather than minimum aggregate loss, (44) should be paired
+with a tie-break on t⁰_i or an explicit waiting-time cap; we report the rule as
+specified and note the property rather than silently damping it.
 
 ## 3.6 Execution environment: discrete-event simulation
 
@@ -616,9 +677,11 @@ the lowest offered load, where the arrival window is deliberately stretched
 beyond the horizon, it is substantially larger and is reported as such.
 
 *Computational implementation.* All programs are implemented in Pyomo and
-solved with a commercial branch-and-cut solver, falling back to an open-source
-solver where licence limits preclude it. The strategic and perfect-information
-programs are solved to proven optimality at every scale reported. The per-epoch
+solved with Gurobi 13.0.3 to a relative MIP gap of 10^-6. Every strategic and
+perfect-information program reported here attains that tolerance; none was
+terminated by a time limit. The qualitative findings also reproduce under HiGHS,
+the open-source solver, though its default tolerance leaves several designs
+short of proven optimality, so the reported optima are the Gurobi ones. The per-epoch
 programs are small — at most a few hundred binary columns, since the ready
 queue at a single facility never exceeded 33 patients — which is what makes
 re-optimisation at every epoch practical rather than merely conceivable. Every

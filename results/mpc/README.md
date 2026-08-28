@@ -22,7 +22,9 @@ python run_experiments.py --exp all --scale 100    # confirmation
 
 ## Configuration (all values as confirmed)
 
-α = $500K/life (strategic objective and Exp C only — **not** in P3);
+α_ref = $500K/life at the operating point (strategic objective and Exp C
+only — **not** in P3); the cost-only comparator uses α_ref = $1 as a
+lexicographic tie-break, since at α = 0 the schedule is undetermined;
 α_u = $1.5M/$1.0M/$0.5M; w = 0.15/0.05/0.02; η = 42, γ = 1, κ = 1; H = 7 d;
 S_min = 0.75 on **projected survival at delivery**; K_remake = 2 remakes
 (3 attempts); no calendar backstop;
@@ -41,6 +43,11 @@ are sunk — paid and reported. Cost per therapy divides by treated patients.
 function of `(seed, pid, k)`, so the same batches fail under every policy, at
 every offered load, and nested across the failure-rate sweep. Differences
 between policies are scheduling, never luck.
+
+**Solver.** Every design and perfect-information program is solved with
+Gurobi 13.0.3 to a relative MIP gap of 1e-6; none is terminated by a time
+limit. The valid inequalities were verified objective-preserving by
+re-solving every design with them disabled.
 
 ## Frozen networks
 
@@ -64,11 +71,11 @@ perfect-information solve on every replication (23 s each, gap 0) — not a prox
 
 | policy | clinical loss Σ(α_u/α_ref)(1−S) | high-risk lost *(primary)* | all lost | cost | $/therapy | hold H/M/L | gap closed (H) |
 |---|---|---|---|---|---|---|---|
-| fifo | 26.98 | 6.63 | 10.76 | $15.608M | $78,645 | 9.2 / 7.4 / 7.8 | 0 % |
-| static_survival | 25.03 | 5.43 | 10.70 | $15.572M | $79,049 | 2.9 / 4.6 / 16.1 | 64 % |
-| survival_index | 23.25 | 4.81 | 11.13 | $15.554M | $79,309 | 0.4 / 2.7 / 19.8 | 97 % |
-| adaptive_mpc | 23.22 | 4.81 | 11.10 | $15.554M | $79,294 | 0.4 / 2.7 / 19.8 | **97 %** |
-| best_achievable | 22.93 | 4.75 | 11.00 | $15.483M | $78,959 | 0.1 / 1.9 / 19.6 | 100 % |
+| fifo | 24.37 | 6.12 | 9.53 | $15.641M | $78,243 | 9.2 / 7.5 / 7.9 | 0 % |
+| static_survival | 21.26 | 5.14 | 8.59 | $15.627M | $78,360 | 3.3 / 5.5 / 16.7 | 51 % |
+| survival_index | 18.28 | 4.24 | 7.64 | $15.642M | $78,235 | 0.4 / 2.7 / 23.5 | 97 % |
+| adaptive_mpc | 18.28 | 4.24 | 7.64 | $15.642M | $78,235 | 0.4 / 2.7 / 23.4 | **97 %** |
+| best_achievable | 18.00 | 4.18 | 7.53 | $15.637M | $78,211 | 0.1 / 2.2 / 23.6 | 100 % |
 
 N = 100 confirms the ordering: fifo 3.62 → static 3.40 (32 %) → index/mpc 3.03
 (88 %) → bound 2.95.
@@ -226,21 +233,21 @@ survival-awareness alone.
 
 ### 3. Exp E — high-risk lost vs failure rate
 
-N = 200 (new; old in brackets):
+N = 200:
 
 | 1 − p | fifo | static_survival | adaptive_mpc | static − adaptive |
 |---|---|---|---|---|
-| 0.00 | 5.086 | 3.849 [3.85] | 3.849 [3.85] | **0.000** |
-| 0.05 | 5.637 | 4.434 [4.61] | 4.060 [4.17] | 0.374 |
-| 0.10 | 6.383 | 5.435 [6.24] | 4.319 [4.89] | 1.117 |
-| 0.15 | 7.147 | 6.504 [7.48] | 4.611 [5.62] | 1.892 |
-| 0.20 | 8.323 | 7.785 [8.95] | 4.995 [6.60] | 2.790 |
-| 0.30 | 12.564 | 11.589 [12.89] | 6.510 [9.58] | **5.079** |
+| 0.00 | 5.075 | 3.849 | 3.849 | **0.000** |
+| 0.05 | 5.623 | 4.430 | 4.056 | 0.374 |
+| 0.10 | 6.360 | 5.399 | 4.316 | 1.083 |
+| 0.15 | 7.124 | 6.499 | 4.610 | 1.888 |
+| 0.20 | 8.319 | 7.780 | 4.996 | 2.784 |
+| 0.30 | 12.521 | 11.616 | 6.512 | **5.104** |
 
-N = 100 static − adaptive: 0.000 → 0.106 → 0.260 → 0.620 → 0.853 → 1.700.
+N = 100 static − adaptive: 0.000 → 0.106 → 0.260 → 0.620 → 0.828 → 1.775.
 
-**Adaptive pulls further ahead of static as failures rise, monotonically, to
-5.08 patients at a 30 % failure rate** — 14× the 0.37 gap at 5 %. At zero
+**Adaptive pulls further ahead of static as failures rise, monotonically,
+to 5.10 patients at a 30 % failure rate** — 14× the 0.37 gap at 5 %. At zero
 failures the two are *identical* (3.849 both): with nothing to react to,
 re-optimising buys nothing, exactly as theory predicts. Meanwhile
 `static_survival`'s own advantage over fifo collapses (1.24 → 0.98) while
