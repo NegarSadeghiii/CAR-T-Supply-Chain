@@ -82,14 +82,14 @@ The baseline has no queue: manufacturing starts on the day the sample reaches th
 |---|---|---|---|---|---|---|---|---|
 | 100 | 2 | optimal | m1+m3 | 14 | $12.81M | 18.00 | 3.15 | 0.5 |
 | 200 | 2 | optimal | m2 | 31 | $26.96M | 18.00 | 6.29 | 1.2 |
-| 500 | 3 | optimal | m2+m3+m5 | 72 | $63.80M | 17.99 | 15.73 | 4.0 |
+| 500 | 3 | optimal | m2+m3+m5 | 72 | $63.79M | 18.00 | 15.73 | 5.0 |
 
 
 **Why the third facility.** At N = 500 the strict centralised cap is what forces the relaxation, and this is a documented diagnostic rather than the headline result:
 
 | N | configured CON1 | opened at configured CON1 | cost at configured CON1 | status at CON1 <= 2 | opened at CON1 <= 2 | cost at CON1 <= 2 |
 |---|---|---|---|---|---|---|
-| 500 | 3 | m2+m3+m5 | $63.80M | infeasible |  |  |
+| 500 | 3 | m2+m3+m5 | $63.79M | infeasible |  |  |
 
 
 So the no-queue model cannot serve N = 500 from two plants: the peak 7-day rolling arrival load reaches 80 jobs against the 62 concurrent slots the best two-facility pair can offer, and starts are pinned to arrival. Three facilities resolve it. Note that this is a statement about the *centralised* configuration only - with the third facility that i-SHIPMENT itself allows at high demand, the baseline is feasible and is the comparison used throughout.
@@ -108,9 +108,9 @@ Baseline survival, by tier (ND = 18 pins every therapy to an 18-day turnaround, 
 | baseline_N200 | H | 60 | 18.00 | 0.9327 | 4.037 |
 | baseline_N200 | M | 80 | 18.00 | 0.9783 | 1.739 |
 | baseline_N200 | L | 60 | 18.00 | 0.9914 | 0.517 |
-| baseline_N500 | H | 150 | 17.99 | 0.9327 | 10.088 |
+| baseline_N500 | H | 150 | 18.00 | 0.9327 | 10.092 |
 | baseline_N500 | M | 200 | 18.00 | 0.9783 | 4.349 |
-| baseline_N500 | L | 150 | 17.99 | 0.9914 | 1.292 |
+| baseline_N500 | L | 150 | 18.00 | 0.9914 | 1.293 |
 
 
 ## 4. Phase 2 - the queue substitutes scheduling for plant
@@ -137,9 +137,9 @@ min Z = (original i-SHIPMENT cost) + sum_p alpha_u(p) * (1 - S[p])
 | N | CON1 | status | facilities opened | capacity | total cost | mean TRT | mean HOLD | max HOLD | E[lost] | wall s |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 100 | 2 | optimal | m1+m4 | 8 | $8.21M | 21.66 | 2.83 | 23 | 3.40 | 5.0 |
-| 200 | 2 | optimal | m1+m3 | 14 | $14.95M | 24.29 | 5.45 | 23 | 7.23 | 13.2 |
-| 500 | 3 | optimal | m1+m2 | 35 | $36.23M | 23.74 | 5.28 | 24 | 17.45 | 127.3 |
-| 500 | 2 | optimal | m1+m2 | 35 | $36.23M | 23.74 | 5.28 | 24 | 17.45 | 114.4 |
+| 200 | 2 | optimal | m1+m3 | 14 | $14.95M | 24.29 | 5.45 | 23 | 7.23 | 17.3 |
+| 500 | 3 | optimal | m1+m2 | 35 | $36.23M | 23.74 | 5.28 | 24 | 17.45 | 145.8 |
+| 500 | 2 | optimal | m1+m2 | 35 | $36.23M | 23.74 | 5.28 | 24 | 17.45 | 137.6 |
 
 
 **Baseline vs. extension, head to head** - the baseline at the CON1 its scale is configured for, the extension at every facility budget solved:
@@ -148,12 +148,12 @@ min Z = (original i-SHIPMENT cost) + sum_p alpha_u(p) * (1 - S[p])
 |---|---|---|---|---|---|---|---|---|---|
 | 100 | 2 | m1+m3 | $12.81M | m1+m4 | $8.21M | 35.9% |  |  |  |
 | 200 | 2 | m2 | $26.96M | m1+m3 | $14.95M | 44.5% |  |  |  |
-| 500 | 3 | m2+m3+m5 | $63.80M | m1+m2 | $36.23M | 43.2% | m1+m2 | $36.23M | 43.2% |
+| 500 | 3 | m2+m3+m5 | $63.79M | m1+m2 | $36.23M | 43.2% | m1+m2 | $36.23M | 43.2% |
 
 
 ### N = 500: capacity substitution
 
-This is the sharpest result in the study, and it is about **substitution, not feasibility rescue**. Given the third facility that i-SHIPMENT allows at high demand, the baseline is perfectly feasible: it opens m2+m3+m5 (capacity 72) for $63.80M. The extension serves the same 500 patients on **two** facilities - m1+m2, capacity 35 - for $36.23M, 43.2% less.
+This is the sharpest result in the study, and it is about **substitution, not feasibility rescue**. Given the third facility that i-SHIPMENT allows at high demand, the baseline is perfectly feasible: it opens m2+m3+m5 (capacity 72) for $63.79M. The extension serves the same 500 patients on **two** facilities - m1+m2, capacity 35 - for $36.23M, 43.2% less.
 
 The queue is buying the third plant back. Where the baseline must hold enough concurrent capacity to absorb the worst arrival burst instantly, the extension spreads that burst across a hold and needs only enough capacity for the sustained rate. Given the same 3-facility budget as the baseline, the extension does not spend it: the optimum at CON1 <= 3 is m1+m2 at $36.23M, so the third facility earns nothing once jobs can be held.
 
@@ -169,7 +169,7 @@ The extension is cheaper, but it is **not** uniformly better: the baseline is pi
 |---|---|---|---|---|---|---|---|---|
 | 100 | $12.81M | 18.00 | 3.15 | $8.21M | 21.66 | 3.40 | +0.26 | $4.61M |
 | 200 | $26.96M | 18.00 | 6.29 | $14.95M | 24.29 | 7.23 | +0.94 | $12.01M |
-| 500 | $63.80M | 17.99 | 15.73 | $36.23M | 23.74 | 17.45 | +1.72 | $27.57M |
+| 500 | $63.79M | 18.00 | 15.73 | $36.23M | 23.74 | 17.45 | +1.72 | $27.57M |
 
 
 So the queue is a **cost-for-time** trade, and the survival objective's job is not to undo it but to decide *who* absorbs the resulting delay - which is Phase 3. Whether the trade is worth taking is exactly the question ALPHA answers, and Phase 4 shows it can be pushed the other way: at N = 200 and ALPHA = 10^7 the extension reaches $20.12M with 6.04 expected losses against the baseline's $26.96M and 6.29 - **cheaper and clinically better at the same time**, on a network the baseline never considers.

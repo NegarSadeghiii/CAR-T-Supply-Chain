@@ -15,7 +15,7 @@
   "objective": null,
   "bound": null,
   "gap": null,
-  "wall_s": 3.6784961223602295,
+  "wall_s": 3.627747058868408,
   "solver": "gurobi",
   "note": ""
  }

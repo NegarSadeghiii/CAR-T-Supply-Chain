@@ -1,4 +1,4 @@
 n,arrivals_per_day,model,ND,max_facilities,status,solver,wall_s,variables,constraints,opened,n_opened,capacity_opened,facility_cost,transport_cost,total_cost,mean_TRT,max_TRT,mean_survival,expected_lost,weighted_loss,TRT_distribution,strict_CON1_2_status
 100,1.136,baseline,18,2,optimal,gurobi,0.5,2554,4119,m1+m3,2,14,10526939.8,307850.0,12813589.8,18.0,18,0.96853,3.147,8.053,"{""18"": 100}",
 200,2.273,baseline,18,2,optimal,gurobi,1.2,5054,7619,m2,1,31,22557730.0,448960.0,26964290.0,18.0,18,0.96853,6.294,16.107,"{""18"": 200}",
-500,5.682,baseline,18,3,optimal,gurobi,4.0,12554,18119,m2+m3+m5,3,72,52634702.9,1267389.0,63796091.9,17.994,18,0.96854,15.729,40.255,"{""17"": 3, ""18"": 497}",infeasible
+500,5.682,baseline,18,3,optimal,gurobi,5.0,12554,18119,m2+m3+m5,3,72,52634702.9,1263871.0,63792573.9,18.0,18,0.96853,15.734,40.267,"{""18"": 500}",infeasible
