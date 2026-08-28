@@ -171,7 +171,7 @@ def value_summary(data, path):
     c0, c1 = data["costs"]["cost"], data["costs"]["survival"]
     if c0 and c1:
         pct = 100 * (c1 - c0) / c0
-        msg = (f"Total cost: \${c0/1e6:.3f}M (cost) vs \${c1/1e6:.3f}M (survival)"
+        msg = (f"Total cost: ${c0/1e6:.3f}M (cost) vs ${c1/1e6:.3f}M (survival)"
                f"\n{pct:+.1f}% - same network ({data['network']}).\n"
                f"Buys back {saved['H']:.2f} expected high-risk patients"
                f" ({sum(saved.values()):.2f} overall).")
