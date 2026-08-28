@@ -127,19 +127,34 @@ def value_summary(data, path):
     cost_h = {u: float(t["cost"][u]["mean_HOLD"]) for u in TIERS}
     surv_h = {u: float(t["survival"][u]["mean_HOLD"]) for u in TIERS}
     worst = max(cost_h, key=cost_h.get)
-    best_surv = min(surv_h, key=surv_h.get)
+    cost_h_first = cost_h["H"] == min(cost_h.values())
+    surv_h_first = surv_h["H"] == min(surv_h.values())
 
-    if worst == "H":
-        callout = ("Cost-optimal scheduling gives the sickest patients\n"
-                   "the longest wait.")
+    # The narrative depends on what the cost design actually does, which changed
+    # when its baseline moved from alpha = 0 to the tie-break: a cost minimiser
+    # that takes every FREE survival gain already serves high risk first, so the
+    # old "cost-optimal scheduling starves the sickest" reading no longer holds.
+    # Both branches are kept because the ordering is data-dependent.
+    if not cost_h_first:
+        # compare against the SHORTEST-waiting tier; comparing against the
+        # longest would print high risk against itself whenever H is worst
+        best = min(cost_h, key=cost_h.get)
+        callout = (f"Cost-optimal scheduling makes the sickest patients wait\n"
+                   f"{'longest' if worst == 'H' else 'longer'}: high risk "
+                   f"{cost_h['H']:.1f} d against {TIER_NAME[best].lower()} "
+                   f"{cost_h[best]:.1f} d.")
+        if surv_h_first:
+            callout += ("\nPricing survival reverses it: high risk drops to "
+                        f"{surv_h['H']:.2f} d,\nthe shortest wait of any tier.")
     else:
-        callout = ("Cost-optimal scheduling ignores risk: high-risk patients\n"
-                   f"wait {cost_h['H']:.1f} d, low-risk only {cost_h['L']:.1f} d "
-                   f"(longest of all is {TIER_NAME[worst].lower()},"
-                   f" {cost_h[worst]:.1f} d).")
-    callout += ("\nWeighting clinical loss reverses it: high risk drops to "
-                f"{surv_h['H']:.2f} d,\nthe shortest wait of any tier."
-                if best_surv == "H" else "")
+        callout = (f"A cost minimiser that takes every FREE survival gain\n"
+                   f"already serves high risk first: {cost_h['H']:.2f} d against "
+                   f"{cost_h['L']:.2f} d\nfor low risk. The tie-break alone "
+                   f"achieves that, at no extra cost.")
+        gain = cost_h["H"] - surv_h["H"]
+        callout += (f"\nPricing survival tightens it further, to "
+                    f"{surv_h['H']:.2f} d ({gain:+.2f} d),\nwhich is what the "
+                    f"cost premium below actually buys.")
     a.text(.03, .97, callout, transform=a.transAxes, va="top", ha="left",
            fontsize=8.5, color="#333333",
            bbox=dict(boxstyle="round,pad=0.45", fc="#f7f4fb", ec="#b9a8cf"))
