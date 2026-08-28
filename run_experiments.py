@@ -74,6 +74,20 @@ plt.rcParams.update({
 # ---------------------------------------------------------------------------
 # Replication driver
 # ---------------------------------------------------------------------------
+def _horizontal_box_kw():
+    """Horizontal-boxplot kwarg, spelled for whichever matplotlib is installed.
+
+    matplotlib renamed ``vert=False`` to ``orientation="horizontal"`` in 3.10 and
+    the two spellings do not overlap: 3.10+ warns on ``vert``, and everything
+    before it raises TypeError on ``orientation``.  Figures must render on both,
+    so the spelling is chosen from the installed version rather than pinned.
+    """
+    from matplotlib import __version__ as _mplv
+    major, minor = (int(x) for x in _mplv.split(".")[:2])
+    return {"orientation": "horizontal"} if (major, minor) >= (3, 10) \
+        else {"vert": False}
+
+
 def run_policy(plan, name, seeds=SEEDS, cfg=None, **kw):
     """Run one policy over ``seeds`` on a frozen plan; returns the SimResults."""
     cfg = cfg or sim.SimConfig()
@@ -337,7 +351,8 @@ def fig_a2_holdtime(runs, plan, stem="figA2_holdtime_by_tier"):
                      for r in res.records.values() if r.tier == u]
             y = i * 3 + k
             bp = ax.boxplot([holds], positions=[y], widths=.72,
-                            patch_artist=True, showfliers=False, orientation="horizontal",
+                            patch_artist=True, showfliers=False,
+                            **_horizontal_box_kw(),
                             medianprops=dict(color="#fcfcfb", lw=1.4),
                             whiskerprops=dict(color=TIER_COLOR[u], lw=1),
                             capprops=dict(color=TIER_COLOR[u], lw=1))
