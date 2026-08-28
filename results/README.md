@@ -30,9 +30,7 @@ python make_readme.py                        # regenerate this file
 ```
 
 
-> **Solver note.** Gurobi is requested first on every solve, but refuses the study-scale models: "Model too large for size-limited license". This container carries only the pip size-limited Gurobi licence (2000 variables / 2000 constraints) and every model here is far larger, so those solves fall back to HiGHS (open-source MILP, driven through the same Pyomo interface). Re-run with a full Gurobi licence to use Gurobi throughout.
->
-> The formulation is unchanged either way: same variables, same constraints, same optima. Only the MILP engine differs, and all reported wall-clock times are HiGHS times on 4 cores.
+All models were solved with Gurobi through Pyomo.
 
 
 ## 1. Fixed set-up (never re-fit)
@@ -42,7 +40,7 @@ python make_readme.py                        # regenerate this file
 | risk tiers | H 30% / M 40% / L 30%, assigned once on the 50-patient base cohort (seed 0) and inherited by every replica |
 | survival | `S_u(t) = (1 - w_u) ** (t/42)` with gamma=1, eta=42, kappa=1 |
 | deterioration `w_u` | H 0.15, M 0.05, L 0.02 |
-| clinical-loss weight `rho_u` | H 3, M 2, L 1 |
+| life value `alpha_u` (\$ per life lost) | H 1,500,000, M 1,000,000, L 500,000 |
 | `sigma[d,u]` lookup | precomputed for integer days d = 17..42 (`sigma_lookup.csv`) |
 | ND | 18 days (baseline) -> 42 days (extension, eq. 31) |
 | CON1 | demand-dependent, matching i-SHIPMENT's centralized vs high-demand configuration: 100 patients -> 2 facilities, 200 patients -> 2 facilities, 500 patients -> 3 facilities (override with `--max-facilities`) |
@@ -58,6 +56,8 @@ Each scale tiles the 50-patient cohort (mult = 2 / 4 / 10). Tier labels and leuk
 
 | N | mult | arrivals/day | H | M | L | c1 | c2 | c3 | c4 |
 |---|---|---|---|---|---|---|---|---|---|
+| 50 | 1 | 0.568 | 15 | 20 | 15 | 10 | 10 | 14 | 16 |
+| 100 | 2 | 1.136 | 30 | 40 | 30 | 20 | 20 | 28 | 32 |
 | 200 | 4 | 2.273 | 60 | 80 | 60 | 40 | 40 | 56 | 64 |
 | 500 | 10 | 5.682 | 150 | 200 | 150 | 100 | 100 | 140 | 160 |
 
@@ -80,7 +80,19 @@ The baseline has no queue: manufacturing starts on the day the sample reaches th
 
 | N | CON1 | status | facilities opened | concurrent capacity | total cost | mean TRT | E[lost] | wall s |
 |---|---|---|---|---|---|---|---|---|
-| 200 | 2 | optimal | m2 | 31 | $26.96M | 18.00 | 6.29 | 16.1 |
+| 100 | 2 | optimal | m1+m3 | 14 | $12.81M | 18.00 | 3.15 | 0.5 |
+| 200 | 2 | optimal | m2 | 31 | $26.96M | 18.00 | 6.29 | 1.2 |
+| 500 | 3 | optimal | m2+m3+m5 | 72 | $63.80M | 17.99 | 15.73 | 4.0 |
+
+
+**Why the third facility.** At N = 500 the strict centralised cap is what forces the relaxation, and this is a documented diagnostic rather than the headline result:
+
+| N | configured CON1 | opened at configured CON1 | cost at configured CON1 | status at CON1 <= 2 | opened at CON1 <= 2 | cost at CON1 <= 2 |
+|---|---|---|---|---|---|---|
+| 500 | 3 | m2+m3+m5 | $63.80M | infeasible |  |  |
+
+
+So the no-queue model cannot serve N = 500 from two plants: the peak 7-day rolling arrival load reaches 80 jobs against the 62 concurrent slots the best two-facility pair can offer, and starts are pinned to arrival. Three facilities resolve it. Note that this is a statement about the *centralised* configuration only - with the third facility that i-SHIPMENT itself allows at high demand, the baseline is feasible and is the comparison used throughout.
 
 
 The pattern is monotone: every step up in demand pushes the baseline onto a larger and more expensive facility set, because the only lever it has against a burst of arrivals is raw concurrent capacity. It cannot delay a single job.
@@ -90,9 +102,15 @@ Baseline survival, by tier (ND = 18 pins every therapy to an 18-day turnaround, 
 
 | instance | tier | n | mean TRT | mean S | E[lost] |
 |---|---|---|---|---|---|
+| baseline_N100 | H | 30 | 18.00 | 0.9327 | 2.018 |
+| baseline_N100 | M | 40 | 18.00 | 0.9783 | 0.870 |
+| baseline_N100 | L | 30 | 18.00 | 0.9914 | 0.259 |
 | baseline_N200 | H | 60 | 18.00 | 0.9327 | 4.037 |
 | baseline_N200 | M | 80 | 18.00 | 0.9783 | 1.739 |
 | baseline_N200 | L | 60 | 18.00 | 0.9914 | 0.517 |
+| baseline_N500 | H | 150 | 17.99 | 0.9327 | 10.088 |
+| baseline_N500 | M | 200 | 18.00 | 0.9783 | 4.349 |
+| baseline_N500 | L | 150 | 17.99 | 0.9914 | 1.292 |
 
 
 ## 4. Phase 2 - the queue substitutes scheduling for plant
@@ -112,20 +130,32 @@ plus ND relaxed 18 -> 42 (eq. 31), the exact integer-day survival lookup
 linked to eqs. (24)-(25), and the objective of eq. (1)
 
 ```
-min Z = (original i-SHIPMENT cost) + ALPHA * sum_p rho_u(p) * (1 - S[p])
+min Z = (original i-SHIPMENT cost) + sum_p alpha_u(p) * (1 - S[p])
 ```
 
 
 | N | CON1 | status | facilities opened | capacity | total cost | mean TRT | mean HOLD | max HOLD | E[lost] | wall s |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 200 | 2 | optimal | m1+m3 | 14 | $14.95M | 24.29 | 5.46 | 23 | 7.24 | 276.5 |
+| 100 | 2 | optimal | m1+m4 | 8 | $8.21M | 21.66 | 2.83 | 23 | 3.40 | 5.0 |
+| 200 | 2 | optimal | m1+m3 | 14 | $14.95M | 24.29 | 5.45 | 23 | 7.23 | 13.2 |
+| 500 | 3 | optimal | m1+m2 | 35 | $36.23M | 23.74 | 5.28 | 24 | 17.45 | 127.3 |
+| 500 | 2 | optimal | m1+m2 | 35 | $36.23M | 23.74 | 5.28 | 24 | 17.45 | 114.4 |
 
 
 **Baseline vs. extension, head to head** - the baseline at the CON1 its scale is configured for, the extension at every facility budget solved:
 
-| N | baseline CON1 | baseline network | baseline cost | extension on 2 | cost | vs baseline |
-|---|---|---|---|---|---|---|
-| 200 | 2 | m2 | $26.96M | m1+m3 | $14.95M | 44.5% |
+| N | baseline CON1 | baseline network | baseline cost | extension on 2 | cost | vs baseline | extension on 3 | cost | vs baseline |
+|---|---|---|---|---|---|---|---|---|---|
+| 100 | 2 | m1+m3 | $12.81M | m1+m4 | $8.21M | 35.9% |  |  |  |
+| 200 | 2 | m2 | $26.96M | m1+m3 | $14.95M | 44.5% |  |  |  |
+| 500 | 3 | m2+m3+m5 | $63.80M | m1+m2 | $36.23M | 43.2% | m1+m2 | $36.23M | 43.2% |
+
+
+### N = 500: capacity substitution
+
+This is the sharpest result in the study, and it is about **substitution, not feasibility rescue**. Given the third facility that i-SHIPMENT allows at high demand, the baseline is perfectly feasible: it opens m2+m3+m5 (capacity 72) for $63.80M. The extension serves the same 500 patients on **two** facilities - m1+m2, capacity 35 - for $36.23M, 43.2% less.
+
+The queue is buying the third plant back. Where the baseline must hold enough concurrent capacity to absorb the worst arrival burst instantly, the extension spreads that burst across a hold and needs only enough capacity for the sustained rate. Given the same 3-facility budget as the baseline, the extension does not spend it: the optimum at CON1 <= 3 is m1+m2 at $36.23M, so the third facility earns nothing once jobs can be held.
 
 
 The hold absorbs exactly the contention that the baseline had to buy concurrent capacity for, so at every scale the extension lands on a smaller, cheaper network than the baseline needs.
@@ -137,7 +167,9 @@ The extension is cheaper, but it is **not** uniformly better: the baseline is pi
 
 | N | baseline cost | baseline mean TRT | baseline E[lost] | extension cost | extension mean TRT | extension E[lost] | extra expected losses | cost saved |
 |---|---|---|---|---|---|---|---|---|
-| 200 | $26.96M | 18.00 | 6.29 | $14.95M | 24.29 | 7.24 | +0.94 | $12.01M |
+| 100 | $12.81M | 18.00 | 3.15 | $8.21M | 21.66 | 3.40 | +0.26 | $4.61M |
+| 200 | $26.96M | 18.00 | 6.29 | $14.95M | 24.29 | 7.23 | +0.94 | $12.01M |
+| 500 | $63.80M | 17.99 | 15.73 | $36.23M | 23.74 | 17.45 | +1.72 | $27.57M |
 
 
 So the queue is a **cost-for-time** trade, and the survival objective's job is not to undo it but to decide *who* absorbs the resulting delay - which is Phase 3. Whether the trade is worth taking is exactly the question ALPHA answers, and Phase 4 shows it can be pushed the other way: at N = 200 and ALPHA = 10^7 the extension reaches $20.12M with 6.04 expected losses against the baseline's $26.96M and 6.29 - **cheaper and clinically better at the same time**, on a network the baseline never considers.
@@ -145,47 +177,97 @@ So the queue is a **cost-for-time** trade, and the survival objective's job is n
 
 ## 5. Phase 3 - cost design vs survival design, by tier
 
-Both designs are solved on the **same** frozen tier assignment at each scale. (a) COST design: ALPHA = 0, survival evaluated afterwards. (b) SURVIVAL design: ALPHA = 100000 ($ per unit of rho-weighted expected loss).
+Both designs are solved on the **same** frozen tier assignment at each scale. (a) COST design: ALPHA = ALPHA_TIEBREAK, small enough that cost decides every choice that costs money and survival only ranks schedules of equal cost -- so the cost planner takes every FREE survival gain and the reported benefit is a lower bound. (b) SURVIVAL design: ALPHA = 100000 ($ per life lost in the reference tier; the vector's shape is fixed by cart_data.ALPHA_W).
 
 | N | CON1 | design | facilities | total cost | mean TRT | mean HOLD | mean S | E[lost] |
 |---|---|---|---|---|---|---|---|---|
-| 200 | 2 | cost | m1+m3 | $14.91M | 28.34 | 9.34 | 0.9506 | 9.88 |
-| 200 | 2 | survival | m1+m3 | $14.95M | 24.29 | 5.46 | 0.9638 | 7.24 |
+| 100 | 2 | cost | m1+m4 | $8.18M | 23.65 | 4.66 | 0.9626 | 3.74 |
+| 100 | 2 | survival | m1+m4 | $8.21M | 21.66 | 2.83 | 0.9660 | 3.40 |
+| 200 | 2 | cost | m1+m3 | $14.91M | 25.21 | 6.21 | 0.9614 | 7.73 |
+| 200 | 2 | survival | m1+m3 | $14.95M | 24.29 | 5.45 | 0.9638 | 7.23 |
+| 500 | 3 | cost | m1+m2 | $36.07M | 24.90 | 5.90 | 0.9630 | 18.50 |
+| 500 | 3 | survival | m1+m2 | $36.23M | 23.74 | 5.28 | 0.9651 | 17.45 |
+| 500 | 2 | cost | m1+m2 | $36.07M | 25.00 | 6.00 | 0.9629 | 18.55 |
+| 500 | 2 | survival | m1+m2 | $36.23M | 23.74 | 5.28 | 0.9651 | 17.45 |
 
 
 ### Emergent priority: holds by tier
 
 | N | CON1 | design | tier | n | mean TRT | mean HOLD | median HOLD | max HOLD | mean S | E[lost] |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 200 | 2 | cost | H | 60 | 28.97 | 9.97 | 6.5 | 23 | 0.8945 | 6.331 |
-| 200 | 2 | cost | M | 80 | 29.02 | 10.03 | 6.5 | 23 | 0.9652 | 2.781 |
-| 200 | 2 | cost | L | 60 | 26.80 | 7.80 | 5.0 | 23 | 0.9872 | 0.768 |
-| 200 | 2 | cost | ALL | 200 | 28.34 | 9.34 | 6.0 | 23 | 0.9506 | 9.880 |
-| 200 | 2 | survival | H | 60 | 18.62 | 0.03 | 0.0 | 1 | 0.9305 | 4.170 |
-| 200 | 2 | survival | M | 80 | 22.09 | 3.15 | 0.0 | 23 | 0.9734 | 2.127 |
-| 200 | 2 | survival | L | 60 | 32.90 | 13.95 | 19.0 | 23 | 0.9843 | 0.941 |
-| 200 | 2 | survival | ALL | 200 | 24.29 | 5.46 | 0.0 | 23 | 0.9638 | 7.238 |
+| 100 | 2 | cost | H | 30 | 20.50 | 1.53 | 0.0 | 24 | 0.9240 | 2.281 |
+| 100 | 2 | cost | M | 40 | 21.38 | 2.38 | 0.0 | 23 | 0.9743 | 1.030 |
+| 100 | 2 | cost | L | 30 | 29.83 | 10.83 | 8.5 | 23 | 0.9858 | 0.427 |
+| 100 | 2 | cost | ALL | 100 | 23.65 | 4.66 | 0.0 | 24 | 0.9626 | 3.738 |
+| 100 | 2 | survival | H | 30 | 18.47 | 0.00 | 0.0 | 0 | 0.9310 | 2.069 |
+| 100 | 2 | survival | M | 40 | 19.32 | 0.35 | 0.0 | 6 | 0.9767 | 0.933 |
+| 100 | 2 | survival | L | 30 | 27.97 | 8.97 | 4.0 | 23 | 0.9866 | 0.401 |
+| 100 | 2 | survival | ALL | 100 | 21.66 | 2.83 | 0.0 | 23 | 0.9660 | 3.402 |
+| 200 | 2 | cost | H | 60 | 20.60 | 1.60 | 0.0 | 23 | 0.9236 | 4.584 |
+| 200 | 2 | cost | M | 80 | 22.84 | 3.84 | 0.0 | 23 | 0.9725 | 2.198 |
+| 200 | 2 | cost | L | 60 | 32.98 | 13.98 | 20.5 | 23 | 0.9843 | 0.944 |
+| 200 | 2 | cost | ALL | 200 | 25.21 | 6.21 | 0.0 | 23 | 0.9614 | 7.726 |
+| 200 | 2 | survival | H | 60 | 18.60 | 0.03 | 0.0 | 1 | 0.9306 | 4.166 |
+| 200 | 2 | survival | M | 80 | 22.07 | 3.14 | 0.0 | 23 | 0.9734 | 2.126 |
+| 200 | 2 | survival | L | 60 | 32.92 | 13.95 | 20.5 | 23 | 0.9843 | 0.942 |
+| 200 | 2 | survival | ALL | 200 | 24.29 | 5.45 | 0.0 | 23 | 0.9638 | 7.234 |
+| 500 | 3 | cost | H | 150 | 19.01 | 0.01 | 0.0 | 1 | 0.9291 | 10.640 |
+| 500 | 3 | cost | M | 200 | 22.61 | 3.61 | 0.0 | 23 | 0.9728 | 5.439 |
+| 500 | 3 | cost | L | 150 | 33.85 | 14.85 | 21.0 | 23 | 0.9839 | 2.421 |
+| 500 | 3 | cost | ALL | 500 | 24.90 | 5.90 | 0.0 | 23 | 0.9630 | 18.499 |
+| 500 | 3 | survival | H | 150 | 17.78 | 0.00 | 0.0 | 0 | 0.9335 | 9.973 |
+| 500 | 3 | survival | M | 200 | 21.24 | 2.62 | 0.0 | 24 | 0.9744 | 5.115 |
+| 500 | 3 | survival | L | 150 | 33.04 | 14.10 | 19.0 | 24 | 0.9842 | 2.363 |
+| 500 | 3 | survival | ALL | 500 | 23.74 | 5.28 | 0.0 | 24 | 0.9651 | 17.451 |
+| 500 | 2 | cost | H | 150 | 19.03 | 0.03 | 0.0 | 1 | 0.9290 | 10.647 |
+| 500 | 2 | cost | M | 200 | 22.77 | 3.77 | 0.0 | 23 | 0.9726 | 5.476 |
+| 500 | 2 | cost | L | 150 | 33.97 | 14.97 | 19.5 | 23 | 0.9838 | 2.429 |
+| 500 | 2 | cost | ALL | 500 | 25.00 | 6.00 | 0.0 | 23 | 0.9629 | 18.552 |
+| 500 | 2 | survival | H | 150 | 17.78 | 0.00 | 0.0 | 0 | 0.9335 | 9.973 |
+| 500 | 2 | survival | M | 200 | 21.24 | 2.62 | 0.0 | 24 | 0.9744 | 5.115 |
+| 500 | 2 | survival | L | 150 | 33.04 | 14.10 | 19.0 | 24 | 0.9842 | 2.363 |
+| 500 | 2 | survival | ALL | 500 | 23.74 | 5.28 | 0.0 | 24 | 0.9651 | 17.451 |
 
 
 Hold distribution (share of each tier that is never held, and the upper tail):
 
 | N | CON1 | design | tier | mean hold | p50 | p90 | max | share with hold = 0 |
 |---|---|---|---|---|---|---|---|---|
-| 200 | 2 | cost | H | 9.97 | 6.5 | 23.0 | 23 | 12% |
-| 200 | 2 | cost | M | 10.03 | 6.5 | 23.0 | 23 | 16% |
-| 200 | 2 | cost | L | 7.80 | 5.0 | 20.0 | 23 | 22% |
+| 100 | 2 | cost | H | 1.53 | 0.0 | 0.0 | 24 | 93% |
+| 100 | 2 | cost | M | 2.38 | 0.0 | 5.0 | 23 | 68% |
+| 100 | 2 | cost | L | 10.83 | 8.5 | 23.0 | 23 | 17% |
+| 100 | 2 | survival | H | 0.00 | 0.0 | 0.0 | 0 | 100% |
+| 100 | 2 | survival | M | 0.35 | 0.0 | 1.0 | 6 | 88% |
+| 100 | 2 | survival | L | 8.97 | 4.0 | 23.0 | 23 | 20% |
+| 200 | 2 | cost | H | 1.60 | 0.0 | 1.0 | 23 | 85% |
+| 200 | 2 | cost | M | 3.84 | 0.0 | 18.1 | 23 | 55% |
+| 200 | 2 | cost | L | 13.98 | 20.5 | 23.0 | 23 | 18% |
 | 200 | 2 | survival | H | 0.03 | 0.0 | 0.0 | 1 | 97% |
-| 200 | 2 | survival | M | 3.15 | 0.0 | 13.1 | 23 | 61% |
-| 200 | 2 | survival | L | 13.95 | 19.0 | 23.0 | 23 | 17% |
+| 200 | 2 | survival | M | 3.14 | 0.0 | 13.2 | 23 | 61% |
+| 200 | 2 | survival | L | 13.95 | 20.5 | 23.0 | 23 | 18% |
+| 500 | 3 | cost | H | 0.01 | 0.0 | 0.0 | 1 | 99% |
+| 500 | 3 | cost | M | 3.61 | 0.0 | 22.0 | 23 | 67% |
+| 500 | 3 | cost | L | 14.85 | 21.0 | 23.0 | 23 | 17% |
+| 500 | 3 | survival | H | 0.00 | 0.0 | 0.0 | 0 | 100% |
+| 500 | 3 | survival | M | 2.62 | 0.0 | 9.1 | 24 | 72% |
+| 500 | 3 | survival | L | 14.10 | 19.0 | 23.0 | 24 | 25% |
+| 500 | 2 | cost | H | 0.03 | 0.0 | 0.0 | 1 | 97% |
+| 500 | 2 | cost | M | 3.77 | 0.0 | 21.0 | 23 | 62% |
+| 500 | 2 | cost | L | 14.97 | 19.5 | 23.0 | 23 | 13% |
+| 500 | 2 | survival | H | 0.00 | 0.0 | 0.0 | 0 | 100% |
+| 500 | 2 | survival | M | 2.62 | 0.0 | 9.0 | 24 | 71% |
+| 500 | 2 | survival | L | 14.10 | 19.0 | 23.0 | 24 | 25% |
 
 
 ### Contention vs demand
 
 | N | CON1 | network | capacity | arrivals/day | starts/day available | offered load | mean HOLD (all) | H | M | L |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 200 | 2 | m1+m3 | 14 | 2.27 | 2.00 | 1.136 | 5.46 | 0.03 | 3.15 | 13.95 |
+| 100 | 2 | m1+m4 | 8 | 1.14 | 1.14 | 0.994 | 2.83 | 0.00 | 0.35 | 8.97 |
+| 200 | 2 | m1+m3 | 14 | 2.27 | 2.00 | 1.136 | 5.45 | 0.03 | 3.14 | 13.95 |
+| 500 | 3 | m1+m2 | 35 | 5.68 | 5.00 | 1.136 | 5.28 | 0.00 | 2.62 | 14.10 |
 
-Mean hold does not simply track N (5.46 d at N = 200), and it is not supposed to:
+Mean hold does not simply track N (2.83 d at N = 100, 5.45 d at N = 200, 5.28 d at N = 500), and it is not supposed to:
 what drives hold is the *offered load*, the ratio the last three columns
 build,
 
@@ -194,7 +276,7 @@ offered load  =  (arrival rate)  /  (start rate the network can sustain)
               =  (N / 88)     /  (FCAP_opened / TMFE)
 ```
 
-which comes out at 1.14 at N = 200. The optimiser answers rising demand with
+which comes out at 0.99 at N = 100, 1.14 at N = 200, 1.14 at N = 500. The optimiser answers rising demand with
 capacity *as well as* queueing, so the backlog each scale has to absorb
 is set by how far its chosen network falls short of its arrival rate,
 not by N. Where the load is close to 1 the network keeps up and the hold
@@ -211,32 +293,35 @@ and the survival objective then decides **whose** hold it is.
 
 ## 6. Phase 4 - the cost-lives frontier (N = 200)
 
-`ALPHA` is the price, in dollars, of one unit of rho-weighted expected clinical loss. Rows marked * are the values named in the brief; the remainder extend the sweep logarithmically, which is what it takes to reach the region where the network design itself changes.
+`ALPHA` is the LEVEL of the life-value vector: the price, in dollars, of one life lost in the reference tier, with alpha_u = ALPHA * ALPHA_W[u]. Rows marked * are the values named in the brief; the remainder extend the sweep logarithmically, which is what it takes to reach the region where the network design itself changes.
 
 | ALPHA |  | facilities | capacity | total cost | E[lost] | E[lost] high-risk | mean HOLD | mean HOLD H | mean HOLD L |
 |---|---|---|---|---|---|---|---|---|---|
-| 0 | * | m1+m3 | 14 | $14.91M | 9.880 | 6.331 | 9.34 | 9.97 | 7.80 |
-| 0.5 | * | m1+m3 | 14 | $14.91M | 7.819 | 4.613 | 6.66 | 1.73 | 14.73 |
-| 1 | * | m1+m3 | 14 | $14.91M | 7.738 | 4.598 | 6.21 | 1.67 | 13.92 |
-| 2 | * | m1+m3 | 14 | $14.91M | 7.738 | 4.581 | 6.22 | 1.58 | 13.72 |
-| 5 | * | m1+m3 | 14 | $14.91M | 7.728 | 4.584 | 6.22 | 1.60 | 14.02 |
-| 10 | * | m1+m3 | 14 | $14.91M | 7.729 | 4.584 | 6.24 | 1.60 | 14.05 |
-| 50 | * | m1+m3 | 14 | $14.91M | 7.736 | 4.581 | 6.26 | 1.58 | 13.98 |
-| 100 |  | m1+m3 | 14 | $14.91M | 7.727 | 4.584 | 6.21 | 1.60 | 13.98 |
-| 10^3 |  | m1+m3 | 14 | $14.91M | 7.791 | 4.588 | 6.58 | 1.62 | 14.57 |
-| 10^4 |  | m1+m3 | 14 | $14.91M | 7.495 | 4.260 | 6.22 | 0.03 | 14.48 |
-| 10^5 |  | m1+m3 | 14 | $14.95M | 7.238 | 4.170 | 5.46 | 0.03 | 13.95 |
-| 10^6 |  | m1+m3 | 14 | $15.26M | 6.735 | 3.838 | 5.38 | 0.00 | 14.47 |
-| 10^7 |  | m3+m6 | 20 | $20.12M | 6.038 | 3.820 | 0.67 | 0.00 | 2.22 |
+| 1 | * | m1+m3 | 14 | $14.91M | 7.726 | 4.584 | 6.21 | 1.60 | 13.98 |
+| 2 | * | m1+m3 | 14 | $14.91M | 7.750 | 4.588 | 6.24 | 1.62 | 13.62 |
+| 5 | * | m1+m3 | 14 | $14.91M | 7.754 | 4.573 | 6.42 | 1.55 | 14.33 |
+| 10 | * | m1+m3 | 14 | $14.91M | 7.734 | 4.584 | 6.21 | 1.60 | 13.82 |
+| 50 | * | m1+m3 | 14 | $14.91M | 7.725 | 4.584 | 6.21 | 1.60 | 13.98 |
+| 100 |  | m1+m3 | 14 | $14.91M | 7.763 | 4.580 | 6.42 | 1.58 | 14.22 |
+| 10^3 |  | m1+m3 | 14 | $14.91M | 7.726 | 4.584 | 6.21 | 1.60 | 13.98 |
+| 10^4 |  | m1+m3 | 14 | $14.91M | 7.488 | 4.260 | 6.23 | 0.03 | 14.67 |
+| 10^5 |  | m1+m3 | 14 | $14.95M | 7.234 | 4.167 | 5.45 | 0.03 | 13.95 |
+| 10^6 |  | m1+m3 | 14 | $15.26M | 6.734 | 3.838 | 5.39 | 0.00 | 14.48 |
+| 10^7 |  | m3+m6 | 20 | $20.11M | 6.037 | 3.820 | 0.66 | 0.00 | 2.17 |
 
 Reading the frontier:
 
-* **ALPHA = 0 -> any ALPHA > 0 is the single biggest move.** Expected losses
-  drop from 9.88 to ~7.73 and high-risk mean hold from 9.97 to ~1.6 days at
-  **no extra cost**. A pure cost model is not "cost-optimal at the expense of
-  survival" - it is *indifferent*, and returns an arbitrary member of a huge
-  set of equally cheap schedules. Simply breaking that tie in the right
-  direction recovers most of the achievable survival.
+* **The sweep starts at ALPHA_TIEBREAK, not 0, and that is the single most
+  consequential modelling choice here.** At ALPHA = 0 the start day has no
+  objective coefficient, so a pure cost model is not "cost-optimal at the
+  expense of survival" - it is *indifferent*, and returns an arbitrary member
+  of a huge set of equally cheap schedules (528 improving swaps exist at
+  N=200, worth 1.36 patients). Pricing survival at one dollar per life breaks
+  that tie at **no extra cost**: expected losses fall from 9.88 to 7.74 and
+  high-risk mean hold from 9.97 to 1.67 days, with total cost identical to
+  the dollar. Most of the achievable survival gain is therefore free, and the
+  benefit attributed to survival-aware design below is measured against a
+  planner who has already taken it.
 * **ALPHA between 0.5 and 10^3 is a plateau, and the small wiggles in it are
   not signal.** On a $14.9M objective, the 1e-4 relative MIP tolerance is
   about $1,500, which already exceeds `ALPHA x (loss difference)` for every
@@ -327,7 +412,7 @@ infeasible model. `--max-facilities` overrides the mapping for any scale.
 
 | file | contents |
 |---|---|
-| `calibration.json` | the frozen tiers / survival / rho set-up |
+| `calibration.json` | the frozen tiers / survival / life-value set-up |
 | `sigma_lookup.csv` | `sigma[d,u]` for d = 17..42 |
 | `instances_overview.csv`, `instance_N*.json`, `tiers_N*.csv` | the generated cohorts and their frozen tier labels |
 | `phase1_baseline_by_scale.csv`, `phase1_baseline_by_tier.csv`, `phase1_patients_N*.csv` | Phase 1 |

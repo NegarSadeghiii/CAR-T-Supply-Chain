@@ -1,5 +1,5 @@
 n,arrivals_per_day,model,ND,alpha,max_facilities,is_configured_cap,status,solver,mip_gap,wall_s,variables,constraints,opened,capacity_opened,total_cost,mean_TRT,mean_HOLD,max_HOLD,mean_survival,expected_lost
-100,1.136,extension,42,100000.0,2,True,optimal,highs,1e-06,27.4,21154,6085,m1+m4,8,8207336.8,21.66,2.83,23,0.96598,3.402
-200,2.273,extension,42,100000.0,2,True,optimal,highs,9.9e-05,276.5,42254,11431,m1+m3,14,14953836.8,24.29,5.455,23,0.96381,7.238
-500,5.682,extension,42,100000.0,3,True,feasible,highs,0.00056,5421.9,105554,27540,m1+m2,35,36230566.9,23.736,5.284,24,0.96512,17.442
-500,5.682,extension,42,100000.0,2,False,optimal,highs,7.8e-05,1959.7,105554,27540,m1+m2,35,36225946.9,23.774,5.312,24,0.96506,17.471
+100,1.136,extension,42,100000.0,2,True,optimal,gurobi,0.0,5.0,21154,6085,m1+m4,8,8207336.8,21.66,2.83,23,0.96598,3.402
+200,2.273,extension,42,100000.0,2,True,optimal,gurobi,0.0,13.2,42254,11431,m1+m3,14,14953836.8,24.285,5.45,23,0.96383,7.234
+500,5.682,extension,42,100000.0,3,True,optimal,gurobi,0.0,127.3,105554,27540,m1+m2,35,36227326.9,23.742,5.28,24,0.9651,17.451
+500,5.682,extension,42,100000.0,2,False,optimal,gurobi,0.0,114.4,105554,27540,m1+m2,35,36227326.9,23.742,5.28,24,0.9651,17.451

@@ -9,13 +9,14 @@
   "variables": 12554,
   "constraints": 18119
  },
+ "tag": "",
  "solve": {
   "status": "infeasible",
   "objective": null,
   "bound": null,
   "gap": null,
-  "wall_s": 96.66511678695679,
-  "solver": "highs",
+  "wall_s": 3.6784961223602295,
+  "solver": "gurobi",
   "note": ""
  }
 }
