@@ -427,7 +427,10 @@ def main():
     # ----------------------------------------------------------------- phase 3
     A("\n## 5. Phase 3 - cost design vs survival design, by tier\n")
     A(f"Both designs are solved on the **same** frozen tier assignment at each "
-      f"scale. (a) COST design: ALPHA = 0, survival evaluated afterwards. "
+      f"scale. (a) COST design: ALPHA = ALPHA_TIEBREAK, small enough that cost "
+      f"decides every choice that costs money and survival only ranks "
+      f"schedules of equal cost -- so the cost planner takes every FREE "
+      f"survival gain and the reported benefit is a lower bound. "
       f"(b) SURVIVAL design: ALPHA = {ish.ALPHA_SURVIVAL:g} "
       f"($ per life lost in the reference tier; the vector's shape is "
       f"fixed by cart_data.ALPHA_W).\n")
@@ -525,12 +528,17 @@ def main():
     A(textwrap.dedent("""
     Reading the frontier:
 
-    * **ALPHA = 0 -> any ALPHA > 0 is the single biggest move.** Expected losses
-      drop from 9.88 to ~7.73 and high-risk mean hold from 9.97 to ~1.6 days at
-      **no extra cost**. A pure cost model is not "cost-optimal at the expense of
-      survival" - it is *indifferent*, and returns an arbitrary member of a huge
-      set of equally cheap schedules. Simply breaking that tie in the right
-      direction recovers most of the achievable survival.
+    * **The sweep starts at ALPHA_TIEBREAK, not 0, and that is the single most
+      consequential modelling choice here.** At ALPHA = 0 the start day has no
+      objective coefficient, so a pure cost model is not "cost-optimal at the
+      expense of survival" - it is *indifferent*, and returns an arbitrary member
+      of a huge set of equally cheap schedules (528 improving swaps exist at
+      N=200, worth 1.36 patients). Pricing survival at one dollar per life breaks
+      that tie at **no extra cost**: expected losses fall from 9.88 to 7.74 and
+      high-risk mean hold from 9.97 to 1.67 days, with total cost identical to
+      the dollar. Most of the achievable survival gain is therefore free, and the
+      benefit attributed to survival-aware design below is measured against a
+      planner who has already taken it.
     * **ALPHA between 0.5 and 10^3 is a plateau, and the small wiggles in it are
       not signal.** On a $14.9M objective, the 1e-4 relative MIP tolerance is
       about $1,500, which already exceeds `ALPHA x (loss difference)` for every

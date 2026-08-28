@@ -29,7 +29,7 @@ FIGDIR = os.path.join(RESULTS, "figures")
 
 # Scenario colours
 COST_C, SURV_C = "#1b6a6a", "#5b2a86"
-DESIGNS = [("cost", "Scenario 1 - cost design (alpha = 0)", COST_C),
+DESIGNS = [("cost", "Scenario 1 - cost design (cost-minimising)", COST_C),
            ("survival", "Scenario 2 - survival design (alpha > 0)", SURV_C)]
 
 # Tier colours

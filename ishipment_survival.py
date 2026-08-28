@@ -103,9 +103,13 @@ def caps_for(n, override=None):
 # alpha = cd.ALPHA_REF therefore reproduces cd.ALPHA_TIER exactly.
 ALPHA_SURVIVAL = 1.0e5
 
+ALPHA_TIEBREAK = cd.ALPHA_TIEBREAK   # see cart_data for the rationale
+
 # Phase-4 sweep: the values requested in the brief, plus a log-extension that
 # actually reaches the region where the NETWORK DESIGN flips (see README).
-ALPHA_SWEEP_REQUESTED = [0, 0.5, 1, 2, 5, 10, 50]
+# The sweep starts at ALPHA_TIEBREAK, not 0: the alpha = 0 point is degenerate
+# in the schedule and its survival statistics have no defined value.
+ALPHA_SWEEP_REQUESTED = [ALPHA_TIEBREAK, 2, 5, 10, 50]
 ALPHA_SWEEP_EXTENDED = [1e2, 1e3, 1e4, 1e5, 1e6, 1e7]
 
 DEFAULT_TIME_LIMIT = 600
@@ -896,12 +900,18 @@ def _extension_with_fallback(net, inst, alpha, time_limit, args, max_fac=None):
 
 
 def phase3(net, insts, time_limits, args):
-    """Cost design (ALPHA=0) vs survival design (ALPHA>0), by tier, per scale."""
+    """Cost design vs survival design, by tier, per scale.
+
+    The cost design is solved at ALPHA_TIEBREAK, not 0, so that its schedule --
+    and therefore its survival statistics -- is well defined; see the comment on
+    that constant.  It is still a cost minimiser: the tie-break can only choose
+    among schedules of equal cost.
+    """
     print("\n=== PHASE 3: cost vs survival design, by tier ===")
     summary_rows, tier_rows, hold_rows = [], [], []
     for n, inst in sorted(insts.items()):
         tl = time_limits.get(n, DEFAULT_TIME_LIMIT)
-        designs = [("cost", 0.0), ("survival", ALPHA_SURVIVAL)]
+        designs = [("cost", ALPHA_TIEBREAK), ("survival", ALPHA_SURVIVAL)]
         caps = caps_for(n, args.max_facilities)
         for cap in caps:
           tagc = "" if len(caps) == 1 else f"_fac{cap}"

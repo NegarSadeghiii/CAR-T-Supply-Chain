@@ -425,7 +425,10 @@ def exp_b(plan, names, seeds=SEEDS, loads=LOADS, cfg=None,
 # ---------------------------------------------------------------------------
 # Exp C -- value of life
 # ---------------------------------------------------------------------------
-VALUE_OF_LIFE = [0.0, 50e3, 100e3, 250e3, 500e3, 1e6, 2e6, 5e6]
+# The sweep starts at the tie-break value, not 0: at alpha = 0 the strategic
+# schedule is degenerate, so the frozen plan -- and every operational result
+# built on it -- would be an arbitrary pick from a large tie set.
+VALUE_OF_LIFE = [cd.ALPHA_TIEBREAK, 50e3, 100e3, 250e3, 500e3, 1e6, 2e6, 5e6]
 OPERATING_ALPHA = st.ALPHA_STRATEGIC
 
 

@@ -56,6 +56,30 @@ ALPHA_REF_TIER = "L"
 ALPHA_REF = ALPHA_TIER[ALPHA_REF_TIER]
 ALPHA_W = {u: ALPHA_TIER[u] / ALPHA_REF for u in TIER_ORDER}
 
+# The cost design's tie-break.
+#
+# At alpha = 0 the manufacturing start day INM has NO objective coefficient --
+# it appears in neither the facility nor the transport cost -- so every feasible
+# schedule is exactly optimal and the reported survival statistics are whatever
+# the solver happened to return.  Measured at N=200: 528 pairwise swaps improve
+# expected losses at zero objective cost, and greedy swapping alone moves
+# E[lost] from 9.880 to 8.521 without changing total cost by a cent.
+#
+# A small positive alpha makes the cost objective lexicographic.  Cost still
+# decides every choice that costs money; survival only ever ranks schedules that
+# cost the SAME.  The cost planner therefore takes every FREE survival gain,
+# which is what a rational cost minimiser would do, so the benefit attributed to
+# survival-aware design becomes a lower bound rather than an artefact of an
+# unlucky tie.
+#
+# The value must be small enough that the survival term can never outweigh a
+# genuine cost difference.  Total weighted loss is of order 10 units, so at
+# ALPHA_TIEBREAK = 1 the survival term can move the objective by at most ~$30,
+# against a smallest observed inter-design cost gap of $1,261 -- a 40x margin.
+# Verified at N=200: alpha = 0 and alpha = 1 return the SAME optimal cost
+# ($14,908,756) and the same network (m1+m3), differing only in the schedule.
+ALPHA_TIEBREAK = 1.0
+
 # Turnaround-time support.  TRT = TLS + TT1 + TMFE + TQC + TT3 + HOLD
 #   min = 1 + 1 + 7 + 7 + 1 + 0 = 17 days   (all-air, no hold)
 #   max = ND = 42 days                      (eq. 31, relaxed from 18)
