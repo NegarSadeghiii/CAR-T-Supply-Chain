@@ -175,6 +175,11 @@ mechanism established rather than observed.
 
 ## 4. Snapshots
 
+A presentation figure of the day-79 epoch (system state, the waiting queue as
+patient cards, the three policy choices, and the realised manufacture -> QC ->
+pass/fail outcome) is at `figures/figF1_decision_epoch_N200_day79.html`, and
+published at <https://claude.ai/artifact/L8ASbjudg6hJhjU2WHM3KA>.
+
 All from `epochs_N200_seed0_adaptive_mpc.json` (frozen plan m1+m3, FCAP 4+10,
 offered load 1.14, seed 0). `elapsed` = elapsed-at-delivery if started today =
 `t + T_MFE + T_QC + tt3 − t0`; `att` = which attempt this would be.

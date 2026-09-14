@@ -1,0 +1,462 @@
+<title>Decision Epoch, Day 79</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+:root{
+  --ground:#fcfcfb;
+  --surface:#ffffff;
+  --surface-sunk:#f5f5f1;
+  --ink:#1c1c1a;
+  --muted:#6b6b66;
+  --rule:#d8d8d2;
+  --rule-strong:#b9b9b1;
+  --tier-h:#B2182B;
+  --tier-m:#D96A3E;
+  --tier-l:#2166AC;
+  --fifo:#9A6A00;
+  --pass:#1F6F5C;
+  --fail:#B2182B;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#161614;
+    --surface:#1e1e1b;
+    --surface-sunk:#121210;
+    --ink:#f2f1ec;
+    --muted:#a3a29a;
+    --rule:#37372f;
+    --rule-strong:#54544a;
+    --tier-h:#E8697C;
+    --tier-m:#F0996A;
+    --tier-l:#7FB3E0;
+    --fifo:#D7A73A;
+    --pass:#5CB79B;
+    --fail:#E8697C;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#161614;
+  --surface:#1e1e1b;
+  --surface-sunk:#121210;
+  --ink:#f2f1ec;
+  --muted:#a3a29a;
+  --rule:#37372f;
+  --rule-strong:#54544a;
+  --tier-h:#E8697C;
+  --tier-m:#F0996A;
+  --tier-l:#7FB3E0;
+  --fifo:#D7A73A;
+  --pass:#5CB79B;
+  --fail:#E8697C;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.5;
+  padding-inline:20px;
+  padding-block:44px 56px;
+  -webkit-font-smoothing:antialiased;
+}
+.sheet{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:0}
+
+/* ---------- masthead ---------- */
+.masthead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px 24px;padding-bottom:18px}
+h1{
+  font-family:var(--serif);font-weight:600;font-size:27px;line-height:1.15;
+  margin:0;letter-spacing:-.01em;text-wrap:balance;
+}
+h1 .dim{color:var(--muted);font-weight:400}
+.masthead .prov{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;line-height:1.7}
+
+/* ---------- bands ---------- */
+.band{border-top:1px solid var(--rule-strong);padding-block:22px 26px}
+.band:last-of-type{padding-bottom:20px}
+.eyebrow{
+  display:flex;align-items:baseline;gap:10px;margin-bottom:16px;
+}
+.eyebrow .num{
+  font-family:var(--mono);font-size:10px;font-weight:600;color:var(--ground);
+  background:var(--ink);border-radius:2px;padding:2px 5px;line-height:1;
+}
+.eyebrow h2{
+  font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;margin:0;
+}
+.eyebrow .note{font-size:11.5px;color:var(--muted);letter-spacing:.01em;margin-left:auto;text-align:right}
+
+/* ---------- band 1 : state ---------- */
+.state{display:flex;flex-wrap:wrap;gap:28px 40px;align-items:flex-start}
+.facts{display:flex;flex-wrap:wrap;gap:0 34px}
+.fact{display:flex;flex-direction:column;gap:3px}
+.fact dt{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.fact dd{margin:0;font-family:var(--mono);font-size:19px;font-weight:500;font-variant-numeric:tabular-nums}
+.fact dd small{font-size:12px;color:var(--muted);font-weight:400}
+.slotviz{display:flex;flex-direction:column;gap:7px}
+.slotviz .cap,.profile .cap{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.slots{display:flex;gap:3px}
+.slot{width:17px;height:24px;border-radius:2px;border:1px solid var(--rule-strong);background:transparent}
+.slot.busy{background:var(--rule-strong);border-color:var(--rule-strong)}
+.slot.free{border:1.5px dashed var(--ink)}
+.profile{display:flex;flex-direction:column;gap:7px;min-width:210px}
+.bars{display:flex;align-items:flex-end;gap:5px;height:34px}
+.bars div{width:18px;background:var(--rule-strong);border-radius:1px 1px 0 0}
+.bars div:first-child{background:var(--ink)}
+.axis{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted)}
+
+/* ---------- band 2 : queue ---------- */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{
+  position:relative;background:var(--surface);border:1px solid var(--rule);
+  border-left:4px solid var(--tier);border-radius:3px;padding:13px 14px 12px;
+  display:flex;flex-direction:column;gap:9px;
+}
+.card.tier-H{--tier:var(--tier-h)}
+.card.tier-M{--tier:var(--tier-m)}
+.card.tier-L{--tier:var(--tier-l)}
+.card.passed-over{background:var(--surface-sunk)}
+.card.pick-fifo{border:1px dashed var(--fifo);border-left:4px solid var(--tier);box-shadow:0 0 0 2px color-mix(in srgb,var(--fifo) 22%,transparent)}
+.card.pick-surv{border:1px solid var(--ink);border-left:4px solid var(--tier);box-shadow:0 0 0 2px color-mix(in srgb,var(--ink) 16%,transparent)}
+.card-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.pid{font-family:var(--mono);font-size:16px;font-weight:600;letter-spacing:-.01em}
+.rank{font-family:var(--mono);font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tierlab{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tier)}
+dl.vars{display:grid;grid-template-columns:1fr auto;gap:3px 10px;margin:0;font-size:11.5px}
+dl.vars dt{color:var(--muted)}
+dl.vars dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+dl.vars dd.key{font-weight:600}
+dl.vars dt.key{color:var(--ink);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:5px;min-height:19px}
+.chip{
+  font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  padding:2.5px 7px;border-radius:2px;line-height:1.25;
+}
+.chip.fifo{background:color-mix(in srgb,var(--fifo) 16%,transparent);color:var(--fifo)}
+.chip.surv{background:color-mix(in srgb,var(--ink) 9%,transparent);color:var(--ink)}
+.chip.none{background:transparent;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;padding-left:0;font-size:11px}
+.gapmark{
+  grid-column:1/-1;display:flex;align-items:center;gap:12px;
+  font-family:var(--mono);font-size:10.5px;color:var(--muted);padding:1px 0;
+}
+.gapmark::before,.gapmark::after{content:"";flex:1;height:1px;background:var(--rule)}
+
+/* ---------- band 3 : policies ---------- */
+.policies{display:flex;flex-direction:column;gap:0;border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.prow{display:grid;grid-template-columns:168px 152px 1fr;gap:16px;align-items:center;padding:13px 16px;border-top:1px solid var(--rule)}
+.prow:first-child{border-top:none}
+.prow.surv{background:var(--surface)}
+.pname{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13.5px}
+.swatch{width:11px;height:11px;border-radius:2px;flex:none}
+.swatch.fifo{border:1.5px dashed var(--fifo)}
+.swatch.surv{border:1.5px solid var(--ink);background:color-mix(in srgb,var(--ink) 14%,transparent)}
+.picks{display:flex;gap:6px;flex-wrap:wrap}
+.pick{font-family:var(--mono);font-size:12.5px;font-weight:600;padding:2px 7px;border-radius:2px;background:var(--surface-sunk);border:1px solid var(--rule)}
+.logic{font-size:12.5px;color:var(--muted);line-height:1.45}
+.logic b{color:var(--ink);font-weight:500}
+.formula{font-family:var(--mono);font-size:12px;color:var(--ink);white-space:nowrap}
+.same{
+  display:inline-block;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  border:1px solid var(--rule-strong);color:var(--muted);border-radius:2px;padding:1.5px 6px;margin-left:2px;
+}
+.foot{font-size:11.5px;color:var(--muted);margin:10px 0 0;line-height:1.5}
+
+/* ---------- band 4 : next state ---------- */
+.tl{display:flex;flex-direction:column;gap:16px}
+.trow{display:grid;grid-template-columns:202px 1fr;gap:16px;align-items:center}
+.tlab{display:flex;flex-direction:column;gap:1px}
+.tlab .pid{font-size:14px}
+.tlab .t{font-size:11px;color:var(--muted)}
+.tlab .out{font-family:var(--mono);font-size:11px;white-space:nowrap;font-weight:500;margin-top:3px}
+.tlab .out.pass{color:var(--pass)}
+.track{position:relative;height:30px}
+.seg{
+  position:absolute;top:0;height:30px;display:flex;align-items:center;justify-content:center;
+  font-size:10.5px;font-weight:500;letter-spacing:.03em;border-radius:2px;overflow:hidden;white-space:nowrap;
+}
+.seg.mfe{background:var(--rule-strong);color:var(--ground)}
+.seg.qc{background:transparent;border:1px solid var(--rule-strong);color:var(--muted)}
+.seg.wait{background:repeating-linear-gradient(135deg,var(--rule) 0 4px,transparent 4px 8px);border:1px solid var(--rule);color:var(--muted)}
+.outcome{
+  position:absolute;top:4px;width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;line-height:1;transform:translateX(-50%);
+}
+.outcome.pass{background:color-mix(in srgb,var(--pass) 18%,transparent);color:var(--pass);border:1px solid var(--pass)}
+.outcome.fail{background:color-mix(in srgb,var(--fail) 16%,transparent);color:var(--fail);border:1px solid var(--fail)}
+.dayaxis{display:grid;grid-template-columns:202px 1fr;gap:16px;margin-top:2px}
+.ticks{position:relative;height:16px;border-top:1px solid var(--rule)}
+.tick{position:absolute;top:0;font-family:var(--mono);font-size:10px;color:var(--muted);transform:translateX(-50%);padding-top:3px}
+.tick::before{content:"";position:absolute;top:0;left:50%;width:1px;height:4px;background:var(--rule-strong)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:14px;font-size:11.5px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:6px}
+.lg{width:15px;height:11px;border-radius:2px;flex:none}
+.lg.mfe{background:var(--rule-strong)}
+.lg.qc{border:1px solid var(--rule-strong)}
+.lg.wait{background:repeating-linear-gradient(135deg,var(--rule) 0 4px,transparent 4px 8px);border:1px solid var(--rule)}
+.lg.test{width:15px;height:15px;border-radius:50%;border:1px solid var(--pass);color:var(--pass);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+
+/* ---------- caption ---------- */
+.caption{border-top:1px solid var(--rule-strong);padding-top:14px;font-size:11.5px;color:var(--muted);line-height:1.65}
+.caption code{font-family:var(--mono);font-size:11px;color:var(--ink);background:var(--surface-sunk);padding:1px 5px;border-radius:2px}
+
+@media (max-width:860px){
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .prow{grid-template-columns:1fr;gap:8px}
+  .masthead .prov{text-align:left}
+}
+@media (max-width:560px){
+  .cards{grid-template-columns:1fr}
+  .trow,.dayaxis{grid-template-columns:1fr}
+  .state{gap:22px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="sheet">
+
+  <header class="masthead">
+    <h1>Who starts next? <span class="dim">One decision epoch, day 79</span></h1>
+    <div class="prov">
+      survival-aware i-SHIPMENT · N = 200 · seed 0<br>
+      frozen network m1+m3 · offered load 1.14
+    </div>
+  </header>
+
+  <!-- ============ 1. STATE ============ -->
+  <section class="band">
+    <div class="eyebrow">
+      <span class="num">1</span><h2>System state</h2>
+      <span class="note">one epoch per facility per day, only when a slot is free</span>
+    </div>
+    <div class="state">
+      <dl class="facts">
+        <div class="fact"><dt>Day</dt><dd>79</dd></div>
+        <div class="fact"><dt>Facility</dt><dd>m3</dd></div>
+        <div class="fact"><dt>Free slots</dt><dd>2<small> / 10</small></dd></div>
+        <div class="fact"><dt>Starts today</dt><dd>2</dd></div>
+        <div class="fact"><dt>Waiting</dt><dd>32</dd></div>
+      </dl>
+      <div class="slotviz">
+        <span class="cap">Slot occupancy</span>
+        <div class="slots">
+          <i class="slot busy"></i><i class="slot busy"></i><i class="slot busy"></i><i class="slot busy"></i>
+          <i class="slot busy"></i><i class="slot busy"></i><i class="slot busy"></i><i class="slot busy"></i>
+          <i class="slot free"></i><i class="slot free"></i>
+        </div>
+      </div>
+      <div class="profile">
+        <span class="cap">Free slots, look-ahead window</span>
+        <div class="bars">
+          <div style="height:20%"></div><div style="height:30%"></div><div style="height:40%"></div>
+          <div style="height:50%"></div><div style="height:70%"></div><div style="height:90%"></div>
+          <div style="height:100%"></div><div style="height:100%"></div>
+        </div>
+        <div class="axis"><span>d 79</span><span>d 86</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2. QUEUE ============ -->
+  <section class="band">
+    <div class="eyebrow">
+      <span class="num">2</span><h2>Waiting patients</h2>
+      <span class="note">6 of 32 shown · ranked by one-day survival loss</span>
+    </div>
+    <div class="cards">
+
+      <article class="card tier-H pick-surv">
+        <div class="card-top"><span class="pid">p44r3</span><span class="rank">#1 of 32</span></div>
+        <span class="tierlab">High risk</span>
+        <dl class="vars">
+          <dt>Collected</dt><dd>day 77</dd>
+          <dt>Waiting</dt><dd>0 d</dd>
+          <dt>Attempt</dt><dd>1st</dd>
+          <dt>Transport out</dt><dd>1 d</dd>
+          <dt>Days to delivery</dt><dd>17</dd>
+          <dt>Survival now</dt><dd>0.936</dd>
+          <dt class="key">1-day loss</dt><dd class="key">0.01085</dd>
+        </dl>
+        <div class="chips"><span class="chip surv">Survival index</span><span class="chip surv">Adaptive MPC</span></div>
+      </article>
+
+      <article class="card tier-M pick-surv">
+        <div class="card-top"><span class="pid">p18r0</span><span class="rank">#2 of 32</span></div>
+        <span class="tierlab">Medium risk</span>
+        <dl class="vars">
+          <dt>Collected</dt><dd>day 76</dd>
+          <dt>Waiting</dt><dd>0 d</dd>
+          <dt>Attempt</dt><dd>1st</dd>
+          <dt>Transport out</dt><dd>1 d</dd>
+          <dt>Days to delivery</dt><dd>18</dd>
+          <dt>Survival now</dt><dd>0.978</dd>
+          <dt class="key">1-day loss</dt><dd class="key">0.00239</dd>
+        </dl>
+        <div class="chips"><span class="chip surv">Survival index</span><span class="chip surv">Adaptive MPC</span></div>
+      </article>
+
+      <article class="card tier-M passed-over">
+        <div class="card-top"><span class="pid">p42r3</span><span class="rank">#11 of 32</span></div>
+        <span class="tierlab">Medium risk</span>
+        <dl class="vars">
+          <dt>Collected</dt><dd>day 68</dd>
+          <dt>Waiting</dt><dd>8 d</dd>
+          <dt>Attempt</dt><dd>1st</dd>
+          <dt>Transport out</dt><dd>1 d</dd>
+          <dt>Days to delivery</dt><dd>26</dd>
+          <dt>Survival now</dt><dd>0.969</dd>
+          <dt class="key">1-day loss</dt><dd class="key">0.00237</dd>
+        </dl>
+        <div class="chips"><span class="chip none">passed over — same tier, flatter curve</span></div>
+      </article>
+
+      <div class="gapmark">ranks 12 – 30 omitted · all low risk</div>
+
+      <article class="card tier-L passed-over">
+        <div class="card-top"><span class="pid">p45r0</span><span class="rank">#12 of 32</span></div>
+        <span class="tierlab">Low risk</span>
+        <dl class="vars">
+          <dt>Collected</dt><dd>day 71</dd>
+          <dt>Waiting</dt><dd>5 d</dd>
+          <dt>Attempt</dt><dd>1st</dd>
+          <dt>Transport out</dt><dd>1 d</dd>
+          <dt>Days to delivery</dt><dd>23</dd>
+          <dt>Survival now</dt><dd>0.989</dd>
+          <dt class="key">1-day loss</dt><dd class="key">0.00048</dd>
+        </dl>
+        <div class="chips"><span class="chip none">passed over</span></div>
+      </article>
+
+      <article class="card tier-L pick-fifo">
+        <div class="card-top"><span class="pid">p49r1</span><span class="rank">#31 of 32</span></div>
+        <span class="tierlab">Low risk</span>
+        <dl class="vars">
+          <dt>Collected</dt><dd>day 30</dd>
+          <dt>Waiting</dt><dd>46 d</dd>
+          <dt>Attempt</dt><dd>1st</dd>
+          <dt>Transport out</dt><dd>2 d</dd>
+          <dt>Days to delivery</dt><dd>65</dd>
+          <dt>Survival now</dt><dd>0.969</dd>
+          <dt class="key">1-day loss</dt><dd class="key">0.00047</dd>
+        </dl>
+        <div class="chips"><span class="chip fifo">FIFO</span></div>
+      </article>
+
+      <article class="card tier-L pick-fifo">
+        <div class="card-top"><span class="pid">p49r2</span><span class="rank">#32 of 32</span></div>
+        <span class="tierlab">Low risk</span>
+        <dl class="vars">
+          <dt>Collected</dt><dd>day 29</dd>
+          <dt>Waiting</dt><dd>47 d</dd>
+          <dt>Attempt</dt><dd>1st</dd>
+          <dt>Transport out</dt><dd>2 d</dd>
+          <dt>Days to delivery</dt><dd>66</dd>
+          <dt>Survival now</dt><dd>0.969</dd>
+          <dt class="key">1-day loss</dt><dd class="key">0.00047</dd>
+        </dl>
+        <div class="chips"><span class="chip fifo">FIFO</span></div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ============ 3. POLICIES ============ -->
+  <section class="band">
+    <div class="eyebrow">
+      <span class="num">3</span><h2>Who each policy starts</h2>
+      <span class="note">same state, same two slots</span>
+    </div>
+    <div class="policies">
+
+      <div class="prow">
+        <span class="pname"><i class="swatch fifo"></i>FIFO</span>
+        <span class="picks"><span class="pick">p49r1</span><span class="pick">p49r2</span></span>
+        <span class="logic">Earliest collection date first. <b>Risk tier and survival are not inputs</b>, so the two longest-waiting patients go — both low risk.</span>
+      </div>
+
+      <div class="prow surv">
+        <span class="pname"><i class="swatch surv"></i>Survival index</span>
+        <span class="picks"><span class="pick">p44r3</span><span class="pick">p18r0</span></span>
+        <span class="logic"><span class="formula">α<sub>u</sub> · [ S<sub>u</sub>(t) − S<sub>u</sub>(t+1) ]</span> — the life-value-weighted survival lost to <b>one more day</b> of waiting. Its curve is 23× steeper than the low-risk patients FIFO takes, so it wins having waited no days at all.</span>
+      </div>
+
+      <div class="prow surv">
+        <span class="pname"><i class="swatch surv"></i>Adaptive MPC</span>
+        <span class="picks"><span class="pick">p44r3</span><span class="pick">p18r0</span></span>
+        <span class="logic">A 7-day look-ahead MILP over the same survival curves. <b>Same two patients</b> <span class="same">identical choice</span></span>
+      </div>
+
+    </div>
+    <p class="foot">Survival decays exponentially, so the steepest one-day drop is at the <em>top</em> of the curve: within a tier both survival-aware policies serve the <em>newest</em> arrival, not the longest waiting. Across 1,843 contested epochs the index and the MPC never differ except on exact ties.</p>
+  </section>
+
+  <!-- ============ 4. NEXT STATE ============ -->
+  <section class="band">
+    <div class="eyebrow">
+      <span class="num">4</span><h2>What happens to the two that started</h2>
+      <span class="note">manufacture → QC → release test</span>
+    </div>
+    <div class="tl">
+
+      <div class="trow">
+        <div class="tlab">
+          <span class="pid">p44r3</span><span class="t">High risk</span>
+          <span class="out pass">→ delivered d94 · S 0.936</span>
+        </div>
+        <div class="track">
+          <div class="seg mfe" style="left:0%;width:21.2%">Manufacture 7 d</div>
+          <div class="seg qc"  style="left:21.2%;width:21.2%">QC 7 d</div>
+          <div class="outcome pass" style="left:42.4%" title="release test passed, day 93">✓</div>
+        </div>
+      </div>
+
+      <div class="trow">
+        <div class="tlab">
+          <span class="pid">p18r0</span><span class="t">Medium risk</span>
+          <span class="out pass">→ delivered d111 · S 0.958</span>
+        </div>
+        <div class="track">
+          <div class="seg mfe" style="left:0%;width:21.2%">Manufacture 7 d</div>
+          <div class="seg qc"  style="left:21.2%;width:21.2%">QC 7 d</div>
+          <div class="seg wait" style="left:42.4%;width:9.1%"></div>
+          <div class="seg mfe" style="left:51.5%;width:21.2%">Remake 7 d</div>
+          <div class="seg qc"  style="left:72.7%;width:21.2%">QC 7 d</div>
+          <div class="outcome fail" style="left:42.4%" title="release test failed, day 93">✕</div>
+          <div class="outcome pass" style="left:93.9%" title="release test passed, day 110">✓</div>
+        </div>
+      </div>
+
+      <div class="dayaxis">
+        <span></span>
+        <div class="ticks">
+          <span class="tick" style="left:0%">79</span>
+          <span class="tick" style="left:21.2%">86</span>
+          <span class="tick" style="left:42.4%">93</span>
+          <span class="tick" style="left:63.6%">100</span>
+          <span class="tick" style="left:84.8%">107</span>
+          <span class="tick" style="left:100%">112</span>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span><i class="lg mfe"></i>Manufacturing — holds the slot</span>
+      <span><i class="lg qc"></i>QC — a delay, not a capacity resource</span>
+      <span><i class="lg wait"></i>Re-collection after a failed batch</span>
+      <span><i class="lg test">✓</i>Release test — yield ~ Bernoulli(0.95)</span>
+    </div>
+  </section>
+
+  <p class="caption">
+    One decision epoch from the operational layer, read directly from the simulation — not reconstructed from the model.
+    Every choice shown is the output of the shipped selection code (<code>Fifo.select</code>, <code>index_choice</code>, <code>solve_epoch</code>) called on this identical state.
+    Reproduce with <code>python3 decision_snapshots.py --scale 200 --seed 0 --acting all</code>.
+    Note: <code>p18r0</code> has a decision-twin, <code>p18r2</code>, identical on every variable above; that tie is broken on patient id.
+  </p>
+
+</div>
