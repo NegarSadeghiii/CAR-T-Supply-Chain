@@ -485,8 +485,9 @@ def b3():
         cfg = dict(base_cfg)
         cfg[lv["code"]] = lv["value"]
         res = frontier_for(cfg, "b3")
-        logs += [dict(row=lv["row"], label=lv["label"], **l)
-                 for l in res["logs"]]
+        # the solve log already has its own `label`, so the level is carried
+        # under a separate key rather than as a colliding keyword
+        logs += [dict(l, row=lv["row"], level=lv["label"]) for l in res["logs"]]
         for r in res["rows"]:
             pts.append(dict(row=lv["row"], code=lv["code"], label=lv["label"],
                             is_base=lv["is_base"], **r))
