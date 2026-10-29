@@ -46,13 +46,13 @@ def use_style():
     })
 
 
-def caption(curves, n_seeds, extra=""):
+def caption(curves, n_seeds, extra="", instance="base instance"):
     H, L = curves["High"], curves["Low"]
     s = (f"Illustrative curves: H eta={H['eta']:g}, k={H['k']:g}; "
          f"L eta={L['eta']:g}, k={L['k']:g}")
     if n_seeds:
         s += f" · {n_seeds} seed" + ("s" if n_seeds > 1 else "")
-    s += " · base instance"
+    s += " · " + instance
     return s + (" · " + extra if extra else "")
 
 
@@ -231,7 +231,9 @@ def fig_exp2_gain(gains, curves, path, decline_labels):
                fontsize=9)
     fig.supxlabel("congestion", fontsize=10, color=INK, y=0.095)
     fig.tight_layout(rect=(0, 0.125, 1, 1))
-    return finish(fig, path, caption(curves, gains.seed.nunique()))
+    return finish(fig, path,
+                  caption(curves, gains.seed.nunique(),
+                          instance="10 patients, arrival window varied"))
 
 
 # -----------------------------------------------------------------------------
