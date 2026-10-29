@@ -221,13 +221,16 @@ def fig_exp2_gain(gains, curves, path, decline_labels):
         ax.set_xlim(-0.5, len(cells) - 0.5)
         ax.axhline(0, color=GRID, lw=1, zorder=1)
         ax.set_ylabel("gain in expected eligible patients")
-        ax.text(0.02, 0.97, dec, transform=ax.transAxes, va="top", fontsize=9,
-                color=MUTED)
-    axes[0].legend(loc="upper left", bbox_to_anchor=(0, 0.90))
+        # the panel identifier sits above the axes, not inside it: a tall
+        # whisker reaches the top of the panel and would collide with it
+        ax.set_title(dec, loc="left", fontsize=9.5, color=MUTED, pad=6)
     for ax in axes[1:]:
         ax.set_ylabel("")
-    fig.supxlabel("congestion", fontsize=10, color=INK, y=0.075)
-    fig.tight_layout(rect=(0, 0.075, 1, 1))
+    h, l = axes[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="lower center", bbox_to_anchor=(0.5, 0.018), ncol=2,
+               fontsize=9)
+    fig.supxlabel("congestion", fontsize=10, color=INK, y=0.095)
+    fig.tight_layout(rect=(0, 0.125, 1, 1))
     return finish(fig, path, caption(curves, gains.seed.nunique()))
 
 
@@ -249,16 +252,21 @@ def fig_b1_frontier(front, knee_i, c_min, c_105, curves, path):
     k = f.iloc[knee_i]
     ax.scatter([k.cost], [k.ELIG], s=150, marker="*", color=RISK["High"],
                edgecolor=BG, linewidth=0.8, zorder=5, label="knee")
-    for x, lab in ((c_min, "min cost"), (c_105, "+5% budget")):
+    span = f.cost.max() - f.cost.min()
+    for i, (x, lab) in enumerate(((c_min, "min cost"), (c_105, "+5% budget"))):
         ax.axvline(x, color=STAGE["transport"], lw=1.1, ls=(0, (4, 3)),
                    zorder=1)
-        ax.text(x, ax.get_ylim()[0], f" {lab}", rotation=90, va="bottom",
-                ha="left", fontsize=8, color=STAGE["transport"])
+        # labels ride the top of the panel: at the bottom they sit on the
+        # cheapest frontier points and on each other
+        ax.text(x + 0.006 * span, ax.get_ylim()[1], f"{lab} ", rotation=90,
+                va="top", ha="left", fontsize=8, color=STAGE["transport"])
+    ax.xaxis.set_major_formatter(
+        plt.matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:,.0f}"))
     ax.set_xlabel("total cost (US dollars)")
     ax.set_ylabel("expected eligible patients at delivery (of 10)")
     ax.legend(loc="lower right")
     fig.tight_layout(rect=(0, 0.045, 1, 1))
-    return finish(fig, path, caption(curves, 1, "base instance, seed 42"))
+    return finish(fig, path, caption(curves, None, "seed 42"))
 
 
 # -----------------------------------------------------------------------------
@@ -294,7 +302,8 @@ def fig_b3_sensitivity(points, base_front, curves, path, ncol=4):
     fig.supylabel("expected eligible patients (of 10)", fontsize=9.5,
                   color=INK, x=0.015)
     fig.tight_layout(rect=(0.03, 0.065, 1, 1))
-    return finish(fig, path, caption(curves, 1, "one factor at a time, seed 42"))
+    return finish(fig, path, caption(curves, None,
+                                     "one factor at a time, seed 42"))
 
 
 def fig_b3_costmix(mix, curves, path):
@@ -312,12 +321,14 @@ def fig_b3_costmix(mix, curves, path):
                linewidth=1.2, label=lab, zorder=3)
         bottom += v
     for xi, tot in zip(x, bottom):
-        ax.text(xi, tot + 0.6, f"{tot:,.1f}k", ha="center", fontsize=7.6,
-                color=MUTED)
+        ax.text(xi, tot + bottom.max() * 0.015, f"{tot:,.1f}k", ha="center",
+                fontsize=7.6, color=MUTED)
+    ax.set_ylim(0, bottom.max() * 1.09)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=7.6)
     ax.set_ylabel("cost (thousand US dollars)")
     ax.grid(axis="x", visible=False)
-    ax.legend(loc="upper left", ncol=3)
+    # the legend sits above the panel: inside it lands on the bar totals
+    ax.legend(loc="lower left", bbox_to_anchor=(0, 1.01), ncol=3)
     fig.tight_layout(rect=(0, 0.045, 1, 1))
-    return finish(fig, path, caption(curves, 1, "seed 42"))
+    return finish(fig, path, caption(curves, None, "seed 42"))
