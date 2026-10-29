@@ -49,8 +49,10 @@ def use_style():
 def caption(curves, n_seeds, extra=""):
     H, L = curves["High"], curves["Low"]
     s = (f"Illustrative curves: H eta={H['eta']:g}, k={H['k']:g}; "
-         f"L eta={L['eta']:g}, k={L['k']:g} · {n_seeds} seeds · "
-         f"base instance")
+         f"L eta={L['eta']:g}, k={L['k']:g}")
+    if n_seeds:
+        s += f" · {n_seeds} seed" + ("s" if n_seeds > 1 else "")
+    s += " · base instance"
     return s + (" · " + extra if extra else "")
 
 
@@ -71,32 +73,50 @@ POLICY_LABEL = {
 
 
 def fig_exp1_dotplot(runs, curves, path, order=None):
-    """One row per policy, one dot per seed, mean marked."""
+    """One row per policy, one dot per seed, mean marked.
+
+    A policy that could not be run at C_min sits at its own minimum cost, so it
+    is NOT comparable with the rest of the chart.  Those rows are drawn hollow
+    and labelled with the budget they needed -- otherwise the eye reads a higher
+    dot as a better policy when it is really a more expensive one.
+    """
     use_style()
     order = order or ["elig_min", "fifo", "high_risk_first", "cost_speed",
                       "elig_max"]
     order = [p for p in order if p in set(runs.policy)]
     fig, ax = plt.subplots(figsize=FIGSIZE)
     rng = np.random.default_rng(0)
+    base_cost = runs[runs.budget == "C_min"].cost.mean()
+    ticks, offbudget = [], False
     for y, pol in enumerate(order):
         sub = runs[runs.policy == pol]
+        own = (sub.budget == "own_min_cost").all()
         col = RISK["High"] if pol == "elig_max" else MUTED
+        face = BG if own else col
+        offbudget = offbudget or own
         jitter = (rng.random(len(sub)) - 0.5) * 0.22
         ax.scatter(sub.ELIG, np.full(len(sub), y) + jitter, s=26,
-                   facecolor=col, edgecolor=BG, linewidth=0.8, alpha=.75,
-                   zorder=3)
-        ax.scatter([sub.ELIG.mean()], [y], marker="D", s=58, facecolor=col,
-                   edgecolor=BG, linewidth=1.4, zorder=4)
-        ax.text(sub.ELIG.mean(), y - 0.33, f"mean {sub.ELIG.mean():.3f}",
-                ha="center", va="bottom", fontsize=8, color=col)
+                   facecolor=face, edgecolor=col if own else BG,
+                   linewidth=1.0 if own else 0.8, alpha=.85, zorder=3)
+        ax.scatter([sub.ELIG.mean()], [y], marker="D", s=58, facecolor=face,
+                   edgecolor=col, linewidth=1.4, zorder=4)
+        note = f"mean {sub.ELIG.mean():.3f}"
+        if own:
+            note += (f"  (needs +{100 * (sub.cost.mean() / base_cost - 1):.0f}%"
+                     f" budget)")
+        ax.text(sub.ELIG.mean(), y - 0.33, note, ha="center", va="bottom",
+                fontsize=8, color=col)
+        ticks.append(POLICY_LABEL.get(pol, pol)
+                     + (" *" if own else ""))
     ax.set_yticks(range(len(order)))
-    ax.set_yticklabels([POLICY_LABEL.get(p, p) for p in order])
+    ax.set_yticklabels(ticks)
     ax.set_ylim(-0.7, len(order) - 0.4)
     ax.set_xlabel("expected eligible patients at delivery (of 10)")
     ax.grid(axis="y", visible=False)
     fig.tight_layout(rect=(0, 0.045, 1, 1))
-    return finish(fig, path, caption(curves, runs.seed.nunique(),
-                                     "all plans at the same cost"))
+    extra = ("same cost, except * (hollow) at its own minimum" if offbudget
+             else "all plans at the same cost")
+    return finish(fig, path, caption(curves, runs.seed.nunique(), extra))
 
 
 def draw_swimlane(ax, d, inst, title):
@@ -163,7 +183,7 @@ def fig_exp1_swimlane_pair(m_ref, m_new, inst, curves, path, nb_stages,
                    bbox_to_anchor=(.5, -.22), ncol=6, handlelength=1.4,
                    columnspacing=1.1, fontsize=8)
     fig.tight_layout(rect=(0, 0.055, 1, 1))
-    return finish(fig, path, caption(curves, 1,
+    return finish(fig, path, caption(curves, None,
                                      f"seed {seed}" if seed else ""))
 
 
