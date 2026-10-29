@@ -6,3 +6,6 @@ __pycache__/
 *.log
 *.out
 *.toc
+
+# INFORMS run artefacts rebuilt by run_informs.py
+results_informs/_cache/

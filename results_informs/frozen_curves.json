@@ -1,0 +1,33 @@
+{
+  "set": "S2",
+  "curves": {
+    "High": {
+      "k": 3.0,
+      "eta": 25.0
+    },
+    "Low": {
+      "k": 1.5,
+      "eta": 80.0
+    }
+  },
+  "faster_decline": {
+    "High": {
+      "k": 3.0,
+      "eta": 22.0
+    },
+    "Low": {
+      "k": 1.5,
+      "eta": 80.0
+    }
+  },
+  "reason": "largest same-cost gain (0.159) among the sets whose inversion day falls after the largest observed turnaround time",
+  "solver": {
+    "solver": "appsi_highs",
+    "mip_gap": 1e-06,
+    "time_limit_s": 300.0,
+    "cost_tolerance": 0.001,
+    "pyomo": "6.10.1",
+    "numpy": "2.4.6",
+    "pandas": "3.0.6"
+  }
+}
