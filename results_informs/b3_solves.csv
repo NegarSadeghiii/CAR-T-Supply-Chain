@@ -1,0 +1,641 @@
+label,status,gap,runtime,optimal,row,level
+cost,appsi_highs: optimal,0.0,2.1044674469999336,True,Manufacturing time,3
+ceiling,appsi_highs: optimal,0.0,2.2216759470002216,True,Manufacturing time,3
+eps=17800,appsi_highs: optimal,0.0,2.3411878279998746,True,Manufacturing time,3
+eps=17800 stage2,appsi_highs: optimal,0.0,2.112164920000396,True,Manufacturing time,3
+eps=22833,appsi_highs: optimal,0.0,4.946763236000152,True,Manufacturing time,3
+eps=22833 stage2,appsi_highs: optimal,0.0,3.816011620000154,True,Manufacturing time,3
+eps=27867,appsi_highs: optimal,0.0,4.051255412000046,True,Manufacturing time,3
+eps=27867 stage2,appsi_highs: optimal,0.0,4.136929316999613,True,Manufacturing time,3
+eps=32900,appsi_highs: optimal,0.0,2.3969219559999146,True,Manufacturing time,3
+eps=32900 stage2,appsi_highs: optimal,0.0,2.2908813810004176,True,Manufacturing time,3
+eps=37933,appsi_highs: optimal,0.0,2.2868051310001647,True,Manufacturing time,3
+eps=37933 stage2,appsi_highs: optimal,2.0210993567541865e-16,2.2109811509999417,True,Manufacturing time,3
+eps=42967,appsi_highs: optimal,0.0,2.3535137369999575,True,Manufacturing time,3
+eps=42967 stage2,appsi_highs: optimal,2.0210993567542296e-16,2.101202693000232,True,Manufacturing time,3
+eps=48000,appsi_highs: optimal,0.0,2.322769494000113,True,Manufacturing time,3
+eps=48000 stage2,appsi_highs: optimal,2.0210993567542296e-16,2.419380114999967,True,Manufacturing time,3
+cost,appsi_highs: optimal,0.0,2.786921739000263,True,Manufacturing time,5
+ceiling,appsi_highs: optimal,0.0,2.871679163999943,True,Manufacturing time,5
+eps=25000,appsi_highs: optimal,0.0,4.782149255000149,True,Manufacturing time,5
+eps=25000 stage2,appsi_highs: optimal,0.0,5.041593757999635,True,Manufacturing time,5
+eps=29467,appsi_highs: optimal,0.0,3.7065000709999367,True,Manufacturing time,5
+eps=29467 stage2,appsi_highs: optimal,0.0,3.617249100999743,True,Manufacturing time,5
+eps=33933,appsi_highs: optimal,0.0,3.417952391000199,True,Manufacturing time,5
+eps=33933 stage2,appsi_highs: optimal,0.0,3.4531572299997606,True,Manufacturing time,5
+eps=38400,appsi_highs: optimal,0.0,4.475991618999615,True,Manufacturing time,5
+eps=38400 stage2,appsi_highs: optimal,2.009933046021307e-16,3.4974067790003573,True,Manufacturing time,5
+eps=42867,appsi_highs: optimal,0.0,3.6058018749999974,True,Manufacturing time,5
+eps=42867 stage2,appsi_highs: optimal,0.0,3.4161102160001064,True,Manufacturing time,5
+eps=47333,appsi_highs: optimal,0.0,3.5780391670000427,True,Manufacturing time,5
+eps=47333 stage2,appsi_highs: optimal,0.0,3.5290767689998574,True,Manufacturing time,5
+eps=51800,appsi_highs: optimal,0.0,3.259242141999948,True,Manufacturing time,5
+eps=51800 stage2,appsi_highs: optimal,0.0,3.4741762990001916,True,Manufacturing time,5
+cost,appsi_highs: optimal,0.0,2.8196362819999194,True,Manufacturing time,7
+ceiling,appsi_highs: optimal,0.0,2.5636769679999816,True,Manufacturing time,7
+eps=31000,appsi_highs: optimal,0.0,2.725876208000045,True,Manufacturing time,7
+eps=31000 stage2,appsi_highs: optimal,0.0,2.8006544800000484,True,Manufacturing time,7
+eps=33583,appsi_highs: optimal,0.0,2.9977748349997455,True,Manufacturing time,7
+eps=33583 stage2,appsi_highs: optimal,0.0,3.542317884000113,True,Manufacturing time,7
+eps=36167,appsi_highs: optimal,0.0,3.0425306920001276,True,Manufacturing time,7
+eps=36167 stage2,appsi_highs: optimal,0.0,3.0416753019999305,True,Manufacturing time,7
+eps=38750,appsi_highs: optimal,0.0,4.09325462400011,True,Manufacturing time,7
+eps=38750 stage2,appsi_highs: optimal,0.0,2.9652928400000746,True,Manufacturing time,7
+eps=41333,appsi_highs: optimal,0.0,3.3025248130002183,True,Manufacturing time,7
+eps=41333 stage2,appsi_highs: optimal,0.0,3.018672809999771,True,Manufacturing time,7
+eps=43917,appsi_highs: optimal,0.0,3.299553429000298,True,Manufacturing time,7
+eps=43917 stage2,appsi_highs: optimal,0.0,3.055458551999891,True,Manufacturing time,7
+eps=46500,appsi_highs: optimal,0.0,3.108866677000151,True,Manufacturing time,7
+eps=46500 stage2,appsi_highs: optimal,0.0,2.896353461000217,True,Manufacturing time,7
+cost,appsi_highs: optimal,0.0,2.9845001190001312,True,Manufacturing time,9
+ceiling,appsi_highs: optimal,0.0,2.4098316859999613,True,Manufacturing time,9
+eps=35200,appsi_highs: optimal,0.0,2.7185727119999683,True,Manufacturing time,9
+eps=35200 stage2,appsi_highs: optimal,0.0,2.99077533100035,True,Manufacturing time,9
+eps=38133,appsi_highs: optimal,0.0,3.1878775360000873,True,Manufacturing time,9
+eps=38133 stage2,appsi_highs: optimal,1.9147256886122637e-16,4.250534976999916,True,Manufacturing time,9
+eps=41067,appsi_highs: optimal,0.0,3.2210085720003008,True,Manufacturing time,9
+eps=41067 stage2,appsi_highs: optimal,0.0,2.944250203000138,True,Manufacturing time,9
+eps=44000,appsi_highs: optimal,0.0,3.579925197999728,True,Manufacturing time,9
+eps=44000 stage2,appsi_highs: optimal,0.0,3.180688609000299,True,Manufacturing time,9
+eps=46933,appsi_highs: optimal,0.0,3.573400495000442,True,Manufacturing time,9
+eps=46933 stage2,appsi_highs: optimal,0.0,2.8986101259997668,True,Manufacturing time,9
+eps=49867,appsi_highs: optimal,0.0,2.682892339999853,True,Manufacturing time,9
+eps=49867 stage2,appsi_highs: optimal,0.0,2.870392412000001,True,Manufacturing time,9
+eps=52800,appsi_highs: optimal,0.0,2.584784378000222,True,Manufacturing time,9
+eps=52800 stage2,appsi_highs: optimal,0.0,3.0528924400000506,True,Manufacturing time,9
+cost,appsi_highs: optimal,0.0,2.828602594000131,True,QC time,1
+ceiling,appsi_highs: optimal,0.0,2.8974425000001247,True,QC time,1
+eps=25000,appsi_highs: optimal,0.0,5.673254895999889,True,QC time,1
+eps=25000 stage2,appsi_highs: optimal,0.0,5.406012864999866,True,QC time,1
+eps=28133,appsi_highs: optimal,0.0,4.702255349000097,True,QC time,1
+eps=28133 stage2,appsi_highs: optimal,0.0,4.749120814999969,True,QC time,1
+eps=31267,appsi_highs: optimal,0.0,3.283968816000197,True,QC time,1
+eps=31267 stage2,appsi_highs: optimal,0.0,3.3368421879999914,True,QC time,1
+eps=34400,appsi_highs: optimal,0.0,3.296769289000167,True,QC time,1
+eps=34400 stage2,appsi_highs: optimal,0.0,3.5787448040000527,True,QC time,1
+eps=37533,appsi_highs: optimal,0.0,3.3974259589999747,True,QC time,1
+eps=37533 stage2,appsi_highs: optimal,0.0,3.3212627739999334,True,QC time,1
+eps=40667,appsi_highs: optimal,0.0,3.1234525159998157,True,QC time,1
+eps=40667 stage2,appsi_highs: optimal,0.0,3.277912846000163,True,QC time,1
+eps=43800,appsi_highs: optimal,0.0,3.074500704000002,True,QC time,1
+eps=43800 stage2,appsi_highs: optimal,0.0,3.1731762270001127,True,QC time,1
+cost,appsi_highs: optimal,0.0,2.786921739000263,True,QC time,2
+ceiling,appsi_highs: optimal,0.0,2.871679163999943,True,QC time,2
+eps=25000,appsi_highs: optimal,0.0,4.782149255000149,True,QC time,2
+eps=25000 stage2,appsi_highs: optimal,0.0,5.041593757999635,True,QC time,2
+eps=29467,appsi_highs: optimal,0.0,3.7065000709999367,True,QC time,2
+eps=29467 stage2,appsi_highs: optimal,0.0,3.617249100999743,True,QC time,2
+eps=33933,appsi_highs: optimal,0.0,3.417952391000199,True,QC time,2
+eps=33933 stage2,appsi_highs: optimal,0.0,3.4531572299997606,True,QC time,2
+eps=38400,appsi_highs: optimal,0.0,4.475991618999615,True,QC time,2
+eps=38400 stage2,appsi_highs: optimal,2.009933046021307e-16,3.4974067790003573,True,QC time,2
+eps=42867,appsi_highs: optimal,0.0,3.6058018749999974,True,QC time,2
+eps=42867 stage2,appsi_highs: optimal,0.0,3.4161102160001064,True,QC time,2
+eps=47333,appsi_highs: optimal,0.0,3.5780391670000427,True,QC time,2
+eps=47333 stage2,appsi_highs: optimal,0.0,3.5290767689998574,True,QC time,2
+eps=51800,appsi_highs: optimal,0.0,3.259242141999948,True,QC time,2
+eps=51800 stage2,appsi_highs: optimal,0.0,3.4741762990001916,True,QC time,2
+cost,appsi_highs: optimal,0.0,2.6603103200000078,True,QC time,3
+ceiling,appsi_highs: optimal,0.0,2.634545530000196,True,QC time,3
+eps=25000,appsi_highs: optimal,0.0,4.617095993000021,True,QC time,3
+eps=25000 stage2,appsi_highs: optimal,0.0,4.523205331000099,True,QC time,3
+eps=28133,appsi_highs: optimal,0.0,3.81804042199974,True,QC time,3
+eps=28133 stage2,appsi_highs: optimal,0.0,4.938374027000009,True,QC time,3
+eps=31267,appsi_highs: optimal,0.0,3.293100251999931,True,QC time,3
+eps=31267 stage2,appsi_highs: optimal,0.0,2.977743818000363,True,QC time,3
+eps=34400,appsi_highs: optimal,0.0,4.124149946999751,True,QC time,3
+eps=34400 stage2,appsi_highs: optimal,0.0,2.864336805000221,True,QC time,3
+eps=37533,appsi_highs: optimal,0.0,3.385900464000315,True,QC time,3
+eps=37533 stage2,appsi_highs: optimal,0.0,2.983524293999835,True,QC time,3
+eps=40667,appsi_highs: optimal,0.0,3.0747327509998286,True,QC time,3
+eps=40667 stage2,appsi_highs: optimal,0.0,3.16448379700023,True,QC time,3
+eps=43800,appsi_highs: optimal,0.0,2.9619717460000174,True,QC time,3
+eps=43800 stage2,appsi_highs: optimal,0.0,2.8367402570002014,True,QC time,3
+cost,appsi_highs: optimal,0.0,2.908493142000225,True,QC time,4
+ceiling,appsi_highs: optimal,0.0,2.6227388809998047,True,QC time,4
+eps=25000,appsi_highs: optimal,0.0,4.612657480000053,True,QC time,4
+eps=25000 stage2,appsi_highs: optimal,0.0,4.666456101999756,True,QC time,4
+eps=28133,appsi_highs: optimal,0.0,3.668190143999709,True,QC time,4
+eps=28133 stage2,appsi_highs: optimal,0.0,4.471665081000083,True,QC time,4
+eps=31267,appsi_highs: optimal,0.0,3.17852846400001,True,QC time,4
+eps=31267 stage2,appsi_highs: optimal,0.0,3.140256364999914,True,QC time,4
+eps=34400,appsi_highs: optimal,0.0,3.474409725999976,True,QC time,4
+eps=34400 stage2,appsi_highs: optimal,0.0,3.0436572290000186,True,QC time,4
+eps=37533,appsi_highs: optimal,0.0,2.7462214320003113,True,QC time,4
+eps=37533 stage2,appsi_highs: optimal,0.0,3.0406995399998777,True,QC time,4
+eps=40667,appsi_highs: optimal,0.0,3.375501532999806,True,QC time,4
+eps=40667 stage2,appsi_highs: optimal,0.0,2.9744108299996697,True,QC time,4
+eps=43800,appsi_highs: optimal,0.0,3.0974293710000893,True,QC time,4
+eps=43800 stage2,appsi_highs: optimal,0.0,3.0049837920000755,True,QC time,4
+cost,appsi_highs: optimal,0.0,2.7142317590000857,True,"Mfg cost, M2_Exp",1000
+ceiling,appsi_highs: optimal,0.0,2.848891371999798,True,"Mfg cost, M2_Exp",1000
+eps=16200,appsi_highs: optimal,0.0,2.0491692410000724,True,"Mfg cost, M2_Exp",1000
+eps=16200 stage2,appsi_highs: optimal,0.0,2.0642671059999884,True,"Mfg cost, M2_Exp",1000
+eps=17550,appsi_highs: optimal,0.0,2.26174293799977,True,"Mfg cost, M2_Exp",1000
+eps=17550 stage2,appsi_highs: optimal,0.0,2.4298421659996166,True,"Mfg cost, M2_Exp",1000
+eps=18900,appsi_highs: optimal,0.0,2.646733691999998,True,"Mfg cost, M2_Exp",1000
+eps=18900 stage2,appsi_highs: optimal,0.0,2.7982970149996618,True,"Mfg cost, M2_Exp",1000
+eps=20250,appsi_highs: optimal,0.0,3.75432192199969,True,"Mfg cost, M2_Exp",1000
+eps=20250 stage2,appsi_highs: optimal,0.0,3.932084498000222,True,"Mfg cost, M2_Exp",1000
+eps=21600,appsi_highs: optimal,0.0,4.281073269999979,True,"Mfg cost, M2_Exp",1000
+eps=21600 stage2,appsi_highs: optimal,1.8373630352898938e-16,4.797009092999815,True,"Mfg cost, M2_Exp",1000
+eps=22950,appsi_highs: optimal,0.0,4.302836781999758,True,"Mfg cost, M2_Exp",1000
+eps=22950 stage2,appsi_highs: optimal,1.837363035289893e-16,4.2987465810001595,True,"Mfg cost, M2_Exp",1000
+eps=24300,appsi_highs: optimal,0.0,3.6780995910003185,True,"Mfg cost, M2_Exp",1000
+eps=24300 stage2,appsi_highs: optimal,0.0,3.556097228999988,True,"Mfg cost, M2_Exp",1000
+cost,appsi_highs: optimal,0.0,2.673973842000123,True,"Mfg cost, M2_Exp",2500
+ceiling,appsi_highs: optimal,0.0,2.688122777999979,True,"Mfg cost, M2_Exp",2500
+eps=21500,appsi_highs: optimal,0.0,4.547212997000315,True,"Mfg cost, M2_Exp",2500
+eps=21500 stage2,appsi_highs: optimal,0.0,5.05750183400005,True,"Mfg cost, M2_Exp",2500
+eps=23292,appsi_highs: optimal,0.0,4.9348483869998745,True,"Mfg cost, M2_Exp",2500
+eps=23292 stage2,appsi_highs: optimal,0.0,5.146720602000187,True,"Mfg cost, M2_Exp",2500
+eps=25083,appsi_highs: optimal,0.0,4.178853110999626,True,"Mfg cost, M2_Exp",2500
+eps=25083 stage2,appsi_highs: optimal,0.0,4.5856389870000385,True,"Mfg cost, M2_Exp",2500
+eps=26875,appsi_highs: optimal,0.0,3.6463265779998437,True,"Mfg cost, M2_Exp",2500
+eps=26875 stage2,appsi_highs: optimal,0.0,4.26243835699961,True,"Mfg cost, M2_Exp",2500
+eps=28667,appsi_highs: optimal,0.0,3.270120931999827,True,"Mfg cost, M2_Exp",2500
+eps=28667 stage2,appsi_highs: optimal,0.0,3.4313568489997124,True,"Mfg cost, M2_Exp",2500
+eps=30458,appsi_highs: optimal,0.0,3.3210114090002207,True,"Mfg cost, M2_Exp",2500
+eps=30458 stage2,appsi_highs: optimal,0.0,3.1082783669999117,True,"Mfg cost, M2_Exp",2500
+eps=32250,appsi_highs: optimal,0.0,2.964476436000041,True,"Mfg cost, M2_Exp",2500
+eps=32250 stage2,appsi_highs: optimal,0.0,3.1789178119997814,True,"Mfg cost, M2_Exp",2500
+cost,appsi_highs: optimal,0.0,2.9014145520000056,True,"Mfg cost, M2_Exp",5000
+ceiling,appsi_highs: optimal,0.0,2.8115954779996173,True,"Mfg cost, M2_Exp",5000
+eps=25000,appsi_highs: optimal,0.0,5.026756923999983,True,"Mfg cost, M2_Exp",5000
+eps=25000 stage2,appsi_highs: optimal,0.0,5.124198937000074,True,"Mfg cost, M2_Exp",5000
+eps=29467,appsi_highs: optimal,0.0,3.570608970000194,True,"Mfg cost, M2_Exp",5000
+eps=29467 stage2,appsi_highs: optimal,0.0,3.6145189039998513,True,"Mfg cost, M2_Exp",5000
+eps=33933,appsi_highs: optimal,0.0,3.3235879029998614,True,"Mfg cost, M2_Exp",5000
+eps=33933 stage2,appsi_highs: optimal,0.0,3.7076844210000672,True,"Mfg cost, M2_Exp",5000
+eps=38400,appsi_highs: optimal,0.0,4.94660661800026,True,"Mfg cost, M2_Exp",5000
+eps=38400 stage2,appsi_highs: optimal,2.009933046021307e-16,3.4155979220004156,True,"Mfg cost, M2_Exp",5000
+eps=42867,appsi_highs: optimal,0.0,3.8218924249999873,True,"Mfg cost, M2_Exp",5000
+eps=42867 stage2,appsi_highs: optimal,0.0,3.3064960060000885,True,"Mfg cost, M2_Exp",5000
+eps=47333,appsi_highs: optimal,0.0,3.4515483850000237,True,"Mfg cost, M2_Exp",5000
+eps=47333 stage2,appsi_highs: optimal,0.0,2.9341888740000286,True,"Mfg cost, M2_Exp",5000
+eps=51800,appsi_highs: optimal,0.0,3.1623838069999692,True,"Mfg cost, M2_Exp",5000
+eps=51800 stage2,appsi_highs: optimal,0.0,2.916379734000202,True,"Mfg cost, M2_Exp",5000
+cost,appsi_highs: optimal,0.0,2.8034551319997263,True,"Mfg cost, M2_Exp",10000
+ceiling,appsi_highs: optimal,0.0,2.9066403889996764,True,"Mfg cost, M2_Exp",10000
+eps=25000,appsi_highs: optimal,0.0,2.942623739999817,True,"Mfg cost, M2_Exp",10000
+eps=25000 stage2,appsi_highs: optimal,0.0,3.1107477340001424,True,"Mfg cost, M2_Exp",10000
+eps=36133,appsi_highs: optimal,0.0,4.504025097000067,True,"Mfg cost, M2_Exp",10000
+eps=36133 stage2,appsi_highs: optimal,2.0907924201721676e-16,4.288949315000082,True,"Mfg cost, M2_Exp",10000
+eps=47267,appsi_highs: optimal,0.0,3.3943188630000805,True,"Mfg cost, M2_Exp",10000
+eps=47267 stage2,appsi_highs: optimal,0.0,3.1173000759999923,True,"Mfg cost, M2_Exp",10000
+eps=58400,appsi_highs: optimal,0.0,3.414941504000126,True,"Mfg cost, M2_Exp",10000
+eps=58400 stage2,appsi_highs: optimal,0.0,3.5423079510001116,True,"Mfg cost, M2_Exp",10000
+eps=69533,appsi_highs: optimal,0.0,2.959476569999879,True,"Mfg cost, M2_Exp",10000
+eps=69533 stage2,appsi_highs: optimal,0.0,3.1797696409998935,True,"Mfg cost, M2_Exp",10000
+eps=80667,appsi_highs: optimal,0.0,3.122893114999897,True,"Mfg cost, M2_Exp",10000
+eps=80667 stage2,appsi_highs: optimal,0.0,2.98131199799991,True,"Mfg cost, M2_Exp",10000
+eps=91800,appsi_highs: optimal,0.0,2.939329221999742,True,"Mfg cost, M2_Exp",10000
+eps=91800 stage2,appsi_highs: optimal,0.0,3.112324935000288,True,"Mfg cost, M2_Exp",10000
+cost,appsi_highs: optimal,0.0,2.822752301000037,True,Fast transport cost,350
+ceiling,appsi_highs: optimal,0.0,2.875200422999569,True,Fast transport cost,350
+eps=24700,appsi_highs: optimal,0.0,4.624325894999856,True,Fast transport cost,350
+eps=24700 stage2,appsi_highs: optimal,0.0,4.918855469000391,True,Fast transport cost,350
+eps=28742,appsi_highs: optimal,0.0,5.589451701000144,True,Fast transport cost,350
+eps=28742 stage2,appsi_highs: optimal,0.0,3.6908447840000917,True,Fast transport cost,350
+eps=32783,appsi_highs: optimal,0.0,5.55351830599966,True,Fast transport cost,350
+eps=32783 stage2,appsi_highs: optimal,0.0,3.304837484000018,True,Fast transport cost,350
+eps=36825,appsi_highs: optimal,0.0,4.406043373000102,True,Fast transport cost,350
+eps=36825 stage2,appsi_highs: optimal,0.0,2.949638619000325,True,Fast transport cost,350
+eps=40867,appsi_highs: optimal,0.0,3.1687851390001924,True,Fast transport cost,350
+eps=40867 stage2,appsi_highs: optimal,1.9691360326941122e-16,2.9272158409999065,True,Fast transport cost,350
+eps=44908,appsi_highs: optimal,0.0,3.22921059600003,True,Fast transport cost,350
+eps=44908 stage2,appsi_highs: optimal,0.0,3.214202254999691,True,Fast transport cost,350
+eps=48950,appsi_highs: optimal,0.0,3.145692071999747,True,Fast transport cost,350
+eps=48950 stage2,appsi_highs: optimal,0.0,3.133782651999809,True,Fast transport cost,350
+cost,appsi_highs: optimal,0.0,2.760368620999998,True,Fast transport cost,500
+ceiling,appsi_highs: optimal,0.0,2.968793065999762,True,Fast transport cost,500
+eps=25000,appsi_highs: optimal,0.0,5.068083896999724,True,Fast transport cost,500
+eps=25000 stage2,appsi_highs: optimal,0.0,4.872368277000078,True,Fast transport cost,500
+eps=29467,appsi_highs: optimal,0.0,3.603833083999689,True,Fast transport cost,500
+eps=29467 stage2,appsi_highs: optimal,0.0,3.5238211639998553,True,Fast transport cost,500
+eps=33933,appsi_highs: optimal,0.0,3.448252211000181,True,Fast transport cost,500
+eps=33933 stage2,appsi_highs: optimal,0.0,3.2064047690000734,True,Fast transport cost,500
+eps=38400,appsi_highs: optimal,0.0,4.7212976470000285,True,Fast transport cost,500
+eps=38400 stage2,appsi_highs: optimal,2.009933046021307e-16,3.679295832999742,True,Fast transport cost,500
+eps=42867,appsi_highs: optimal,0.0,3.451821941000162,True,Fast transport cost,500
+eps=42867 stage2,appsi_highs: optimal,0.0,3.2192003079999267,True,Fast transport cost,500
+eps=47333,appsi_highs: optimal,0.0,3.4487541990001773,True,Fast transport cost,500
+eps=47333 stage2,appsi_highs: optimal,0.0,3.0291798819998803,True,Fast transport cost,500
+eps=51800,appsi_highs: optimal,0.0,2.8617669589998513,True,Fast transport cost,500
+eps=51800 stage2,appsi_highs: optimal,0.0,3.2018814950001797,True,Fast transport cost,500
+cost,appsi_highs: optimal,0.0,2.5870276639998337,True,Fast transport cost,1000
+ceiling,appsi_highs: optimal,0.0,3.015499200999784,True,Fast transport cost,1000
+eps=26000,appsi_highs: optimal,0.0,4.988511073999689,True,Fast transport cost,1000
+eps=26000 stage2,appsi_highs: optimal,0.0,4.954975488999935,True,Fast transport cost,1000
+eps=31883,appsi_highs: optimal,0.0,3.021734975000072,True,Fast transport cost,1000
+eps=31883 stage2,appsi_highs: optimal,0.0,2.986154180000085,True,Fast transport cost,1000
+eps=37767,appsi_highs: optimal,0.0,3.6303520080000453,True,Fast transport cost,1000
+eps=37767 stage2,appsi_highs: optimal,0.0,3.575885644999744,True,Fast transport cost,1000
+eps=43650,appsi_highs: optimal,0.0,3.7148241840000082,True,Fast transport cost,1000
+eps=43650 stage2,appsi_highs: optimal,0.0,4.125254222999956,True,Fast transport cost,1000
+eps=49533,appsi_highs: optimal,0.0,3.093609043000015,True,Fast transport cost,1000
+eps=49533 stage2,appsi_highs: optimal,0.0,2.897506759999942,True,Fast transport cost,1000
+eps=55417,appsi_highs: optimal,0.0,3.203519586999846,True,Fast transport cost,1000
+eps=55417 stage2,appsi_highs: optimal,0.0,3.0322856980001234,True,Fast transport cost,1000
+eps=61300,appsi_highs: optimal,0.0,3.010096644999976,True,Fast transport cost,1000
+eps=61300 stage2,appsi_highs: optimal,0.0,3.0467316079998454,True,Fast transport cost,1000
+cost,appsi_highs: optimal,0.0,2.7975781230002212,True,Fast transport cost,1500
+ceiling,appsi_highs: optimal,0.0,2.7600295330003064,True,Fast transport cost,1500
+eps=27000,appsi_highs: optimal,0.0,4.660180616999696,True,Fast transport cost,1500
+eps=27000 stage2,appsi_highs: optimal,0.0,4.697051353000006,True,Fast transport cost,1500
+eps=34300,appsi_highs: optimal,0.0,3.6454029980000087,True,Fast transport cost,1500
+eps=34300 stage2,appsi_highs: optimal,2.1526501826599491e-16,3.9652769340000305,True,Fast transport cost,1500
+eps=41600,appsi_highs: optimal,0.0,3.5663406639996538,True,Fast transport cost,1500
+eps=41600 stage2,appsi_highs: optimal,0.0,3.4537606750000123,True,Fast transport cost,1500
+eps=48900,appsi_highs: optimal,0.0,3.700028874000054,True,Fast transport cost,1500
+eps=48900 stage2,appsi_highs: optimal,0.0,3.1248913809999976,True,Fast transport cost,1500
+eps=56200,appsi_highs: optimal,0.0,3.646792934000132,True,Fast transport cost,1500
+eps=56200 stage2,appsi_highs: optimal,0.0,3.7430945309997696,True,Fast transport cost,1500
+eps=63500,appsi_highs: optimal,0.0,3.1299863640001604,True,Fast transport cost,1500
+eps=63500 stage2,appsi_highs: optimal,0.0,3.0325479760003873,True,Fast transport cost,1500
+eps=70800,appsi_highs: optimal,0.0,3.231555761999971,True,Fast transport cost,1500
+eps=70800 stage2,appsi_highs: optimal,0.0,2.8241546079998443,True,Fast transport cost,1500
+cost,appsi_highs: optimal,0.0,2.9290829810001924,True,Holding cost,0
+ceiling,appsi_highs: optimal,0.0,2.9768297579998944,True,Holding cost,0
+eps=16000,appsi_highs: optimal,0.0,1.9365856060003352,True,Holding cost,0
+eps=16000 stage2,appsi_highs: optimal,0.0,2.367709508000189,True,Holding cost,0
+eps=21967,appsi_highs: optimal,0.0,5.668776893000086,True,Holding cost,0
+eps=21967 stage2,appsi_highs: optimal,0.0,5.002660980000201,True,Holding cost,0
+eps=27933,appsi_highs: optimal,0.0,3.1774719810000533,True,Holding cost,0
+eps=27933 stage2,appsi_highs: optimal,0.0,3.0775085759996728,True,Holding cost,0
+eps=33900,appsi_highs: optimal,0.0,3.4034417400002894,True,Holding cost,0
+eps=33900 stage2,appsi_highs: optimal,0.0,3.094800768999903,True,Holding cost,0
+eps=39867,appsi_highs: optimal,0.0,2.9014129370002593,True,Holding cost,0
+eps=39867 stage2,appsi_highs: optimal,0.0,3.117526259999977,True,Holding cost,0
+eps=45833,appsi_highs: optimal,0.0,3.4772865489999276,True,Holding cost,0
+eps=45833 stage2,appsi_highs: optimal,0.0,2.7183536140000797,True,Holding cost,0
+eps=51800,appsi_highs: optimal,0.0,2.8899446010000247,True,Holding cost,0
+eps=51800 stage2,appsi_highs: optimal,0.0,2.8164585790000274,True,Holding cost,0
+cost,appsi_highs: optimal,0.0,3.0628191900000274,True,Holding cost,5
+ceiling,appsi_highs: optimal,0.0,2.8946332179998535,True,Holding cost,5
+eps=16295,appsi_highs: optimal,0.0,2.6690712219997295,True,Holding cost,5
+eps=16295 stage2,appsi_highs: optimal,0.0,2.6248763349999535,True,Holding cost,5
+eps=22212,appsi_highs: optimal,1.9608934746770925e-16,5.224758351000219,True,Holding cost,5
+eps=22212 stage2,appsi_highs: optimal,1.6420576885177394e-16,4.730556658999831,True,Holding cost,5
+eps=28130,appsi_highs: optimal,0.0,3.124399429999812,True,Holding cost,5
+eps=28130 stage2,appsi_highs: optimal,0.0,3.070601180000267,True,Holding cost,5
+eps=34048,appsi_highs: optimal,0.0,4.05948961599961,True,Holding cost,5
+eps=34048 stage2,appsi_highs: optimal,0.0,3.3140859059999457,True,Holding cost,5
+eps=39965,appsi_highs: optimal,0.0,3.1079823800000668,True,Holding cost,5
+eps=39965 stage2,appsi_highs: optimal,0.0,2.7464765209997495,True,Holding cost,5
+eps=45882,appsi_highs: optimal,0.0,3.0155110919995423,True,Holding cost,5
+eps=45882 stage2,appsi_highs: optimal,0.0,2.8548279070000717,True,Holding cost,5
+eps=51800,appsi_highs: optimal,0.0,2.9700344319999203,True,Holding cost,5
+eps=51800 stage2,appsi_highs: optimal,0.0,3.057293355999718,True,Holding cost,5
+cost,appsi_highs: optimal,0.0,2.5507720939995124,True,Holding cost,50
+ceiling,appsi_highs: optimal,0.0,2.6818344250004884,True,Holding cost,50
+eps=18550,appsi_highs: optimal,0.0,2.4697475510001823,True,Holding cost,50
+eps=18550 stage2,appsi_highs: optimal,0.0,2.2500414710002588,True,Holding cost,50
+eps=24092,appsi_highs: optimal,0.0,5.2852568670004985,True,Holding cost,50
+eps=24092 stage2,appsi_highs: optimal,0.0,5.768885702999796,True,Holding cost,50
+eps=29633,appsi_highs: optimal,0.0,3.5715397269996174,True,Holding cost,50
+eps=29633 stage2,appsi_highs: optimal,0.0,2.941715965000185,True,Holding cost,50
+eps=35175,appsi_highs: optimal,0.0,3.655390953999813,True,Holding cost,50
+eps=35175 stage2,appsi_highs: optimal,0.0,3.3890367280000646,True,Holding cost,50
+eps=40717,appsi_highs: optimal,0.0,3.2852097869999852,True,Holding cost,50
+eps=40717 stage2,appsi_highs: optimal,0.0,3.242155953999827,True,Holding cost,50
+eps=46258,appsi_highs: optimal,0.0,3.256017464999786,True,Holding cost,50
+eps=46258 stage2,appsi_highs: optimal,0.0,3.015352039999925,True,Holding cost,50
+eps=51800,appsi_highs: optimal,0.0,3.095496300999912,True,Holding cost,50
+eps=51800 stage2,appsi_highs: optimal,0.0,3.1538788580000983,True,Holding cost,50
+cost,appsi_highs: optimal,0.0,2.8455425649999597,True,Holding cost,200
+ceiling,appsi_highs: optimal,0.0,2.9647797799998443,True,Holding cost,200
+eps=25000,appsi_highs: optimal,0.0,4.746377414999188,True,Holding cost,200
+eps=25000 stage2,appsi_highs: optimal,0.0,4.7916711909992955,True,Holding cost,200
+eps=29467,appsi_highs: optimal,0.0,3.7938570480000635,True,Holding cost,200
+eps=29467 stage2,appsi_highs: optimal,0.0,3.431153768000513,True,Holding cost,200
+eps=33933,appsi_highs: optimal,0.0,3.7819733610003823,True,Holding cost,200
+eps=33933 stage2,appsi_highs: optimal,0.0,3.6016263410001557,True,Holding cost,200
+eps=38400,appsi_highs: optimal,0.0,4.701153723000061,True,Holding cost,200
+eps=38400 stage2,appsi_highs: optimal,2.009933046021307e-16,3.3059789700000692,True,Holding cost,200
+eps=42867,appsi_highs: optimal,0.0,3.6348242000003665,True,Holding cost,200
+eps=42867 stage2,appsi_highs: optimal,0.0,3.189965208999638,True,Holding cost,200
+eps=47333,appsi_highs: optimal,0.0,3.504044640999382,True,Holding cost,200
+eps=47333 stage2,appsi_highs: optimal,0.0,2.9181662370001504,True,Holding cost,200
+eps=51800,appsi_highs: optimal,0.0,3.298190163000072,True,Holding cost,200
+eps=51800 stage2,appsi_highs: optimal,0.0,3.003712845999871,True,Holding cost,200
+cost,appsi_highs: optimal,0.0,2.765464498000256,True,Holding cost,500
+ceiling,appsi_highs: optimal,0.0,2.7462752479996198,True,Holding cost,500
+eps=29600,appsi_highs: optimal,0.0,4.769271344000117,True,Holding cost,500
+eps=29600 stage2,appsi_highs: optimal,0.0,5.071626062000178,True,Holding cost,500
+eps=33300,appsi_highs: optimal,0.0,5.1557130300006975,True,Holding cost,500
+eps=33300 stage2,appsi_highs: optimal,0.0,5.862916928999766,True,Holding cost,500
+eps=37000,appsi_highs: optimal,0.0,4.45197386000018,True,Holding cost,500
+eps=37000 stage2,appsi_highs: optimal,1.9771624012114803e-16,5.110107110000172,True,Holding cost,500
+eps=40700,appsi_highs: optimal,0.0,3.7618325140001616,True,Holding cost,500
+eps=40700 stage2,appsi_highs: optimal,0.0,3.60018975300045,True,Holding cost,500
+eps=44400,appsi_highs: optimal,0.0,3.358834671000295,True,Holding cost,500
+eps=44400 stage2,appsi_highs: optimal,0.0,3.095801706999737,True,Holding cost,500
+eps=48100,appsi_highs: optimal,0.0,3.224430719999873,True,Holding cost,500
+eps=48100 stage2,appsi_highs: optimal,0.0,3.089208368999607,True,Holding cost,500
+eps=51800,appsi_highs: optimal,0.0,3.160089402000267,True,Holding cost,500
+eps=51800 stage2,appsi_highs: optimal,0.0,3.1435231260002183,True,Holding cost,500
+cost,appsi_highs: optimal,0.0,3.2221656960000473,True,Facility capacity,"(1, 2)"
+ceiling,appsi_highs: optimal,0.0,3.1117841140003293,True,Facility capacity,"(1, 2)"
+eps=38400,appsi_highs: optimal,0.0,3.3701407580001614,True,Facility capacity,"(1, 2)"
+eps=38400 stage2,appsi_highs: optimal,0.0,3.5817933660000563,True,Facility capacity,"(1, 2)"
+eps=41600,appsi_highs: optimal,1.952771210441892e-16,3.5371825100000933,True,Facility capacity,"(1, 2)"
+eps=41600 stage2,appsi_highs: optimal,0.0,4.053562197000247,True,Facility capacity,"(1, 2)"
+eps=44800,appsi_highs: optimal,0.0,3.7882279579998794,True,Facility capacity,"(1, 2)"
+eps=44800 stage2,appsi_highs: optimal,0.0,3.4702527110002848,True,Facility capacity,"(1, 2)"
+eps=48000,appsi_highs: optimal,0.0,3.9054079039997305,True,Facility capacity,"(1, 2)"
+eps=48000 stage2,appsi_highs: optimal,0.0,3.2125392389998524,True,Facility capacity,"(1, 2)"
+eps=51200,appsi_highs: optimal,0.0,3.4813339679994897,True,Facility capacity,"(1, 2)"
+eps=51200 stage2,appsi_highs: optimal,0.0,3.360538933000498,True,Facility capacity,"(1, 2)"
+eps=54400,appsi_highs: optimal,0.0,3.346903401000418,True,Facility capacity,"(1, 2)"
+eps=54400 stage2,appsi_highs: optimal,0.0,3.6710009460002766,True,Facility capacity,"(1, 2)"
+eps=57600,appsi_highs: optimal,0.0,3.347771302000183,True,Facility capacity,"(1, 2)"
+eps=57600 stage2,appsi_highs: optimal,0.0,3.1415575849996458,True,Facility capacity,"(1, 2)"
+cost,appsi_highs: optimal,0.0,2.786921739000263,True,Facility capacity,"(2, 4)"
+ceiling,appsi_highs: optimal,0.0,2.871679163999943,True,Facility capacity,"(2, 4)"
+eps=25000,appsi_highs: optimal,0.0,4.782149255000149,True,Facility capacity,"(2, 4)"
+eps=25000 stage2,appsi_highs: optimal,0.0,5.041593757999635,True,Facility capacity,"(2, 4)"
+eps=29467,appsi_highs: optimal,0.0,3.7065000709999367,True,Facility capacity,"(2, 4)"
+eps=29467 stage2,appsi_highs: optimal,0.0,3.617249100999743,True,Facility capacity,"(2, 4)"
+eps=33933,appsi_highs: optimal,0.0,3.417952391000199,True,Facility capacity,"(2, 4)"
+eps=33933 stage2,appsi_highs: optimal,0.0,3.4531572299997606,True,Facility capacity,"(2, 4)"
+eps=38400,appsi_highs: optimal,0.0,4.475991618999615,True,Facility capacity,"(2, 4)"
+eps=38400 stage2,appsi_highs: optimal,2.009933046021307e-16,3.4974067790003573,True,Facility capacity,"(2, 4)"
+eps=42867,appsi_highs: optimal,0.0,3.6058018749999974,True,Facility capacity,"(2, 4)"
+eps=42867 stage2,appsi_highs: optimal,0.0,3.4161102160001064,True,Facility capacity,"(2, 4)"
+eps=47333,appsi_highs: optimal,0.0,3.5780391670000427,True,Facility capacity,"(2, 4)"
+eps=47333 stage2,appsi_highs: optimal,0.0,3.5290767689998574,True,Facility capacity,"(2, 4)"
+eps=51800,appsi_highs: optimal,0.0,3.259242141999948,True,Facility capacity,"(2, 4)"
+eps=51800 stage2,appsi_highs: optimal,0.0,3.4741762990001916,True,Facility capacity,"(2, 4)"
+cost,appsi_highs: optimal,0.0,2.6386367429995516,True,Facility capacity,"(3, 6)"
+ceiling,appsi_highs: optimal,0.0,2.6558812530001887,True,Facility capacity,"(3, 6)"
+eps=18400,appsi_highs: optimal,0.0,2.062942459000624,True,Facility capacity,"(3, 6)"
+eps=18400 stage2,appsi_highs: optimal,0.0,2.1322827750000215,True,Facility capacity,"(3, 6)"
+eps=23333,appsi_highs: optimal,0.0,4.762005022000267,True,Facility capacity,"(3, 6)"
+eps=23333 stage2,appsi_highs: optimal,0.0,4.462553423999452,True,Facility capacity,"(3, 6)"
+eps=28267,appsi_highs: optimal,0.0,3.9678926750002574,True,Facility capacity,"(3, 6)"
+eps=28267 stage2,appsi_highs: optimal,0.0,4.357952162999936,True,Facility capacity,"(3, 6)"
+eps=33200,appsi_highs: optimal,0.0,3.1241877969996494,True,Facility capacity,"(3, 6)"
+eps=33200 stage2,appsi_highs: optimal,0.0,3.0301022209996518,True,Facility capacity,"(3, 6)"
+eps=38133,appsi_highs: optimal,0.0,3.3090465350005616,True,Facility capacity,"(3, 6)"
+eps=38133 stage2,appsi_highs: optimal,0.0,2.959054737999395,True,Facility capacity,"(3, 6)"
+eps=43067,appsi_highs: optimal,0.0,3.5741877299997213,True,Facility capacity,"(3, 6)"
+eps=43067 stage2,appsi_highs: optimal,0.0,3.125437745000454,True,Facility capacity,"(3, 6)"
+eps=48000,appsi_highs: optimal,0.0,3.139279620000707,True,Facility capacity,"(3, 6)"
+eps=48000 stage2,appsi_highs: optimal,0.0,3.029527917999985,True,Facility capacity,"(3, 6)"
+cost,appsi_highs: optimal,0.0,2.865811356999984,True,Arrival window,7
+ceiling,appsi_highs: optimal,0.0,3.1477660330001527,True,Arrival window,7
+eps=29200,appsi_highs: optimal,0.0,3.6943779469993387,True,Arrival window,7
+eps=29200 stage2,appsi_highs: optimal,0.0,4.252465782999934,True,Arrival window,7
+eps=32400,appsi_highs: optimal,0.0,3.5090385049998076,True,Arrival window,7
+eps=32400 stage2,appsi_highs: optimal,0.0,3.6227649060001568,True,Arrival window,7
+eps=35600,appsi_highs: optimal,0.0,3.080445169000086,True,Arrival window,7
+eps=35600 stage2,appsi_highs: optimal,0.0,3.3541026410002814,True,Arrival window,7
+eps=38800,appsi_highs: optimal,0.0,3.4468707030000587,True,Arrival window,7
+eps=38800 stage2,appsi_highs: optimal,0.0,3.228361933999622,True,Arrival window,7
+eps=42000,appsi_highs: optimal,0.0,4.057156861999829,True,Arrival window,7
+eps=42000 stage2,appsi_highs: optimal,0.0,3.0944581200001267,True,Arrival window,7
+eps=45200,appsi_highs: optimal,0.0,3.3766476399996463,True,Arrival window,7
+eps=45200 stage2,appsi_highs: optimal,0.0,3.3179774190002718,True,Arrival window,7
+eps=48400,appsi_highs: optimal,0.0,3.3031590880000294,True,Arrival window,7
+eps=48400 stage2,appsi_highs: optimal,0.0,3.4503163040008076,True,Arrival window,7
+cost,appsi_highs: optimal,0.0,2.793865630000255,True,Arrival window,10
+ceiling,appsi_highs: optimal,0.0,2.807456038000055,True,Arrival window,10
+eps=27800,appsi_highs: optimal,0.0,4.775490765000541,True,Arrival window,10
+eps=27800 stage2,appsi_highs: optimal,0.0,4.567503011000554,True,Arrival window,10
+eps=30533,appsi_highs: optimal,0.0,3.0129033490002257,True,Arrival window,10
+eps=30533 stage2,appsi_highs: optimal,0.0,3.2512773930002368,True,Arrival window,10
+eps=33267,appsi_highs: optimal,0.0,3.430629207000493,True,Arrival window,10
+eps=33267 stage2,appsi_highs: optimal,2.191553499302925e-16,2.9025817899992035,True,Arrival window,10
+eps=36000,appsi_highs: optimal,0.0,3.4535037389996432,True,Arrival window,10
+eps=36000 stage2,appsi_highs: optimal,0.0,3.269822082999781,True,Arrival window,10
+eps=38733,appsi_highs: optimal,0.0,3.7478645219998725,True,Arrival window,10
+eps=38733 stage2,appsi_highs: optimal,0.0,3.6907465280000906,True,Arrival window,10
+eps=41467,appsi_highs: optimal,0.0,3.3900488909994237,True,Arrival window,10
+eps=41467 stage2,appsi_highs: optimal,0.0,3.2817930960000012,True,Arrival window,10
+eps=44200,appsi_highs: optimal,0.0,3.0924549129995285,True,Arrival window,10
+eps=44200 stage2,appsi_highs: optimal,0.0,2.8324945480007955,True,Arrival window,10
+cost,appsi_highs: optimal,0.0,2.786921739000263,True,Arrival window,15
+ceiling,appsi_highs: optimal,0.0,2.871679163999943,True,Arrival window,15
+eps=25000,appsi_highs: optimal,0.0,4.782149255000149,True,Arrival window,15
+eps=25000 stage2,appsi_highs: optimal,0.0,5.041593757999635,True,Arrival window,15
+eps=29467,appsi_highs: optimal,0.0,3.7065000709999367,True,Arrival window,15
+eps=29467 stage2,appsi_highs: optimal,0.0,3.617249100999743,True,Arrival window,15
+eps=33933,appsi_highs: optimal,0.0,3.417952391000199,True,Arrival window,15
+eps=33933 stage2,appsi_highs: optimal,0.0,3.4531572299997606,True,Arrival window,15
+eps=38400,appsi_highs: optimal,0.0,4.475991618999615,True,Arrival window,15
+eps=38400 stage2,appsi_highs: optimal,2.009933046021307e-16,3.4974067790003573,True,Arrival window,15
+eps=42867,appsi_highs: optimal,0.0,3.6058018749999974,True,Arrival window,15
+eps=42867 stage2,appsi_highs: optimal,0.0,3.4161102160001064,True,Arrival window,15
+eps=47333,appsi_highs: optimal,0.0,3.5780391670000427,True,Arrival window,15
+eps=47333 stage2,appsi_highs: optimal,0.0,3.5290767689998574,True,Arrival window,15
+eps=51800,appsi_highs: optimal,0.0,3.259242141999948,True,Arrival window,15
+eps=51800 stage2,appsi_highs: optimal,0.0,3.4741762990001916,True,Arrival window,15
+cost,appsi_highs: optimal,0.0,2.546722807000151,True,Arrival window,25
+ceiling,appsi_highs: optimal,0.0,2.7034036800005197,True,Arrival window,25
+eps=19000,appsi_highs: optimal,0.0,2.109820110000328,True,Arrival window,25
+eps=19000 stage2,appsi_highs: optimal,0.0,2.1747792219994153,True,Arrival window,25
+eps=23167,appsi_highs: optimal,1.9180992830976579e-16,4.372782495999672,True,Arrival window,25
+eps=23167 stage2,appsi_highs: optimal,0.0,3.7562405529997704,True,Arrival window,25
+eps=27333,appsi_highs: optimal,2.4564387843975232e-15,4.135114218000126,True,Arrival window,25
+eps=27333 stage2,appsi_highs: optimal,0.0,4.585374997999679,True,Arrival window,25
+eps=31500,appsi_highs: optimal,0.0,3.2000968789998296,True,Arrival window,25
+eps=31500 stage2,appsi_highs: optimal,0.0,4.762236073999702,True,Arrival window,25
+eps=35667,appsi_highs: optimal,0.0,3.311850392999986,True,Arrival window,25
+eps=35667 stage2,appsi_highs: optimal,0.0,2.9278669289997197,True,Arrival window,25
+eps=39833,appsi_highs: optimal,0.0,2.9391318849993695,True,Arrival window,25
+eps=39833 stage2,appsi_highs: optimal,0.0,2.775259209000069,True,Arrival window,25
+eps=44000,appsi_highs: optimal,0.0,2.8133022820002225,True,Arrival window,25
+eps=44000 stage2,appsi_highs: optimal,2.0210993551261257e-16,2.6895315069996286,True,Arrival window,25
+cost,appsi_highs: optimal,0.0,2.6729759179997927,True,"Scale eta, high risk",12
+ceiling,appsi_highs: optimal,0.0,2.811535472000287,True,"Scale eta, high risk",12
+eps=25000,appsi_highs: optimal,0.0,4.871941248999974,True,"Scale eta, high risk",12
+eps=25000 stage2,appsi_highs: optimal,0.0,5.188360357999954,True,"Scale eta, high risk",12
+eps=29467,appsi_highs: optimal,0.0,4.045981086000211,True,"Scale eta, high risk",12
+eps=29467 stage2,appsi_highs: optimal,0.0,4.147783274999711,True,"Scale eta, high risk",12
+eps=33933,appsi_highs: optimal,0.0,3.3426725639992583,True,"Scale eta, high risk",12
+eps=33933 stage2,appsi_highs: optimal,0.0,3.419757536999896,True,"Scale eta, high risk",12
+eps=38400,appsi_highs: optimal,0.0,4.6789248080003745,True,"Scale eta, high risk",12
+eps=38400 stage2,appsi_highs: optimal,0.0,3.080132252999647,True,"Scale eta, high risk",12
+eps=42867,appsi_highs: optimal,0.0,4.389563883999472,True,"Scale eta, high risk",12
+eps=42867 stage2,appsi_highs: optimal,0.0,2.8936802130001524,True,"Scale eta, high risk",12
+eps=47333,appsi_highs: optimal,0.0,3.382869519000451,True,"Scale eta, high risk",12
+eps=47333 stage2,appsi_highs: optimal,0.0,3.004018620000352,True,"Scale eta, high risk",12
+eps=51800,appsi_highs: optimal,0.0,3.0838585629999216,True,"Scale eta, high risk",12
+eps=51800 stage2,appsi_highs: optimal,0.0,3.232638913000301,True,"Scale eta, high risk",12
+cost,appsi_highs: optimal,0.0,2.5774958149995655,True,"Scale eta, high risk",15
+ceiling,appsi_highs: optimal,0.0,2.659094262000508,True,"Scale eta, high risk",15
+eps=25000,appsi_highs: optimal,0.0,4.9097290270001395,True,"Scale eta, high risk",15
+eps=25000 stage2,appsi_highs: optimal,0.0,5.306394578999971,True,"Scale eta, high risk",15
+eps=29467,appsi_highs: optimal,0.0,3.6618556189996525,True,"Scale eta, high risk",15
+eps=29467 stage2,appsi_highs: optimal,0.0,3.9623046619999513,True,"Scale eta, high risk",15
+eps=33933,appsi_highs: optimal,0.0,3.536561427000379,True,"Scale eta, high risk",15
+eps=33933 stage2,appsi_highs: optimal,0.0,2.879833338000026,True,"Scale eta, high risk",15
+eps=38400,appsi_highs: optimal,0.0,7.244206796999606,True,"Scale eta, high risk",15
+eps=38400 stage2,appsi_highs: optimal,0.0,2.935616020999987,True,"Scale eta, high risk",15
+eps=42867,appsi_highs: optimal,0.0,3.8521527980001338,True,"Scale eta, high risk",15
+eps=42867 stage2,appsi_highs: optimal,0.0,3.2132927309994557,True,"Scale eta, high risk",15
+eps=47333,appsi_highs: optimal,0.0,3.326793631000328,True,"Scale eta, high risk",15
+eps=47333 stage2,appsi_highs: optimal,0.0,3.2464991390006617,True,"Scale eta, high risk",15
+eps=51800,appsi_highs: optimal,0.0,3.247967914000583,True,"Scale eta, high risk",15
+eps=51800 stage2,appsi_highs: optimal,0.0,3.0717995899995003,True,"Scale eta, high risk",15
+cost,appsi_highs: optimal,0.0,2.997005145000003,True,"Scale eta, high risk",18
+ceiling,appsi_highs: optimal,0.0,2.911316804999842,True,"Scale eta, high risk",18
+eps=25000,appsi_highs: optimal,0.0,5.076346738000211,True,"Scale eta, high risk",18
+eps=25000 stage2,appsi_highs: optimal,0.0,4.88452668500031,True,"Scale eta, high risk",18
+eps=29467,appsi_highs: optimal,0.0,3.551791363999655,True,"Scale eta, high risk",18
+eps=29467 stage2,appsi_highs: optimal,0.0,3.733785983999951,True,"Scale eta, high risk",18
+eps=33933,appsi_highs: optimal,0.0,3.5057102310001937,True,"Scale eta, high risk",18
+eps=33933 stage2,appsi_highs: optimal,0.0,3.1893216019998363,True,"Scale eta, high risk",18
+eps=38400,appsi_highs: optimal,0.0,3.9967513480005437,True,"Scale eta, high risk",18
+eps=38400 stage2,appsi_highs: optimal,0.0,2.9502300929998455,True,"Scale eta, high risk",18
+eps=42867,appsi_highs: optimal,0.0,6.049353804999555,True,"Scale eta, high risk",18
+eps=42867 stage2,appsi_highs: optimal,0.0,3.09857058399939,True,"Scale eta, high risk",18
+eps=47333,appsi_highs: optimal,0.0,3.468233140000848,True,"Scale eta, high risk",18
+eps=47333 stage2,appsi_highs: optimal,0.0,2.8254210249997413,True,"Scale eta, high risk",18
+eps=51800,appsi_highs: optimal,0.0,3.1328469809996022,True,"Scale eta, high risk",18
+eps=51800 stage2,appsi_highs: optimal,0.0,2.9785826679999445,True,"Scale eta, high risk",18
+cost,appsi_highs: optimal,0.0,2.7861040800007686,True,"Scale eta, low risk",22
+ceiling,appsi_highs: optimal,0.0,2.8630836840002303,True,"Scale eta, low risk",22
+eps=25000,appsi_highs: optimal,0.0,5.059689121000702,True,"Scale eta, low risk",22
+eps=25000 stage2,appsi_highs: optimal,0.0,5.311635983000087,True,"Scale eta, low risk",22
+eps=29533,appsi_highs: optimal,0.0,3.749432483000419,True,"Scale eta, low risk",22
+eps=29533 stage2,appsi_highs: optimal,0.0,3.7325836970003365,True,"Scale eta, low risk",22
+eps=34067,appsi_highs: optimal,0.0,3.945234081000308,True,"Scale eta, low risk",22
+eps=34067 stage2,appsi_highs: optimal,0.0,3.193873125999744,True,"Scale eta, low risk",22
+eps=38600,appsi_highs: optimal,0.0,4.688307873000667,True,"Scale eta, low risk",22
+eps=38600 stage2,appsi_highs: optimal,0.0,3.294834938999884,True,"Scale eta, low risk",22
+eps=43133,appsi_highs: optimal,0.0,3.4824853239997537,True,"Scale eta, low risk",22
+eps=43133 stage2,appsi_highs: optimal,0.0,3.2606660980000015,True,"Scale eta, low risk",22
+eps=47667,appsi_highs: optimal,0.0,3.3661801399994147,True,"Scale eta, low risk",22
+eps=47667 stage2,appsi_highs: optimal,0.0,2.9353893739998966,True,"Scale eta, low risk",22
+eps=52200,appsi_highs: optimal,0.0,3.25705993199972,True,"Scale eta, low risk",22
+eps=52200 stage2,appsi_highs: optimal,0.0,3.241999570000189,True,"Scale eta, low risk",22
+cost,appsi_highs: optimal,0.0,2.839674713000022,True,"Scale eta, low risk",29
+ceiling,appsi_highs: optimal,0.0,2.916945523999857,True,"Scale eta, low risk",29
+eps=25000,appsi_highs: optimal,0.0,5.193534388000444,True,"Scale eta, low risk",29
+eps=25000 stage2,appsi_highs: optimal,0.0,5.192474358000254,True,"Scale eta, low risk",29
+eps=29533,appsi_highs: optimal,0.0,3.7633395369994105,True,"Scale eta, low risk",29
+eps=29533 stage2,appsi_highs: optimal,0.0,3.5975366700004088,True,"Scale eta, low risk",29
+eps=34067,appsi_highs: optimal,0.0,4.432749339000111,True,"Scale eta, low risk",29
+eps=34067 stage2,appsi_highs: optimal,0.0,3.0148135920007917,True,"Scale eta, low risk",29
+eps=38600,appsi_highs: optimal,0.0,4.662387344999843,True,"Scale eta, low risk",29
+eps=38600 stage2,appsi_highs: optimal,0.0,3.072173618999841,True,"Scale eta, low risk",29
+eps=43133,appsi_highs: optimal,0.0,3.622681298000316,True,"Scale eta, low risk",29
+eps=43133 stage2,appsi_highs: optimal,0.0,3.4680611359999602,True,"Scale eta, low risk",29
+eps=47667,appsi_highs: optimal,0.0,3.601720454000315,True,"Scale eta, low risk",29
+eps=47667 stage2,appsi_highs: optimal,0.0,3.2357179840000754,True,"Scale eta, low risk",29
+eps=52200,appsi_highs: optimal,0.0,3.2465924390007785,True,"Scale eta, low risk",29
+eps=52200 stage2,appsi_highs: optimal,0.0,3.0597893309995925,True,"Scale eta, low risk",29
+cost,appsi_highs: optimal,0.0,2.8805730849999236,True,"Scale eta, low risk",36
+ceiling,appsi_highs: optimal,0.0,2.9950863389994993,True,"Scale eta, low risk",36
+eps=25000,appsi_highs: optimal,0.0,5.189445644999978,True,"Scale eta, low risk",36
+eps=25000 stage2,appsi_highs: optimal,0.0,5.192701567999393,True,"Scale eta, low risk",36
+eps=29533,appsi_highs: optimal,2.0741194817865087e-16,3.8204610709999542,True,"Scale eta, low risk",36
+eps=29533 stage2,appsi_highs: optimal,0.0,3.4570980950002195,True,"Scale eta, low risk",36
+eps=34067,appsi_highs: optimal,0.0,3.548205611999947,True,"Scale eta, low risk",36
+eps=34067 stage2,appsi_highs: optimal,0.0,3.357105782000872,True,"Scale eta, low risk",36
+eps=38600,appsi_highs: optimal,0.0,4.085776160000023,True,"Scale eta, low risk",36
+eps=38600 stage2,appsi_highs: optimal,2.009933046363975e-16,3.5447288870000193,True,"Scale eta, low risk",36
+eps=43133,appsi_highs: optimal,0.0,4.336008236000453,True,"Scale eta, low risk",36
+eps=43133 stage2,appsi_highs: optimal,0.0,3.52453886100011,True,"Scale eta, low risk",36
+eps=47667,appsi_highs: optimal,0.0,3.4777138139997987,True,"Scale eta, low risk",36
+eps=47667 stage2,appsi_highs: optimal,0.0,2.977220717999444,True,"Scale eta, low risk",36
+eps=52200,appsi_highs: optimal,0.0,3.109392471999854,True,"Scale eta, low risk",36
+eps=52200 stage2,appsi_highs: optimal,0.0,2.9442360949997237,True,"Scale eta, low risk",36
+cost,appsi_highs: optimal,0.0,3.082786791000217,True,"Shape k, high risk",2.2
+ceiling,appsi_highs: optimal,0.0,2.8209777789998043,True,"Shape k, high risk",2.2
+eps=25000,appsi_highs: optimal,0.0,4.949964164000448,True,"Shape k, high risk",2.2
+eps=25000 stage2,appsi_highs: optimal,0.0,5.051817147999827,True,"Shape k, high risk",2.2
+eps=29467,appsi_highs: optimal,0.0,3.7126310140001806,True,"Shape k, high risk",2.2
+eps=29467 stage2,appsi_highs: optimal,0.0,3.7535086780007987,True,"Shape k, high risk",2.2
+eps=33933,appsi_highs: optimal,0.0,3.8016551910004637,True,"Shape k, high risk",2.2
+eps=33933 stage2,appsi_highs: optimal,0.0,3.46656618399993,True,"Shape k, high risk",2.2
+eps=38400,appsi_highs: optimal,0.0,5.0840059060001295,True,"Shape k, high risk",2.2
+eps=38400 stage2,appsi_highs: optimal,0.0,3.2681577549992653,True,"Shape k, high risk",2.2
+eps=42867,appsi_highs: optimal,0.0,3.7328077769998345,True,"Shape k, high risk",2.2
+eps=42867 stage2,appsi_highs: optimal,0.0,3.091271526000128,True,"Shape k, high risk",2.2
+eps=47333,appsi_highs: optimal,0.0,3.4625989209998806,True,"Shape k, high risk",2.2
+eps=47333 stage2,appsi_highs: optimal,0.0,2.9312935890002336,True,"Shape k, high risk",2.2
+eps=51800,appsi_highs: optimal,0.0,3.2563237450003726,True,"Shape k, high risk",2.2
+eps=51800 stage2,appsi_highs: optimal,0.0,3.252798169000016,True,"Shape k, high risk",2.2
+cost,appsi_highs: optimal,0.0,2.7200831330001165,True,"Shape k, high risk",2.7
+ceiling,appsi_highs: optimal,0.0,2.846429772999727,True,"Shape k, high risk",2.7
+eps=25000,appsi_highs: optimal,0.0,5.102993030999642,True,"Shape k, high risk",2.7
+eps=25000 stage2,appsi_highs: optimal,0.0,5.355737938999482,True,"Shape k, high risk",2.7
+eps=29467,appsi_highs: optimal,0.0,3.7201418209997428,True,"Shape k, high risk",2.7
+eps=29467 stage2,appsi_highs: optimal,0.0,3.6868697840000095,True,"Shape k, high risk",2.7
+eps=33933,appsi_highs: optimal,0.0,3.411113825999564,True,"Shape k, high risk",2.7
+eps=33933 stage2,appsi_highs: optimal,0.0,3.2576678690002154,True,"Shape k, high risk",2.7
+eps=38400,appsi_highs: optimal,0.0,4.476033701000233,True,"Shape k, high risk",2.7
+eps=38400 stage2,appsi_highs: optimal,0.0,2.917517560000306,True,"Shape k, high risk",2.7
+eps=42867,appsi_highs: optimal,0.0,3.48246403200028,True,"Shape k, high risk",2.7
+eps=42867 stage2,appsi_highs: optimal,0.0,3.3538307030003125,True,"Shape k, high risk",2.7
+eps=47333,appsi_highs: optimal,0.0,3.7929833669995787,True,"Shape k, high risk",2.7
+eps=47333 stage2,appsi_highs: optimal,0.0,3.332570630999726,True,"Shape k, high risk",2.7
+eps=51800,appsi_highs: optimal,0.0,3.1865552059998663,True,"Shape k, high risk",2.7
+eps=51800 stage2,appsi_highs: optimal,0.0,2.9770467830003327,True,"Shape k, high risk",2.7
+cost,appsi_highs: optimal,0.0,3.0475704330001463,True,"Shape k, high risk",3.2
+ceiling,appsi_highs: optimal,0.0,3.0149168509997253,True,"Shape k, high risk",3.2
+eps=25000,appsi_highs: optimal,0.0,4.99908569299987,True,"Shape k, high risk",3.2
+eps=25000 stage2,appsi_highs: optimal,0.0,4.941301048000241,True,"Shape k, high risk",3.2
+eps=29467,appsi_highs: optimal,0.0,3.7017236829997273,True,"Shape k, high risk",3.2
+eps=29467 stage2,appsi_highs: optimal,0.0,3.507752264999908,True,"Shape k, high risk",3.2
+eps=33933,appsi_highs: optimal,0.0,3.6653018240003803,True,"Shape k, high risk",3.2
+eps=33933 stage2,appsi_highs: optimal,0.0,3.30256770699998,True,"Shape k, high risk",3.2
+eps=38400,appsi_highs: optimal,0.0,4.242954864999774,True,"Shape k, high risk",3.2
+eps=38400 stage2,appsi_highs: optimal,0.0,3.137362104999738,True,"Shape k, high risk",3.2
+eps=42867,appsi_highs: optimal,0.0,3.6590830450004432,True,"Shape k, high risk",3.2
+eps=42867 stage2,appsi_highs: optimal,0.0,3.19596991599974,True,"Shape k, high risk",3.2
+eps=47333,appsi_highs: optimal,0.0,3.565707214000213,True,"Shape k, high risk",3.2
+eps=47333 stage2,appsi_highs: optimal,0.0,3.0344331969999985,True,"Shape k, high risk",3.2
+eps=51800,appsi_highs: optimal,0.0,3.1402634820005915,True,"Shape k, high risk",3.2
+eps=51800 stage2,appsi_highs: optimal,0.0,2.9815685690000464,True,"Shape k, high risk",3.2
+cost,appsi_highs: optimal,0.0,2.8118120799999815,True,"Shape k, low risk",1.4
+ceiling,appsi_highs: optimal,0.0,2.9420018319997325,True,"Shape k, low risk",1.4
+eps=25000,appsi_highs: optimal,0.0,4.8417997280002965,True,"Shape k, low risk",1.4
+eps=25000 stage2,appsi_highs: optimal,0.0,5.147358345000612,True,"Shape k, low risk",1.4
+eps=29467,appsi_highs: optimal,0.0,3.500453822000054,True,"Shape k, low risk",1.4
+eps=29467 stage2,appsi_highs: optimal,0.0,3.7036259540000174,True,"Shape k, low risk",1.4
+eps=33933,appsi_highs: optimal,0.0,3.8512471510002797,True,"Shape k, low risk",1.4
+eps=33933 stage2,appsi_highs: optimal,0.0,3.237809675999415,True,"Shape k, low risk",1.4
+eps=38400,appsi_highs: optimal,0.0,4.210876948000077,True,"Shape k, low risk",1.4
+eps=38400 stage2,appsi_highs: optimal,0.0,3.256514581000374,True,"Shape k, low risk",1.4
+eps=42867,appsi_highs: optimal,0.0,3.442676329000278,True,"Shape k, low risk",1.4
+eps=42867 stage2,appsi_highs: optimal,0.0,3.1049178729999767,True,"Shape k, low risk",1.4
+eps=47333,appsi_highs: optimal,0.0,3.4322883610002464,True,"Shape k, low risk",1.4
+eps=47333 stage2,appsi_highs: optimal,0.0,2.9494452900007673,True,"Shape k, low risk",1.4
+eps=51800,appsi_highs: optimal,0.0,3.593611260999751,True,"Shape k, low risk",1.4
+eps=51800 stage2,appsi_highs: optimal,0.0,3.068241754000155,True,"Shape k, low risk",1.4
+cost,appsi_highs: optimal,0.0,2.7940046129997427,True,"Shape k, low risk",1.7
+ceiling,appsi_highs: optimal,0.0,2.943363121999937,True,"Shape k, low risk",1.7
+eps=25000,appsi_highs: optimal,0.0,5.077138972999819,True,"Shape k, low risk",1.7
+eps=25000 stage2,appsi_highs: optimal,0.0,5.021496532999663,True,"Shape k, low risk",1.7
+eps=29467,appsi_highs: optimal,0.0,3.7336283919994457,True,"Shape k, low risk",1.7
+eps=29467 stage2,appsi_highs: optimal,0.0,4.016987509000501,True,"Shape k, low risk",1.7
+eps=33933,appsi_highs: optimal,0.0,3.551007727999604,True,"Shape k, low risk",1.7
+eps=33933 stage2,appsi_highs: optimal,0.0,3.280698762000611,True,"Shape k, low risk",1.7
+eps=38400,appsi_highs: optimal,0.0,5.254035896999994,True,"Shape k, low risk",1.7
+eps=38400 stage2,appsi_highs: optimal,0.0,3.3523960010006704,True,"Shape k, low risk",1.7
+eps=42867,appsi_highs: optimal,0.0,4.311896391999653,True,"Shape k, low risk",1.7
+eps=42867 stage2,appsi_highs: optimal,0.0,3.3704239449998568,True,"Shape k, low risk",1.7
+eps=47333,appsi_highs: optimal,0.0,3.5696938159999263,True,"Shape k, low risk",1.7
+eps=47333 stage2,appsi_highs: optimal,0.0,3.1599676069999987,True,"Shape k, low risk",1.7
+eps=51800,appsi_highs: optimal,0.0,3.4335598689995095,True,"Shape k, low risk",1.7
+eps=51800 stage2,appsi_highs: optimal,0.0,3.228866987999936,True,"Shape k, low risk",1.7
+cost,appsi_highs: optimal,0.0,2.8677486540000245,True,"Shape k, low risk",2.0
+ceiling,appsi_highs: optimal,0.0,2.9422901160005495,True,"Shape k, low risk",2.0
+eps=25000,appsi_highs: optimal,0.0,5.249482578000425,True,"Shape k, low risk",2.0
+eps=25000 stage2,appsi_highs: optimal,0.0,5.149733287999879,True,"Shape k, low risk",2.0
+eps=29467,appsi_highs: optimal,0.0,3.566878493999866,True,"Shape k, low risk",2.0
+eps=29467 stage2,appsi_highs: optimal,0.0,3.6025398880001376,True,"Shape k, low risk",2.0
+eps=33933,appsi_highs: optimal,0.0,3.65050498599976,True,"Shape k, low risk",2.0
+eps=33933 stage2,appsi_highs: optimal,0.0,3.16564877699966,True,"Shape k, low risk",2.0
+eps=38400,appsi_highs: optimal,0.0,4.628465574000074,True,"Shape k, low risk",2.0
+eps=38400 stage2,appsi_highs: optimal,0.0,3.168879120999918,True,"Shape k, low risk",2.0
+eps=42867,appsi_highs: optimal,0.0,3.3585025270003825,True,"Shape k, low risk",2.0
+eps=42867 stage2,appsi_highs: optimal,0.0,3.3335764479998033,True,"Shape k, low risk",2.0
+eps=47333,appsi_highs: optimal,0.0,3.3903522099999464,True,"Shape k, low risk",2.0
+eps=47333 stage2,appsi_highs: optimal,0.0,3.1831604839999272,True,"Shape k, low risk",2.0
+eps=51800,appsi_highs: optimal,0.0,3.464018231999944,True,"Shape k, low risk",2.0
+eps=51800 stage2,appsi_highs: optimal,0.0,3.2548490830004084,True,"Shape k, low risk",2.0

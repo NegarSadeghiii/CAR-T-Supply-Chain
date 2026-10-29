@@ -315,8 +315,13 @@ def md_table(df, index=False, floatfmt="{:g}"):
 
     def cell(v):
         if isinstance(v, float):
-            return "" if pd.isna(v) else floatfmt.format(v)
-        return str(v)
+            if pd.isna(v):
+                return ""
+            if v == 0:
+                v = 0.0                      # never print "-0"
+            return floatfmt.format(v)
+        # a newline inside a cell would end the markdown row
+        return str(v).replace("\n", " ")
 
     head = [str(c) for c in d.columns]
     body = [[cell(v) for v in row] for row in d.itertuples(index=False)]

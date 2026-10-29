@@ -292,8 +292,8 @@ def fig_b3_sensitivity(points, base_front, curves, path, ncol=4):
                     label=lab)
         ax.plot(base_front.cost / 1000, base_front.ELIG, lw=1.2, ls=(0, (4, 3)),
                 color=INK, zorder=1, label="base")
-        ax.text(0.03, 0.96, row, transform=ax.transAxes, va="top", fontsize=8,
-                color=INK)
+        # above the axes, not inside: several frontiers reach the top-left
+        ax.set_title(row, loc="left", fontsize=8.5, color=INK, pad=4)
         ax.legend(fontsize=6.4, loc="lower right", handlelength=1.2,
                   labelspacing=.25, borderpad=.1)
         ax.tick_params(labelsize=7.5)

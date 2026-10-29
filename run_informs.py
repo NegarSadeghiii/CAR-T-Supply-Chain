@@ -424,13 +424,21 @@ def sa_levels():
         for _, r in tab.iterrows():
             out.append(dict(row=str(r["parameter"]), code=str(r["column"]),
                             label=str(r["level"]), value=r["value"],
-                            is_base=bool(r.get("is_base", False))))
+                            is_base=bool(r.get("is_base", False)),
+                            cost_side=True))
         return out, "SA levels tab of " + SA_XLSX
+    # The GRID's Weibull rows were calibrated for the notebook's own BASE
+    # (eta_H 15, eta_L 29), not for the frozen set (eta_H 25, eta_L 80), so
+    # sweeping them here would walk away from the curves section 0 froze --
+    # and they are not cost-side parameters, which is what B3 is for.  They
+    # are still solved and kept in the CSV, but flagged out of the figure.
+    clinical = {"eta_high", "eta_low", "k_high", "k_low"}
     out = []
     for row, code, values in ic.nb("GRID"):
         for v in values:
             out.append(dict(row=row, code=code, label=str(v), value=v,
-                            is_base=(ic.nb("BASE")[code] == v)))
+                            is_base=(ic.nb("BASE")[code] == v),
+                            cost_side=code not in clinical))
     return out, ("the notebook's GRID (" + SA_XLSX + " is not in the "
                  "repository)")
 
@@ -490,14 +498,16 @@ def b3():
         logs += [dict(l, row=lv["row"], level=lv["label"]) for l in res["logs"]]
         for r in res["rows"]:
             pts.append(dict(row=lv["row"], code=lv["code"], label=lv["label"],
-                            is_base=lv["is_base"], **r))
+                            is_base=lv["is_base"],
+                            cost_side=lv["cost_side"], **r))
         print(f"    {lv['row']} = {lv['label']}: {len(res['rows'])} points",
               flush=True)
     pts = pd.DataFrame(pts)
     pts.to_csv(os.path.join(R, "b3_sensitivity.csv"), index=False)
     pd.DataFrame(logs).to_csv(os.path.join(R, "b3_solves.csv"), index=False)
-    if len(pts):
-        fg.fig_b3_sensitivity(pts, base_front, curves,
+    shown = pts[pts.cost_side] if "cost_side" in pts else pts
+    if len(shown):
+        fg.fig_b3_sensitivity(shown, base_front, curves,
                               os.path.join(R, "fig_b3_sensitivity.png"))
 
     # (b) cost composition at C_min and at the knee, per capacity level
@@ -584,17 +594,27 @@ def summary():
                    f"(mean {_fmt(met[biggest[0]].mean(), 1)} patients per "
                    f"instance).")
         out.append("")
-        same = runs[(runs.budget == "C_min") & runs.policy.isin(ic.POLICIES)]
-        tab = (same.groupby("policy").ELIG.agg(["mean", "min", "max", "count"])
+        same = runs[runs.budget.isin(["C_min", "own_min_cost"])
+                    & runs.policy.isin(ic.POLICIES)]
+        tab = (same.groupby("policy")
+               .agg(ELIG_mean=("ELIG", "mean"), ELIG_min=("ELIG", "min"),
+                    ELIG_max=("ELIG", "max"), cost_mean=("cost", "mean"),
+                    n=("ELIG", "size"),
+                    at_C_min=("budget", lambda b: (b == "C_min").all()))
                .reindex(ic.POLICIES).round(3))
-        out.append("Policy means at the same cost:")
+        out.append("Policy results. `at_C_min` False means the policy could "
+                   "not be scheduled at the cheapest plan's cost and is shown "
+                   "at its own minimum, so its eligibility is NOT comparable "
+                   "with the rest of the table:")
         out.append("")
-        out.append(ic.md_table(tab, index=True))
+        out.append(ic.md_table(tab, index=True, floatfmt="{:,.3f}"))
         out.append("")
         for pol, lab in (("fifo", "FIFO"),
                          ("high_risk_first", "high-risk-first")):
-            sub = same[same.policy == pol]
+            sub = same[(same.policy == pol) & (same.budget == "C_min")]
             mx = same[same.policy == "elig_max"]
+            # only policies that actually ran at C_min belong in a same-cost
+            # comparison; the others get their own line below
             if len(sub) and len(mx):
                 out.append(f"- {lab} reaches {_fmt(sub.ELIG.mean())} on "
                            f"average against {_fmt(mx.ELIG.mean())} for the "
@@ -603,22 +623,24 @@ def summary():
                            f"fewer eligible patients), over "
                            f"{len(sub)} of {len(met)} instances.")
             else:
-                n_inf = int((runs[(runs.policy == pol)].feasible == False).sum())
-                out.append(f"- {lab} was infeasible at C_min in every "
-                           f"instance; see the own-cheapest-plan rows in "
-                           f"exp1_runs.csv.")
-                issues.append(f"{lab} infeasible at C_min "
-                              f"({n_inf} instances)")
-        own = runs[(runs.budget == "own_min_cost")]
-        if len(own):
-            for pol in own.policy.unique():
-                s = own[own.policy == pol]
-                out.append(f"- {POL_LABEL(pol)} at its own cheapest cost: "
-                           f"cost mean {s.cost.mean():,.0f}, ELIG mean "
-                           f"{_fmt(s.ELIG.mean())} "
-                           f"({len(s)} instances).")
-                issues.append(f"{POL_LABEL(pol)} needed a higher budget than "
-                              f"C_min in {len(s)} instances")
+                n_inf = int((runs[runs.policy == pol].budget
+                             == "own_min_cost").sum())
+                out.append(f"- {lab} was infeasible at C_min in {n_inf} of "
+                           f"{len(met)} instances; see the own-cheapest-plan "
+                           f"rows in exp1_runs.csv.")
+                issues.append(f"{lab} infeasible at C_min in {n_inf} of "
+                              f"{len(met)} instances")
+        own = runs[runs.budget == "own_min_cost"]
+        base_cost = runs[runs.budget == "C_min"].cost.mean()
+        for pol in own.policy.unique():
+            o = own[own.policy == pol]
+            out.append(f"- {POL_LABEL(pol)} at its own cheapest cost: "
+                       f"{o.cost.mean():,.0f} against {base_cost:,.0f} for "
+                       f"every other policy "
+                       f"(+{100 * (o.cost.mean() / base_cost - 1):.0f}%), "
+                       f"reaching {_fmt(o.ELIG.mean())} eligible patients. "
+                       f"It buys more than the eligibility-aware plan, but "
+                       f"not at the same cost.")
         out.append("")
 
     # --- slide 8 -----------------------------------------------------------
@@ -629,7 +651,7 @@ def summary():
         t = (g.groupby(["decline", "congestion"])
              [["same_cost_gain", "paid_gain"]]
              .agg(["mean", "min", "max"]).round(3))
-        out.append(ic.md_table(t, index=True))
+        out.append(ic.md_table(t, index=True, floatfmt="{:.3f}"))
         out.append("")
         for dec in g.decline.unique():
             sub = g[g.decline == dec]
@@ -674,17 +696,31 @@ def summary():
         _, source = sa_levels()
         out += ["## B3 - cost side", ""]
         out.append(f"- Sensitivity levels taken from {source}.")
+        shown = pts[pts.cost_side] if "cost_side" in pts else pts
         out.append(f"- {pts.row.nunique()} parameters, "
                    f"{pts.groupby(['row', 'label']).ngroups} levels, "
                    f"{len(pts)} frontier points in total.")
+        if len(shown) < len(pts):
+            dropped = sorted(set(pts[~pts.cost_side].row))
+            out.append(f"- {fg_panel_count(shown)} of those parameters are "
+                       f"drawn in fig_b3_sensitivity.png. The Weibull rows "
+                       f"({', '.join(dropped)}) are kept in the CSV but left "
+                       f"out of the figure: the GRID's levels for them were "
+                       f"set for the notebook's BASE curves (eta_H 15, "
+                       f"eta_L 29), not for the frozen set (eta_H "
+                       f"{curves['High']['eta']:g}, eta_L "
+                       f"{curves['Low']['eta']:g}), so sweeping them walks "
+                       f"away from the curves section 0 froze, and they are "
+                       f"not cost-side parameters.")
         if not os.path.exists(SA_XLSX):
             issues.append(f"{SA_XLSX} is not in the repository, so B3(a) used "
                           f"the notebook's GRID instead of the SA levels tab")
         mixp = os.path.join(R, "b3_costmix.csv")
         if os.path.exists(mixp):
             mix = pd.read_csv(mixp)
+            mix["config"] = mix.config.str.replace("\n", " ", regex=False)
             out.append("")
-            out.append(ic.md_table(mix.round(3)))
+            out.append(ic.md_table(mix.round(3), floatfmt="{:,.3f}"))
         out.append("")
 
     # --- solve quality -----------------------------------------------------
@@ -714,6 +750,10 @@ def summary():
     with open(os.path.join(R, "SUMMARY.md"), "w") as f:
         f.write("\n".join(out) + "\n")
     print("wrote", os.path.join(R, "SUMMARY.md"), flush=True)
+
+
+def fg_panel_count(df):
+    return df.row.nunique()
 
 
 def POL_LABEL(p):
