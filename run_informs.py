@@ -391,8 +391,13 @@ def b1(n_points=15):
         logs += res["logs"]
         if res["ok"]:
             rows.append(dict(eps=float(eps), **res["summary"]))
-    f = (pd.DataFrame(rows).round(6)
-         .drop_duplicates(subset=["cost", "ELIG"])
+    # Costs are dollars: two solves of the same point can differ by ~1e-5 of a
+    # dollar on solver tolerance alone, and rounding to 6 decimals keeps that
+    # as a second "distinct" frontier point.  Dedupe at the cent.
+    f = pd.DataFrame(rows)
+    f["cost"] = f.cost.round(2)
+    f["ELIG"] = f.ELIG.round(6)
+    f = (f.drop_duplicates(subset=["cost", "ELIG"])
          .sort_values("cost").reset_index(drop=True))
     f["unsupported"] = upper_hull_flags(f.cost.values, f.ELIG.values)
     knee_i, f_sorted = ic.nb("knee_point")(f)
