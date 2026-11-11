@@ -1,0 +1,7 @@
+run,facility,city,lines,patients,urgent_patients,mean_W,max_W
+baseline,m1,"Philadelphia, PA",4,17,5,8.058823529411764,21
+baseline,m2,"Houston, TX",2,4,3,2.25,5
+baseline,m3,"Los Angeles, CA",10,9,1,0.0,0
+"lambda_D=150,000",m1,"Philadelphia, PA",4,12,6,3.75,10
+"lambda_D=150,000",m2,"Houston, TX",2,4,2,1.0,2
+"lambda_D=150,000",m3,"Los Angeles, CA",10,14,1,0.35714285714285715,2
