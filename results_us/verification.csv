@@ -4,7 +4,7 @@ baseline,delivery hospital = paired hospital,PASS
 baseline,"same facility for outbound, arrival, start and return",PASS
 baseline,start >= arrival day,PASS
 baseline,capacity (17) respected for every facility and day,PASS
-baseline,TRT <= 24 for all patients,PASS
+baseline,TRT <= 40 for all patients,PASS
 baseline,TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
 baseline,E_D from per-patient table = solver value (1e-6),PASS
 baseline,E_U from per-patient table = solver value (1e-6),PASS
@@ -14,7 +14,7 @@ tie_min_ED (best same-cost),delivery hospital = paired hospital,PASS
 tie_min_ED (best same-cost),"same facility for outbound, arrival, start and return",PASS
 tie_min_ED (best same-cost),start >= arrival day,PASS
 tie_min_ED (best same-cost),capacity (17) respected for every facility and day,PASS
-tie_min_ED (best same-cost),TRT <= 24 for all patients,PASS
+tie_min_ED (best same-cost),TRT <= 40 for all patients,PASS
 tie_min_ED (best same-cost),TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
 tie_min_ED (best same-cost),E_D from per-patient table = solver value (1e-6),PASS
 tie_min_ED (best same-cost),E_U from per-patient table = solver value (1e-6),PASS
@@ -24,7 +24,7 @@ tie_max_ED (worst same-cost),delivery hospital = paired hospital,PASS
 tie_max_ED (worst same-cost),"same facility for outbound, arrival, start and return",PASS
 tie_max_ED (worst same-cost),start >= arrival day,PASS
 tie_max_ED (worst same-cost),capacity (17) respected for every facility and day,PASS
-tie_max_ED (worst same-cost),TRT <= 24 for all patients,PASS
+tie_max_ED (worst same-cost),TRT <= 40 for all patients,PASS
 tie_max_ED (worst same-cost),TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
 tie_max_ED (worst same-cost),E_D from per-patient table = solver value (1e-6),PASS
 tie_max_ED (worst same-cost),E_U from per-patient table = solver value (1e-6),PASS
@@ -34,7 +34,7 @@ lambda_D=0,delivery hospital = paired hospital,PASS
 lambda_D=0,"same facility for outbound, arrival, start and return",PASS
 lambda_D=0,start >= arrival day,PASS
 lambda_D=0,capacity (17) respected for every facility and day,PASS
-lambda_D=0,TRT <= 24 for all patients,PASS
+lambda_D=0,TRT <= 40 for all patients,PASS
 lambda_D=0,TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
 lambda_D=0,E_D from per-patient table = solver value (1e-6),PASS
 lambda_D=0,E_U from per-patient table = solver value (1e-6),PASS
@@ -44,7 +44,7 @@ lambda_D=0,TOTCOST recomputed from table = solver value,PASS
 "lambda_D=25,000","same facility for outbound, arrival, start and return",PASS
 "lambda_D=25,000",start >= arrival day,PASS
 "lambda_D=25,000",capacity (17) respected for every facility and day,PASS
-"lambda_D=25,000",TRT <= 24 for all patients,PASS
+"lambda_D=25,000",TRT <= 40 for all patients,PASS
 "lambda_D=25,000",TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
 "lambda_D=25,000",E_D from per-patient table = solver value (1e-6),PASS
 "lambda_D=25,000",E_U from per-patient table = solver value (1e-6),PASS
@@ -54,7 +54,7 @@ lambda_D=0,TOTCOST recomputed from table = solver value,PASS
 "lambda_D=75,000","same facility for outbound, arrival, start and return",PASS
 "lambda_D=75,000",start >= arrival day,PASS
 "lambda_D=75,000",capacity (17) respected for every facility and day,PASS
-"lambda_D=75,000",TRT <= 24 for all patients,PASS
+"lambda_D=75,000",TRT <= 40 for all patients,PASS
 "lambda_D=75,000",TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
 "lambda_D=75,000",E_D from per-patient table = solver value (1e-6),PASS
 "lambda_D=75,000",E_U from per-patient table = solver value (1e-6),PASS
@@ -64,7 +64,7 @@ lambda_D=0,TOTCOST recomputed from table = solver value,PASS
 "lambda_D=150,000","same facility for outbound, arrival, start and return",PASS
 "lambda_D=150,000",start >= arrival day,PASS
 "lambda_D=150,000",capacity (17) respected for every facility and day,PASS
-"lambda_D=150,000",TRT <= 24 for all patients,PASS
+"lambda_D=150,000",TRT <= 40 for all patients,PASS
 "lambda_D=150,000",TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
 "lambda_D=150,000",E_D from per-patient table = solver value (1e-6),PASS
 "lambda_D=150,000",E_U from per-patient table = solver value (1e-6),PASS
@@ -74,7 +74,7 @@ lambda_D=0,TOTCOST recomputed from table = solver value,PASS
 "lambda_D=300,000","same facility for outbound, arrival, start and return",PASS
 "lambda_D=300,000",start >= arrival day,PASS
 "lambda_D=300,000",capacity (17) respected for every facility and day,PASS
-"lambda_D=300,000",TRT <= 24 for all patients,PASS
+"lambda_D=300,000",TRT <= 40 for all patients,PASS
 "lambda_D=300,000",TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
 "lambda_D=300,000",E_D from per-patient table = solver value (1e-6),PASS
 "lambda_D=300,000",E_U from per-patient table = solver value (1e-6),PASS
@@ -84,12 +84,12 @@ upper_bound (min E_D),delivery hospital = paired hospital,PASS
 upper_bound (min E_D),"same facility for outbound, arrival, start and return",PASS
 upper_bound (min E_D),start >= arrival day,PASS
 upper_bound (min E_D),capacity (17) respected for every facility and day,PASS
-upper_bound (min E_D),TRT <= 24 for all patients,PASS
+upper_bound (min E_D),TRT <= 40 for all patients,PASS
 upper_bound (min E_D),TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
 upper_bound (min E_D),E_D from per-patient table = solver value (1e-6),PASS
 upper_bound (min E_D),E_U from per-patient table = solver value (1e-6),PASS
 upper_bound (min E_D),TOTCOST recomputed from table = solver value,PASS
-cross-run / data,"lambda_D = 0 run reproduces baseline cost C* (385,869.48 vs 385,869.48)",PASS
+cross-run / data,"lambda_D = 0 run reproduces baseline cost C* (384,646.90 vs 384,646.90)",PASS
 cross-run / data,tie-range runs stay within C*(1+1e-6),PASS
 cross-run / data,tie range brackets the baseline E_D,PASS
 cross-run / data,E_D_min <= E_D of every run,PASS
