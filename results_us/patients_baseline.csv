@@ -1,0 +1,31 @@
+p,class,site city,region,facility,out mode,return mode,collection day,arrival,start,delivery,TRT,W_p,pi_D at delivery
+p1,R,"Palo Alto, CA",West,m3,slow,slow,1,3,3,18,17,0,0.06910992388225315
+p2,U,"Chicago, IL",East,m2,slow,slow,1,4,4,20,19,0,0.3187673757601076
+p3,R,"Philadelphia, PA",East,m1,slow,slow,1,3,3,18,17,0,0.06910992388225315
+p4,R,"Los Angeles, CA",West,m3,slow,slow,1,3,3,18,17,0,0.06910992388225315
+p5,R,"Los Angeles, CA",West,m3,slow,slow,2,4,4,19,17,0,0.06910992388225315
+p6,R,"Denver, CO",Central,m3,slow,slow,2,5,5,21,19,0,0.07920338629767736
+p7,R,"New York, NY",East,m1,slow,slow,2,4,4,19,17,0,0.06910992388225315
+p8,R,"Denver, CO",Central,m3,slow,slow,2,5,5,21,19,0,0.07920338629767736
+p9,R,"Los Angeles, CA",West,m3,slow,slow,3,5,5,20,17,0,0.06910992388225315
+p10,R,"Baltimore, MD",East,m1,slow,slow,3,5,5,20,17,0,0.06910992388225315
+p11,U,"Houston, TX",Central,m2,slow,slow,3,5,5,20,17,0,0.29067823381935404
+p12,R,"Houston, TX",Central,m2,slow,slow,3,5,5,20,17,0,0.06910992388225315
+p13,U,"Baltimore, MD",East,m1,slow,slow,3,5,5,20,17,0,0.29067823381935404
+p14,R,"Philadelphia, PA",East,m2,slow,slow,4,7,7,23,19,0,0.07920338629767736
+p15,U,"Houston, TX",Central,m2,slow,slow,5,7,7,22,17,0,0.29067823381935404
+p16,U,"New York, NY",East,m1,slow,slow,5,7,12,27,22,5,0.35882930392640716
+p17,R,"Boston, MA",East,m1,slow,slow,5,7,11,26,21,4,0.08958863790742337
+p18,R,"Chicago, IL",East,m2,slow,slow,5,8,8,24,19,0,0.07920338629767736
+p19,R,"Chicago, IL",East,m2,slow,slow,5,8,8,24,19,0,0.07920338629767736
+p20,U,"Denver, CO",Central,m3,slow,slow,5,8,8,24,19,0,0.3187673757601076
+p21,U,"Durham, NC",East,m2,slow,slow,5,8,8,24,19,0,0.3187673757601076
+p22,R,"Baltimore, MD",East,m2,slow,slow,6,9,9,25,19,0,0.07920338629767736
+p23,R,"Durham, NC",East,m2,slow,slow,7,10,10,26,19,0,0.07920338629767736
+p24,R,"Palo Alto, CA",West,m3,slow,slow,7,9,9,24,17,0,0.06910992388225315
+p25,R,"Boston, MA",East,m1,slow,slow,7,9,10,25,18,1,0.07411827720997739
+p26,U,"New York, NY",East,m1,slow,slow,7,9,12,27,20,3,0.33239202824490544
+p27,R,"Palo Alto, CA",West,m3,slow,slow,8,10,10,25,17,0,0.06910992388225315
+p28,R,"Boston, MA",East,m1,slow,slow,8,10,17,32,24,7,0.10564971774612832
+p29,R,"Durham, NC",East,m1,slow,slow,9,11,18,33,24,7,0.10564971774612832
+p30,U,"Philadelphia, PA",East,m1,slow,slow,10,12,19,34,24,7,0.3842196634909214
