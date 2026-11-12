@@ -1,0 +1,46 @@
+run,check,result
+baseline,one outbound shipment / one start / one delivery per patient,PASS
+baseline,delivery hospital = paired hospital,PASS
+baseline,"same facility for outbound, arrival, start and return",PASS
+baseline,start >= arrival day,PASS
+baseline,capacity (17) respected for every facility and day,PASS
+baseline,TRT <= 40 for all patients,PASS
+baseline,TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
+baseline,E_D from per-patient table = solver value (1e-6),PASS
+baseline,E_U from per-patient table = solver value (1e-6),PASS
+baseline,TOTCOST recomputed from table = solver value,PASS
+"lambda_D=150,000",one outbound shipment / one start / one delivery per patient,PASS
+"lambda_D=150,000",delivery hospital = paired hospital,PASS
+"lambda_D=150,000","same facility for outbound, arrival, start and return",PASS
+"lambda_D=150,000",start >= arrival day,PASS
+"lambda_D=150,000",capacity (17) respected for every facility and day,PASS
+"lambda_D=150,000",TRT <= 40 for all patients,PASS
+"lambda_D=150,000",TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
+"lambda_D=150,000",E_D from per-patient table = solver value (1e-6),PASS
+"lambda_D=150,000",E_U from per-patient table = solver value (1e-6),PASS
+"lambda_D=150,000",TOTCOST recomputed from table = solver value,PASS
+upper_bound (min E_D),one outbound shipment / one start / one delivery per patient,PASS
+upper_bound (min E_D),delivery hospital = paired hospital,PASS
+upper_bound (min E_D),"same facility for outbound, arrival, start and return",PASS
+upper_bound (min E_D),start >= arrival day,PASS
+upper_bound (min E_D),capacity (17) respected for every facility and day,PASS
+upper_bound (min E_D),TRT <= 40 for all patients,PASS
+upper_bound (min E_D),TRT = T_LS + TT1 + W + T_MFE + T_QC + TT2 (recomputed from route/modes),PASS
+upper_bound (min E_D),E_D from per-patient table = solver value (1e-6),PASS
+upper_bound (min E_D),E_U from per-patient table = solver value (1e-6),PASS
+upper_bound (min E_D),TOTCOST recomputed from table = solver value,PASS
+cross-run / data,patient-aware runs cost at least C* and have E_D between E_D_min and E_D(baseline) + tie tolerance,PASS
+cross-run / data,E_D_min <= E_D of every run,PASS
+cross-run / data,E_D non-increasing and TOTCOST non-decreasing in lambda_D,PASS
+cross-run / data,"Transport_out has one row per (c,m,j)",PASS
+cross-run / data,"Transport_return has one row per (m,h,j)",PASS
+cross-run / data,"MAP[c,h]=1 iff same number",PASS
+cross-run / data,Patients sheet: hospital column D = paired hospital of site,PASS
+cross-run / data,Settings NP equals number of patients,PASS
+cross-run / data,CVM_pm on Facilities equals Settings CVM,PASS
+cross-run / data,Sanity: 9 urgent patients loaded,PASS
+cross-run / data,Sanity: 18 patients in the East,PASS
+cross-run / data,Horizon covers latest possible delivery (max a_p + ND <= NT),PASS
+cross-run / data,Slowest route fits ND,PASS
+cross-run / data,pi (eq. 21) matches Pi sheet within 1e-6,PASS
+cross-run / data,P matches Clinical sheet matrix,PASS
