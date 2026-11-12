@@ -1,6 +1,6 @@
 # Paper 1: experiment log (eligibility-aware CAR-T scheduling)
 
-Last updated: 2026-11-12. This log records what was changed in the model and the data, and what each change did to the result.
+Last updated: Nov 12th, 2026. This log records what was changed in the model and the data, and what each change did to the result.
 
 ## Starting point
 
