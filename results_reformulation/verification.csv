@@ -1,0 +1,85 @@
+scenario,model,check,result
+Houston 10 / T_MFE 7,Baseline,one plan per patient,PASS
+Houston 10 / T_MFE 7,Baseline,capacity respected for every m and t,PASS
+Houston 10 / T_MFE 7,Baseline,TRT <= ND (40) for every patient,PASS
+Houston 10 / T_MFE 7,Baseline,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 10 / T_MFE 7,Baseline,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 7,Baseline,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 7,Baseline,total cost recomputed from the chosen plans = solver value,PASS
+Houston 10 / T_MFE 7,Patient-aware,one plan per patient,PASS
+Houston 10 / T_MFE 7,Patient-aware,capacity respected for every m and t,PASS
+Houston 10 / T_MFE 7,Patient-aware,TRT <= ND (40) for every patient,PASS
+Houston 10 / T_MFE 7,Patient-aware,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 10 / T_MFE 7,Patient-aware,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 7,Patient-aware,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 7,Patient-aware,total cost recomputed from the chosen plans = solver value,PASS
+Houston 4 / T_MFE 7,Baseline,one plan per patient,PASS
+Houston 4 / T_MFE 7,Baseline,capacity respected for every m and t,PASS
+Houston 4 / T_MFE 7,Baseline,TRT <= ND (40) for every patient,PASS
+Houston 4 / T_MFE 7,Baseline,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 4 / T_MFE 7,Baseline,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 7,Baseline,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 7,Baseline,total cost recomputed from the chosen plans = solver value,PASS
+Houston 4 / T_MFE 7,Patient-aware,one plan per patient,PASS
+Houston 4 / T_MFE 7,Patient-aware,capacity respected for every m and t,PASS
+Houston 4 / T_MFE 7,Patient-aware,TRT <= ND (40) for every patient,PASS
+Houston 4 / T_MFE 7,Patient-aware,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 4 / T_MFE 7,Patient-aware,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 7,Patient-aware,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 7,Patient-aware,total cost recomputed from the chosen plans = solver value,PASS
+Houston 2 / T_MFE 7,Baseline,one plan per patient,PASS
+Houston 2 / T_MFE 7,Baseline,capacity respected for every m and t,PASS
+Houston 2 / T_MFE 7,Baseline,TRT <= ND (40) for every patient,PASS
+Houston 2 / T_MFE 7,Baseline,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 2 / T_MFE 7,Baseline,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 7,Baseline,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 7,Baseline,total cost recomputed from the chosen plans = solver value,PASS
+Houston 2 / T_MFE 7,Patient-aware,one plan per patient,PASS
+Houston 2 / T_MFE 7,Patient-aware,capacity respected for every m and t,PASS
+Houston 2 / T_MFE 7,Patient-aware,TRT <= ND (40) for every patient,PASS
+Houston 2 / T_MFE 7,Patient-aware,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 2 / T_MFE 7,Patient-aware,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 7,Patient-aware,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 7,Patient-aware,total cost recomputed from the chosen plans = solver value,PASS
+Houston 4 / T_MFE 14,Baseline,one plan per patient,PASS
+Houston 4 / T_MFE 14,Baseline,capacity respected for every m and t,PASS
+Houston 4 / T_MFE 14,Baseline,TRT <= ND (40) for every patient,PASS
+Houston 4 / T_MFE 14,Baseline,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 4 / T_MFE 14,Baseline,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 14,Baseline,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 14,Baseline,total cost recomputed from the chosen plans = solver value,PASS
+Houston 4 / T_MFE 14,Patient-aware,one plan per patient,PASS
+Houston 4 / T_MFE 14,Patient-aware,capacity respected for every m and t,PASS
+Houston 4 / T_MFE 14,Patient-aware,TRT <= ND (40) for every patient,PASS
+Houston 4 / T_MFE 14,Patient-aware,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 4 / T_MFE 14,Patient-aware,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 14,Patient-aware,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 14,Patient-aware,total cost recomputed from the chosen plans = solver value,PASS
+Houston 2 / T_MFE 14,Baseline,one plan per patient,PASS
+Houston 2 / T_MFE 14,Baseline,capacity respected for every m and t,PASS
+Houston 2 / T_MFE 14,Baseline,TRT <= ND (40) for every patient,PASS
+Houston 2 / T_MFE 14,Baseline,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 2 / T_MFE 14,Baseline,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 14,Baseline,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 14,Baseline,total cost recomputed from the chosen plans = solver value,PASS
+Houston 2 / T_MFE 14,Patient-aware,one plan per patient,PASS
+Houston 2 / T_MFE 14,Patient-aware,capacity respected for every m and t,PASS
+Houston 2 / T_MFE 14,Patient-aware,TRT <= ND (40) for every patient,PASS
+Houston 2 / T_MFE 14,Patient-aware,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 2 / T_MFE 14,Patient-aware,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 14,Patient-aware,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 14,Patient-aware,total cost recomputed from the chosen plans = solver value,PASS
+Houston 10 / T_MFE 5,Baseline,one plan per patient,PASS
+Houston 10 / T_MFE 5,Baseline,capacity respected for every m and t,PASS
+Houston 10 / T_MFE 5,Baseline,TRT <= ND (40) for every patient,PASS
+Houston 10 / T_MFE 5,Baseline,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 10 / T_MFE 5,Baseline,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 5,Baseline,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 5,Baseline,total cost recomputed from the chosen plans = solver value,PASS
+Houston 10 / T_MFE 5,Patient-aware,one plan per patient,PASS
+Houston 10 / T_MFE 5,Patient-aware,capacity respected for every m and t,PASS
+Houston 10 / T_MFE 5,Patient-aware,TRT <= ND (40) for every patient,PASS
+Houston 10 / T_MFE 5,Patient-aware,"timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 10 / T_MFE 5,Patient-aware,E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 5,Patient-aware,E_U recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 5,Patient-aware,total cost recomputed from the chosen plans = solver value,PASS

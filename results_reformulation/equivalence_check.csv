@@ -1,0 +1,13 @@
+scenario,model,"objective, flow","objective, reformulation",relative difference,objective,E_D difference (reformulation − flow),E_D,"flow plan admissible in reformulation, same cost and E_D"
+Houston 10 / T_MFE 7,Baseline,384646.9,384646.9,0.0,PASS,0.06765302664018513,tie difference,PASS
+Houston 10 / T_MFE 7,Patient-aware,1035503.5335584821,1035503.5335584821,0.0,PASS,0.0,same E_D,PASS
+Houston 4 / T_MFE 7,Baseline,386896.44,386896.44,0.0,PASS,-0.13298825039544493,tie difference,PASS
+Houston 4 / T_MFE 7,Patient-aware,1068850.994680765,1068850.994680765,0.0,PASS,0.0,same E_D,PASS
+Houston 2 / T_MFE 7,Baseline,390014.12,390014.12,0.0,PASS,0.03699536346773513,tie difference,PASS
+Houston 2 / T_MFE 7,Patient-aware,1094015.8039308712,1094015.8039308712,0.0,PASS,0.0,same E_D,PASS
+Houston 4 / T_MFE 14,Baseline,422055.32,422055.32,0.0,PASS,-0.029359712497228685,tie difference,PASS
+Houston 4 / T_MFE 14,Patient-aware,1417544.2189952903,1417544.2189952903,0.0,PASS,0.0,same E_D,PASS
+Houston 2 / T_MFE 14,Baseline,441561.62,441561.62,0.0,PASS,0.0005249781830070077,tie difference,PASS
+Houston 2 / T_MFE 14,Patient-aware,1468360.0564848064,1468360.0564848064,0.0,PASS,0.0,same E_D,PASS
+Houston 10 / T_MFE 5,Baseline,377999.3,377999.3,0.0,PASS,-0.11629777681510678,tie difference,PASS
+Houston 10 / T_MFE 5,Patient-aware,950014.0856868351,950014.0856868351,0.0,PASS,-4.440892098500626e-16,same E_D,PASS
