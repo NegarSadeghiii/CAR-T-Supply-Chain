@@ -1,0 +1,31 @@
+p,collection day,site,hospital,city,region,permutation rank,urgent at 10%,urgent at 20%,urgent at 30%
+p1,2,c2,h2,"New York, NY",East,28,R,R,R
+p2,2,c2,h2,"New York, NY",East,16,R,R,R
+p3,2,c8,h8,"Denver, CO",Central,1,U,U,U
+p4,3,c5,h5,"Durham, NC",East,11,R,R,R
+p5,3,c1,h1,"Boston, MA",East,5,R,U,U
+p6,3,c8,h8,"Denver, CO",Central,17,R,R,R
+p7,3,c9,h9,"Los Angeles, CA",West,20,R,R,R
+p8,4,c2,h2,"New York, NY",East,6,R,U,U
+p9,4,c1,h1,"Boston, MA",East,15,R,R,R
+p10,4,c4,h4,"Baltimore, MD",East,23,R,R,R
+p11,4,c9,h9,"Los Angeles, CA",West,4,R,U,U
+p12,4,c10,h10,"Palo Alto, CA",West,27,R,R,R
+p13,5,c3,h3,"Philadelphia, PA",East,25,R,R,R
+p14,5,c1,h1,"Boston, MA",East,24,R,R,R
+p15,5,c2,h2,"New York, NY",East,12,R,R,R
+p16,5,c10,h10,"Palo Alto, CA",West,30,R,R,R
+p17,5,c10,h10,"Palo Alto, CA",West,10,R,R,R
+p18,6,c4,h4,"Baltimore, MD",East,18,R,R,R
+p19,6,c6,h6,"Chicago, IL",East,9,R,R,U
+p20,7,c1,h1,"Boston, MA",East,2,U,U,U
+p21,8,c2,h2,"New York, NY",East,3,U,U,U
+p22,8,c7,h7,"Houston, TX",Central,19,R,R,R
+p23,8,c10,h10,"Palo Alto, CA",West,21,R,R,R
+p24,9,c1,h1,"Boston, MA",East,13,R,R,R
+p25,9,c6,h6,"Chicago, IL",East,8,R,R,U
+p26,9,c8,h8,"Denver, CO",Central,14,R,R,R
+p27,10,c2,h2,"New York, NY",East,26,R,R,R
+p28,10,c6,h6,"Chicago, IL",East,22,R,R,R
+p29,10,c9,h9,"Los Angeles, CA",West,7,R,R,U
+p30,10,c10,h10,"Palo Alto, CA",West,29,R,R,R

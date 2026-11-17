@@ -1,0 +1,61 @@
+p,collection day,site,hospital,city,region,permutation rank,urgent at 10%,urgent at 20%,urgent at 30%
+p1,1,c1,h1,"Boston, MA",East,28,R,R,R
+p2,1,c4,h4,"Baltimore, MD",East,49,R,R,R
+p3,1,c2,h2,"New York, NY",East,11,R,U,U
+p4,1,c4,h4,"Baltimore, MD",East,26,R,R,R
+p5,1,c2,h2,"New York, NY",East,54,R,R,R
+p6,1,c9,h9,"Los Angeles, CA",West,33,R,R,R
+p7,1,c9,h9,"Los Angeles, CA",West,14,R,R,U
+p8,2,c8,h8,"Denver, CO",Central,48,R,R,R
+p9,2,c9,h9,"Los Angeles, CA",West,42,R,R,R
+p10,2,c9,h9,"Los Angeles, CA",West,59,R,R,R
+p11,3,c6,h6,"Chicago, IL",East,38,R,R,R
+p12,3,c3,h3,"Philadelphia, PA",East,50,R,R,R
+p13,3,c2,h2,"New York, NY",East,21,R,R,R
+p14,3,c8,h8,"Denver, CO",Central,16,R,R,U
+p15,4,c1,h1,"Boston, MA",East,18,R,R,U
+p16,4,c2,h2,"New York, NY",East,44,R,R,R
+p17,4,c2,h2,"New York, NY",East,4,U,U,U
+p18,4,c1,h1,"Boston, MA",East,22,R,R,R
+p19,4,c2,h2,"New York, NY",East,40,R,R,R
+p20,4,c1,h1,"Boston, MA",East,51,R,R,R
+p21,5,c4,h4,"Baltimore, MD",East,39,R,R,R
+p22,5,c1,h1,"Boston, MA",East,2,U,U,U
+p23,5,c1,h1,"Boston, MA",East,53,R,R,R
+p24,5,c1,h1,"Boston, MA",East,30,R,R,R
+p25,5,c1,h1,"Boston, MA",East,41,R,R,R
+p26,5,c8,h8,"Denver, CO",Central,43,R,R,R
+p27,5,c10,h10,"Palo Alto, CA",West,35,R,R,R
+p28,6,c3,h3,"Philadelphia, PA",East,58,R,R,R
+p29,7,c1,h1,"Boston, MA",East,29,R,R,R
+p30,7,c2,h2,"New York, NY",East,23,R,R,R
+p31,7,c8,h8,"Denver, CO",Central,45,R,R,R
+p32,7,c7,h7,"Houston, TX",Central,25,R,R,R
+p33,7,c7,h7,"Houston, TX",Central,27,R,R,R
+p34,7,c9,h9,"Los Angeles, CA",West,9,R,U,U
+p35,7,c9,h9,"Los Angeles, CA",West,46,R,R,R
+p36,7,c10,h10,"Palo Alto, CA",West,55,R,R,R
+p37,7,c9,h9,"Los Angeles, CA",West,60,R,R,R
+p38,8,c3,h3,"Philadelphia, PA",East,1,U,U,U
+p39,8,c5,h5,"Durham, NC",East,37,R,R,R
+p40,8,c5,h5,"Durham, NC",East,20,R,R,R
+p41,8,c2,h2,"New York, NY",East,6,U,U,U
+p42,8,c4,h4,"Baltimore, MD",East,57,R,R,R
+p43,8,c10,h10,"Palo Alto, CA",West,3,U,U,U
+p44,8,c10,h10,"Palo Alto, CA",West,7,R,U,U
+p45,9,c4,h4,"Baltimore, MD",East,8,R,U,U
+p46,9,c2,h2,"New York, NY",East,24,R,R,R
+p47,9,c4,h4,"Baltimore, MD",East,17,R,R,U
+p48,9,c2,h2,"New York, NY",East,52,R,R,R
+p49,9,c4,h4,"Baltimore, MD",East,56,R,R,R
+p50,9,c1,h1,"Boston, MA",East,5,U,U,U
+p51,9,c9,h9,"Los Angeles, CA",West,32,R,R,R
+p52,9,c9,h9,"Los Angeles, CA",West,47,R,R,R
+p53,10,c5,h5,"Durham, NC",East,36,R,R,R
+p54,10,c4,h4,"Baltimore, MD",East,13,R,R,U
+p55,10,c4,h4,"Baltimore, MD",East,19,R,R,R
+p56,10,c8,h8,"Denver, CO",Central,34,R,R,R
+p57,10,c8,h8,"Denver, CO",Central,15,R,R,U
+p58,10,c9,h9,"Los Angeles, CA",West,31,R,R,R
+p59,10,c9,h9,"Los Angeles, CA",West,10,R,U,U
+p60,10,c9,h9,"Los Angeles, CA",West,12,R,U,U
