@@ -1,0 +1,115 @@
+scenario,check,result
+Houston 10 / T_MFE 7,Patient-aware objective identical to results_reformulation (rel. diff 2.2e-16),PASS
+Houston 10 / T_MFE 7,Patient-aware E_D identical to results_reformulation (diff +8.9e-16),PASS
+Houston 10 / T_MFE 7,Patient-aware per-patient plan identical to results_reformulation,PASS
+Houston 10 / T_MFE 7,"Baseline with FIFO: cost >= Baseline cost without FIFO (384,646.90 >= 384,646.90)",PASS
+Houston 4 / T_MFE 7,Patient-aware objective identical to results_reformulation (rel. diff 4.4e-16),PASS
+Houston 4 / T_MFE 7,Patient-aware E_D identical to results_reformulation (diff +2.7e-15),PASS
+Houston 4 / T_MFE 7,Patient-aware per-patient plan identical to results_reformulation,PASS
+Houston 4 / T_MFE 7,"Baseline with FIFO: cost >= Baseline cost without FIFO (386,896.44 >= 386,896.44)",PASS
+Houston 2 / T_MFE 7,Patient-aware objective identical to results_reformulation (rel. diff 4.3e-16),PASS
+Houston 2 / T_MFE 7,Patient-aware E_D identical to results_reformulation (diff +2.7e-15),PASS
+Houston 2 / T_MFE 7,Patient-aware per-patient plan identical to results_reformulation,PASS
+Houston 2 / T_MFE 7,"Baseline with FIFO: cost >= Baseline cost without FIFO (390,014.12 >= 390,014.12)",PASS
+Houston 4 / T_MFE 14,Patient-aware objective identical to results_reformulation (rel. diff 1.6e-16),PASS
+Houston 4 / T_MFE 14,Patient-aware E_D identical to results_reformulation (diff +1.8e-15),PASS
+Houston 4 / T_MFE 14,Patient-aware per-patient plan identical to results_reformulation,PASS
+Houston 4 / T_MFE 14,"Baseline with FIFO: cost >= Baseline cost without FIFO (423,295.86 >= 422,055.32)",PASS
+Houston 2 / T_MFE 14,Patient-aware objective identical to results_reformulation (rel. diff 3.2e-16),PASS
+Houston 2 / T_MFE 14,Patient-aware E_D identical to results_reformulation (diff +1.8e-15),PASS
+Houston 2 / T_MFE 14,Patient-aware per-patient plan identical to results_reformulation,PASS
+Houston 2 / T_MFE 14,"Baseline with FIFO: cost >= Baseline cost without FIFO (442,979.38 >= 441,561.62)",PASS
+Houston 10 / T_MFE 5,Patient-aware objective identical to results_reformulation (rel. diff 4.9e-16),PASS
+Houston 10 / T_MFE 5,Patient-aware E_D identical to results_reformulation (diff +2.2e-15),PASS
+Houston 10 / T_MFE 5,Patient-aware per-patient plan identical to results_reformulation,PASS
+Houston 10 / T_MFE 5,"Baseline with FIFO: cost >= Baseline cost without FIFO (377,999.30 >= 377,999.30)",PASS
+Houston 10 / T_MFE 7,Baseline: one plan per patient,PASS
+Houston 10 / T_MFE 7,Baseline: every chosen plan is admissible,PASS
+Houston 10 / T_MFE 7,Baseline: capacity respected for every m and t,PASS
+Houston 10 / T_MFE 7,Baseline: TRT <= ND (40) for every patient,PASS
+Houston 10 / T_MFE 7,"Baseline: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 10 / T_MFE 7,Baseline: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 7,Baseline: total cost recomputed from the chosen plans = solver value,PASS
+Houston 10 / T_MFE 7,"Baseline: FIFO: at each facility, start days non-decreasing in (collection day, index) order",PASS
+Houston 10 / T_MFE 7,Patient-aware: one plan per patient,PASS
+Houston 10 / T_MFE 7,Patient-aware: every chosen plan is admissible,PASS
+Houston 10 / T_MFE 7,Patient-aware: capacity respected for every m and t,PASS
+Houston 10 / T_MFE 7,Patient-aware: TRT <= ND (40) for every patient,PASS
+Houston 10 / T_MFE 7,"Patient-aware: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 10 / T_MFE 7,Patient-aware: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 7,Patient-aware: total cost recomputed from the chosen plans = solver value,PASS
+Houston 4 / T_MFE 7,Baseline: one plan per patient,PASS
+Houston 4 / T_MFE 7,Baseline: every chosen plan is admissible,PASS
+Houston 4 / T_MFE 7,Baseline: capacity respected for every m and t,PASS
+Houston 4 / T_MFE 7,Baseline: TRT <= ND (40) for every patient,PASS
+Houston 4 / T_MFE 7,"Baseline: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 4 / T_MFE 7,Baseline: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 7,Baseline: total cost recomputed from the chosen plans = solver value,PASS
+Houston 4 / T_MFE 7,"Baseline: FIFO: at each facility, start days non-decreasing in (collection day, index) order",PASS
+Houston 4 / T_MFE 7,Patient-aware: one plan per patient,PASS
+Houston 4 / T_MFE 7,Patient-aware: every chosen plan is admissible,PASS
+Houston 4 / T_MFE 7,Patient-aware: capacity respected for every m and t,PASS
+Houston 4 / T_MFE 7,Patient-aware: TRT <= ND (40) for every patient,PASS
+Houston 4 / T_MFE 7,"Patient-aware: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 4 / T_MFE 7,Patient-aware: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 7,Patient-aware: total cost recomputed from the chosen plans = solver value,PASS
+Houston 2 / T_MFE 7,Baseline: one plan per patient,PASS
+Houston 2 / T_MFE 7,Baseline: every chosen plan is admissible,PASS
+Houston 2 / T_MFE 7,Baseline: capacity respected for every m and t,PASS
+Houston 2 / T_MFE 7,Baseline: TRT <= ND (40) for every patient,PASS
+Houston 2 / T_MFE 7,"Baseline: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 2 / T_MFE 7,Baseline: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 7,Baseline: total cost recomputed from the chosen plans = solver value,PASS
+Houston 2 / T_MFE 7,"Baseline: FIFO: at each facility, start days non-decreasing in (collection day, index) order",PASS
+Houston 2 / T_MFE 7,Patient-aware: one plan per patient,PASS
+Houston 2 / T_MFE 7,Patient-aware: every chosen plan is admissible,PASS
+Houston 2 / T_MFE 7,Patient-aware: capacity respected for every m and t,PASS
+Houston 2 / T_MFE 7,Patient-aware: TRT <= ND (40) for every patient,PASS
+Houston 2 / T_MFE 7,"Patient-aware: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 2 / T_MFE 7,Patient-aware: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 7,Patient-aware: total cost recomputed from the chosen plans = solver value,PASS
+Houston 4 / T_MFE 14,Baseline: one plan per patient,PASS
+Houston 4 / T_MFE 14,Baseline: every chosen plan is admissible,PASS
+Houston 4 / T_MFE 14,Baseline: capacity respected for every m and t,PASS
+Houston 4 / T_MFE 14,Baseline: TRT <= ND (40) for every patient,PASS
+Houston 4 / T_MFE 14,"Baseline: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 4 / T_MFE 14,Baseline: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 14,Baseline: total cost recomputed from the chosen plans = solver value,PASS
+Houston 4 / T_MFE 14,"Baseline: FIFO: at each facility, start days non-decreasing in (collection day, index) order",PASS
+Houston 4 / T_MFE 14,Patient-aware: one plan per patient,PASS
+Houston 4 / T_MFE 14,Patient-aware: every chosen plan is admissible,PASS
+Houston 4 / T_MFE 14,Patient-aware: capacity respected for every m and t,PASS
+Houston 4 / T_MFE 14,Patient-aware: TRT <= ND (40) for every patient,PASS
+Houston 4 / T_MFE 14,"Patient-aware: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 4 / T_MFE 14,Patient-aware: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 4 / T_MFE 14,Patient-aware: total cost recomputed from the chosen plans = solver value,PASS
+Houston 2 / T_MFE 14,Baseline: one plan per patient,PASS
+Houston 2 / T_MFE 14,Baseline: every chosen plan is admissible,PASS
+Houston 2 / T_MFE 14,Baseline: capacity respected for every m and t,PASS
+Houston 2 / T_MFE 14,Baseline: TRT <= ND (40) for every patient,PASS
+Houston 2 / T_MFE 14,"Baseline: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 2 / T_MFE 14,Baseline: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 14,Baseline: total cost recomputed from the chosen plans = solver value,PASS
+Houston 2 / T_MFE 14,"Baseline: FIFO: at each facility, start days non-decreasing in (collection day, index) order",PASS
+Houston 2 / T_MFE 14,Patient-aware: one plan per patient,PASS
+Houston 2 / T_MFE 14,Patient-aware: every chosen plan is admissible,PASS
+Houston 2 / T_MFE 14,Patient-aware: capacity respected for every m and t,PASS
+Houston 2 / T_MFE 14,Patient-aware: TRT <= ND (40) for every patient,PASS
+Houston 2 / T_MFE 14,"Patient-aware: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 2 / T_MFE 14,Patient-aware: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 2 / T_MFE 14,Patient-aware: total cost recomputed from the chosen plans = solver value,PASS
+Houston 10 / T_MFE 5,Baseline: one plan per patient,PASS
+Houston 10 / T_MFE 5,Baseline: every chosen plan is admissible,PASS
+Houston 10 / T_MFE 5,Baseline: capacity respected for every m and t,PASS
+Houston 10 / T_MFE 5,Baseline: TRT <= ND (40) for every patient,PASS
+Houston 10 / T_MFE 5,"Baseline: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 10 / T_MFE 5,Baseline: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 5,Baseline: total cost recomputed from the chosen plans = solver value,PASS
+Houston 10 / T_MFE 5,"Baseline: FIFO: at each facility, start days non-decreasing in (collection day, index) order",PASS
+Houston 10 / T_MFE 5,Patient-aware: one plan per patient,PASS
+Houston 10 / T_MFE 5,Patient-aware: every chosen plan is admissible,PASS
+Houston 10 / T_MFE 5,Patient-aware: capacity respected for every m and t,PASS
+Houston 10 / T_MFE 5,Patient-aware: TRT <= ND (40) for every patient,PASS
+Houston 10 / T_MFE 5,"Patient-aware: timing recomputed from route/modes (arrival, start >= arrival, delivery, TRT, horizon)",PASS
+Houston 10 / T_MFE 5,Patient-aware: E_D recomputed from the chosen plans = solver value (1e-6),PASS
+Houston 10 / T_MFE 5,Patient-aware: total cost recomputed from the chosen plans = solver value,PASS
