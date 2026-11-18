@@ -5,7 +5,8 @@ costs, CVM, HC, T_LS, T_MFE, T_QC and the Liu transition rates) is read from the
 CART_doe_main.ipynb (CART_instance_30patients_cap4.xlsx). The workbook's ND, horizon, line counts and patients are
 NOT used: they are set per pilot setting.
 
-Patients arrive continuously: on every day d = 1..D the number of new patients is Poisson(annual demand / 365).
+Patients arrive continuously: on every day d = 1..D the number of new patients is Poisson(rate[d]). By default
+rate[d] = annual demand / 365 on every day; daily_rates() builds a nonhomogeneous vector (e.g. a demand surge).
 """
 import re
 from pathlib import Path
@@ -89,12 +90,25 @@ def compute_pi(q, tau_max, pi_sheet=None):
 # ----------------------------------------------------------------------------------------------------------------
 # Instance generator
 # ----------------------------------------------------------------------------------------------------------------
+def daily_rates(D, annual_demand, surge_factor=1.0, surge_start=None, surge_end=None):
+    """Arrival rate (patients/day) for each day 1..D: annual_demand / 365, multiplied by surge_factor on days
+    surge_start..surge_end (inclusive). Without a surge this is the constant rate used by P1-P4."""
+    base = annual_demand / 365.0
+    rate = {d: base for d in range(1, D + 1)}
+    if surge_start is not None:
+        for d in range(surge_start, surge_end + 1):
+            rate[d] = base * surge_factor
+    return rate
+
+
 def generate_instance(net, D, annual_demand, urgent_prob, seed, region_shares=REGION_SHARES,
-                      demand_weight=DEMAND_WEIGHT, max_patients=None):
+                      demand_weight=DEMAND_WEIGHT, max_patients=None, rate=None):
     """Continuous arrivals over days 1..D.
 
+    rate: dict day -> expected patients that day (see daily_rates). None = annual_demand / 365 on every day, which
+    reproduces exactly the instances of P1-P4.
     One numpy.random.default_rng(seed) stream, drawn day by day: the number of new patients on day d is
-    Poisson(annual_demand / 365); then for each new patient, in turn: region (independent draw with region_shares),
+    Poisson(rate[d]); then for each new patient, in turn: region (independent draw with region_shares),
     hospital within the region (probability proportional to demand_weight), urgent (probability urgent_prob).
     Patients are numbered p1, p2, ... in generation order, which is also collection-day order.
     max_patients keeps only the first patients (used by the smoke test only).
@@ -105,10 +119,11 @@ def generate_instance(net, D, annual_demand, urgent_prob, seed, region_shares=RE
     assert abs(reg_p.sum() - 1) < 1e-9, "region shares must sum to 1"
     sites_of = {r: [c for c in net["C"] if net["REGION"][c] == r] for r in regions}
     w_of = {r: np.array([demand_weight[net["CITY_SHORT"][c]] for c in sites_of[r]], float) for r in regions}
-    rate = annual_demand / 365.0
+    if rate is None:
+        rate = daily_rates(D, annual_demand)
     rows = []
     for d in range(1, D + 1):
-        for _ in range(int(rng.poisson(rate))):
+        for _ in range(int(rng.poisson(rate[d]))):
             reg = regions[rng.choice(len(regions), p=reg_p)]
             site = sites_of[reg][rng.choice(len(sites_of[reg]), p=w_of[reg] / w_of[reg].sum())]
             urgent = bool(rng.random() < urgent_prob)
@@ -148,22 +163,41 @@ def make_data(net, patients, ND, lines, D):
     return d
 
 
-def utilisation(net, patients, lines, D, annual_demand, region_shares=REGION_SHARES, demand_weight=DEMAND_WEIGHT):
-    """rho overall and per facility (nearest facility by distance), expected (from the rates) and realised (instance).
-
-    overall:      patients per day * T_MFE / total lines
-    facility m:   patients whose nearest facility is m, per day * T_MFE / lines of m
-    """
-    T = net["T_MFE"]
-    lines = dict(zip(net["M"], lines))
-    rate = annual_demand / 365.0
-    # expected share of patients whose nearest facility is m
+def nearest_shares(net, region_shares=REGION_SHARES, demand_weight=DEMAND_WEIGHT):
+    """Expected share of patients whose nearest facility (by distance) is m."""
     share = {m: 0.0 for m in net["M"]}
     for r, s in region_shares.items():
         sites = [c for c in net["C"] if net["REGION"][c] == r]
         wsum = sum(demand_weight[net["CITY_SHORT"][c]] for c in sites)
         for c in sites:
             share[net["NEAREST"][c]] += s * demand_weight[net["CITY_SHORT"][c]] / wsum
+    return share
+
+
+def expected_loads(net, lines, rate_per_day, region_shares=REGION_SHARES, demand_weight=DEMAND_WEIGHT):
+    """Expected load at a given daily arrival rate: overall and per facility (nearest facility by distance)."""
+    T = net["T_MFE"]
+    lines = dict(zip(net["M"], lines))
+    share = nearest_shares(net, region_shares, demand_weight)
+    div = lambda x, y: x / y if y else float("inf")
+    out = {"overall": div(rate_per_day * T, sum(lines.values()))}
+    for m in net["M"]:
+        out[f"{m} {net['M_CITY'][m].split(',')[0]}"] = div(rate_per_day * share[m] * T, lines[m])
+    return out
+
+
+def utilisation(net, patients, lines, D, annual_demand, region_shares=REGION_SHARES, demand_weight=DEMAND_WEIGHT,
+                rate=None):
+    """rho overall and per facility (nearest facility by distance), expected (from the mean daily rate) and realised.
+
+    overall:      patients per day * T_MFE / total lines
+    facility m:   patients whose nearest facility is m, per day * T_MFE / lines of m
+    """
+    T = net["T_MFE"]
+    lines = dict(zip(net["M"], lines))
+    # expected arrivals per day: mean of the daily rate vector (constant rate = annual demand / 365)
+    rate = float(np.mean(list(rate.values()))) if rate is not None else annual_demand / 365.0
+    share = nearest_shares(net, region_shares, demand_weight)
     n = len(patients)
     div = lambda x, y: x / y if y else float("inf")
     out = {"rho overall (expected)": div(rate * T, sum(lines.values())),
