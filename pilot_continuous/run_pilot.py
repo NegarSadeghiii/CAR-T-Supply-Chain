@@ -6,20 +6,23 @@ Usage (from the repository root or from pilot_continuous/):
     python run_pilot.py --count-only        # instance sizes and FIFO constraint counts, no solving
     python run_pilot.py --rerun             # ignore cached solves and solve again
     python run_pilot.py --smoke             # tiny 5-patient test with HiGHS (writes to results_smoke/)
+    python run_pilot.py --smoke --solver gurobi   # the same test with Gurobi (checks gurobipy and the license)
+    --solver gurobi|gams|highs overrides SOLVER from the configuration block
 
 Every solve is cached in results/cache/ as soon as it finishes, so an interrupted run resumes where it stopped.
 """
 # ================================================================================================================
 # CONFIGURATION — all solver choices are here
 # ================================================================================================================
-SOLVER = "gams"               # "gams" (default) or "highs"
-GAMS_SUBSOLVER = "cplex"      # "cplex" (default), "gurobi" or "cbc"
+SOLVER = "gurobi"             # "gurobi" (default; Gurobi called directly through gurobipy), "gams" or "highs"
+GAMS_SUBSOLVER = "cplex"      # only for SOLVER = "gams": "cplex", "gurobi" or "cbc"
 GAMS_EXECUTABLE = None        # None = find "gams" on PATH; or a full path, e.g. r"C:\GAMS\48\gams.exe"
 TIME_LIMIT_S = 1800           # per solve (GAMS option reslim)
 MIP_GAP = 0.0                 # relative gap (GAMS option optcr); optca is set to 0
 THREADS = 0                   # 0 = solver default (option not passed); otherwise number of threads
 FIFO_FORM = "timeindexed"     # Baseline FIFO: "timeindexed" (default) or "bigM"
 KEEP_GAMS_FILES = False       # True keeps the .gms/.lst files GAMS writes (for debugging)
+SHOW_SOLVER_LOG = True        # print the Gurobi/HiGHS log while solving
 
 # ---- pilot design ----------------------------------------------------------------------------------------------
 ARRIVAL_DAYS = 30             # D: patients arrive on days 1..D
@@ -99,16 +102,31 @@ def solve_gams(mdl):
                 solver=f"gams/{GAMS_SUBSOLVER}", termination=str(tc.name))
 
 
-def solve_highs(mdl):
-    from pyomo.contrib.appsi.solvers import Highs
+def solve_appsi(mdl, which):
+    """Gurobi (gurobipy) or HiGHS (highspy) through Pyomo's appsi interface."""
     from pyomo.contrib.appsi.base import TerminationCondition as TC
-    opt = Highs()
+    if which == "gurobi":
+        from pyomo.contrib.appsi.solvers import Gurobi
+        opt = Gurobi()
+        avail = opt.available()
+        if not avail:
+            raise RuntimeError(f"Gurobi not usable ({avail.name}): install gurobipy and a Gurobi license (see README)")
+        if avail.name == "LimitedLicense":
+            print("  WARNING: Gurobi is running with the size-limited pip license (2,000 variables/constraints); "
+                  "the pilot settings need your full license (gurobi.lic)")
+        opt.gurobi_options = {"Seed": 0, "MIPGapAbs": 1e-9}
+        if THREADS:
+            opt.gurobi_options["Threads"] = THREADS
+    else:
+        from pyomo.contrib.appsi.solvers import Highs
+        opt = Highs()
+        opt.highs_options = {"random_seed": 0, "mip_abs_gap": 1e-9}
+        if THREADS:
+            opt.highs_options["threads"] = THREADS
     opt.config.time_limit = TIME_LIMIT_S
     opt.config.mip_gap = MIP_GAP
     opt.config.load_solution = False
-    opt.highs_options = {"random_seed": 0, "mip_abs_gap": 1e-9}
-    if THREADS:
-        opt.highs_options["threads"] = THREADS
+    opt.config.stream_solver = SHOW_SOLVER_LOG
     t0 = time.time()
     res = opt.solve(mdl)
     secs = time.time() - t0
@@ -120,15 +138,15 @@ def solve_highs(mdl):
     bound = res.best_objective_bound
     return dict(status=_status(tc.name, has_sol), has_solution=has_sol,
                 objective=res.best_feasible_objective if has_sol else float("nan"),
-                best_bound=float(bound) if bound is not None else float("nan"), solve_s=secs, solver="highs",
+                best_bound=float(bound) if bound is not None else float("nan"), solve_s=secs, solver=which,
                 termination=str(tc.name))
 
 
 def solve(mdl):
     if SOLVER == "gams":
         return solve_gams(mdl)
-    if SOLVER == "highs":
-        return solve_highs(mdl)
+    if SOLVER in ("gurobi", "highs"):
+        return solve_appsi(mdl, SOLVER)
     raise ValueError(f"unknown SOLVER {SOLVER!r}")
 
 
@@ -336,10 +354,13 @@ def main():
     ap.add_argument("--count-only", action="store_true", help="print sizes and FIFO constraint counts, do not solve")
     ap.add_argument("--smoke", action="store_true", help="tiny 5-patient test with HiGHS")
     ap.add_argument("--out", help="output folder (default: pilot_continuous/results)")
+    ap.add_argument("--solver", choices=["gurobi", "gams", "highs"], help="override SOLVER from the configuration block")
     args = ap.parse_args()
 
+    if args.solver:
+        SOLVER = args.solver
     if args.smoke:
-        SOLVER = "highs"
+        SOLVER = args.solver or "highs"
         out = Path(args.out) if args.out else HERE / "results_smoke"
         small = dict(annual_demand=1000, D=3, max_patients=5, lines=(1, 1, 1))
         settings = {"S1_timeindexed": dict(small, fifo_form="timeindexed"),

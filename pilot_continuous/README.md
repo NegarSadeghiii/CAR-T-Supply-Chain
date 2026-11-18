@@ -6,7 +6,7 @@ The model is the same as in `CART_doe_main.ipynb`:
 - **Baseline**: minimise total cost, with the FIFO rule at every facility.
 - **Patient-aware**: minimise total cost + λ_D · E_D (λ_D = 150,000, λ_U = 0), no FIFO.
 
-The pilot has **not** been run. Only a 5-patient smoke test was run, with HiGHS (all checks PASS).
+The pilot has **not** been run. Only a 5-patient smoke test was run, with HiGHS and with Gurobi (size-limited pip license); all checks PASS.
 
 ## Files
 
@@ -14,7 +14,7 @@ The pilot has **not** been run. Only a 5-patient smoke test was run, with HiGHS 
 |---|---|
 | `model.py` | Compact model: plan variable `X[p, k]`, `k = (m, j1, j2, t)`; one plan per patient; time-indexed capacity; Baseline with FIFO in two forms (`bigM`, `timeindexed`); Patient-aware; solution checks |
 | `instances.py` | Network data from `../CART_instance_30patients_cap4.xlsx` and the continuous-arrival instance generator |
-| `run_pilot.py` | Configuration block, the four pilot settings, solving, caching, results, plots |
+| `run_pilot.py` | Configuration block (solver: Gurobi by default, or GAMS or HiGHS), the four pilot settings, solving, caching, results, plots |
 | `results/instances/` | The two pilot instances, already generated (seed 1): 74 patients (1,000/yr) and 147 patients (2,000/yr). `run_pilot.py` reuses these files, so you get exactly these patients whatever your numpy version. Delete them to regenerate. |
 
 ## Pilot settings
@@ -32,49 +32,46 @@ one replication. Solves per setting: Baseline (FIFO) and Patient-aware at λ_D =
 ρ = patients per day × T_MFE ÷ lines. The per-facility ρ (patients whose nearest facility it is) is printed for every
 setting and written to `summary_runs.csv`.
 
-## Step by step (Anaconda)
+## Step by step (Anaconda, Gurobi)
+
+The default solver is **Gurobi**, called directly from Python through `gurobipy`. GAMS and HiGHS remain available
+through `SOLVER` or `--solver`.
 
 ### 1. Create the environment
 
-Open the Anaconda Prompt and go to the repository folder (the one that contains `CART_instance_30patients_cap4.xlsx`):
+Open a terminal and go to the repository folder (the one that contains `CART_instance_30patients_cap4.xlsx`):
 
 ```bash
-conda create -n cart-pilot -c conda-forge python=3.11 pyomo pandas numpy openpyxl matplotlib
+conda create -n cart-pilot -c conda-forge python=3.11 pyomo pandas numpy openpyxl matplotlib -y
 ```
 
 ```bash
 conda activate cart-pilot
 ```
 
-Optional, only needed for `SOLVER = "highs"` or the smoke test:
-
 ```bash
-pip install highspy
+pip install gurobipy highspy
 ```
 
-The smoke test here used Pyomo 6.10.1, numpy 2.5.3, pandas 3.0.5, openpyxl 3.1.5, matplotlib 3.11.2, highspy.
+`highspy` is only needed for `--smoke` without `--solver gurobi` and for `SOLVER = "highs"`. The pip version of
+`gurobipy` includes a size-limited license (2,000 variables and 2,000 constraints). That is enough for the smoke
+test, but the pilot needs your full Gurobi license.
 
-### 2. Point Pyomo to GAMS
+### 2. Install your Gurobi license
 
-Pyomo calls the `gams` executable (shell interface: it writes a `.gms` file and runs it). Either:
+- **Academic named-user license:** download and install the Gurobi Optimizer from gurobi.com. Request a license on
+  the Gurobi portal and run the `grbgetkey <key>` command it shows; this writes `gurobi.lic` to your home folder.
+- **Web License Service (WLS) or other license file:** save `gurobi.lic` in your home folder, or set the environment
+  variable `GRB_LICENSE_FILE` to its path.
 
-- **Add the GAMS folder to PATH** for this environment (Windows example; use your GAMS version folder):
-
-  ```bash
-  conda env config vars set PATH="C:\GAMS\48;%PATH%"
-  ```
-
-  then `conda deactivate` and `conda activate cart-pilot` again; or
-- **Set the full path** in the configuration block of `run_pilot.py`:
-  `GAMS_EXECUTABLE = r"C:\GAMS\48\gams.exe"`.
-
-Check that Pyomo finds GAMS:
+Use a `gurobipy` version your license supports, for example `pip install "gurobipy==12.*"` for a version 12 license.
+Check that Python sees the full license:
 
 ```bash
-python -c "import pyomo.environ as pyo; print(pyo.SolverFactory('gams').available(exception_flag=False))"
+python -c "from pyomo.contrib.appsi.solvers import Gurobi; print(Gurobi().available())"
 ```
 
-This must print `True`. Your GAMS license must include the subsolver you choose (CPLEX by default).
+It must print `FullLicense`. `LimitedLicense` means only the pip license was found.
 
 ### 3. Choose the solver
 
@@ -82,28 +79,32 @@ All choices are in the configuration block at the top of `run_pilot.py`:
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `SOLVER` | `"gams"` | `"gams"` or `"highs"` |
-| `GAMS_SUBSOLVER` | `"cplex"` | `"cplex"`, `"gurobi"` or `"cbc"` (passed as `solver=` to Pyomo's GAMS interface) |
-| `GAMS_EXECUTABLE` | `None` | full path to `gams` if it is not on PATH |
-| `TIME_LIMIT_S` | `1800` | per solve; GAMS `option reslim` |
-| `MIP_GAP` | `0.0` | relative gap; GAMS `option optcr` (`optca` is set to 0) |
-| `THREADS` | `0` | 0 = solver default (option not passed); otherwise GAMS `option threads` |
+| `SOLVER` | `"gurobi"` | `"gurobi"`, `"gams"` or `"highs"` (or `--solver` on the command line) |
+| `TIME_LIMIT_S` | `1800` | per solve (Gurobi `TimeLimit`; GAMS `option reslim`) |
+| `MIP_GAP` | `0.0` | relative gap (Gurobi `MIPGap`; GAMS `option optcr`) |
+| `THREADS` | `0` | 0 = solver default (Gurobi uses all cores); otherwise number of threads |
 | `FIFO_FORM` | `"timeindexed"` | Baseline FIFO form: `"timeindexed"` or `"bigM"` |
-| `KEEP_GAMS_FILES` | `False` | `True` keeps the `.gms`/`.lst` files for debugging |
+| `SHOW_SOLVER_LOG` | `True` | print the Gurobi/HiGHS log while solving |
+| `GAMS_SUBSOLVER` | `"cplex"` | only for `SOLVER = "gams"`: `"cplex"`, `"gurobi"` or `"cbc"` |
+| `GAMS_EXECUTABLE` | `None` | only for GAMS: full path to `gams` if it is not on PATH |
+| `KEEP_GAMS_FILES` | `False` | only for GAMS: keep the `.gms`/`.lst` files |
 
-### 4. Check model sizes first (no solving)
+With GAMS instead of Gurobi: put the GAMS folder on PATH (or set `GAMS_EXECUTABLE`) and check
+`python -c "import pyomo.environ as pyo; print(pyo.SolverFactory('gams').available(exception_flag=False))"` prints `True`.
+
+### 4. Smoke test (5 patients, a few seconds)
+
+```bash
+python pilot_continuous/run_pilot.py --smoke --solver gurobi
+```
+
+It must end with `SMOKE OVERALL: PASS`. Its output goes to `pilot_continuous/results_smoke/` (not committed).
+
+### 5. Check model sizes (no solving)
 
 ```bash
 python pilot_continuous/run_pilot.py --count-only
 ```
-
-### 5. Optional: smoke test (5 patients, HiGHS, a few seconds)
-
-```bash
-python pilot_continuous/run_pilot.py --smoke
-```
-
-It must end with `SMOKE OVERALL: PASS`. Its output goes to `pilot_continuous/results_smoke/` (not committed).
 
 ### 6. Run the pilot
 
@@ -118,6 +119,8 @@ Then the rest (P1 is taken from the cache):
 ```bash
 python pilot_continuous/run_pilot.py
 ```
+
+On a Mac, prefix the command with `caffeinate -i` so the computer does not sleep during the run.
 
 ### 7. Resume an interrupted run
 
@@ -136,8 +139,8 @@ A solve that was interrupted in the middle starts again from scratch (only finis
 The one-plan and capacity constraints add only 247 (P1, P2) or 325 (P3, P4) rows; FIFO dominates the size of the
 Baseline. The Patient-aware model has no FIFO and is small.
 
-Expect the Baseline of P3 and P4 to need a lot of memory and time **before** the solver starts: Pyomo builds the model
-in Python and the GAMS interface writes it as a text `.gms` file. Run P1 first and watch memory.
+Expect the Baseline of P3 and P4 to need a lot of memory and time **before** the solver starts, because Pyomo
+builds the model in Python (with GAMS it also writes it as a text `.gms` file). Run P1 first and watch memory.
 
 ## FIFO forms
 
